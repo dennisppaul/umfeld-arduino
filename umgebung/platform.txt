@@ -1,0 +1,185 @@
+###################################################################################################
+# 
+# UMGEBUNG
+#
+# see https://arduino.github.io/arduino-cli/latest/platform-specification/
+# 
+###################################################################################################
+
+name=Umgebung
+version=0.0.4
+
+# TODO note that currently a sketch that runs with emulator NEEDS to `#include "System.h"` or else some method implementations are missing.
+
+###################################################################################################
+#
+# COMPILE
+#
+###################################################################################################
+
+recipe.hooks.prebuild.01.pattern=echo "KLST_ENV: " {build.flags.board}
+recipe.hooks.prebuild.02.pattern=sh "{runtime.platform.path}/extras/check-for-tools.sh"
+recipe.hooks.prebuild.03.pattern=sh "{runtime.platform.path}/extras/find_sdl.sh" "{build.path}"
+recipe.hooks.prebuild.04.pattern=echo "+++ make sure that sketch contains `#include "System.h"` or else some method implementations are missing."
+# recipe.hooks.prebuild.01.pattern=date
+# recipe.hooks.prebuild.02.pattern=echo "+++ runtime.platform.path:" {runtime.platform.path}
+# recipe.hooks.prebuild.03.pattern=echo "+++ runtime.hardware.path:" {runtime.hardware.path}
+# recipe.hooks.prebuild.04.pattern=echo "+++ runtime.os           :" {runtime.os}
+# recipe.hooks.prebuild.05.pattern=echo "+++ name                 :" {name}
+# recipe.hooks.prebuild.06.pattern=echo "+++ _id                  :" {_id}
+# recipe.hooks.prebuild.07.pattern=echo "+++ build.source.path    :" {build.source.path}
+# recipe.hooks.prebuild.08.pattern=echo "+++ extra.time.utc       :" {extra.time.utc}
+# recipe.hooks.prebuild.09.pattern=echo "+++ build.path           :" {build.path}
+# recipe.hooks.prebuild.10.pattern=echo "+++ build.project_name   :" {build.project_name}
+# recipe.hooks.prebuild.11.pattern=echo "+++ build.arch           :" {build.arch}
+
+# TODO this should be configured according for each system … maybe with a script?
+compiler.path.macosx=/usr/bin/
+compiler.path.linux=/usr/bin/
+compiler.klst_define=-DKLST_ENV={build.flags.board}
+
+# umgebung 
+# TODO **hard hack** this currently only works for macOS with apple silicon and homebrew installed libs
+#
+# TODO condsider using the `@` idiom to gather and complement umgebung information from txt file:
+#
+# `find_sdl.sh`:
+#     
+#     #!/bin/bash
+#     # Detect Homebrew prefix
+#     BREW_PREFIX=$(brew --prefix 2>/dev/null || echo "/usr/local")
+#     
+#     # Check for SDL2 installation
+#     if [ -d "$BREW_PREFIX/opt/sdl2" ]; then
+#         SDL3_INCLUDE_PATH="$BREW_PREFIX/include/SDL2"
+#         SDL3_LIB_PATH="$BREW_PREFIX/lib"
+#     else
+#         echo "Error: SDL2 not found in Homebrew installation!" >&2
+#         exit 1
+#     fi
+#     
+#     # Output paths to a file
+#     echo "-I$SDL3_INCLUDE_PATH" > "$1/sdl_include.txt"
+#     echo "-L$SDL3_LIB_PATH -lSDL2" > "$1/sdl_libs.txt"
+#
+# update `platform.txt`
+#
+#     recipe.hooks.prebuild.1.pattern=sh "{runtime.platform.path}/extras/find_sdl.sh" "{build.path}"
+#     
+#     compiler.extra_include=@{build.path}/sdl_include.txt
+#     compiler.extra_link_flags=@{build.path}/sdl_libs.txt
+#     
+#     recipe.cpp.o.pattern="{compiler.path}{compiler.cpp.cmd}" {compiler.cpp.flags} {compiler.extra_include} {includes} -o "{object_file}" "{source_file}"
+#     
+#     recipe.c.combine.pattern="{compiler.path}{compiler.c.elf.cmd}" {compiler.c.elf.flags} {compiler.extra_link_flags} -o "{build.path}/{build.project_name}.elf" {object_files} "{build.path}/{archive_file}"
+
+compiler.umgebung_flags=-I{runtime.platform.path}/cores/sdl3 -I{runtime.platform.path}/cores/sdl3/umgebung/include -I{runtime.platform.path}/cores/sdl3/umgebung/include/libraries -I{runtime.platform.path}/cores/sdl3/umgebung/include/libraries/ip -I{runtime.platform.path}/cores/sdl3/umgebung/include/libraries/osc -I{runtime.platform.path}/cores/sdl3/umgebung/include/shaders   -I/opt/homebrew/include/freetype2/ -DDISABLE_VIDEO
+compiler.umgebung_libs=-L/opt/homebrew/lib -lftgl -framework OpenGL -lGLEW 
+
+# TODO this should be collected from `sdl2-config --cflags`
+compiler.SDL3_cflags.macosx=-I/opt/homebrew/include/SDL3 -I/opt/homebrew/include/ -D_THREAD_SAFE -DGLM_ENABLE_EXPERIMENTAL -DSDL_MAIN_USE_CALLBACKS
+compiler.SDL3_cflags.linux=
+compiler.SDL3_cflags.windows=
+
+# TODO this should be collectex from `sdl2-config --libs`
+compiler.SDL3_libs        = -L/opt/homebrew/lib -lSDL3 -lSDL3_ttf -lharfbuzz -lfreetype
+# compiler.SDL3_libs.macosx =
+# compiler.SDL3_libs.linux  =
+# compiler.SDL3_libs.windows=
+
+compiler.c.cmd=gcc
+compiler.c.std=c17
+compiler.c.flags.macosx= -c -Wall -std={compiler.c.std} {compiler.klst_define}
+# compiler.c.flags.macosx= -c -g -MMD -Wall -flto -std={compiler.c.std} {compiler.klst_define}
+compiler.c.flags.linux= -c -g -MMD -Wall -flto -std={compiler.c.std} {compiler.klst_define}
+compiler.c.flags.windows=
+recipe.c.o.pattern="{compiler.path}{compiler.c.cmd}" {compiler.c.flags} {includes} {compiler.SDL3_cflags} {compiler.umgebung_flags} "{source_file}" -o "{object_file}"
+
+compiler.cpp.cmd=g++
+compiler.cpp.std=c++17
+compiler.cpp.flags.macosx= -c -Wall -std={compiler.cpp.std} -pthread {compiler.klst_define}
+# compiler.cpp.flags.macosx= -c -g -MMD -Wall -flto -std={compiler.cpp.std} -pthread {compiler.klst_define}
+compiler.cpp.flags.linux=  -c -g -MMD -Wall -flto -std={compiler.cpp.std} -Wno-long-long -pthread {compiler.klst_define}
+compiler.cpp.flags.windows=
+recipe.cpp.o.pattern="{compiler.path}{compiler.cpp.cmd}" {compiler.cpp.flags} {includes} {compiler.SDL3_cflags} {compiler.umgebung_flags} "{source_file}" -o "{object_file}"
+
+###################################################################################################
+#
+# ARCHIVE
+#
+###################################################################################################
+
+compiler.ar.cmd=ar
+compiler.ar.flags=-rcs
+recipe.ar.pattern="{compiler.path}{compiler.ar.cmd}" {compiler.ar.flags} "{archive_file_path}" "{object_file}"
+
+###################################################################################################
+#
+# COMBINE/LINK
+#
+###################################################################################################
+
+compiler.c.linker.cmd=g++
+compiler.ldflags=-v
+# recipe.c.combine.pattern="{compiler.path}{compiler.c.linker.cmd}" "{build.path}/{archive_file}" {compiler.SDL3_libs} {compiler.umgebung_libs} -o "{build.path}/{build.project_name}.exec" {object_files} {compiler.ldflags} "{archive_file_path}" "-L{build.path}" -lm
+# recipe.c.combine.pattern="{compiler.path}{compiler.c.linker.cmd}" {compiler.ldflags} -o "{build.path}/{build.project_name}.exec"  {object_files} {compiler.SDL3_libs} {compiler.umgebung_libs}  "{archive_file_path}" "-L{build.path}" -lm
+# recipe.c.combine.pattern="{compiler.path}{compiler.c.linker.cmd}" {compiler.ldflags} -o "{build.path}/{build.project_name}.exec" {object_files} {archive_file_path} {compiler.umgebung_libs} {compiler.SDL3_libs} -lm
+# recipe.c.combine.pattern="{compiler.path}{compiler.c.linker.cmd}" {compiler.ldflags} -o "{build.path}/{build.project_name}.exec" {object_files} -Wl,--whole-archive {archive_file_path} -Wl,--no-whole-archive {compiler.umgebung_libs} {compiler.SDL3_libs} -lm
+recipe.c.combine.pattern="{compiler.path}{compiler.c.linker.cmd}" {compiler.ldflags} -o "{build.path}/{build.project_name}.exec" {object_files} {archive_file_path} {compiler.umgebung_libs} {compiler.SDL3_libs} -lm
+
+# copy run script to `/tmp/` ( or similar )
+# compiler.execpath=sketch-exec
+# compiler.copy.macosx={compiler.execpath}/copy-sketch-exec.macos.sh
+# compiler.copy.linux={compiler.execpath}/copy-sketch-exec.linux.sh
+# compiler.copy.windows=
+# compiler.exec.macosx={compiler.execpath}/sketch-exec.sh
+# compiler.exec.linux={compiler.execpath}/sketch-exec.sh
+# compiler.exec.windows=
+#recipe.hooks.linking.postlink.1.pattern="{build.core.path}/../../{compiler.copy}" "{build.core.path}/../../{compiler.exec}"
+
+###################################################################################################
+#
+# PREPROCESS
+#
+###################################################################################################
+
+preproc.includes.cmd.macosx=g++
+preproc.includes.cmd.linux=g++
+preproc.includes.flags=-w -x c++ -M -MG -MP
+recipe.preproc.includes="{compiler.path}{preproc.includes.cmd}" {compiler.cpp.flags} {preproc.includes.flags} {compiler.cpp.extra_flags} {build.extra_flags} {includes} {compiler.SDL3_cflags} {compiler.umgebung_flags} "{source_file}"
+
+preproc.macros.cmd.macosx=g++
+preproc.macros.cmd.linux=g++
+preproc.macros.flags=-w -x c++ -E -CC
+recipe.preproc.macros="{compiler.path}{preproc.macros.cmd}" {compiler.cpp.flags} {preproc.macros.flags} {compiler.cpp.extra_flags} {build.extra_flags} {includes} {compiler.SDL3_cflags} {compiler.umgebung_flags} "{source_file}" -o "{preprocessed_file_path}"
+
+###################################################################################################
+#
+# UPLOAD
+#
+###################################################################################################
+
+# run sketch via script ( this prevents the sketch from being shut down by Arduino )
+# tools.sdlexecprog.exec.macosx={build.path}/sketch-exec.sh
+# tools.sdlexecprog.exec.linux={build.path}/sketch-exec.sh
+# tools.sdlexecprog.exec.windows=
+# TODO problem with dialog box quitting 
+# cannot use the upload script when also using the dialog box with e.g `Card.begin()`
+tools.sdlexecprog.upload.pattern="{build.path}/{build.project_name}.exec" {upload.options} --fontpath={runtime.platform.path}/fonts/
+tools.sdlexecprog.upload.params.verbose=
+tools.sdlexecprog.upload.params.quiet=
+
+recipe.hooks.postbuild.01.pattern=printf "\n\nexecutable binary located at: {build.path}/{build.project_name}.exec \n\n"
+# recipe.hooks.postbuild.02.pattern={build.path}/{build.project_name}.exec
+
+###################################################################################################
+#
+# CLI
+#
+###################################################################################################
+
+# sketches can also be compiled and run from CLI e.g:
+# 
+# arduino-cli compile -v -b    klangstrom:emulator:KLST_EMU:board=KLST_PANDA MY_SKETCH
+# arduino-cli upload -b        klangstrom:emulator:KLST_EMU:board=KLST_PANDA MY_SKETCH
+# arduino-cli compile -u -v -b klangstrom:emulator:KLST_EMU:board=KLST_CATERPILLAR MY_SKETCH # compile+upload

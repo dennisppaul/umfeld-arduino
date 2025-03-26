@@ -1,0 +1,3 @@
+[submodule "umgebung/cores/sdl3/umgebung"]
+	path = umgebung/cores/sdl3/umgebung
+	url = https://github.com/dennisppaul/umgebung.git

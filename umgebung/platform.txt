@@ -73,16 +73,14 @@ compiler.klst_define=-DKLST_ENV={build.flags.board}
 #     
 #     recipe.c.combine.pattern="{compiler.path}{compiler.c.elf.cmd}" {compiler.c.elf.flags} {compiler.extra_link_flags} -o "{build.path}/{build.project_name}.elf" {object_files} "{build.path}/{archive_file}"
 
-compiler.umgebung_flags=-I{runtime.platform.path}/cores/sdl3 -I{runtime.platform.path}/cores/sdl3/umgebung/include -I{runtime.platform.path}/cores/sdl3/umgebung/include/libraries -I{runtime.platform.path}/cores/sdl3/umgebung/include/libraries/ip -I{runtime.platform.path}/cores/sdl3/umgebung/include/libraries/osc -I{runtime.platform.path}/cores/sdl3/umgebung/include/shaders   -I/opt/homebrew/include/freetype2/ -DDISABLE_VIDEO
-compiler.umgebung_libs=-L/opt/homebrew/lib -lftgl -framework OpenGL -lGLEW 
+compiler.umgebung_flags=-I{runtime.platform.path}/cores/sdl3 -I{runtime.platform.path}/cores/sdl3/umgebung/include -I{runtime.platform.path}/cores/sdl3/umgebung/include/libraries -I{runtime.platform.path}/cores/sdl3/umgebung/include/libraries/ip -I{runtime.platform.path}/cores/sdl3/umgebung/include/libraries/osc -I{runtime.platform.path}/cores/sdl3/umgebung/include/shaders -DDISABLE_VIDEO
+compiler.umgebung_libs=-L/opt/homebrew/lib -L/usr/local/lib -framework OpenGL -lGLEW -lharfbuzz -lfreetype
 
-# TODO this should be collected from `sdl2-config --cflags`
-compiler.SDL3_cflags.macosx=-I/opt/homebrew/include/SDL3 -I/opt/homebrew/include/ -D_THREAD_SAFE -DGLM_ENABLE_EXPERIMENTAL -DSDL_MAIN_USE_CALLBACKS
+compiler.SDL3_cflags.macosx=-I/opt/homebrew/include/SDL3 -I/opt/homebrew/include/ -I/opt/homebrew/include/freetype2/ -I/usr/local/include/SDL3 -I/usr/local/include/ -I/usr/local/include/freetype2/ -D_THREAD_SAFE -DGLM_ENABLE_EXPERIMENTAL -DSDL_MAIN_USE_CALLBACKS
 compiler.SDL3_cflags.linux=
 compiler.SDL3_cflags.windows=
 
-# TODO this should be collectex from `sdl2-config --libs`
-compiler.SDL3_libs        = -L/opt/homebrew/lib -lSDL3 -lSDL3_ttf -lharfbuzz -lfreetype
+compiler.SDL3_libs        = -L/opt/homebrew/lib -L/usr/local/lib -lSDL3 -lSDL3_ttf
 # compiler.SDL3_libs.macosx =
 # compiler.SDL3_libs.linux  =
 # compiler.SDL3_libs.windows=

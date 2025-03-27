@@ -7,7 +7,6 @@ UMG.build.core=sdl3
 menu.upload_method=Upload method
 menu.board=Klangstrom Board
 menu.samplingrate=Sampling Rate
-menu.audioblock=Samples per Audio Block
 menu.OSC=Enable OSC
 menu.DISPLAY=Enable Display
 

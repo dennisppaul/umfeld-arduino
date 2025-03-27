@@ -7,9 +7,7 @@
 ###################################################################################################
 
 name=Umgebung
-version=0.0.4
-
-# TODO note that currently a sketch that runs with emulator NEEDS to `#include "System.h"` or else some method implementations are missing.
+version=0.0.1
 
 ###################################################################################################
 #
@@ -17,61 +15,13 @@ version=0.0.4
 #
 ###################################################################################################
 
-recipe.hooks.prebuild.01.pattern=echo "KLST_ENV: " {build.flags.board}
-recipe.hooks.prebuild.02.pattern=sh "{runtime.platform.path}/extras/check-for-tools.sh"
-recipe.hooks.prebuild.03.pattern=sh "{runtime.platform.path}/extras/find_sdl.sh" "{build.path}"
-recipe.hooks.prebuild.04.pattern=echo "+++ make sure that sketch contains `#include "System.h"` or else some method implementations are missing."
-# recipe.hooks.prebuild.01.pattern=date
-# recipe.hooks.prebuild.02.pattern=echo "+++ runtime.platform.path:" {runtime.platform.path}
-# recipe.hooks.prebuild.03.pattern=echo "+++ runtime.hardware.path:" {runtime.hardware.path}
-# recipe.hooks.prebuild.04.pattern=echo "+++ runtime.os           :" {runtime.os}
-# recipe.hooks.prebuild.05.pattern=echo "+++ name                 :" {name}
-# recipe.hooks.prebuild.06.pattern=echo "+++ _id                  :" {_id}
-# recipe.hooks.prebuild.07.pattern=echo "+++ build.source.path    :" {build.source.path}
-# recipe.hooks.prebuild.08.pattern=echo "+++ extra.time.utc       :" {extra.time.utc}
-# recipe.hooks.prebuild.09.pattern=echo "+++ build.path           :" {build.path}
-# recipe.hooks.prebuild.10.pattern=echo "+++ build.project_name   :" {build.project_name}
-# recipe.hooks.prebuild.11.pattern=echo "+++ build.arch           :" {build.arch}
+recipe.hooks.prebuild.01.pattern=echo "UMG: " {build.flags.board}
+#recipe.hooks.prebuild.02.pattern=sh "{runtime.platform.path}/extras/check-for-tools.sh"
 
 # TODO this should be configured according for each system … maybe with a script?
 compiler.path.macosx=/usr/bin/
 compiler.path.linux=/usr/bin/
 compiler.klst_define=-DKLST_ENV={build.flags.board}
-
-# umgebung 
-# TODO **hard hack** this currently only works for macOS with apple silicon and homebrew installed libs
-#
-# TODO condsider using the `@` idiom to gather and complement umgebung information from txt file:
-#
-# `find_sdl.sh`:
-#     
-#     #!/bin/bash
-#     # Detect Homebrew prefix
-#     BREW_PREFIX=$(brew --prefix 2>/dev/null || echo "/usr/local")
-#     
-#     # Check for SDL2 installation
-#     if [ -d "$BREW_PREFIX/opt/sdl2" ]; then
-#         SDL3_INCLUDE_PATH="$BREW_PREFIX/include/SDL2"
-#         SDL3_LIB_PATH="$BREW_PREFIX/lib"
-#     else
-#         echo "Error: SDL2 not found in Homebrew installation!" >&2
-#         exit 1
-#     fi
-#     
-#     # Output paths to a file
-#     echo "-I$SDL3_INCLUDE_PATH" > "$1/sdl_include.txt"
-#     echo "-L$SDL3_LIB_PATH -lSDL2" > "$1/sdl_libs.txt"
-#
-# update `platform.txt`
-#
-#     recipe.hooks.prebuild.1.pattern=sh "{runtime.platform.path}/extras/find_sdl.sh" "{build.path}"
-#     
-#     compiler.extra_include=@{build.path}/sdl_include.txt
-#     compiler.extra_link_flags=@{build.path}/sdl_libs.txt
-#     
-#     recipe.cpp.o.pattern="{compiler.path}{compiler.cpp.cmd}" {compiler.cpp.flags} {compiler.extra_include} {includes} -o "{object_file}" "{source_file}"
-#     
-#     recipe.c.combine.pattern="{compiler.path}{compiler.c.elf.cmd}" {compiler.c.elf.flags} {compiler.extra_link_flags} -o "{build.path}/{build.project_name}.elf" {object_files} "{build.path}/{archive_file}"
 
 compiler.umgebung_flags=-I{runtime.platform.path}/cores/sdl3 -I{runtime.platform.path}/cores/sdl3/umgebung/include -I{runtime.platform.path}/cores/sdl3/umgebung/include/libraries -I{runtime.platform.path}/cores/sdl3/umgebung/include/libraries/ip -I{runtime.platform.path}/cores/sdl3/umgebung/include/libraries/osc -I{runtime.platform.path}/cores/sdl3/umgebung/include/shaders -DDISABLE_VIDEO
 compiler.umgebung_libs=-L/opt/homebrew/lib -L/usr/local/lib -framework OpenGL -lGLEW -lharfbuzz -lfreetype
@@ -80,7 +30,8 @@ compiler.SDL3_cflags.macosx=-I/opt/homebrew/include/SDL3 -I/opt/homebrew/include
 compiler.SDL3_cflags.linux=
 compiler.SDL3_cflags.windows=
 
-compiler.SDL3_libs        = -L/opt/homebrew/lib -L/usr/local/lib -lSDL3 -lSDL3_ttf
+compiler.SDL3_libs = -L/opt/homebrew/lib -L/usr/local/lib -lSDL3
+#-lSDL3_ttf
 # compiler.SDL3_libs.macosx =
 # compiler.SDL3_libs.linux  =
 # compiler.SDL3_libs.windows=

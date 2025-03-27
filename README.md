@@ -52,11 +52,12 @@ the *Arduino* folder should look something like this:
 
 ```
 .
-└── hardware
-    └── umgebung-arduino ( <<< cloned repository )
-        ├── LICENSE
-        ├── README.md
-        └── umgebung
+├── hardware
+│   └── umgebung-arduino ( <<< cloned repository )
+│       ├── LICENSE
+│       ├── README.md
+│       └── umgebung
+└── libraries
 ```
 
 if you have the Ardunio Command Line tool installed you can verifiy that umgebung is properly installed with:

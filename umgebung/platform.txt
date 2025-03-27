@@ -15,40 +15,38 @@ version=0.0.1
 #
 ###################################################################################################
 
-recipe.hooks.prebuild.01.pattern=echo "UMG: " {build.flags.board}
+recipe.hooks.prebuild.01.pattern=echo "Umgebung: " {build.flags.board}
 #recipe.hooks.prebuild.02.pattern=sh "{runtime.platform.path}/extras/check-for-tools.sh"
 
 # TODO this should be configured according for each system … maybe with a script?
 compiler.path.macosx=/usr/bin/
 compiler.path.linux=/usr/bin/
-compiler.klst_define=-DKLST_ENV={build.flags.board}
+compiler.umg_define=-DUMG_ENV={build.flags.board}
 
 compiler.umgebung_flags=-I{runtime.platform.path}/cores/sdl3 -I{runtime.platform.path}/cores/sdl3/umgebung/include -I{runtime.platform.path}/cores/sdl3/umgebung/include/libraries -I{runtime.platform.path}/cores/sdl3/umgebung/include/libraries/ip -I{runtime.platform.path}/cores/sdl3/umgebung/include/libraries/osc -I{runtime.platform.path}/cores/sdl3/umgebung/include/shaders -DDISABLE_VIDEO
 compiler.umgebung_libs=-L/opt/homebrew/lib -L/usr/local/lib -framework OpenGL -lGLEW -lharfbuzz -lfreetype
 
-compiler.SDL3_cflags.macosx=-I/opt/homebrew/include/SDL3 -I/opt/homebrew/include/ -I/opt/homebrew/include/freetype2/ -I/usr/local/include/SDL3 -I/usr/local/include/ -I/usr/local/include/freetype2/ -D_THREAD_SAFE -DGLM_ENABLE_EXPERIMENTAL -DSDL_MAIN_USE_CALLBACKS
-compiler.SDL3_cflags.linux=
-compiler.SDL3_cflags.windows=
+compiler.SDL3_cflags            =-I/opt/homebrew/include/SDL3 -I/opt/homebrew/include/ -I/opt/homebrew/include/freetype2/ -I/usr/local/include/SDL3 -I/usr/local/include/ -I/usr/local/include/freetype2/ -D_THREAD_SAFE -DGLM_ENABLE_EXPERIMENTAL -DSDL_MAIN_USE_CALLBACKS
+# compiler.SDL3_cflags.macosx   =
+# compiler.SDL3_cflags.linux    =
+# compiler.SDL3_cflags.windows  =
 
-compiler.SDL3_libs = -L/opt/homebrew/lib -L/usr/local/lib -lSDL3
-#-lSDL3_ttf
-# compiler.SDL3_libs.macosx =
-# compiler.SDL3_libs.linux  =
-# compiler.SDL3_libs.windows=
+compiler.SDL3_libs              = -L/opt/homebrew/lib -L/usr/local/lib -lSDL3
+# compiler.SDL3_libs.macosx     =
+# compiler.SDL3_libs.linux      =
+# compiler.SDL3_libs.windows    =
 
 compiler.c.cmd=gcc
 compiler.c.std=c17
-compiler.c.flags.macosx= -c -Wall -std={compiler.c.std} {compiler.klst_define}
-# compiler.c.flags.macosx= -c -g -MMD -Wall -flto -std={compiler.c.std} {compiler.klst_define}
-compiler.c.flags.linux= -c -g -MMD -Wall -flto -std={compiler.c.std} {compiler.klst_define}
+compiler.c.flags.macosx= -c -Wall -std={compiler.c.std} {compiler.umg_define}
+compiler.c.flags.linux= -c -g -MMD -Wall -flto -std={compiler.c.std} {compiler.umg_define}
 compiler.c.flags.windows=
 recipe.c.o.pattern="{compiler.path}{compiler.c.cmd}" {compiler.c.flags} {includes} {compiler.SDL3_cflags} {compiler.umgebung_flags} "{source_file}" -o "{object_file}"
 
 compiler.cpp.cmd=g++
 compiler.cpp.std=c++17
-compiler.cpp.flags.macosx= -c -Wall -std={compiler.cpp.std} -pthread {compiler.klst_define}
-# compiler.cpp.flags.macosx= -c -g -MMD -Wall -flto -std={compiler.cpp.std} -pthread {compiler.klst_define}
-compiler.cpp.flags.linux=  -c -g -MMD -Wall -flto -std={compiler.cpp.std} -Wno-long-long -pthread {compiler.klst_define}
+compiler.cpp.flags.macosx= -c -Wall -std={compiler.cpp.std} -pthread {compiler.umg_define}
+compiler.cpp.flags.linux=  -c -g -MMD -Wall -flto -std={compiler.cpp.std} -Wno-long-long -pthread {compiler.umg_define}
 compiler.cpp.flags.windows=
 recipe.cpp.o.pattern="{compiler.path}{compiler.cpp.cmd}" {compiler.cpp.flags} {includes} {compiler.SDL3_cflags} {compiler.umgebung_flags} "{source_file}" -o "{object_file}"
 
@@ -70,10 +68,6 @@ recipe.ar.pattern="{compiler.path}{compiler.ar.cmd}" {compiler.ar.flags} "{archi
 
 compiler.c.linker.cmd=g++
 compiler.ldflags=-v
-# recipe.c.combine.pattern="{compiler.path}{compiler.c.linker.cmd}" "{build.path}/{archive_file}" {compiler.SDL3_libs} {compiler.umgebung_libs} -o "{build.path}/{build.project_name}.exec" {object_files} {compiler.ldflags} "{archive_file_path}" "-L{build.path}" -lm
-# recipe.c.combine.pattern="{compiler.path}{compiler.c.linker.cmd}" {compiler.ldflags} -o "{build.path}/{build.project_name}.exec"  {object_files} {compiler.SDL3_libs} {compiler.umgebung_libs}  "{archive_file_path}" "-L{build.path}" -lm
-# recipe.c.combine.pattern="{compiler.path}{compiler.c.linker.cmd}" {compiler.ldflags} -o "{build.path}/{build.project_name}.exec" {object_files} {archive_file_path} {compiler.umgebung_libs} {compiler.SDL3_libs} -lm
-# recipe.c.combine.pattern="{compiler.path}{compiler.c.linker.cmd}" {compiler.ldflags} -o "{build.path}/{build.project_name}.exec" {object_files} -Wl,--whole-archive {archive_file_path} -Wl,--no-whole-archive {compiler.umgebung_libs} {compiler.SDL3_libs} -lm
 recipe.c.combine.pattern="{compiler.path}{compiler.c.linker.cmd}" {compiler.ldflags} -o "{build.path}/{build.project_name}.exec" {object_files} {archive_file_path} {compiler.umgebung_libs} {compiler.SDL3_libs} -lm
 
 # copy run script to `/tmp/` ( or similar )
@@ -129,6 +123,4 @@ recipe.hooks.postbuild.01.pattern=printf "\n\nexecutable binary located at: {bui
 
 # sketches can also be compiled and run from CLI e.g:
 # 
-# arduino-cli compile -v -b    klangstrom:emulator:KLST_EMU:board=KLST_PANDA MY_SKETCH
-# arduino-cli upload -b        klangstrom:emulator:KLST_EMU:board=KLST_PANDA MY_SKETCH
-# arduino-cli compile -u -v -b klangstrom:emulator:KLST_EMU:board=KLST_CATERPILLAR MY_SKETCH # compile+upload
+# arduino-cli compile -v -u -b umgebung-arduino:umgebung:UMG ./umgebung/examples/test

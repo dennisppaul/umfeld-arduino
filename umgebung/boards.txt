@@ -6,7 +6,6 @@ UMG.build.core=sdl3
 
 menu.upload_method=Upload method
 menu.board=Klangstrom Board
-menu.samplingrate=Sampling Rate
 menu.OSC=Enable OSC
 menu.DISPLAY=Enable Display
 
@@ -16,47 +15,15 @@ UMG.menu.upload_method.sdlexec.upload.options=-g
 UMG.menu.upload_method.sdlexec.upload.tool=sdlexecprog
 UMG.menu.upload_method.sdlexec.upload.options=
 
-UMG.menu.samplingrate.xx48000xx=48000Hz
-UMG.menu.samplingrate.xx48000xx.build.flags.samplingrate=48000
-UMG.menu.samplingrate.xx44100xx=44100Hz
-UMG.menu.samplingrate.xx44100xx.build.flags.samplingrate=44100
-UMG.menu.samplingrate.xx22050xx=22050Hz
-UMG.menu.samplingrate.xx22050xx.build.flags.samplingrate=22050
-
-UMG.menu.audioblock.2048=2048 samples
-UMG.menu.audioblock.2048.build.flags.audioblock=2048
-UMG.menu.audioblock.1024=1024 samples
-UMG.menu.audioblock.1024.build.flags.audioblock=1024
-UMG.menu.audioblock.512=512 samples
-UMG.menu.audioblock.512.build.flags.audioblock=512
-UMG.menu.audioblock.256=256 samples
-UMG.menu.audioblock.256.build.flags.audioblock=256
-UMG.menu.audioblock.128=128 samples
-UMG.menu.audioblock.128.build.flags.audioblock=128
-UMG.menu.audioblock.64=64 samples
-UMG.menu.audioblock.64.build.flags.audioblock=64
-UMG.menu.audioblock.32=32 samples
-UMG.menu.audioblock.32.build.flags.audioblock=32
-
-UMG.menu.board.KLST_CATERPILLAR=KLST_CATERPILLAR
-UMG.menu.board.KLST_CATERPILLAR.build.flags.board=0x47
-UMG.menu.board.KLST_PANDA=KLST_PANDA
-UMG.menu.board.KLST_PANDA.build.flags.board=0x46
-UMG.menu.board.KLST_SHEEP=KLST_SHEEP ( 16 LEDs, 2 Encoders, Display, ... )
-UMG.menu.board.KLST_SHEEP.build.flags.board=0x45
-UMG.menu.board.KLST_TINY=KLST_TINY ( 3 LEDs, 3 Encoders, ... )
-UMG.menu.board.KLST_TINY.build.flags.board=0x44
-UMG.menu.board.KLST_CORE=KLST_CORE ( 3 LEDs, 3 Encoders, ... )
-UMG.menu.board.KLST_CORE.build.flags.board=0x43
 UMG.menu.board.GENERIC=GENERIC
-UMG.menu.board.GENERIC.build.flags.board=0x42
+UMG.menu.board.GENERIC.build.flags.board=0x00
 
 UMG.menu.OSC.disable=Disable OSC
 UMG.menu.OSC.disable.build.flags.OSC=
 UMG.menu.OSC.enable=Enable OSC
-UMG.menu.OSC.enable.build.flags.OSC=-DKLST_SDL_USE_OSC
+UMG.menu.OSC.enable.build.flags.OSC=-DUMG_SDL_USE_OSC
 
 UMG.menu.DISPLAY.enable=Enable Display
-UMG.menu.DISPLAY.enable.build.flags.DISPLAY=-DKLST_SDL_HAS_DISPLAY
+UMG.menu.DISPLAY.enable.build.flags.DISPLAY=-DUMG_SDL_HAS_DISPLAY
 UMG.menu.DISPLAY.disable=Disable Display
 UMG.menu.DISPLAY.disable.build.flags.DISPLAY=

@@ -19,28 +19,27 @@ recipe.hooks.prebuild.01.pattern=echo "Umgebung: " {build.flags.board}
 #recipe.hooks.prebuild.02.pattern=sh "{runtime.platform.path}/extras/check-for-tools.sh"
 
 # TODO this should be configured according for each system … maybe with a script?
-compiler.path.macosx=/usr/bin/
-compiler.path.linux=/usr/bin/
-compiler.umg_define=-DUMG_ENV={build.flags.board}
+compiler.path.macosx            = /usr/bin/
+compiler.path.linux             = /usr/bin/
+compiler.umg_define             = -DUMG_ENV={build.flags.board}
 
 compiler.umgebung_flags=-I{runtime.platform.path}/cores/sdl3 -I{runtime.platform.path}/cores/sdl3/umgebung/include -I{runtime.platform.path}/cores/sdl3/umgebung/include/libraries -I{runtime.platform.path}/cores/sdl3/umgebung/include/libraries/ip -I{runtime.platform.path}/cores/sdl3/umgebung/include/libraries/osc -I{runtime.platform.path}/cores/sdl3/umgebung/include/shaders -DDISABLE_VIDEO
-compiler.umgebung_libs=-L/opt/homebrew/lib -L/usr/local/lib -framework OpenGL -lGLEW -lharfbuzz -lfreetype
+compiler.umgebung_libs.macosx   = -L/opt/homebrew/lib -framework OpenGL -lGLEW -lharfbuzz -lfreetype
+compiler.umgebung_libs.linux    = -L/usr/lib -L/usr/local/lib -framework OpenGL -lGLEW -lharfbuzz -lfreetype
 
-compiler.SDL3_cflags            =-I/opt/homebrew/include/SDL3 -I/opt/homebrew/include/ -I/opt/homebrew/include/freetype2/ -I/usr/local/include/SDL3 -I/usr/local/include/ -I/usr/local/include/freetype2/ -D_THREAD_SAFE -DGLM_ENABLE_EXPERIMENTAL -DSDL_MAIN_USE_CALLBACKS
-# compiler.SDL3_cflags.macosx   =
-# compiler.SDL3_cflags.linux    =
-# compiler.SDL3_cflags.windows  =
+compiler.SDL3_cflags.macosx     = -I/opt/homebrew/include/ -I/opt/homebrew/include/SDL3 -I/opt/homebrew/include/freetype2/ -D_THREAD_SAFE -DGLM_ENABLE_EXPERIMENTAL -DSDL_MAIN_USE_CALLBACKS
+compiler.SDL3_cflags.linux      = -I/usr/include/ -I/usr/include/SDL3 -I/usr/include/freetype2/ -D_THREAD_SAFE -DGLM_ENABLE_EXPERIMENTAL -DSDL_MAIN_USE_CALLBACKS
+compiler.SDL3_cflags.windows    =
 
-compiler.SDL3_libs              = -L/opt/homebrew/lib -L/usr/local/lib -lSDL3
-# compiler.SDL3_libs.macosx     =
-# compiler.SDL3_libs.linux      =
-# compiler.SDL3_libs.windows    =
+compiler.SDL3_libs.macosx       = -L/opt/homebrew/lib -lSDL3
+compiler.SDL3_libs.linux        = -L/usr/lib -lSDL3
+compiler.SDL3_libs.windows      =
 
-compiler.c.cmd=gcc
-compiler.c.std=c17
-compiler.c.flags.macosx= -c -Wall -std={compiler.c.std} {compiler.umg_define}
-compiler.c.flags.linux= -c -g -MMD -Wall -flto -std={compiler.c.std} {compiler.umg_define}
-compiler.c.flags.windows=
+compiler.c.cmd                  = gcc
+compiler.c.std                  = c17
+compiler.c.flags.macosx         = -c -Wall -std={compiler.c.std} {compiler.umg_define}
+compiler.c.flags.linux          = -c -g -MMD -Wall -flto -std={compiler.c.std} {compiler.umg_define}
+compiler.c.flags.windows        =
 recipe.c.o.pattern="{compiler.path}{compiler.c.cmd}" {compiler.c.flags} {includes} {compiler.SDL3_cflags} {compiler.umgebung_flags} "{source_file}" -o "{object_file}"
 
 compiler.cpp.cmd=g++

@@ -1,3 +1,3 @@
 #!/bin/bash
 
-arduino-cli compile -u -b umgebung:sdl3:UMG $1
+arduino-cli compile -u -b umgebung-arduino:umgebung:UMG $1

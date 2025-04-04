@@ -25,7 +25,7 @@ Make sure [Umgebung](https://github.com/dennisppaul/umgebung) is up and running.
 navigate to *Arduino* folder:
 
 ```sh
-cd $HOME/Documents/Arduino
+cd $HOME/Documents/Arduino/ # on macOS, on Ubuntu Linux it might be `/home/dennisppaul/Arduino/`
 ```
 
 check if `hardware` folder exists. the *Arduino* folder should look something like this:
@@ -63,25 +63,33 @@ the *Arduino* folder should look something like this:
 if you have the Ardunio Command Line tool installed you can verifiy that umgebung is properly installed with:
 
 ```sh
-arduino-cli board listall | grep umgebung
+arduino-cli board listall
 ```
 
-this should produce an output similar to this:
+this should produce an output including something similar to this:
 
 ```sh
-Umgebung                                           umgebung-arduino:umgebung:UMG
+Umgebung   umgebung-arduino:umgebung:UMG
 ```
 
-now either restart Arduino IDE to use *Umgebung* or compile and run sketches with `arduino-cli` with e.g:
+now either restart Arduino IDE to use *Umgebung* or compile and run sketches with `arduino-cli` ( see *Installing Arduino CLI* below ) with e.g:
 
 ```sh
 arduino-cli compile -u -b umgebung-arduino:umgebung:UMG ./umgebung-arduino/umgebung/examples/test
 ```
 
-### testing 
+### Installing Arduino CLI
 
-run example
+either install the Arduino Command Line Interface `arduino-cli` with a package manage e.g with `snap` with `sudo snap install arduino-cli` ( failed on Ubuntu 22.04.3 with UTM ) or follow the steps below:
 
 ```sh
-arduino-cli compile -u -b umgebung:umgebung-arduino:UMG /Users/dennisppaul/Documents/dev/umgebung/git/umgebung-arduino/umgebung/examples/test
-``
+cd $HOME
+curl -fsSL https://raw.githubusercontent.com/arduino/arduino-cli/master/install.sh | sh
+export PATH="$HOME/bin:$PATH" # temporary add  and should be added to startup file
+```
+
+now run the following command to test if everthing works:
+
+```sh
+arduino-cli --version 
+```

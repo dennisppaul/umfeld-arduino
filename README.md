@@ -1,12 +1,12 @@
-# Umgebung-Arduino
+# Umfeld-Arduino
 
-Board definition to run [Umgebung](https://github.com/dennisppaul/umgebung) as a board from Arduino IDE or CLI.
+Board definition to run [Umfeld](https://github.com/dennisppaul/umfeld) as a board from Arduino IDE or CLI.
 
-*Umgebung* is a lightweight C++ environment for small audio and graphics based applications. It is inspired by Processing.org and the like.
+*Umfeld* is a lightweight C++ environment for small audio and graphics based applications. It is inspired by Processing.org and the like.
 
 ==THIS PROJECT IS VERY EXPERIMENTAL==
 
-please use the [issue tracking system](https://github.com/dennisppaul/umgebung-arduino/issues) to file feature requests and report issues.
+please use the [issue tracking system](https://github.com/dennisppaul/umfeld-arduino/issues) to file feature requests and report issues.
 
 currently this only works on macOS and has only been tested on:
 
@@ -20,7 +20,7 @@ ProductVersion:     15.3.2
 
 ### macOS
 
-Make sure [Umgebung](https://github.com/dennisppaul/umgebung) is up and running.
+Make sure [Umfeld](https://github.com/dennisppaul/umfeld) is up and running.
 
 navigate to *Arduino* folder:
 
@@ -45,7 +45,7 @@ enter the `hardware` folder and check out the repository ( with submodules ):
 
 ```sh
 cd hardware
-git clone --recurse-submodules https://github.com/dennisppaul/umgebung-arduino
+git clone --recurse-submodules https://github.com/dennisppaul/umfeld-arduino
 ```
 
 the *Arduino* folder should look something like this:
@@ -53,14 +53,14 @@ the *Arduino* folder should look something like this:
 ```
 .
 ├── hardware
-│   └── umgebung-arduino ( <<< cloned repository )
+│   └── umfeld-arduino ( <<< cloned repository )
 │       ├── LICENSE
 │       ├── README.md
-│       └── umgebung
+│       └── umfeld
 └── libraries
 ```
 
-if you have the Ardunio Command Line tool installed you can verifiy that umgebung is properly installed with:
+if you have the Ardunio Command Line tool installed you can verifiy that umfeld is properly installed with:
 
 ```sh
 arduino-cli board listall
@@ -69,13 +69,13 @@ arduino-cli board listall
 this should produce an output including something similar to this:
 
 ```sh
-Umgebung   umgebung-arduino:umgebung:UMG
+Umfeld   umfeld-arduino:umfeld:UMG
 ```
 
-now either restart Arduino IDE to use *Umgebung* or compile and run sketches with `arduino-cli` ( see *Installing Arduino CLI* below ) with e.g:
+now either restart Arduino IDE to use *Umfeld* or compile and run sketches with `arduino-cli` ( see *Installing Arduino CLI* below ) with e.g:
 
 ```sh
-arduino-cli compile -u -b umgebung-arduino:umgebung:UMG ./umgebung-arduino/umgebung/examples/test
+arduino-cli compile -u -b umfeld-arduino:umfeld:UMG ./umfeld-arduino/umfeld/examples/test
 ```
 
 ### Installing Arduino CLI

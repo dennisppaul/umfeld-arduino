@@ -27,13 +27,18 @@ compiler.umfeld_flags=-I{runtime.platform.path}/cores/sdl3 -I{runtime.platform.p
 compiler.umfeld_libs.macosx   = -L/opt/homebrew/lib -framework OpenGL -lGLEW -lharfbuzz -lfreetype -lportaudio
 compiler.umfeld_libs.linux    = -L/usr/lib -L/usr/local/lib -lGL -lGLEW -lharfbuzz -lfreetype -lportaudio
 
-compiler.SDL3_cflags.macosx     = -I/opt/homebrew/include/ -I/opt/homebrew/include/SDL3 -I/opt/homebrew/include/freetype2/ -D_THREAD_SAFE -DGLM_ENABLE_EXPERIMENTAL -DSDL_MAIN_USE_CALLBACKS
-compiler.SDL3_cflags.linux      = -I/usr/include/ -I/usr/include/rtmidi/ -I/usr/include/SDL3 -I/usr/include/freetype2/ -D_THREAD_SAFE -DGLM_ENABLE_EXPERIMENTAL -DSDL_MAIN_USE_CALLBACKS
-compiler.SDL3_cflags.windows    =
+# TODO improve
+# 1. add windows paths
+# 2. introduce `umgebung_libs_includes`
+# 3. separate general path e.g `/opt/homebrew/include` from actual library e.g `rtmidi`
+
+compiler.SDL3_cflags.macosx     = -I/opt/homebrew/include/ -I/opt/homebrew/include/SDL3 -I/opt/homebrew/include/rtmidi/ -I/opt/homebrew/include/freetype2/ -D_THREAD_SAFE -DGLM_ENABLE_EXPERIMENTAL -DSDL_MAIN_USE_CALLBACKS
+compiler.SDL3_cflags.linux      = -I/usr/include/ -I/usr/include/SDL3 -I/usr/include/rtmidi/ -I/usr/include/freetype2/ -D_THREAD_SAFE -DGLM_ENABLE_EXPERIMENTAL -DSDL_MAIN_USE_CALLBACKS
+compiler.SDL3_cflags.windows    = # TODO add windows paths
 
 compiler.SDL3_libs.macosx       = -L/opt/homebrew/lib -lSDL3
 compiler.SDL3_libs.linux        = -L/usr/lib -lSDL3
-compiler.SDL3_libs.windows      =
+compiler.SDL3_libs.windows      = # TODO add windows paths
 
 compiler.c.cmd                  = gcc
 compiler.c.std                  = c17

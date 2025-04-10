@@ -24,12 +24,13 @@ compiler.path.linux             = /usr/bin/
 compiler.umf_define             = -DUMF_ENV={build.flags.board}
 
 compiler.umfeld_flags=-I{runtime.platform.path}/cores/sdl3 -I{runtime.platform.path}/cores/sdl3/umfeld/include -I{runtime.platform.path}/cores/sdl3/umfeld/include/libraries -I{runtime.platform.path}/cores/sdl3/umfeld/include/libraries/dr_libs -I{runtime.platform.path}/cores/sdl3/umfeld/include/libraries/ip -I{runtime.platform.path}/cores/sdl3/umfeld/include/libraries/osc -I{runtime.platform.path}/cores/sdl3/umfeld/include/shaders -DDISABLE_VIDEO -DENABLE_PORTAUDIO
-compiler.umfeld_libs.macosx   = -L/opt/homebrew/lib -framework OpenGL -lGLEW -lharfbuzz -lfreetype -lportaudio
-compiler.umfeld_libs.linux    = -L/usr/lib -L/usr/local/lib -lGL -lGLEW -lharfbuzz -lfreetype -lportaudio
+compiler.umfeld_libs.macosx   = -L/opt/homebrew/lib -framework OpenGL -lGLEW -lharfbuzz -lfreetype -lportaudio -lcurl
+compiler.umfeld_libs.linux    = -L/usr/lib -L/usr/local/lib -lGL -lGLEW -lharfbuzz -lfreetype -lportaudio -lcurl
+# TODO remove reference to curl … it is not setup properly and should be replaced by leightweight HTTP library
 
 # TODO improve
 # 1. add windows paths
-# 2. introduce `umgebung_libs_includes`
+# 2. introduce `umfeld_libs_includes`
 # 3. separate general path e.g `/opt/homebrew/include` from actual library e.g `rtmidi`
 
 compiler.SDL3_cflags.macosx     = -I/opt/homebrew/include/ -I/opt/homebrew/include/SDL3 -I/opt/homebrew/include/rtmidi/ -I/opt/homebrew/include/freetype2/ -D_THREAD_SAFE -DGLM_ENABLE_EXPERIMENTAL -DSDL_MAIN_USE_CALLBACKS

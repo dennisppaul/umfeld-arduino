@@ -1,3 +1,3 @@
 #!/bin/bash
 
-arduino-cli compile -u -b umfeld-arduino:umfeld:UMG $1
+arduino-cli compile -u -b umfeld-arduino:umfeld:UMFELD $1

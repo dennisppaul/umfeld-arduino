@@ -69,13 +69,13 @@ arduino-cli board listall
 this should produce an output including something similar to this:
 
 ```sh
-Umfeld   umfeld-arduino:umfeld:UMG
+Umfeld   umfeld-arduino:umfeld:UMFELD
 ```
 
 now either restart Arduino IDE to use *Umfeld* or compile and run sketches with `arduino-cli` ( see *Installing Arduino CLI* below ) with e.g:
 
 ```sh
-arduino-cli compile -u -b umfeld-arduino:umfeld:UMG ./umfeld-arduino/umfeld/examples/test
+arduino-cli compile -u -b umfeld-arduino:umfeld:UMFELD ./umfeld-arduino/umfeld/examples/test
 ```
 
 ### Installing Arduino CLI

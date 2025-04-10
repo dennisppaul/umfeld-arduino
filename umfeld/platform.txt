@@ -127,4 +127,4 @@ recipe.hooks.postbuild.01.pattern=printf "\n\nexecutable binary located at: {bui
 
 # sketches can also be compiled and run from CLI e.g:
 # 
-# arduino-cli compile -v -u -b umfeld-arduino:umfeld:UMG ./umfeld/examples/test
+# arduino-cli compile -v -u -b umfeld-arduino:umfeld:UMFELD ./umfeld/examples/test

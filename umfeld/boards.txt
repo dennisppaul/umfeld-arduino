@@ -1,29 +1,29 @@
-UMG.name=Umfeld
-UMG.upload.tool=sdlexecprog
-UMG.upload.wait_for_upload_port=false
-UMG.build.board=UMG
-UMG.build.core=sdl3
+UMFELD.name=Umfeld
+UMFELD.upload.tool=sdlexecprog
+UMFELD.upload.wait_for_upload_port=false
+UMFELD.build.board=UMFELD
+UMFELD.build.core=sdl3
 
 menu.upload_method=Upload method
 menu.board=Klangstrom Board
 menu.OSC=Enable OSC
 menu.DISPLAY=Enable Display
 
-UMG.menu.upload_method.sdlexec=Execute Application
-UMG.menu.upload_method.sdlexec.upload.protocol=1
-UMG.menu.upload_method.sdlexec.upload.options=-g
-UMG.menu.upload_method.sdlexec.upload.tool=sdlexecprog
-UMG.menu.upload_method.sdlexec.upload.options=
+UMFELD.menu.upload_method.sdlexec=Execute Application
+UMFELD.menu.upload_method.sdlexec.upload.protocol=1
+UMFELD.menu.upload_method.sdlexec.upload.options=-g
+UMFELD.menu.upload_method.sdlexec.upload.tool=sdlexecprog
+UMFELD.menu.upload_method.sdlexec.upload.options=
 
-UMG.menu.board.GENERIC=GENERIC
-UMG.menu.board.GENERIC.build.flags.board=0x00
+UMFELD.menu.board.GENERIC=GENERIC
+UMFELD.menu.board.GENERIC.build.flags.board=0x00
 
-UMG.menu.OSC.disable=Disable OSC
-UMG.menu.OSC.disable.build.flags.OSC=
-UMG.menu.OSC.enable=Enable OSC
-UMG.menu.OSC.enable.build.flags.OSC=-DUMF_SDL_USE_OSC
+UMFELD.menu.OSC.disable=Disable OSC
+UMFELD.menu.OSC.disable.build.flags.OSC=
+UMFELD.menu.OSC.enable=Enable OSC
+UMFELD.menu.OSC.enable.build.flags.OSC=-DUMF_SDL_USE_OSC
 
-UMG.menu.DISPLAY.enable=Enable Display
-UMG.menu.DISPLAY.enable.build.flags.DISPLAY=-DUMF_SDL_HAS_DISPLAY
-UMG.menu.DISPLAY.disable=Disable Display
-UMG.menu.DISPLAY.disable.build.flags.DISPLAY=
+UMFELD.menu.DISPLAY.enable=Enable Display
+UMFELD.menu.DISPLAY.enable.build.flags.DISPLAY=-DUMF_SDL_HAS_DISPLAY
+UMFELD.menu.DISPLAY.disable=Disable Display
+UMFELD.menu.DISPLAY.disable.build.flags.DISPLAY=

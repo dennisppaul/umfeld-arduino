@@ -25,7 +25,7 @@
 
 
 namespace umfeld {
-void                     enable_gamepads();
+    void                      enable_gamepads();
     void                      gamepad_handle_events_in_loop(bool events_in_loop);
     void                      gamepad_motion_event_cooldown(int milliseconds);
     std::vector<SDL_Gamepad*> gamepad_connected(bool print = true);

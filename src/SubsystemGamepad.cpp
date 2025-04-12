@@ -23,6 +23,7 @@
 #include "UmfeldCallbacks.h"
 #include "Gamepad.h"
 
+// TODO add more features like `SDL_GetGamepadProperties`, `SDL_RumbleGamepad`, `SDL_SetGamepadLED`, etc.
 
 namespace umfeld {
 

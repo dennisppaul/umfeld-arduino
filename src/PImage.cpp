@@ -45,14 +45,19 @@ PImage::PImage(const int width, const int height, const int format) : width(stat
     PImage::init(pixels, width, height, format, false);
 }
 
-PImage::PImage(const std::string& filename) : width(0),
+PImage::PImage(const std::string& filepath) : width(0),
                                               height(0),
                                               format(0),
                                               pixels(nullptr) {
+    if (!exists(filepath)) {
+        error("PImage / file not found: '", filepath, "'");
+        return;
+    }
+
     int            _width    = 0;
     int            _height   = 0;
     int            _channels = 0;
-    unsigned char* data      = stbi_load(filename.c_str(), &_width, &_height, &_channels, 0);
+    unsigned char* data      = stbi_load(filepath.c_str(), &_width, &_height, &_channels, 0);
     if (data) {
         if (_channels != 4 && _channels != 3) {
             std::cerr << "Unsupported image format, defaulting to RGBA forcing 4 color channels." << std::endl;
@@ -74,16 +79,16 @@ PImage::PImage(const std::string& filename) : width(0),
         }
         PImage::init(pixels, _width, _height, _channels, true);
     } else {
-        std::cerr << "Failed to load image: " << filename << std::endl;
+        std::cerr << "Failed to load image: " << filepath << std::endl;
     }
     stbi_image_free(data);
 }
 
 
-void PImage::init(uint32_t* pixels,
-                  const int width,
-                  const int height,
-                  const int format,
+void PImage::init(uint32_t*  pixels,
+                  const int  width,
+                  const int  height,
+                  const int  format,
                   const bool generate_mipmap) {
     if (pixels == nullptr) {
         std::cerr << "unitialized pixel buffer" << std::endl;

@@ -63,14 +63,19 @@ namespace umfeld {
         const std::string character_atlas_default = " ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()[]{}-_=+;:'\",<.>/?`~";
 
     public:
-        explicit PFont(const std::string& font_filepath,
+        explicit PFont(const std::string& filepath,
                        const int          font_size,
                        const float        pixelDensity = 1) : font_size(font_size) {
+            if (!exists(filepath)) {
+                error("PFont / file not found: '", filepath, "'");
+                return;
+            }
+
             const std::string character_atlas = character_atlas_default;
             (void) pixelDensity; // TODO implement pixel density
 
             /* init freetype and font struct */
-            const char* filepath_c = font_filepath.c_str();
+            const char* filepath_c = filepath.c_str();
             FT_Init_FreeType(&freetype);
             font         = new FontData();
             font->buffer = hb_buffer_create();

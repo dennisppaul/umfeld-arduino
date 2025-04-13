@@ -634,7 +634,6 @@ PImage* PGraphics::loadImage(const std::string& file) {
     return nullptr;
 }
 
-
 PFont* PGraphics::loadFont(const std::string& file, const float size) {
     const std::string abolsute_path = sketchPath() + file;
     if (exists(abolsute_path)) {

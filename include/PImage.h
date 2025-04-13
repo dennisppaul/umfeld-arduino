@@ -30,7 +30,7 @@ namespace umfeld {
     class PGraphics;
     class PImage {
     public:
-        explicit PImage(const std::string& filename);
+        explicit PImage(const std::string& filepath);
         PImage(int width, int height, int format);
         PImage();
         virtual ~PImage() = default;

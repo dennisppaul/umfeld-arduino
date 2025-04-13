@@ -625,14 +625,23 @@ void PGraphics::circle(const float x, const float y, const float diameter) {
     ellipse(x, y, diameter, diameter);
 }
 
-PImage* PGraphics::loadImage(const std::string& filename) {
-    auto* img = new PImage(filename);
-    return img;
+PImage* PGraphics::loadImage(const std::string& file) {
+    const std::string abolsute_path = sketchPath() + file;
+    if (exists(abolsute_path)) {
+        return new PImage(abolsute_path);
+    }
+    error("loadImage() failed! image file not found: '", file, "'. the 'sketchPath()' is currently set to '", sketchPath(), "'. looking for image file at: '", abolsute_path, "'");
+    return nullptr;
 }
 
+
 PFont* PGraphics::loadFont(const std::string& file, const float size) {
-    auto* font = new PFont(file, size); // TODO what about pixel_density … see FTGL implementation
-    return font;
+    const std::string abolsute_path = sketchPath() + file;
+    if (exists(abolsute_path)) {
+        return new PFont(abolsute_path, size);
+    }
+    error("loadFont() failed! font file not found: '", file, "'. the 'sketchPath()' is currently set to '", sketchPath(), "'. looking for font file at: '", abolsute_path, "'");
+    return nullptr;
 }
 
 void PGraphics::textFont(PFont* font) {
@@ -817,7 +826,7 @@ void PGraphics::resize_ellipse_points_LUT() {
     ellipse_points_LUT.clear();
     ellipse_points_LUT.resize(ellipse_detail + 1); // Resize instead of reserve
 
-    const float     deltaTheta = (2.0f * PI) / static_cast<float>(ellipse_detail);
+    const float deltaTheta = (2.0f * PI) / static_cast<float>(ellipse_detail);
 
     for (int i = 0; i <= ellipse_detail; ++i) {
         const float theta     = deltaTheta * static_cast<float>(i);

@@ -18,7 +18,7 @@ in order to compile and run applications install the following packages with [Ho
 either manually with:
 
 ```sh
-brew install cmake pkgconfig sdl3 glew harfbuzz freetype ffmpeg rtmidi dylibbundler portaudio
+brew install cmake pkgconfig sdl3 glew harfbuzz freetype ffmpeg rtmidi glm dylibbundler portaudio
 ```
 
 or run installer script `./install-macOS.sh` ( i.e checking for Homebrew and running the bundler with `brew bundle` ).

@@ -66,7 +66,7 @@ namespace umfeld {
         explicit PFont(const std::string& filepath,
                        const int          font_size,
                        const float        pixelDensity = 1) : font_size(font_size) {
-            if (!exists(filepath)) {
+            if (!file_exists(filepath)) {
                 error("PFont / file not found: '", filepath, "'");
                 return;
             }

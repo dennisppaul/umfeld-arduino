@@ -155,7 +155,7 @@ namespace umfeld {
         virtual void     image(PImage* img, float x, float y, float w, float h);
         virtual void     image(PImage* img, float x, float y);
         virtual void     texture(PImage* img = nullptr);
-        virtual PImage*  loadImage(const std::string& filename);
+        virtual PImage*  loadImage(const std::string& file);
         virtual void     pointSize(float size);
         virtual void     rectMode(int mode);
         virtual void     textFont(PFont* font);

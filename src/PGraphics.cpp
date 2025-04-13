@@ -180,7 +180,7 @@ void PGraphics::fill(const float gray, const float alpha) {
 }
 
 void PGraphics::fill_color(const uint32_t c) {
-    color_inv(c, color_fill.r, color_fill.g, color_fill.b, color_fill.a);
+    color_unpack(c, color_fill.r, color_fill.g, color_fill.b, color_fill.a);
     color_fill.active = true;
 }
 
@@ -205,7 +205,7 @@ void PGraphics::stroke(const float gray, const float alpha) {
 }
 
 void PGraphics::stroke_color(const uint32_t c) {
-    color_inv(c, color_stroke.r, color_stroke.g, color_stroke.b, color_stroke.a);
+    color_unpack(c, color_stroke.r, color_stroke.g, color_stroke.b, color_stroke.a);
     color_stroke.active = true;
 }
 
@@ -627,20 +627,20 @@ void PGraphics::circle(const float x, const float y, const float diameter) {
 
 PImage* PGraphics::loadImage(const std::string& file) {
     const std::string abolsute_path = sketchPath() + file;
-    if (exists(abolsute_path)) {
-        return new PImage(abolsute_path);
+    if (!file_exists(abolsute_path)) {
+        error("loadImage() failed! file not found: '", file, "'. the 'sketchPath()' is currently set to '", sketchPath(), "'. looking for file at: '", abolsute_path, "'");
+        return nullptr;
     }
-    error("loadImage() failed! image file not found: '", file, "'. the 'sketchPath()' is currently set to '", sketchPath(), "'. looking for image file at: '", abolsute_path, "'");
-    return nullptr;
+    return new PImage(abolsute_path);
 }
 
 PFont* PGraphics::loadFont(const std::string& file, const float size) {
     const std::string abolsute_path = sketchPath() + file;
-    if (exists(abolsute_path)) {
-        return new PFont(abolsute_path, size);
+    if (!file_exists(abolsute_path)) {
+        error("loadFont() failed! file not found: '", file, "'. the 'sketchPath()' is currently set to '", sketchPath(), "'. looking for file at: '", abolsute_path, "'");
+        return nullptr;
     }
-    error("loadFont() failed! font file not found: '", file, "'. the 'sketchPath()' is currently set to '", sketchPath(), "'. looking for font file at: '", abolsute_path, "'");
-    return nullptr;
+    return new PFont(abolsute_path, size);
 }
 
 void PGraphics::textFont(PFont* font) {

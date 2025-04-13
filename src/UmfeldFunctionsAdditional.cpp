@@ -47,16 +47,32 @@ namespace umfeld {
         return str.substr(str.size() - suffix.size()) == suffix;
     }
 
-    void color_inv(const uint32_t color, float& r, float& g, float& b, float& a) {
-        a = static_cast<float>((color >> 24) & 0xFF) / 255.0f;
-        b = static_cast<float>((color >> 16) & 0xFF) / 255.0f;
-        g = static_cast<float>((color >> 8) & 0xFF) / 255.0f;
+    void color_unpack(const uint32_t color, float& r, float& g, float& b, float& a) {
+        a = static_cast<float>(color >> 24 & 0xFF) / 255.0f;
+        b = static_cast<float>(color >> 16 & 0xFF) / 255.0f;
+        g = static_cast<float>(color >> 8 & 0xFF) / 255.0f;
         r = static_cast<float>(color & 0xFF) / 255.0f;
     }
 
-    bool exists(const std::string& file_path) {
+    uint32_t color_pack(float r, float g, float b, float a) {
+        const uint32_t ir = static_cast<uint32_t>(r * 255.0f) & 0xFF;
+        const uint32_t ig = static_cast<uint32_t>(g * 255.0f) & 0xFF;
+        const uint32_t ib = static_cast<uint32_t>(b * 255.0f) & 0xFF;
+        const uint32_t ia = static_cast<uint32_t>(a * 255.0f) & 0xFF;
+
+        return ia << 24 | ib << 16 | ig << 8 | ir;
+    }
+
+    bool file_exists(const std::string& file_path) {
+        std::error_code             ec;
         const std::filesystem::path path(file_path);
-        return std::filesystem::exists(path);
+        return std::filesystem::exists(path, ec) && std::filesystem::is_regular_file(path, ec);
+    }
+
+    bool directory_exists(const std::string& dir_path) {
+        std::error_code             ec;
+        const std::filesystem::path path(dir_path);
+        return std::filesystem::exists(path, ec) && std::filesystem::is_directory(path, ec);
     }
 
     std::string find_file_in_paths(const std::vector<std::string>& paths, const std::string& filename) {
@@ -130,8 +146,12 @@ namespace umfeld {
         return files;
     }
 
+    /**
+     * get an int value from an argument formated like e.g this "value=23"
+     * @param argument argument formated like e.g this "value=23"
+     * @return
+     */
     int get_int_from_argument(const std::string& argument) {
-        /* get an int value from an argument formated like e.g this "value=23" */
         const std::size_t pos = argument.find('=');
         if (pos == std::string::npos) {
             throw std::invalid_argument("no '=' character found in argument.");
@@ -140,9 +160,13 @@ namespace umfeld {
         return std::stoi(valueStr);
     }
 
+    /**
+     * get a string value from an argument formated like e.g this "value=twentythree"
+     * @param argument argument formated like e.g this "value=twentythree"
+     * @return
+     */
     std::string get_string_from_argument(const std::string& argument) {
-        /* get a string value from an argument formated like e.g this "value=twentythree" */
-        std::size_t pos = argument.find('=');
+        const std::size_t pos = argument.find('=');
         if (pos == std::string::npos) {
             throw std::invalid_argument("no '=' character found in argument.");
         }
@@ -283,7 +307,7 @@ namespace umfeld {
                 if (i % 3 == 0) { // Every 3 vertices = new face
                     face_index++;
                 }
-                int material_id = (face_index < shape.mesh.material_ids.size()) ? shape.mesh.material_ids[face_index - 1] : -1;
+                int material_id = face_index < shape.mesh.material_ids.size() ? shape.mesh.material_ids[face_index - 1] : -1;
 
                 if (material_id >= 0 && material_id < materials.size()) {
                     const auto& material = materials[material_id];
@@ -353,15 +377,26 @@ namespace umfeld {
         return vertices;
     }
 
-    std::vector<Vertex> loadOBJ(const std::string& filename, const bool material) {
-        return material ? loadOBJ_with_material(filename) : loadOBJ_no_material(filename);
+    std::vector<Vertex> loadOBJ(const std::string& file, const bool material) {
+        const std::string abolsute_path = sketchPath() + file;
+        if (!file_exists(abolsute_path)) {
+            error("loadOBJ() failed! file not found: '", file, "'. the 'sketchPath()' is currently set to '", sketchPath(), "'. looking for file at: '", abolsute_path, "'");
+            return {};
+        }
+        return material ? loadOBJ_with_material(abolsute_path) : loadOBJ_no_material(abolsute_path);
     }
 
-    Sampler* loadSample(const std::string& filename) {
+    Sampler* loadSample(const std::string& file) {
+        const std::string abolsute_path = sketchPath() + file;
+        if (!file_exists(abolsute_path)) {
+            error("loadSample() failed! file not found: '", file, "'. the 'sketchPath()' is currently set to '", sketchPath(), "'. looking for file at: '", abolsute_path, "'");
+            return nullptr;
+        }
+
         unsigned int channels;
         unsigned int sample_rate;
         drwav_uint64 length;
-        float*       sample_buffer = AudioFileReader::load(filename, channels, sample_rate, length);
+        float*       sample_buffer = AudioFileReader::load(file, channels, sample_rate, length);
         console("loading sample: ");
         console("channels   : ", channels);
         console("audio_sample_rate: ", sample_rate);
@@ -379,5 +414,4 @@ namespace umfeld {
         const auto sampler = new Sampler(sample_buffer, length, sample_rate);
         return sampler;
     }
-
 } // namespace umfeld

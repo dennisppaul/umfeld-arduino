@@ -42,8 +42,10 @@ namespace umfeld {
 
     bool                     begins_with(const std::string& str, const std::string& prefix);
     bool                     ends_with(const std::string& str, const std::string& suffix);
-    void                     color_inv(uint32_t color, float& r, float& g, float& b, float& a);
-    bool                     exists(const std::string& file_path);
+    uint32_t                 color_pack(float r, float g, float b, float a);
+    void                     color_unpack(uint32_t color, float& r, float& g, float& b, float& a);
+    bool                     file_exists(const std::string& file_path);
+    bool                     directory_exists(const std::string& dir_path);
     std::string              find_file_in_paths(const std::vector<std::string>& paths, const std::string& filename);
     std::string              find_in_environment_path(const std::string& filename);
     std::string              get_executable_location();
@@ -69,13 +71,28 @@ namespace umfeld {
     bool                     is_initialized();
     std::string              get_window_title(); // TODO maybe add setter
     void                     set_frame_rate(float fps);
-    SDL_WindowFlags          get_SDL_WindowFlags(SDL_WindowFlags& flags);
     void                     register_library(LibraryListener* listener);         /* implemented in subsystems */
     void                     unregister_library(const LibraryListener* listener); /* implemented in subsystems */
-    void                     handle_events_in_loop(bool events_in_loop);          /* implemented in subsystems */
-    std::vector<Vertex>      loadOBJ(const std::string& filename, bool material = true);
-    Sampler*                 loadSample(const std::string& filename);
+    std::vector<Vertex>      loadOBJ(const std::string& file, bool material = true);
+    Sampler*                 loadSample(const std::string& file);
     PAudio*                  createAudio(const AudioUnitInfo* device_info);
+
+    /* --- utilities --- */
+
+    SDL_WindowFlags get_SDL_WindowFlags(SDL_WindowFlags& flags);
+    using namespace std::chrono;
+
+    template<typename Func, typename... Args>
+    double time_function_ms(Func&& func, Args&&... args) {
+        const auto start = high_resolution_clock::now();
+
+        // Call the function with forwarded arguments
+        std::invoke(std::forward<Func>(func), std::forward<Args>(args)...);
+
+        const auto                         end     = high_resolution_clock::now();
+        const duration<double, std::milli> elapsed = end - start;
+        return elapsed.count(); // in milliseconds
+    }
 
     /* --- templated functions --- */
 
@@ -146,19 +163,5 @@ namespace umfeld {
 
     inline std::string separator(const bool equal_sign = true, const std::size_t length = 80) {
         return std::string(length, equal_sign ? '=' : '-');
-    }
-
-    using namespace std::chrono;
-
-    template<typename Func, typename... Args>
-    double time_function_ms(Func&& func, Args&&... args) {
-        const auto start = high_resolution_clock::now();
-
-        // Call the function with forwarded arguments
-        std::invoke(std::forward<Func>(func), std::forward<Args>(args)...);
-
-        const auto                         end     = high_resolution_clock::now();
-        const duration<double, std::milli> elapsed = end - start;
-        return elapsed.count(); // in milliseconds
     }
 } // namespace umfeld

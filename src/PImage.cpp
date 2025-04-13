@@ -49,7 +49,7 @@ PImage::PImage(const std::string& filepath) : width(0),
                                               height(0),
                                               format(0),
                                               pixels(nullptr) {
-    if (!exists(filepath)) {
+    if (!file_exists(filepath)) {
         error("PImage / file not found: '", filepath, "'");
         return;
     }

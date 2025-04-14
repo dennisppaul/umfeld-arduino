@@ -32,8 +32,8 @@ namespace umfeld {
     void                      gamepad_print_debug(bool print_debug);
 } // namespace umfeld
 
-WEAK void gamepadButton(int id, int button, bool down);
-WEAK void gamepadAxis(int id, int axis, float value);
-WEAK void gamepadEvent(const SDL_Event& event);
+WEAK void gamepad_button(int id, int button, bool down);
+WEAK void gamepad_axis(int id, int axis, float value);
+WEAK void gamepad_event(const SDL_Event& event);
 
 umfeld::Subsystem* umfeld_create_subsystem_gamepad();

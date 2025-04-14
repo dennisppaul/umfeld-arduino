@@ -87,7 +87,7 @@ namespace umfeld {
                         if (_print_debug) {
                             console("Gamepad #", which, " axis: ", static_cast<int>(event.gaxis.axis), " : ", axis_value_f);
                         }
-                        gamepadAxis(which, event.gaxis.axis, axis_value_f);
+                        gamepad_axis(which, event.gaxis.axis, axis_value_f);
                     }
                 }
                 break;
@@ -100,7 +100,7 @@ namespace umfeld {
                     if (_print_debug) {
                         console("Gamepad #", which, " button: ", static_cast<int>(event.gbutton.button), ": ", event.gbutton.down ? "PRESSED" : "RELEASED");
                     }
-                    gamepadButton(which, event.gbutton.button, event.gbutton.down);
+                    gamepad_button(which, event.gbutton.button, event.gbutton.down);
                 }
                 break;
             case SDL_EVENT_GAMEPAD_ADDED:
@@ -230,19 +230,19 @@ namespace umfeld {
     }
 } // namespace umfeld
 
-WEAK void gamepadButton(const int id, const int button, const bool down) {
+WEAK void gamepad_button(const int id, const int button, const bool down) {
     if (umfeld::_print_debug) {
         umfeld::console("gamepad button", id, " : ", button, " : ", down ? "PRESSED" : "RELEASED");
     }
 }
 
-WEAK void gamepadAxis(const int id, const int axis, const float value) {
+WEAK void gamepad_axis(const int id, const int axis, const float value) {
     if (umfeld::_print_debug) {
         umfeld::console("gamepad axis  ", id, " : ", axis, " : ", value);
     }
 }
 
-WEAK void gamepadEvent(const SDL_Event& event) {
+WEAK void gamepad_event(const SDL_Event& event) {
     if (umfeld::_print_debug) {
         umfeld::console("gamepad event ", event.type);
     }

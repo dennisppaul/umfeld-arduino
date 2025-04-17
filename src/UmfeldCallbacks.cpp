@@ -19,6 +19,7 @@
 
 #include <SDL3/SDL.h> // TODO remove this at some point
 
+#include "UmfeldDefines.h"
 #include "UmfeldCallbacks.h"
 
 #define ENABLE_UMFELD_CALLBACK_LOGGING 0

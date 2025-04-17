@@ -26,12 +26,12 @@ this is a VERY unsorted todo list and a note pad.
 
 ## Audio
 
-- [ ] @umfeld basic audio classes 
+- [x] @umfeld basic audio classes 
     - [x] oscillator ( wavetable )
     - [x] sampler
     - [x] filter ( low, high, band )
     - [x] envelope + adsr
-    - [ ] trigger/beat
+    - [x] trigger/beat
 
 ## Environment
 

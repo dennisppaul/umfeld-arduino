@@ -48,7 +48,7 @@ alternatively, run the homebrew installer script `./install-linux.sh` to install
 
 #### Raspberry Pi OS (RPI)
 
-*Umfeld* can run on Raspberry Pi ( e.g RPI 4 Model B and RPI 5 ). see [Umfeld-on-RPI](documentation/Umfeld-on-RPI.md) for detailed information.
+*Umfeld* can run on Raspberry Pi ( e.g RPI 4 Model B and RPI 5 ). see [Umfeld-on-RPI](Umfeld-on-RPI.md) for detailed information.
 
 #### Build SDL from source
 

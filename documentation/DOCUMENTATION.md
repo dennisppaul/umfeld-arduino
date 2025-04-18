@@ -66,12 +66,25 @@ cmake --build build
 - install [MSYS2](https://www.msys2.org/)
 - install the following modules with `pacman` in `MSYS2 UCRT64`:
 
-@TODO(update packages to SDL3)
-
 ```sh
 pacman -Syu --noconfirm
-pacman -S --noconfirm mingw-w64-ucrt-x86_64-toolchain mingw-w64-ucrt-x86_64-cmake git
-pacman -S --noconfirm mingw-w64-ucrt-x86_64-glew mingw-w64-ucrt-x86_64-mesa mingw-w64-ucrt-x86_64-ftgl mingw-w64-ucrt-x86_64-SDL2 mingw-w64-ucrt-x86_64-ffmpeg mingw-w64-ucrt-x86_64-rtmidi
+pacman -Syu --noconfirm
+pacman -S --noconfirm \
+  mingw-w64-ucrt-x86_64-toolchain \
+  mingw-w64-ucrt-x86_64-cmake \
+  mingw-w64-ucrt-x86_64-pkg-config \
+  mingw-w64-ucrt-x86_64-ninja \
+  mingw-w64-ucrt-x86_64-glew \
+  mingw-w64-ucrt-x86_64-mesa \
+  mingw-w64-ucrt-x86_64-ftgl \
+  mingw-w64-ucrt-x86_64-sdl3 \
+  mingw-w64-ucrt-x86_64-sdl3-image \
+  mingw-w64-ucrt-x86_64-sdl3-ttf \
+  mingw-w64-ucrt-x86_64-ffmpeg \
+  mingw-w64-ucrt-x86_64-rtmidi \
+  mingw-w64-ucrt-x86_64-glm \
+  mingw-w64-ucrt-x86_64-portaudio \
+  git
 ```
 
 the setup is exclusively for the `MSYS2 UCRT64` branch ( and not for `MSYS2 MINGW64` etcetera ). also it uses `ninja` as a build system instead of `make` ( which is the default on linux + macOS ).

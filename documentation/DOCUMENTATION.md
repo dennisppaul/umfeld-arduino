@@ -2,16 +2,9 @@
 
 ## Installing Umfeld
 
-clone the *Umfeld* repository ( with submodules ) and optionally some other *Umfeld* repositories from GitHub into the desired folder ( e.g `~/Documents/dev` ):
+### Prerequisite
 
-```sh
-git clone --recurse-submodules https://github.com/dennisppaul/umfeld
-git clone --recurse-submodules https://github.com/dennisppaul/umfeld-libraries
-git clone --recurse-submodules https://github.com/dennisppaul/umfeld-examples
-cd umfeld
-```
-
-### macOS
+#### macOS
 
 in order to compile and run applications install the following packages with [Homebrew](https://brew.sh):
 
@@ -23,7 +16,7 @@ brew install cmake pkgconfig sdl3 glew harfbuzz freetype ffmpeg rtmidi glm dylib
 
 or run installer script `./install-macOS.sh` ( i.e checking for Homebrew and running the bundler with `brew bundle` ).
 
-### Linux
+#### Linux
 
 on linux install the required packages with [APT](https://en.wikipedia.org/wiki/APT_(software)) ( for Raspberry Pi OS, see detailed instructions below ).
 
@@ -46,11 +39,11 @@ sudo apt install libx11-dev libxext-dev libxrandr-dev libxcursor-dev libxi-dev l
 
 alternatively, run the homebrew installer script `./install-linux.sh` to install packages with [Linuxbrew](https://docs.brew.sh/Homebrew-on-Linux) ( linux version of Homebrew, currently not supported on Raspberry Pi OS and a bit more experimental than `apt` ).
 
-#### Raspberry Pi OS (RPI)
+##### Raspberry Pi OS (RPI)
 
 *Umfeld* can run on Raspberry Pi ( e.g RPI 4 Model B and RPI 5 ). see [Umfeld-on-RPI](Umfeld-on-RPI.md) for detailed information.
 
-#### Build SDL from source
+##### Build SDL from source
 
 note, currently SDL3 is not available via `apt` and needs to be build from source. the following steps should work without modification:
 
@@ -61,7 +54,7 @@ cmake -S . -B build
 cmake --build build
 ```
 
-### Windows
+#### Windows
 
 - install [MSYS2](https://www.msys2.org/)
 - install the following modules with `pacman` in `MSYS2 UCRT64`:
@@ -88,6 +81,17 @@ pacman -S --noconfirm \
 ```
 
 the setup is exclusively for the `MSYS2 UCRT64` branch ( and not for `MSYS2 MINGW64` etcetera ). also it uses `ninja` as a build system instead of `make` ( which is the default on linux + macOS ).
+
+### Cloning *Umfeld* Repositories
+
+clone the *Umfeld* repository ( with submodules ) and optionally some other *Umfeld* repositories from GitHub into the desired folder ( e.g `~/Documents/dev` ):
+
+```sh
+git clone --recurse-submodules https://github.com/dennisppaul/umfeld
+git clone --recurse-submodules https://github.com/dennisppaul/umfeld-libraries
+git clone --recurse-submodules https://github.com/dennisppaul/umfeld-examples
+cd umfeld
+```
 
 ## Building Applications with *Umfeld*
 

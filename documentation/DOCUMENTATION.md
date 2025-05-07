@@ -14,7 +14,7 @@ either manually with:
 brew install cmake pkgconfig sdl3 glew harfbuzz freetype ffmpeg rtmidi glm dylibbundler portaudio
 ```
 
-or run installer script `./install-macOS.sh` ( i.e checking for Homebrew and running the bundler with `brew bundle` ).
+or run installer script `./install-macOS.sh` ( i.e checking for Homebrew and running the bundler with `brew bundle` ). you might need to install XCode Tools with `xcode-select --install`.
 
 #### Linux
 

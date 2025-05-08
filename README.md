@@ -28,7 +28,7 @@ cd ../umfeld-examples/Basics/minimal
 cmake -B build ; cmake --build build ; ./build/minimal
 ```
 
-( on some linux systems you might need to installed `git` first with `sudo apt install -y git` )
+on some linux systems you might need to installed `git` first with `sudo apt install -y git`. if something goes wrong consult the detailed [DOCUMENTATION](documentation/DOCUMENTATION.md).
 
 ## Why *Umfeld*?
 

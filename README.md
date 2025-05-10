@@ -1,6 +1,6 @@
 # Umfeld
 
-![umfeld-logotype-3D](umfeld-logotype-3D.png)
+![umfeld-logotype-3D](assets/umfeld-logotype-3D.png)
 
 *Umfeld* is a lightweight C++ environment for small audio and graphics based applications. it is inspired by [Processing.org](https://processing.org) and similar environments.
 
@@ -23,12 +23,12 @@
 git clone --recurse-submodules https://github.com/dennisppaul/umfeld
 git clone --recurse-submodules https://github.com/dennisppaul/umfeld-examples
 cd umfeld
-./install-macOS.sh # or ./install-linux-apt.sh
+./install-macOS.sh # or ./install-linux.sh
 cd ../umfeld-examples/Basics/minimal
 cmake -B build ; cmake --build build ; ./build/minimal
 ```
 
-( on some linux systems you might need to installed `git` first with `sudo apt install -y git` )
+on some linux systems you might need to installed `git` first with `sudo apt install -y git`. if something goes wrong consult the detailed [DOCUMENTATION](documentation/DOCUMENTATION.md).
 
 ## Why *Umfeld*?
 

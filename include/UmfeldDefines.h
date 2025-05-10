@@ -27,6 +27,10 @@
 #define WEAK
 #endif
 
+#ifndef UMFELD_FUNC_WEAK
+#define UMFELD_FUNC_WEAK __attribute__((weak))
+#endif
+
 #ifndef TRUE
 #define TRUE 1
 #endif

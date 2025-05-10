@@ -26,6 +26,7 @@
 #include "Subsystems.h"
 #include "PAudio.h"
 
+#ifndef SYSTEM_WIN32
 WEAK void arguments(const std::vector<std::string>& args);
 WEAK void settings();
 WEAK void setup();
@@ -50,3 +51,28 @@ WEAK void post();
 WEAK void shutdown();
 WEAK void dropped(const char* dropped_filedir);
 WEAK bool sdl_event(const SDL_Event& event);
+#else
+void callbackHook();
+
+void arguments(const std::vector<std::string> &args);
+void settings();
+void setup();
+void draw();
+void keyPressed();
+void keyReleased();
+void mousePressed();
+void mouseReleased();
+void mouseDragged();
+void mouseMoved();
+void mouseWheel(float x, float y);
+void windowResized(int width, int height);
+
+/* --- additional callbacks --- */
+
+void audioEvent();
+void audioEvent(const umfeld::PAudio &device);
+void post();
+void shutdown();
+void dropped(const char *dropped_filedir);
+bool sdl_event(const SDL_Event &event);
+#endif

@@ -22,8 +22,13 @@
 #include "Umfeld.h"
 #include "UmfeldCallbacks.h"
 
-namespace umfeld {
+// declare weak user hook
+// ... it seems that it must be implemented in the same translation unit
+// ... function cannot be in namespace
+UMFELD_FUNC_WEAK void callbackHook() { printf("default callbackHook\n"); }
+UMFELD_FUNC_WEAK void mouseMoved() { printf("default mouseMoved\n"); }
 
+namespace umfeld {
     static bool _handle_events_in_loop = true;
     static bool _mouse_is_pressed      = false;
 
@@ -50,6 +55,10 @@ namespace umfeld {
                 _mouse_is_pressed   = true;
                 mousePressed();
                 umfeld::isMousePressed = true;
+
+                // TODO remove this as soon as windows is properly implemented
+
+                callbackHook();
                 break;
             case SDL_EVENT_MOUSE_BUTTON_UP:
                 _mouse_is_pressed   = false;
@@ -69,7 +78,7 @@ namespace umfeld {
                     mouseMoved();
                 }
                 break;
-                // case SDL_MULTIGESTURE:
+            // case SDL_MULTIGESTURE:
             case SDL_EVENT_MOUSE_WHEEL:
                 mouseWheel(event.wheel.mouse_x, event.wheel.mouse_y);
                 break;
@@ -84,7 +93,8 @@ namespace umfeld {
         }
     }
 
-    static void shutdown() {}
+    static void shutdown() {
+    }
 
     static void set_flags(uint32_t& subsystem_flags) {
         subsystem_flags |= SDL_INIT_EVENTS;

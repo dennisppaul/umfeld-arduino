@@ -298,7 +298,7 @@ namespace umfeld {
                                         GL_ONE, GL_ONE);
                     break;
                 // not possible in fixed-function blending
-                case DIFFERENCE:
+                case DIFFERENCE_BLEND:
                 case OVERLAY:
                 case HARD_LIGHT:
                 case SOFT_LIGHT:

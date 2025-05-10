@@ -23,6 +23,7 @@
 
 #include <cstdint>
 #include <chrono>
+#include <functional>
 #include <iostream>
 #include <sstream>
 #include <string>

@@ -3,3 +3,4 @@ cmake-build-debug/
 .idea/
 Brewfile.lock.json
 .DS_Store
+.obsidian/

@@ -383,9 +383,22 @@ namespace umfeld {
         return SimplexNoise::noise(x, y, z);
     }
 
+#ifndef UMFELD_USE_NATIVE_SKETCH_PATH
+#define USE_SDL_SKETCH_PATH
+#endif
+    std::string sketchPath() {
+#ifdef USE_SDL_SKETCH_PATH
+        return SDL_GetBasePath();
+#else
+        return sketchPath_impl();
+#endif
+    }
+
+#ifndef USE_SDL_SKETCH_PATH
 #if defined(SYSTEM_WIN32)
+#include <windows.h>
     std::string sketchPath_impl() {
-        std::vector<char> buffer(MAX_PATH);
+        std::vector<char> buffer(1024);
         DWORD             length = GetModuleFileNameA(NULL, buffer.data(), buffer.size());
 
         while (length == buffer.size() && GetLastError() == ERROR_INSUFFICIENT_BUFFER) {
@@ -442,19 +455,8 @@ namespace umfeld {
         std::filesystem::path currentPath = std::filesystem::current_path();
         return currentPath.string() + std::string("/");
     }
-
 #endif
-
-#ifndef UMFELD_USE_NATIVE_SKETCH_PATH
-#define USE_SDL_SKETCH_PATH
 #endif
-    std::string sketchPath() {
-#ifdef USE_SDL_SKETCH_PATH
-        return SDL_GetBasePath();
-#else
-        return sketchPath_impl();
-#endif
-    }
 
     std::vector<std::string> split(const std::string& str, const std::string& delimiter) {
         std::vector<std::string> result;

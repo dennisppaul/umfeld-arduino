@@ -19,8 +19,12 @@
 
 #pragma once
 
+#ifndef SYSTEM_WIN32
 #ifndef WEAK
 #define WEAK __attribute__((weak))
+#endif
+#else
+#define WEAK
 #endif
 
 #ifndef TRUE

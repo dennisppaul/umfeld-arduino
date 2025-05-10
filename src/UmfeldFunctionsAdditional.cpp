@@ -128,7 +128,7 @@ namespace umfeld {
 
         if (GetModuleFileNameA(hModule, path, MAX_PATH) != 0) {
             std::filesystem::path lib_path(path);                                                // Full path to the DLL
-            return lib_path.parent_path().string() + std::filesystem::path::preferred_separator; // Add the separator
+            return lib_path.parent_path().string() + static_cast<char>(std::filesystem::path::preferred_separator); // Add the separator
         } else {
             std::cerr << "Could not retrieve library location (GetModuleFileName)" << std::endl;
             return "";

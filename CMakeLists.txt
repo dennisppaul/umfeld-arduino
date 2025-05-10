@@ -278,10 +278,11 @@ endif ()
 if (NOT DISABLE_GRAPHICS)
     # OpenGL + GLEW
     pkg_search_module(GLEW REQUIRED glew)
-    pkg_search_module(GLM REQUIRED glm) # TODO add to brew file
+    #pkg_search_module(GLM REQUIRED glm) # TODO add to brew file
+    find_package(glm REQUIRED)
     find_package(OpenGL REQUIRED)
     find_package(SDL3 CONFIG REQUIRED)
-    pkg_search_module(HARFBUZZ REQUIRED harfbuzz)
+    find_package(harfbuzz CONFIG REQUIRED)
     pkg_check_modules(FREETYPE REQUIRED freetype2)
 
     if (APPLE)
@@ -359,7 +360,7 @@ if (NOT DISABLE_AUDIO)
 endif (NOT DISABLE_AUDIO)
 
 if (NOT DISABLE_GRAPHICS OR NOT DISABLE_AUDIO)
-    target_link_libraries(${PROJECT_NAME} PUBLIC ${HARFBUZZ_LIBRARIES})
+    target_link_libraries(${PROJECT_NAME} PUBLIC harfbuzz::harfbuzz)
     target_include_directories(${PROJECT_NAME} PUBLIC ${HARFBUZZ_INCLUDE_DIRS})
     target_link_libraries(${PROJECT_NAME} PUBLIC ${FREETYPE_LIBRARIES})
     target_include_directories(${PROJECT_NAME} PUBLIC ${FREETYPE_INCLUDE_DIRS})
@@ -373,8 +374,9 @@ if (NOT DISABLE_GRAPHICS)
     target_include_directories(${PROJECT_NAME} PUBLIC ${OPENGL_INCLUDE_DIRS})
     target_link_libraries(${PROJECT_NAME} PUBLIC ${GLEW_LIBRARIES})
     target_include_directories(${PROJECT_NAME} PUBLIC ${GLEW_INCLUDE_DIRS})
-    target_link_libraries(${PROJECT_NAME} PUBLIC ${GLM_LIBRARIES})
-    target_include_directories(${PROJECT_NAME} PUBLIC ${GLM_INCLUDE_DIRS})
+    #target_link_libraries(${PROJECT_NAME} PUBLIC ${GLM_LIBRARIES})
+    #target_include_directories(${PROJECT_NAME} PUBLIC ${GLM_INCLUDE_DIRS})
+    target_link_libraries(${PROJECT_NAME} PUBLIC glm::glm)
 
     # FFMPEG
     if (NOT DISABLE_VIDEO)

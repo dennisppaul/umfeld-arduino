@@ -129,7 +129,7 @@ namespace umfeld {
         SCREEN,
         EXCLUSION,
         REPLACE,
-        DIFFERENCE, // not implemented
+        DIFFERENCE_BLEND, // not implemented
         OVERLAY,    // not implemented
         HARD_LIGHT, // not implemented
         SOFT_LIGHT, // not implemented

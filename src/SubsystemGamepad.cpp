@@ -73,7 +73,7 @@ namespace umfeld {
         _print_debug = print_debug;
     }
 
-    static void handle_gamepad_event(const SDL_Event& event) {
+    static void handle_event(const SDL_Event& event) {
         switch (event.type) {
             case SDL_EVENT_GAMEPAD_AXIS_MOTION:
                 /**< Gamepad axis motion */
@@ -211,7 +211,7 @@ namespace umfeld {
     static void event(SDL_Event* event) {
         if (is_hid_event(event)) {
             if (!_handle_events_in_loop) {
-                handle_gamepad_event(*event);
+                handle_event(*event);
             }
         }
     }
@@ -220,7 +220,7 @@ namespace umfeld {
     static void event_in_update_loop(SDL_Event* event) {
         if (is_hid_event(event)) {
             if (_handle_events_in_loop) {
-                handle_gamepad_event(*event);
+                handle_event(*event);
             }
         }
     }

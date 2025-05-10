@@ -30,6 +30,7 @@
 #define LOG_MSG(msg) ((void) 0) // Does nothing when logging is disabled
 #endif
 
+#ifndef SYSTEM_WIN32
 WEAK void arguments(const std::vector<std::string>& args) { LOG_MSG("default arguments"); }
 WEAK void settings() { LOG_MSG("default settings"); }
 WEAK void setup() { LOG_MSG("default setup"); }
@@ -50,3 +51,10 @@ WEAK bool sdl_event(const SDL_Event& event) { LOG_MSG("sdl event"); return false
 WEAK void windowResized(int width, int height) {}
 WEAK void audioEvent(const umfeld::PAudio& device) {}
 WEAK void audioEvent() { /* NOTE same as above but for default audio device */ }
+// #else
+// #define WIN_FUNC_WEAK __attribute__((weak))
+//
+// WIN_FUNC_WEAK void mouseMoved()  {
+//     LOG_MSG("default mouseMoved");
+// }
+#endif

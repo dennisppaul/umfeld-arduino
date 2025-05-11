@@ -387,9 +387,9 @@ namespace umfeld {
     }
 
     Sampler* loadSample(const std::string& file) {
-        const std::string abolsute_path = sketchPath() + file;
-        if (!file_exists(abolsute_path)) {
-            error("loadSample() failed! file not found: '", file, "'. the 'sketchPath()' is currently set to '", sketchPath(), "'. looking for file at: '", abolsute_path, "'");
+        const std::string absolute_path = sketchPath() + file;
+        if (!file_exists(absolute_path)) {
+            error("loadSample() failed! file not found: '", file, "'. the 'sketchPath()' is currently set to '", sketchPath(), "'. looking for file at: '", absolute_path, "'");
             return nullptr;
         }
 

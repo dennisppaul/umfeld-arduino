@@ -25,8 +25,6 @@
 #include "Subsystems.h"
 #include "PAudio.h"
 
-void callbackHook(); // TODO remove this as soon as windows is properly implemented
-
 /* NOTE weak implementations in `Umfeld.cpp` */
 void arguments(const std::vector<std::string>& args);
 void settings();
@@ -47,9 +45,7 @@ void mouseWheel(float x, float y);
 void dropped(const char* dropped_filedir);
 bool sdl_event(const SDL_Event& event);
 
-/* NOTE weak implementations in `SubsystemAudioPortAudio.cpp` and `SubsystemAudioSDL.cpp` */
-// TODO problem: used in two different translation units
-//      might need to create a proxy in `UmfeldCallbacks.cpp`.
-//      develop on windows.
 void audioEvent();
 void audioEvent(const umfeld::PAudio& device);
+void callback_audioEvent(const umfeld::PAudio& device);
+void callback_audioEvent();

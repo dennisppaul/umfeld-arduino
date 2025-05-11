@@ -17,16 +17,16 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <SDL3/SDL.h> // TODO remove this at some point
-
 #include "UmfeldDefines.h"
 #include "UmfeldCallbacks.h"
 
-// TODO move default callbacks to according translation units
-#ifndef SYSTEM_WIN32
-// TODO problem: used in two different translation units
-//      might need to create a proxy in `UmfeldCallbacks.cpp`.
-//      develop on windows.
 UMFELD_FUNC_WEAK void audioEvent(const umfeld::PAudio& device) {}
 UMFELD_FUNC_WEAK void audioEvent() { /* NOTE same as above but for default audio device */ }
-#endif
+
+void callback_audioEvent(const umfeld::PAudio& device) {
+    audioEvent(device);
+}
+
+void callback_audioEvent() {
+    audioEvent();
+}

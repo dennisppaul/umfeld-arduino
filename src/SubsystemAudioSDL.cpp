@@ -370,12 +370,12 @@ namespace umfeld {
                                 // NOTE for main audio device
                                 if (a != nullptr) {
                                     if (_device->audio_device == a) {
-                                        audioEvent();
+                                        callback_audioEvent();
                                     }
                                 }
 
                                 // NOTE for all registered audio devices ( including main audio device )
-                                audioEvent(*_device->audio_device);
+                                callback_audioEvent(*_device->audio_device);
 
                                 const int    num_processed_bytes = static_cast<int>(_num_sample_frames) * _device->audio_device->output_channels * sizeof(float);
                                 const float* buffer              = _device->audio_device->output_buffer;
@@ -479,7 +479,6 @@ namespace umfeld {
             // std::vector<AudioUnitInfoSDL> _devices_found;
             // find_audio_input_devices(_devices_found);
             // TODO find logical id from name … or name
-            warning("currently only default devices are supported");
             SDL_AudioSpec stream_specs; // NOTE these will be used as stream specs for input and output streams
             SDL_zero(stream_specs);
             stream_specs.format              = SDL_AUDIO_F32; // NOTE currently only F32 is supported
@@ -545,7 +544,7 @@ namespace umfeld {
 
         const char* _input_device_name = SDL_GetAudioDeviceName(_device->logical_input_device_id);
         if (_input_device_name == nullptr) {
-            device->input_device_name = DEFAULT_AUDIO_DEVICE_NOT_USED; // TODO can we need to do better than that?
+            device->input_device_name = DEFAULT_AUDIO_DEVICE_NOT_USED; // TODO we need to do better than that?
         } else {
             if (device->input_device_name != _input_device_name) {
                 console("updating input device name from '", device->input_device_name, "' to '", _input_device_name, "'");
@@ -555,7 +554,7 @@ namespace umfeld {
 
         const char* _output_device_name = SDL_GetAudioDeviceName(_device->logical_output_device_id);
         if (_output_device_name == nullptr) {
-            device->output_device_name = DEFAULT_AUDIO_DEVICE_NOT_USED; // TODO can we need to do better than that?
+            device->output_device_name = DEFAULT_AUDIO_DEVICE_NOT_USED; // TODO we need to do better than that?
         } else {
             if (device->output_device_name != _output_device_name) {
                 console("updating output device name from '", device->output_device_name, "' to '", _output_device_name, "'");

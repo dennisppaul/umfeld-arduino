@@ -114,13 +114,13 @@ namespace umfeld {
                 // check if output buffer has space
                 const long availableOutputFrames = Pa_GetStreamWriteAvailable(stream);
 
-                // call audioevent resepcting non-present audio devices and available frames
+                // call `audioevent` respecting non-present audio devices and available frames
                 if ((availableInputFrames >= audio->buffer_size || audio->input_channels == 0) &&
                     (availableOutputFrames >= audio->buffer_size || audio->output_channels == 0)) {
                     if (a != nullptr && audio == umfeld::a) {
-                        audioEvent();
+                        callback_audioEvent();
                     }
-                    audioEvent(*audio);
+                    callback_audioEvent(*audio);
                 }
 
                 if (availableOutputFrames >= audio->buffer_size) {

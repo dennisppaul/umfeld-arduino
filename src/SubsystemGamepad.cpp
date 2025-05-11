@@ -19,6 +19,7 @@
 
 #include <SDL3/SDL.h>
 
+#include "UmfeldDefines.h"
 #include "Umfeld.h"
 #include "UmfeldCallbacks.h"
 #include "Gamepad.h"
@@ -27,8 +28,10 @@
 
 namespace umfeld {
 
-    void enable_gamepads() {
-        add_subsystem(umfeld_create_subsystem_gamepad());
+    Subsystem* enable_gamepads() {
+        Subsystem* subsystem = umfeld_create_subsystem_gamepad();
+        add_subsystem(subsystem);
+        return subsystem;
     }
 
     static bool _handle_events_in_loop = true;
@@ -230,19 +233,19 @@ namespace umfeld {
     }
 } // namespace umfeld
 
-WEAK void gamepad_button(const int id, const int button, const bool down) {
+UMFELD_FUNC_WEAK void gamepad_button(const int id, const int button, const bool down) {
     if (umfeld::_print_debug) {
         umfeld::console("gamepad button", id, " : ", button, " : ", down ? "PRESSED" : "RELEASED");
     }
 }
 
-WEAK void gamepad_axis(const int id, const int axis, const float value) {
+UMFELD_FUNC_WEAK void gamepad_axis(const int id, const int axis, const float value) {
     if (umfeld::_print_debug) {
         umfeld::console("gamepad axis  ", id, " : ", axis, " : ", value);
     }
 }
 
-WEAK void gamepad_event(const SDL_Event& event) {
+UMFELD_FUNC_WEAK void gamepad_event(const SDL_Event& event) {
     if (umfeld::_print_debug) {
         umfeld::console("gamepad event ", event.type);
     }

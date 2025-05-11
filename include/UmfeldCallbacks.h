@@ -22,42 +22,21 @@
 #include <SDL3/SDL.h>
 #include <vector>
 
-#include "UmfeldDefines.h"
 #include "Subsystems.h"
 #include "PAudio.h"
 
-#ifndef SYSTEM_WIN32
-WEAK void arguments(const std::vector<std::string>& args);
-WEAK void settings();
-WEAK void setup();
-WEAK void draw();
+void callbackHook(); // TODO remove this as soon as windows is properly implemented
 
-WEAK void keyPressed();
-WEAK void keyReleased();
-WEAK void mousePressed();
-WEAK void mouseReleased();
-WEAK void mouseDragged();
-WEAK void mouseMoved();
-WEAK void mouseWheel(float x, float y);
-
-WEAK void windowResized(int width, int height);
-
-/* --- additional callbacks --- */
-
-WEAK void audioEvent();
-WEAK void audioEvent(const umfeld::PAudio& device);
-
-WEAK void post();
-WEAK void shutdown();
-WEAK void dropped(const char* dropped_filedir);
-WEAK bool sdl_event(const SDL_Event& event);
-#else
-void callbackHook();
-
-void arguments(const std::vector<std::string> &args);
+/* NOTE weak implementations in `Umfeld.cpp` */
+void arguments(const std::vector<std::string>& args);
 void settings();
 void setup();
 void draw();
+void windowResized(int width, int height);
+void post();
+void shutdown();
+
+/* NOTE weak implementations in `SubsystemHIDEvents`*/
 void keyPressed();
 void keyReleased();
 void mousePressed();
@@ -65,14 +44,12 @@ void mouseReleased();
 void mouseDragged();
 void mouseMoved();
 void mouseWheel(float x, float y);
-void windowResized(int width, int height);
+void dropped(const char* dropped_filedir);
+bool sdl_event(const SDL_Event& event);
 
-/* --- additional callbacks --- */
-
+/* NOTE weak implementations in `SubsystemAudioPortAudio.cpp` and `SubsystemAudioSDL.cpp` */
+// TODO problem: used in two different translation units
+//      might need to create a proxy in `UmfeldCallbacks.cpp`.
+//      develop on windows.
 void audioEvent();
-void audioEvent(const umfeld::PAudio &device);
-void post();
-void shutdown();
-void dropped(const char *dropped_filedir);
-bool sdl_event(const SDL_Event &event);
-#endif
+void audioEvent(const umfeld::PAudio& device);

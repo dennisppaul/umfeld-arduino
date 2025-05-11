@@ -20,13 +20,21 @@
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
 
-#include <iostream>
 #include <string>
 
+#include "UmfeldDefines.h"
 #include "Umfeld.h"
 #include "PAudio.h"
 
 using namespace std::chrono;
+
+UMFELD_FUNC_WEAK void arguments(const std::vector<std::string>& args) { LOG_CALLBACK_MSG("default arguments"); }
+UMFELD_FUNC_WEAK void settings() { LOG_CALLBACK_MSG("default settings"); }
+UMFELD_FUNC_WEAK void setup() { LOG_CALLBACK_MSG("default setup"); }
+UMFELD_FUNC_WEAK void draw() { LOG_CALLBACK_MSG("default draw"); }
+UMFELD_FUNC_WEAK void windowResized(int width, int height) { LOG_CALLBACK_MSG("default windowResized"); }
+UMFELD_FUNC_WEAK void post() { LOG_CALLBACK_MSG("default post"); }
+UMFELD_FUNC_WEAK void shutdown() { LOG_CALLBACK_MSG("default shutdown"); }
 
 namespace umfeld {
     static high_resolution_clock::time_point lastFrameTime                       = {};
@@ -124,7 +132,7 @@ static uint32_t compile_subsystems_flag() {
      * - `SDL_INIT_EVERYTHING`: all of the above subsystems
      * - `SDL_INIT_NOPARACHUTE`: compatibility; this flag is ignored
      */
-    uint32_t subsystem_flags = 0;
+    constexpr uint32_t subsystem_flags = 0;
     // subsystem_flags |= SDL_INIT_EVENTS;
     return subsystem_flags;
 }
@@ -302,7 +310,7 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[]) {
                 _audio_unit_info.input_device_name  = umfeld::audio_input_device_name;
                 _audio_unit_info.output_device_id   = umfeld::audio_output_device_id;
                 _audio_unit_info.output_device_name = umfeld::audio_output_device_name;
-                umfeld::a                         = umfeld::subsystem_audio->create_audio(&_audio_unit_info);
+                umfeld::a                           = umfeld::subsystem_audio->create_audio(&_audio_unit_info);
             }
         }
     }
@@ -329,11 +337,11 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[]) {
     if (umfeld::a != nullptr && umfeld::enable_audio) {
         // NOTE copy values back to global variables after initialization … a bit hackish but well.
         umfeld::audio_input_buffer       = umfeld::a->input_buffer;
-        umfeld::audio_input_channels           = umfeld::a->input_channels;
+        umfeld::audio_input_channels     = umfeld::a->input_channels;
         umfeld::audio_output_buffer      = umfeld::a->output_buffer;
-        umfeld::audio_output_channels          = umfeld::a->output_channels;
+        umfeld::audio_output_channels    = umfeld::a->output_channels;
         umfeld::audio_buffer_size        = umfeld::a->buffer_size;
-        umfeld::audio_sample_rate              = umfeld::a->sample_rate;
+        umfeld::audio_sample_rate        = umfeld::a->sample_rate;
         umfeld::audio_input_device_id    = umfeld::a->input_device_id;
         umfeld::audio_input_device_name  = umfeld::a->input_device_name;
         umfeld::audio_output_device_id   = umfeld::a->output_device_id;

@@ -19,18 +19,31 @@
 
 #include <SDL3/SDL.h>
 
+#include "UmfeldDefines.h"
 #include "Umfeld.h"
 #include "UmfeldCallbacks.h"
 
 // declare weak user hook
 // ... it seems that it must be implemented in the same translation unit
 // ... function cannot be in namespace
-UMFELD_FUNC_WEAK void callbackHook() { printf("default callbackHook\n"); }
-UMFELD_FUNC_WEAK void mouseMoved() { printf("default mouseMoved\n"); }
+UMFELD_FUNC_WEAK void callbackHook() { printf("default callbackHook\n"); } // TODO remove this as soon as windows is properly implemented
+
+UMFELD_FUNC_WEAK void keyPressed() { LOG_CALLBACK_MSG("default keyPressed"); }
+UMFELD_FUNC_WEAK void keyReleased() { LOG_CALLBACK_MSG("default keyReleased"); }
+UMFELD_FUNC_WEAK void mousePressed() { LOG_CALLBACK_MSG("default mousePressed"); }
+UMFELD_FUNC_WEAK void mouseReleased() { LOG_CALLBACK_MSG("default mouseReleased"); }
+UMFELD_FUNC_WEAK void mouseDragged() { LOG_CALLBACK_MSG("default mouseDragged"); }
+UMFELD_FUNC_WEAK void mouseMoved() { LOG_CALLBACK_MSG("default mouseMoved"); }
+UMFELD_FUNC_WEAK void mouseWheel(const float x, const float y) { LOG_CALLBACK_MSG("default mouseWheel"); }
+UMFELD_FUNC_WEAK void dropped(const char* dropped_filedir) { LOG_CALLBACK_MSG("default dropped"); }
+UMFELD_FUNC_WEAK bool sdl_event(const SDL_Event& event) { LOG_CALLBACK_MSG("sdl event"); return false; }
 
 namespace umfeld {
     static bool _handle_events_in_loop = true;
     static bool _mouse_is_pressed      = false;
+
+    // TODO remove this as soon as windows is properly implemented
+    static void (*callbackHook_func)() = callbackHook;
 
     void hid_handle_events_in_loop(const bool events_in_loop) {
         _handle_events_in_loop = events_in_loop;
@@ -57,8 +70,10 @@ namespace umfeld {
                 umfeld::isMousePressed = true;
 
                 // TODO remove this as soon as windows is properly implemented
-
                 callbackHook();
+                if (callbackHook_func) {
+                    callbackHook_func();
+                }
                 break;
             case SDL_EVENT_MOUSE_BUTTON_UP:
                 _mouse_is_pressed   = false;

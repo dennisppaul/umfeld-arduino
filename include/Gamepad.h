@@ -25,15 +25,15 @@
 
 
 namespace umfeld {
-    void                      enable_gamepads();
+    Subsystem*                enable_gamepads();
     void                      gamepad_handle_events_in_loop(bool events_in_loop);
     void                      gamepad_motion_event_cooldown(int milliseconds);
     std::vector<SDL_Gamepad*> gamepad_connected(bool print = true);
     void                      gamepad_print_debug(bool print_debug);
 } // namespace umfeld
 
-WEAK void gamepad_button(int id, int button, bool down);
-WEAK void gamepad_axis(int id, int axis, float value);
-WEAK void gamepad_event(const SDL_Event& event);
+void gamepad_button(int id, int button, bool down);
+void gamepad_axis(int id, int axis, float value);
+void gamepad_event(const SDL_Event& event);
 
 umfeld::Subsystem* umfeld_create_subsystem_gamepad();

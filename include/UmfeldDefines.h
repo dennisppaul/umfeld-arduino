@@ -19,13 +19,22 @@
 
 #pragma once
 
-#ifndef SYSTEM_WIN32
-#ifndef WEAK
-#define WEAK __attribute__((weak))
-#endif
+#define ENABLE_UMFELD_CALLBACK_LOGGING 0
+
+#if ENABLE_UMFELD_CALLBACK_LOGGING
+#define LOG_CALLBACK_MSG(msg) SDL_Log(msg)
 #else
-#define WEAK
+#define LOG_CALLBACK_MSG(msg) ((void) 0)
 #endif
+
+// // TODO remove WEAK define asap
+// #ifndef SYSTEM_WIN32
+// #ifndef WEAK
+// #define WEAK __attribute__((weak))
+// #endif
+// #else
+// #define WEAK
+// #endif
 
 #ifndef UMFELD_FUNC_WEAK
 #define UMFELD_FUNC_WEAK __attribute__((weak))

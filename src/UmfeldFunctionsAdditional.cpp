@@ -127,7 +127,7 @@ namespace umfeld {
         char    path[MAX_PATH];
 
         if (GetModuleFileNameA(hModule, path, MAX_PATH) != 0) {
-            std::filesystem::path lib_path(path);                                                // Full path to the DLL
+            std::filesystem::path lib_path(path);                                                                   // Full path to the DLL
             return lib_path.parent_path().string() + static_cast<char>(std::filesystem::path::preferred_separator); // Add the separator
         } else {
             std::cerr << "Could not retrieve library location (GetModuleFileName)" << std::endl;
@@ -411,7 +411,8 @@ namespace umfeld {
             delete[] sample_buffer;
             sample_buffer = single_buffer;
         }
-        const auto sampler = new Sampler(sample_buffer, length, sample_rate);
+        const auto sampler = new Sampler(sample_rate);
+        sampler->set_buffer(sample_buffer, length, false);
         return sampler;
     }
 } // namespace umfeld

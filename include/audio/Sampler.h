@@ -55,9 +55,13 @@ namespace umfeld {
     public:
         static constexpr int8_t NO_LOOP_POINT = -1;
 
+        explicit SamplerT(uint32_t sample_rate) : SamplerT(new BUFFER_TYPE[0], 0, sample_rate) {
+            own_buffer = false;
+        }
+
         explicit SamplerT(int32_t  buffer_length,
                           uint32_t sample_rate) : SamplerT(new BUFFER_TYPE[buffer_length], buffer_length, sample_rate) {
-            fOwnsBuffer = true;
+            own_buffer = true;
         }
 
         SamplerT(BUFFER_TYPE*  buffer,
@@ -78,11 +82,11 @@ namespace umfeld {
             set_speed(1.0f);
             set_amplitude(1.0f);
             fIsRecording = false;
-            fOwnsBuffer  = false;
+            own_buffer   = false;
         }
 
         ~SamplerT() {
-            if (fOwnsBuffer) {
+            if (own_buffer && fBuffer) {
                 delete[] fBuffer;
             }
         }
@@ -177,7 +181,7 @@ namespace umfeld {
         }
 
         void set_buffer(BUFFER_TYPE* buffer, const int32_t buffer_length, const bool sampler_owns_buffer = false) {
-            fOwnsBuffer   = sampler_owns_buffer;
+            own_buffer    = sampler_owns_buffer;
             fBuffer       = buffer;
             fBufferLength = buffer_length;
             rewind();
@@ -358,11 +362,11 @@ namespace umfeld {
                 mBuffer[i] = fRecording[i];
             }
             fRecording.clear();
-            if (fOwnsBuffer) {
+            if (own_buffer) {
                 delete[] fBuffer;
             }
             set_buffer(mBuffer, mBufferLength);
-            fOwnsBuffer = true;
+            own_buffer = true;
             return mBufferLength;
         }
 
@@ -471,7 +475,7 @@ namespace umfeld {
         float                         fStepSize;
         bool                          fIsFlaggedDone;
         bool                          fIsRecording;
-        bool                          fOwnsBuffer;
+        bool                          own_buffer;
 
         int32_t last_index() const {
             return fBufferLength - 1;

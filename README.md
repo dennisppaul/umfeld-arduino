@@ -2,7 +2,7 @@
 
 ![umfeld-logotype-3D](assets/umfeld-logotype-3D.png)
 
-*Umfeld* is a lightweight C++ environment for small audio and graphics based applications. it is inspired by [Processing.org](https://processing.org) and similar environments.
+*Umfeld* is a C++ environment for audio and graphics based applications. it is inspired by [Processing.org](https://processing.org) and similar environments.
 
 ⚠️ *Umfeld* is a *Work in Progress* (WIP) ⚠️ please always keep this in mind. if you find a bug, an issue, something missing, have an idea for improvements or a feature request, please use GitHub’s [Issue Tracking System](https://github.com/dennisppaul/umfeld/issues).
 

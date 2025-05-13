@@ -146,7 +146,7 @@ namespace umfeld {
     }
 
     static const char* name() {
-        return "HID Events ( mouse, keyboard, drag-n-drop, ... )";
+        return "HID Events ( mouse, keyboard, drag-n-dr... )";
     }
 } // namespace umfeld
 

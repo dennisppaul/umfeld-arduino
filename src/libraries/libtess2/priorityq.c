@@ -32,8 +32,8 @@
 //#include "tesos.h"
 #include <stddef.h>
 #include <assert.h>
-#include "libtess2/tesselator.h"
-#include "libtess2/priorityq.h"
+#include "tesselator.h"
+#include "priorityq.h"
 
 
 #define INIT_SIZE	32
@@ -45,7 +45,7 @@
 #define LEQ(x,y)	(*pq->leq)(x,y)
 #else
 /* Violates modularity, but a little faster */
-#include "libtess2/geom.h"
+#include "geom.h"
 #define LEQ(x,y)	VertLeq((TESSvertex *)x, (TESSvertex *)y)
 #endif
 

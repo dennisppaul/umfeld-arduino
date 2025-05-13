@@ -835,7 +835,7 @@ void PGraphics::resize_ellipse_points_LUT() {
 
 /* --- triangulation --- */
 
-// TODO move to Gemoetry or Triangulation
+// TODO move to Geometry or Triangulation
 
 // EARCUT
 
@@ -1170,10 +1170,10 @@ void PGraphics::process_collected_fill_vertices() {
             case POLYGON: {
                 std::vector<Vertex> vertices_fill_polygon;
                 if (polygon_triangulation_strategy == POLYGON_TRIANGULATION_FASTER) {
-                    // EARCUT :: supports concave polygons, textures but no holes or selfintersection
+                    // EARCUT :: supports concave polygons, textures but no holes or self-intersection
                     vertices_fill_polygon = triangulate_faster(shape_fill_vertex_buffer);
                 } else if (polygon_triangulation_strategy == POLYGON_TRIANGULATION_BETTER) {
-                    // LIBTESS2 :: supports concave polygons, textures, holes and selfintersection but no textures
+                    // LIBTESS2 :: supports concave polygons, textures, holes and self-intersection but no textures
                     vertices_fill_polygon = triangulate_good(shape_fill_vertex_buffer);
                 } else if (polygon_triangulation_strategy == POLYGON_TRIANGULATION_MID) {
                     // POLYPARTITION + CLIPPER2 // TODO maybe remove this option

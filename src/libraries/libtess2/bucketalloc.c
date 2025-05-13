@@ -31,7 +31,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include "libtess2/tesselator.h"
+#include "tesselator.h"
 
 //#define CHECK_BOUNDS
 

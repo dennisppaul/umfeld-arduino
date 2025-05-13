@@ -33,21 +33,13 @@
 #include <stddef.h>
 #include <setjmp.h>		/* longjmp */
 
-#include "libtess2/mesh.h"
-#include "libtess2/geom.h"
-#include "libtess2/tess.h"
-#include "libtess2/dict.h"
-#include "libtess2/priorityq.h"
-#include "libtess2/bucketalloc.h"
-#include "libtess2/sweep.h"
-
-#if defined( __clang__ ) || defined( __GCC__ )
-	#pragma GCC diagnostic push
-	#pragma GCC diagnostic ignored "-Wunused-parameter"
-#elif defined( _MSC_VER )
-	#pragma warning( push )
-	#pragma warning( disable : 4100)
-#endif
+#include "mesh.h"
+#include "geom.h"
+#include "tess.h"
+#include "dict.h"
+#include "priorityq.h"
+#include "bucketalloc.h"
+#include "sweep.h"
 
 #define TRUE 1
 #define FALSE 0
@@ -405,19 +397,6 @@ static void AddRightEdges( TESStesselator *tess, ActiveRegion *regUp,
 }
 
 
-static void CallCombine( TESStesselator *tess, TESSvertex *isect,
-						TESSreal weights[4], int needed )
-{
-	TESSreal coords[3];
-
-	/* Copy coord data in case the callback changes it. */
-	coords[0] = isect->coords[0];
-	coords[1] = isect->coords[1];
-	coords[2] = isect->coords[2];
-
-	(*tess->callCombine)( coords, weights );
-}
-
 static void SpliceMergeVertices( TESStesselator *tess, TESShalfEdge *e1,
 								TESShalfEdge *e2 )
 /*
@@ -425,9 +404,6 @@ static void SpliceMergeVertices( TESStesselator *tess, TESShalfEdge *e1,
 * e1->Org is kept, while e2->Org is discarded.
 */
 {
-	TESSreal weights[4] = { 0.5, 0.5, 0.0, 0.0 };
-
-	CallCombine( tess, e1->Org, weights, FALSE );
 	if ( !tessMeshSplice( tess->mesh, e1, e2 ) ) longjmp(tess->env,1); 
 }
 
@@ -462,12 +438,12 @@ static void GetIntersectData( TESStesselator *tess, TESSvertex *isect,
  */
 {
 	TESSreal weights[4];
+	TESS_NOTUSED( tess );
 
 	isect->coords[0] = isect->coords[1] = isect->coords[2] = 0;
+	isect->idx = TESS_UNDEF;
 	VertexWeights( isect, orgUp, dstUp, &weights[0] );
 	VertexWeights( isect, orgLo, dstLo, &weights[2] );
-
-	CallCombine( tess, isect, weights, TRUE );
 }
 
 static int CheckForRightSplice( TESStesselator *tess, ActiveRegion *regUp )
@@ -520,7 +496,11 @@ static int CheckForRightSplice( TESStesselator *tess, ActiveRegion *regUp )
 		if( EdgeSign( eUp->Dst, eLo->Org, eUp->Org ) < 0 ) return FALSE;
 
 		/* eLo->Org appears to be above eUp, so splice eLo->Org into eUp */
-		RegionAbove(regUp)->dirty = regUp->dirty = TRUE;
+		regUp->dirty = TRUE;
+		ActiveRegion* regionAbove = RegionAbove(regUp);
+		if (regionAbove != NULL) {
+			regionAbove->dirty = TRUE;
+		}
 		if (tessMeshSplitEdge( tess->mesh, eUp->Sym ) == NULL) longjmp(tess->env,1);
 		if ( !tessMeshSplice( tess->mesh, eLo->Oprev, eUp ) ) longjmp(tess->env,1);
 	}
@@ -558,7 +538,11 @@ static int CheckForLeftSplice( TESStesselator *tess, ActiveRegion *regUp )
 		if( EdgeSign( eUp->Dst, eLo->Dst, eUp->Org ) < 0 ) return FALSE;
 
 		/* eLo->Dst is above eUp, so splice eLo->Dst into eUp */
-		RegionAbove(regUp)->dirty = regUp->dirty = TRUE;
+		regUp->dirty = TRUE;
+		ActiveRegion* regionAbove = RegionAbove(regUp);
+		if (regionAbove != NULL) {
+			regionAbove->dirty = TRUE;
+		}
 		e = tessMeshSplitEdge( tess->mesh, eUp );
 		if (e == NULL) longjmp(tess->env,1);
 		if ( !tessMeshSplice( tess->mesh, eLo->Sym, e ) ) longjmp(tess->env,1);
@@ -1000,6 +984,10 @@ static void ConnectLeftVertex( TESStesselator *tess, TESSvertex *vEvent )
 	/* __GL_DICTLISTKEY */ /* tessDictListSearch */
 	regUp = (ActiveRegion *)dictKey( dictSearch( tess->dict, &tmp ));
 	regLo = RegionBelow( regUp );
+	if( !regLo ) {
+		// This may happen if the input polygon is coplanar.
+		return;
+	}
 	eUp = regUp->eUp;
 	eLo = regLo->eUp;
 
@@ -1135,16 +1123,17 @@ static void InitEdgeDict( TESStesselator *tess )
 	TESSreal w, h;
 	TESSreal smin, smax, tmin, tmax;
 
-	tess->dict = dictNewDict( &tess->alloc, tess, (int (*)(void *, DictKey, DictKey)) EdgeLeq );
+	tess->dict = dictNewDict( &tess->alloc, tess, EdgeLeq );
 	if (tess->dict == NULL) longjmp(tess->env,1);
 
-	w = (tess->bmax[0] - tess->bmin[0]);
-	h = (tess->bmax[1] - tess->bmin[1]);
+	/* If the bbox is empty, ensure that sentinels are not coincident by slightly enlarging it. */
+	w = (tess->bmax[0] - tess->bmin[0]) + (TESSreal)0.01;
+	h = (tess->bmax[1] - tess->bmin[1]) + (TESSreal)0.01;
 
 	smin = tess->bmin[0] - w;
-	smax = tess->bmax[0] + w;
-	tmin = tess->bmin[1] - h;
-	tmax = tess->bmax[1] + h;
+    smax = tess->bmax[0] + w;
+    tmin = tess->bmin[1] - h;
+    tmax = tess->bmax[1] + h;
 
 	AddSentinel( tess, smin, smax, tmin );
 	AddSentinel( tess, smin, smax, tmax );
@@ -1154,7 +1143,9 @@ static void InitEdgeDict( TESStesselator *tess )
 static void DoneEdgeDict( TESStesselator *tess )
 {
 	ActiveRegion *reg;
+#ifndef NDEBUG
 	int fixedEdges = 0;
+#endif
 
 	while( (reg = (ActiveRegion *)dictKey( dictMin( tess->dict ))) != NULL ) {
 		/*
@@ -1341,10 +1332,3 @@ int tessComputeInterior( TESStesselator *tess )
 
 	return 1;
 }
-
-#if defined( __clang__ ) || defined( __GCC__ )
-	#pragma GCC diagnostic pop
-#elif defined(_MSC_VER)
-	#pragma warning(pop)
-#endif
-

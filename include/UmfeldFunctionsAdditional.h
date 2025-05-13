@@ -162,7 +162,7 @@ namespace umfeld {
         return label + std::string(width - label.length(), ' ') + " : ";
     }
 
-    inline std::string separator(const bool equal_sign = true, const std::size_t length = 80) {
+    inline std::string separator(const bool equal_sign = true, const std::size_t length = 78) {
         return std::string(length, equal_sign ? '=' : '-');
     }
 } // namespace umfeld

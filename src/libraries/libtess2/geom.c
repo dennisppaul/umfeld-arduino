@@ -1,5 +1,5 @@
 /*
-** SGI FREE SOFTWARE LICENSE B (Version 2.0, Sept. 18, 2008) 
+** SGI FREE SOFTWARE LICENSE B (Version 2.0, Sept. 18, 2008)
 ** Copyright (C) [dates of first publication] Silicon Graphics, Inc.
 ** All Rights Reserved.
 **
@@ -9,10 +9,10 @@
 ** to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
 ** of the Software, and to permit persons to whom the Software is furnished to do so,
 ** subject to the following conditions:
-** 
+**
 ** The above copyright notice including the dates of first publication and either this
 ** permission notice or a reference to http://oss.sgi.com/projects/FreeB/ shall be
-** included in all copies or substantial portions of the Software. 
+** included in all copies or substantial portions of the Software.
 **
 ** THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
 ** INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
@@ -20,7 +20,7 @@
 ** BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 ** TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
 ** OR OTHER DEALINGS IN THE SOFTWARE.
-** 
+**
 ** Except as contained in this notice, the name of Silicon Graphics, Inc. shall not
 ** be used in advertising or otherwise to promote the sale, use or other dealings in
 ** this Software without prior written authorization from Silicon Graphics, Inc.
@@ -31,8 +31,9 @@
 
 //#include "tesos.h"
 #include <assert.h>
-#include "libtess2/mesh.h"
-#include "libtess2/geom.h"
+#include "mesh.h"
+#include "geom.h"
+#include <math.h>
 
 int tesvertLeq( TESSvertex *u, TESSvertex *v )
 {
@@ -79,15 +80,14 @@ TESSreal tesedgeSign( TESSvertex *u, TESSvertex *v, TESSvertex *w )
 	*/
 	TESSreal gapL, gapR;
 
-//	assert( VertLeq( u, v ) && VertLeq( v, w ));
-	if( ! ( VertLeq( u, v ) && VertLeq( v, w )) )
-		return 0;// this is incorrect but prevents a crash with pernicious geometry
+	assert( VertLeq( u, v ) && VertLeq( v, w ));
 
 	gapL = v->s - u->s;
 	gapR = w->s - v->s;
 
 	if( gapL + gapR > 0 ) {
-		return (v->t - w->t) * gapL + (v->t - u->t) * gapR;
+		TESSreal result = (v->t - w->t) * gapL + (v->t - u->t) * gapR;
+		return isnan(result) ? 0 : result;
 	}
 	/* vertical line */
 	return 0;
@@ -170,7 +170,7 @@ int tesvertCCW( TESSvertex *u, TESSvertex *v, TESSvertex *w )
 */
 #define RealInterpolate(a,x,b,y)			\
 	(a = (a < 0) ? 0 : a, b = (b < 0) ? 0 : b,		\
-	((a <= b) ? ((b == 0) ? ((x+y) / 2)			\
+	((a <= b) ? ((b == 0) ? (x / 2 + y / 2)			\
 	: (x + (y-x) * (a/(a+b))))	\
 	: (y + (x-y) * (b/(a+b)))))
 
@@ -223,7 +223,7 @@ void tesedgeIntersect( TESSvertex *o1, TESSvertex *d1,
 
 	if( ! VertLeq( o2, d1 )) {
 		/* Technically, no intersection -- do our best */
-		v->s = (o2->s + d1->s) / 2;
+		v->s = o2->s / 2 + d1->s / 2;
 	} else if( VertLeq( d1, d2 )) {
 		/* Interpolate between o2 and d1 */
 		z1 = EdgeEval( o1, o2, d1 );
@@ -246,7 +246,7 @@ void tesedgeIntersect( TESSvertex *o1, TESSvertex *d1,
 
 	if( ! TransLeq( o2, d1 )) {
 		/* Technically, no intersection -- do our best */
-		v->t = (o2->t + d1->t) / 2;
+		v->t = o2->t / 2 + d1->t / 2;
 	} else if( TransLeq( d1, d2 )) {
 		/* Interpolate between o2 and d1 */
 		z1 = TransEval( o1, o2, d1 );
@@ -260,4 +260,35 @@ void tesedgeIntersect( TESSvertex *o1, TESSvertex *d1,
 		if( z1+z2 < 0 ) { z1 = -z1; z2 = -z2; }
 		v->t = Interpolate( z1, o2->t, z2, d2->t );
 	}
+}
+
+TESSreal inCircle( TESSvertex *v, TESSvertex *v0, TESSvertex *v1, TESSvertex *v2 ) {
+	TESSreal adx, ady, bdx, bdy, cdx, cdy;
+	TESSreal abdet, bcdet, cadet;
+	TESSreal alift, blift, clift;
+
+	adx = v0->s - v->s;
+	ady = v0->t - v->t;
+	bdx = v1->s - v->s;
+	bdy = v1->t - v->t;
+	cdx = v2->s - v->s;
+	cdy = v2->t - v->t;
+
+	abdet = adx * bdy - bdx * ady;
+	bcdet = bdx * cdy - cdx * bdy;
+	cadet = cdx * ady - adx * cdy;
+
+	alift = adx * adx + ady * ady;
+	blift = bdx * bdx + bdy * bdy;
+	clift = cdx * cdx + cdy * cdy;
+
+	return alift * bcdet + blift * cadet + clift * abdet;
+}
+
+/*
+	Returns 1 is edge is locally delaunay
+ */
+int tesedgeIsLocallyDelaunay( TESShalfEdge *e )
+{
+	return inCircle(e->Sym->Lnext->Lnext->Org, e->Lnext->Org, e->Lnext->Lnext->Org, e->Org) < 0;
 }

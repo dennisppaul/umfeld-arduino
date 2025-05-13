@@ -1,5 +1,5 @@
 /*
-** SGI FREE SOFTWARE LICENSE B (Version 2.0, Sept. 18, 2008) 
+** SGI FREE SOFTWARE LICENSE B (Version 2.0, Sept. 18, 2008)
 ** Copyright (C) [dates of first publication] Silicon Graphics, Inc.
 ** All Rights Reserved.
 **
@@ -9,10 +9,10 @@
 ** to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
 ** of the Software, and to permit persons to whom the Software is furnished to do so,
 ** subject to the following conditions:
-** 
+**
 ** The above copyright notice including the dates of first publication and either this
 ** permission notice or a reference to http://oss.sgi.com/projects/FreeB/ shall be
-** included in all copies or substantial portions of the Software. 
+** included in all copies or substantial portions of the Software.
 **
 ** THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
 ** INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
@@ -20,7 +20,7 @@
 ** BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 ** TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
 ** OR OTHER DEALINGS IN THE SOFTWARE.
-** 
+**
 ** Except as contained in this notice, the name of Silicon Graphics, Inc. shall not
 ** be used in advertising or otherwise to promote the sale, use or other dealings in
 ** this Software without prior written authorization from Silicon Graphics, Inc.
@@ -36,6 +36,8 @@
 extern "C" {
 #endif
 
+// See OpenGL Red Book for description of the winding rules
+// http://www.glprogramming.com/red/chapter11.html
 enum TessWindingRule
 {
 	TESS_WINDING_ODD,
@@ -45,22 +47,86 @@ enum TessWindingRule
 	TESS_WINDING_ABS_GEQ_TWO,
 };
 
+// The contents of the tessGetElements() depends on element type being passed to tessTesselate().
 // Tesselation result element types:
-// TESS_TRIANGLES
-//   Each element is defined as array of 3 TESSindex.
-//   The 3 values in the array defines indices to each vertex of a triangle.
-// TESS_CONNECTED_TRIANGLES
-//   Each element is defined as array of 6 TESSindex.
-//   The first 3 values in the array defines indices to each vertex of a triangle.
-//   The second 3 values in the array defines indices to each of neighbour element or -1 if there is no neighbour.
+// TESS_POLYGONS
+//   Each element in the element array is polygon defined as 'polySize' number of vertex indices.
+//   If a polygon has than 'polySize' vertices, the remaining indices are stored as TESS_UNDEF.
+//   Example, drawing a polygon:
+//     const int nelems = tessGetElementCount(tess);
+//     const TESSindex* elems = tessGetElements(tess);
+//     for (int i = 0; i < nelems; i++) {
+//         const TESSindex* poly = &elems[i * polySize];
+//         glBegin(GL_POLYGON);
+//         for (int j = 0; j < polySize; j++) {
+//             if (poly[j] == TESS_UNDEF) break;
+//             glVertex2fv(&verts[poly[j]*vertexSize]);
+//         }
+//         glEnd();
+//     }
+//
+// TESS_CONNECTED_POLYGONS
+//   Each element in the element array is polygon defined as 'polySize' number of vertex indices,
+//   followed by 'polySize' indices to neighour polygons, that is each element is 'polySize' * 2 indices.
+//   If a polygon has than 'polySize' vertices, the remaining indices are stored as TESS_UNDEF.
+//   If a polygon edge is a boundary, that is, not connected to another polygon, the neighbour index is TESS_UNDEF.
+//   Example, flood fill based on seed polygon:
+//     const int nelems = tessGetElementCount(tess);
+//     const TESSindex* elems = tessGetElements(tess);
+//     unsigned char* visited = (unsigned char*)calloc(nelems);
+//     TESSindex stack[50];
+//     int nstack = 0;
+//     stack[nstack++] = seedPoly;
+//     visited[startPoly] = 1;
+//     while (nstack > 0) {
+//         TESSindex idx = stack[--nstack];
+//			const TESSindex* poly = &elems[idx * polySize * 2];
+//			const TESSindex* nei = &poly[polySize];
+//          for (int i = 0; i < polySize; i++) {
+//              if (poly[i] == TESS_UNDEF) break;
+//              if (nei[i] != TESS_UNDEF && !visited[nei[i]])
+//	                stack[nstack++] = nei[i];
+//                  visited[nei[i]] = 1;
+//              }
+//          }
+//     }
+//
 // TESS_BOUNDARY_CONTOURS
-//   Each element is defined as array of 2 TESSindex.
+//   Each element in the element array is [base index, count] pair defining a range of vertices for a contour.
 //   The first value is index to first vertex in contour and the second value is number of vertices in the contour.
+//   Example, drawing contours:
+//     const int nelems = tessGetElementCount(tess);
+//     const TESSindex* elems = tessGetElements(tess);
+//     for (int i = 0; i < nelems; i++) {
+//         const TESSindex base = elems[i * 2];
+//         const TESSindex count = elems[i * 2 + 1];
+//         glBegin(GL_LINE_LOOP);
+//         for (int j = 0; j < count; j++) {
+//             glVertex2fv(&verts[(base+j) * vertexSize]);
+//         }
+//         glEnd();
+//     }
+
 enum TessElementType
 {
 	TESS_POLYGONS,
 	TESS_CONNECTED_POLYGONS,
 	TESS_BOUNDARY_CONTOURS,
+};
+
+
+// TESS_CONSTRAINED_DELAUNAY_TRIANGULATION
+//   If enabled, the initial triagulation is improved with non-robust Constrained Delayney triangulation.
+//   Disable by default.
+//
+// TESS_REVERSE_CONTOURS
+//   If enabled, tessAddContour() will treat CW contours as CCW and vice versa
+//   Disabled by default.
+
+enum TessOption
+{
+	TESS_CONSTRAINED_DELAUNAY_TRIANGULATION,
+	TESS_REVERSE_CONTOURS
 };
 
 typedef float TESSreal;
@@ -69,6 +135,16 @@ typedef struct TESStesselator TESStesselator;
 typedef struct TESSalloc TESSalloc;
 
 #define TESS_UNDEF (~(TESSindex)0)
+
+#define TESS_NOTUSED(v) do { (void)(1 ? (void)0 : ( (void)(v) ) ); } while(0)
+
+// These two constants define the valid input coordinate range the library is
+// able to operate on. Tesselation will fail if any of the coordinates are not
+// within this range. Clients are responsible for dealing with inputs outside of
+// this range (e.g. clamping or filtering invalid points, scaling down the
+// coordinate space).
+#define TESS_MAX_VALID_INPUT_VALUE ((TESSreal) (1<<23))
+#define TESS_MIN_VALID_INPUT_VALUE (-TESS_MAX_VALID_INPUT_VALUE)
 
 // Custom memory allocator interface.
 // The internal memory allocator allocates mesh edges, vertices and faces
@@ -80,12 +156,12 @@ typedef struct TESSalloc TESSalloc;
 // how often to allocate memory from the system versus how much extra space the system
 // should allocate. Reasonable defaults are show in commects below, they will be used if
 // the bucket sizes are zero.
-// 
+//
 // The use may left the memrealloc to be null. In that case, the tesselator will not try to
 // dynamically grow int's internal arrays. The tesselator only needs the reallocation when it
 // has found intersecting segments and needs to add new vertex. This defency can be cured by
 // allocating some extra vertices beforehand. The 'extraVertices' variable allows to specify
-// number of expected extra vertices.  
+// number of expected extra vertices.
 struct TESSalloc
 {
 	void *(*memalloc)( void *userData, unsigned int size );
@@ -99,9 +175,19 @@ struct TESSalloc
 	int regionBucketSize;		// 256
 	int extraVertices;			// Number of extra vertices allocated for the priority queue.
 };
-	
+
+
+//
+// Example use:
+//
+//
+//
+//
+
 // tessNewTess() - Creates a new tesselator.
 // Use tessDeleteTess() to delete the tesselator.
+// Parameters:
+//   alloc - pointer to a filled TESSalloc struct or NULL to use default malloc based allocator.
 // Returns:
 //   new tesselator object.
 TESStesselator* tessNewTess( TESSalloc* alloc );
@@ -121,6 +207,12 @@ void tessDeleteTess( TESStesselator *tess );
 //   count - number of vertices in contour.
 void tessAddContour( TESStesselator *tess, int size, const void* pointer, int stride, int count );
 
+// tessSetOption() - Toggles optional tessellation parameters
+// Parameters:
+//  option - one of TessOption
+//  value - 1 if enabled, 0 if disabled.
+void tessSetOption( TESStesselator *tess, int option, int value );
+
 // tessTesselate() - tesselate contours.
 // Parameters:
 //   tess - pointer to tesselator object.
@@ -130,7 +222,8 @@ void tessAddContour( TESStesselator *tess, int size, const void* pointer, int st
 //   vertexSize - defines the number of coordinates in tesselation result vertex, must be 2 or 3.
 //   normal - defines the normal of the input contours, of null the normal is calculated automatically.
 // Returns:
-//   1 if succeed, 0 if failed.
+//   1 if succeed, 0 if failed (tessGetStatus can be used after to get a more
+//   specific failure status)
 int tessTesselate( TESStesselator *tess, int windingRule, int elementType, int polySize, int vertexSize, const TESSreal* normal );
 
 // tessGetVertexCount() - Returns number of vertices in the tesselated output.
@@ -139,11 +232,29 @@ int tessGetVertexCount( TESStesselator *tess );
 // tessGetVertices() - Returns pointer to first coordinate of first vertex.
 const TESSreal* tessGetVertices( TESStesselator *tess );
 
+// tessGetVertexIndices() - Returns pointer to first vertex index.
+// Vertex indices can be used to map the generated vertices to the original vertices.
+// Every point added using tessAddContour() will get a new index starting at 0.
+// New vertices generated at the intersections of segments are assigned value TESS_UNDEF.
+const TESSindex* tessGetVertexIndices( TESStesselator *tess );
+
 // tessGetElementCount() - Returns number of elements in the the tesselated output.
 int tessGetElementCount( TESStesselator *tess );
 
 // tessGetElements() - Returns pointer to the first element.
 const TESSindex* tessGetElements( TESStesselator *tess );
+
+typedef enum TESSstatus {
+  TESS_STATUS_OK,
+  TESS_STATUS_OUT_OF_MEMORY,
+  TESS_STATUS_INVALID_INPUT
+} TESSstatus;
+
+// Return the success or failure status. If tessTesselate fails (or will fail,
+// e.g. after invalid data is passed to tessAddContour), this can indicate
+// more specifically why. It can also be checked after tessAddContour to
+// see whether to bail out early.
+TESSstatus tessGetStatus( TESStesselator *tess );
 
 #ifdef __cplusplus
 };

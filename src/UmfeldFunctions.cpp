@@ -704,7 +704,12 @@ namespace umfeld {
         );
 
         if (folder_path) {
+#ifdef SYSTEM_WIN32
+            // NOTE windows needs an extra slash at the end
+            return std::string(folder_path) + "/";
+#else
             return folder_path;
+#endif
         }
         return "";
     }

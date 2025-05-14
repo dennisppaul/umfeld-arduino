@@ -20,15 +20,19 @@
 ## Quickstart
 
 ```sh
-git clone --recurse-submodules https://github.com/dennisppaul/umfeld
-git clone --recurse-submodules https://github.com/dennisppaul/umfeld-examples
+git clone https://github.com/dennisppaul/umfeld
+git clone https://github.com/dennisppaul/umfeld-examples
 cd umfeld
-./install-macOS.sh # or ./install-linux.sh
+./install.sh 
 cd ../umfeld-examples/Basics/minimal
 cmake -B build ; cmake --build build ; ./build/minimal
 ```
 
-on some linux systems you might need to installed `git` first with `sudo apt install -y git`. if something goes wrong consult the detailed [DOCUMENTATION](documentation/DOCUMENTATION.md).
+on windows you need to install [MSYS2](https://www.msys2.org/) first and run the script from `MSYS2 UCRT64` console.
+
+on *some* linux systems you might need to installed `git` first with `sudo apt install -y git`.
+
+if something goes wrong consult the detailed [DOCUMENTATION](documentation/DOCUMENTATION.md).
 
 ## Why *Umfeld*?
 

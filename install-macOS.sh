@@ -2,9 +2,9 @@
 
 check_brew() {
     if command -v brew >/dev/null 2>&1; then
-        echo "Homebrew is already installed."
+        echo "already installed."
     else
-        echo "Homebrew is not installed. Installing Homebrew..."
+        echo -n "not installed. installing homebrew now..."
         install_brew
     fi
 }
@@ -12,19 +12,17 @@ check_brew() {
 install_brew() {
     /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
     if [ $? -eq 0 ]; then
-        echo "Homebrew installation successful."
+        echo " OK"
     else
-        echo "Homebrew installation failed."
+        echo " FAILED"
         exit 1
     fi
 }
 
-echo "+++ setting up umfeld   +++"
-
-echo "+++ checking for homebrew +++"
+echo -n "+++ checking for homebrew: "
 check_brew
 
-echo "+++ installing packages   +++"
+echo "+++ installing packages"
 brew bundle
 
 echo

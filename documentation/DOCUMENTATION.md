@@ -57,11 +57,12 @@ cmake --build build
 #### Windows
 
 - install [MSYS2](https://www.msys2.org/)
-- install the following modules with `pacman` in `MSYS2 UCRT64`:
+- open `MSYS2 UCRT64`
+- in `MSYS2 UCRT64` install the following modules with `pacman`:
 
 ```sh
 pacman -Syu --noconfirm
-pacman -Syu --noconfirm
+pacman -Syu --noconfirm # Repeat after first upgrade to ensure core tools are also updated
 pacman -S --noconfirm \
   mingw-w64-ucrt-x86_64-toolchain \
   mingw-w64-ucrt-x86_64-cmake \

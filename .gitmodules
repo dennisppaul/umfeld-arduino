@@ -1,3 +1,4 @@
 [submodule "umfeld/cores/sdl3/umfeld"]
 	path = umfeld/cores/sdl3/umfeld
 	url = https://github.com/dennisppaul/umfeld.git
+	branch = main

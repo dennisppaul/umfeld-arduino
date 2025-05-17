@@ -1,7 +1,6 @@
 brew 'cmake'
 brew 'pkgconfig'
 brew 'sdl3'
-brew 'glew'
 brew 'harfbuzz'
 brew 'freetype'
 brew 'ffmpeg'

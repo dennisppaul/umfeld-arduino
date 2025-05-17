@@ -35,7 +35,7 @@ install all packages:
 ```sh
 sudo apt-get update -y
 sudo apt-get upgrade -y
-sudo apt-get install cmake libglew-dev libharfbuzz-dev libfreetype6-dev ffmpeg libavcodec-dev libavformat-dev libavutil-dev libswscale-dev libavdevice-dev librtmidi-dev libglm-dev portaudio19-dev -y
+sudo apt-get install cmake libharfbuzz-dev libfreetype6-dev ffmpeg libavcodec-dev libavformat-dev libavutil-dev libswscale-dev libavdevice-dev librtmidi-dev libglm-dev portaudio19-dev -y
 #sudo apt-get install libsdl3-dev # currently (2025-04-01) not available
 ```
 

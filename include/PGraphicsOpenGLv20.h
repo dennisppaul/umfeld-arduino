@@ -52,7 +52,7 @@ namespace umfeld {
         void restore_mvp_matrices() override;
 
         void        init(uint32_t* pixels, int width, int height, int format, bool generate_mipmap) override;
-        std::string name() override { return "PGraphicsOpenGLv22"; }
+        std::string name() override { return "PGraphicsOpenGLv20"; }
 
         /* --- standard drawing functions --- */
 

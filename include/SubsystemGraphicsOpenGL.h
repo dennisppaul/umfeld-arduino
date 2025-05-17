@@ -19,7 +19,7 @@
 
 #pragma once
 
-#include <GL/glew.h>
+#include "UmfeldSDLOpenGL.h" // TODO move to cpp implementation
 
 #include "Umfeld.h"
 #include "PGraphicsOpenGL.h"
@@ -98,16 +98,23 @@ namespace umfeld {
 
         SDL_ShowWindow(window);
 
-        /* initialize GLEW */
-
-        glewExperimental            = GL_TRUE;
-        const GLenum glewInitResult = glewInit();
-        if (GLEW_OK != glewInitResult) {
-            error("problem initializing GLEW: ", glewGetErrorString(glewInitResult));
+        /* initialize GLAD */
+// TODO maybe move to subsystem
+#if defined(OPEN_GL_CORE_3_3) || defined(OPEN_GL_2_0)
+        if (!gladLoadGL(SDL_GL_GetProcAddress)) {
+            error("Failed to load OpenGL with GLAD");
             SDL_GL_DestroyContext(gl_context);
             SDL_DestroyWindow(window);
             return false;
         }
+#elif defined(OPEN_GLES_30)
+        if (!gladLoadGLES2(SDL_GL_GetProcAddress)) {
+            error("Failed to load OpenGL with GLAD");
+            SDL_GL_DestroyContext(gl_context);
+            SDL_DestroyWindow(window);
+            return false;
+        }
+#endif
 
         query_opengl_capabilities(open_gl_capabilities);
 

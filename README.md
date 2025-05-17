@@ -74,7 +74,6 @@ this project relies on the following packages:
 - [CMake](https://cmake.org/) `@version(macOS, 3.31.6)`
 - [pkg-config](https://www.freedesktop.org/wiki/Software/pkg-config/) `@version(macOS, 2.4.3)`
 - [SDL3](https://www.libsdl.org) `@version(macOS, 3.2.8)`
-- [GLEW](https://glew.sourceforge.net/) `@version(macOS, 2.2.0)`
 - [HarfBuzz](https://github.com/harfbuzz/harfbuzz) `@version(macOS, 11.0.0)`
 - [Freetype](https://www.freetype.org/) `@version(macOS, 2.13.3)`
 - [ffmpeg](https://ffmpeg.org) `@version(macOS, 7.1.1)`

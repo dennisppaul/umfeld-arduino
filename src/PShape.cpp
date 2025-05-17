@@ -24,7 +24,8 @@ using namespace umfeld;
 
 #ifndef DISABLE_GRAPHICS
 
-#include <GL/glew.h>
+#include "UmfeldSDLOpenGL.h"
+#include "PGraphicsOpenGL.h"
 
 void PShape::beginShape(int shape) {
     isRecording = true;
@@ -93,38 +94,39 @@ void PShape::draw() {
     //    glBindVertexArray(vertexArray);
     //    glDrawArrays(GL_TRIANGLES, 0, fVerticesSize / 6);  // TODO implement different shapes
     //    glBindVertexArray(0);
-    int mShape;
-    switch (fShape) {
-        case TRIANGLES:
-            mShape = GL_TRIANGLES;
-            break;
-        case TRIANGLE_STRIP:
-            mShape = GL_TRIANGLE_STRIP;
-            break;
-        case TRIANGLE_FAN:
-            mShape = GL_TRIANGLE_FAN;
-            break;
-        case QUADS:
-            mShape = GL_QUADS;
-            break;
-        case QUAD_STRIP:
-            mShape = GL_QUAD_STRIP;
-            break;
-        case POLYGON:
-            mShape = GL_POLYGON;
-            break;
-        case POINTS:
-            mShape = GL_POINTS;
-            break;
-        case LINES:
-            mShape = GL_LINES;
-            break;
-        case LINE_STRIP:
-            mShape = GL_LINE_STRIP;
-            break;
-        default:
-            mShape = GL_TRIANGLES;
-    }
+    int mShape = get_draw_mode(fShape);
+    // switch (fShape) {
+    //     case TRIANGLES:
+    //         mShape = GL_TRIANGLES;
+    //         break;
+    //     case TRIANGLE_STRIP:
+    //         mShape = GL_TRIANGLE_STRIP;
+    //         break;
+    //     case TRIANGLE_FAN:
+    //         mShape = GL_TRIANGLE_FAN;
+    //         break;
+    //     case QUADS:
+    //         mShape = GL_QUADS;
+    //         break;
+    //     case QUAD_STRIP:
+    //         mShape = GL_QUAD_STRIP;
+    //         break;
+    //     case POLYGON:
+    //         mShape = GL_POLYGON;
+    //         break;
+    //     case POINTS:
+    //         mShape = GL_POINTS;
+    //         break;
+    //     case LINES:
+    //         mShape = GL_LINES;
+    //         break;
+    //     case LINE_STRIP:
+    //         mShape = GL_LINE_STRIP;
+    //         break;
+    //     default:
+    //         mShape = GL_TRIANGLES;
+    // }
+#ifdef OPEN_GL_2_0
     glBegin(mShape);
     for (int i = 0; i < vertices.size(); i += 6) {
         glColor3f(vertices[i + 3],
@@ -135,6 +137,9 @@ void PShape::draw() {
                    vertices[i + 2]);
     }
     glEnd();
+#else
+    warning("PShape not supported in this OpenGL version");
+#endif
 }
 
 #else // DISABLE_GRAPHICS

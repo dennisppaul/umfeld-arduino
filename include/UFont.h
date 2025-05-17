@@ -20,7 +20,7 @@
 #pragma once
 
 #include <vector>
-#include <GL/glew.h>
+#include "UmfeldSDLOpenGL.h" // TODO move to cpp implementation
 
 #include "Vertex.h"
 #include "PGraphicsOpenGLConstants.h"

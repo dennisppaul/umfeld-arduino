@@ -69,14 +69,14 @@ namespace umfeld {
     // ReSharper disable once CppParameterMayBeConstPtrOrRef
     static void event(SDL_Event* event) {
         if (event->type == SDL_EVENT_WINDOW_RESIZED) {
-            warning("TODO implement resize in SDL_2D");
+            warning("TODO implement resize in RENDERER_SDL_2D");
         }
     }
 
     // ReSharper disable once CppParameterMayBeConstPtrOrRef
     static void event_in_update_loop(SDL_Event* event) {
         if (event->type == SDL_EVENT_WINDOW_RESIZED) {
-            warning("TODO implement resize in SDL_2D");
+            warning("TODO implement resize in RENDERER_SDL_2D");
         }
     }
 
@@ -94,7 +94,7 @@ namespace umfeld {
     }
 
     static int get_renderer_type() {
-        return SDL_2D;
+        return RENDERER_SDL_2D;
     }
 
     static const char* name() {

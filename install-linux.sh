@@ -27,7 +27,6 @@ sudo apt-get install -y \
 # install umfeld dependencies
 echo "--- installing dependencies        ---"
 sudo apt-get install -y \
-  libglew-dev \
   libharfbuzz-dev \
   libfreetype6-dev \
   libglm-dev \

@@ -18,7 +18,6 @@ pacman -S --noconfirm \
   mingw-w64-ucrt-x86_64-cmake \
   mingw-w64-ucrt-x86_64-pkg-config \
   mingw-w64-ucrt-x86_64-ninja \
-  mingw-w64-ucrt-x86_64-glew \
   mingw-w64-ucrt-x86_64-mesa \
   mingw-w64-ucrt-x86_64-ftgl \
   mingw-w64-ucrt-x86_64-sdl3 \

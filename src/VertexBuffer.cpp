@@ -43,9 +43,8 @@ VertexBuffer::~VertexBuffer() {
 }
 
 void VertexBuffer::checkVAOSupport() {
-    GLint major, minor;
-    glGetIntegerv(GL_MAJOR_VERSION, &major);
-    glGetIntegerv(GL_MINOR_VERSION, &minor);
+    int major = 0, minor = 0;
+    get_OpenGL_version(major, minor);
 
     if ((major > 3) || (major == 3 && minor >= 3)) {
         vao_supported = true; // OpenGL 3.3+ supports VAOs

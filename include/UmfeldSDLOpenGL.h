@@ -19,9 +19,5 @@
 
 #pragma once
 
-#include "UmfeldSDLOpenGL.h" // TODO move to cpp implementation
-
-namespace umfeld {
-    static constexpr GLint UMFELD_DEFAULT_TEXTURE_PIXEL_TYPE    = GL_UNSIGNED_BYTE;
-    static constexpr GLint UMFELD_DEFAULT_INTERNAL_PIXEL_FORMAT = GL_RGBA;
-} // namespace umfeld
+#include <SDL3/SDL.h>
+#include "glad/gl.h"

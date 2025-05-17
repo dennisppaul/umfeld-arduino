@@ -17,8 +17,10 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifdef OPEN_GL_2_0
+
 #include <vector>
-#include <GL/glew.h>
+#include "UmfeldSDLOpenGL.h"
 #include <glm/gtc/type_ptr.hpp>
 
 #include "PGraphicsOpenGL.h"
@@ -979,3 +981,4 @@ void PGraphicsOpenGLv20::ortho(const float left, const float right, const float 
 void PGraphicsOpenGLv20::perspective(const float fovy, const float aspect, const float near, const float far) {
     PGraphics::perspective(fovy, aspect, near, far);
 }
+#endif // OPEN_GL_2_0

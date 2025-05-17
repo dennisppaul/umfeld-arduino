@@ -21,8 +21,8 @@
 
 #include <string>
 #include <unordered_map>
+#include "UmfeldSDLOpenGL.h" // TODO move to cpp implementation
 #include <glm/glm.hpp>
-#include <GL/glew.h>
 
 namespace umfeld {
     class PShader {

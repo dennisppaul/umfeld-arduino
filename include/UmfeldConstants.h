@@ -130,11 +130,11 @@ namespace umfeld {
         EXCLUSION,
         REPLACE,
         DIFFERENCE_BLEND, // not implemented
-        OVERLAY,    // not implemented
-        HARD_LIGHT, // not implemented
-        SOFT_LIGHT, // not implemented
-        DODGE,      // not implemented
-        BURN        // not implemented
+        OVERLAY,          // not implemented
+        HARD_LIGHT,       // not implemented
+        SOFT_LIGHT,       // not implemented
+        DODGE,            // not implemented
+        BURN              // not implemented
     };
     enum RenderMode {
         RENDER_MODE_IMMEDIATE = 0x90,
@@ -148,11 +148,17 @@ namespace umfeld {
         DISABLE_DEPTH_TEST
     };
     enum Renderer {
-        OPENGL_3_3 = 0xB0,       // core profile
-        OPENGL     = OPENGL_3_3, // defaults to OPENGL_3_3
-        OPENGL_2_0,              // fixed-function pipeline
-        OPENGL_ES_3_0,           // iOS + Android + RPI4b+5
-        SDL_2D,
+        RENDERER_OPEN_GL_CORE_3_3 = 0xB0,                      // core profile
+        RENDERER_OPEN_GL_2_0,                                  // fixed-function pipeline
+        RENDERER_OPEN_GL_ES_3_0,                               // iOS + Android + RPI4b+5
+#if defined(OPEN_GL_CORE_3_3)
+        RENDERER_OPEN_GL = RENDERER_OPEN_GL_CORE_3_3, // default OpenGL renderer
+#elif defined(OPEN_GL_2_0)
+        RENDERER_OPEN_GL = RENDERER_OPEN_GL_2_0, // default OpenGL renderer
+#elif defined(OPEN_GL_ES_3_0)
+        RENDERER_OPEN_GL = RENDERER_OPEN_GL_ES_3_0, // default OpenGL renderer
+#endif
+        RENDERER_SDL_2D,
     };
     const std::string SHADER_UNIFORM_MODEL_MATRIX      = "uModelMatrix";
     const std::string SHADER_UNIFORM_VIEW_MATRIX       = "uViewMatrix";

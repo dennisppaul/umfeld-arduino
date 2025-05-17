@@ -507,16 +507,16 @@ namespace umfeld {
         // NOTE `create_native_graphics` should handle all this:
         //
         // if (renderer == DEFAULT) {
-        //     renderer = OPENGL; // TODO try to deduce renderer from (sub-)system or main graphics `g`
+        //     renderer = RENDERER_OPEN_GL; // TODO try to deduce renderer from (sub-)system or main graphics `g`
         // }
         //
         // switch (renderer) {
-        //     case OPENGL_2_0: {
+        //     case RENDERER_OPEN_GL_2_0: {
         //         const auto graphics = new PGraphicsOpenGLv20(true);
         //         graphics->init(nullptr, width, height, 0, false);
         //         return graphics;
         //     }
-        //     case OPENGL_3_3:
+        //     case RENDERER_OPEN_GL_CORE_3_3:
         //     default: {
         //         const auto graphics = new PGraphicsOpenGLv33(true);
         //         graphics->init(nullptr, width, height, 0, false);

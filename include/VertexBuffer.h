@@ -20,8 +20,8 @@
 #pragma once
 
 #include <vector>
-#include <GL/glew.h>
 
+#include "UmfeldSDLOpenGL.h" // TODO move to cpp implementation
 #include "Umfeld.h"
 #include "Vertex.h"
 
@@ -43,7 +43,8 @@ namespace umfeld {
     private:
         const int           VBO_BUFFER_CHUNK_SIZE_BYTES = 1024 * 16 * sizeof(Vertex);
         std::vector<Vertex> _vertices;
-        GLuint              vbo = 0, vao = 0;
+        GLuint                 vbo                = 0;
+        GLuint                 vao                = 0;
         bool                vao_supported      = false;
         bool                initial_upload     = false;
         bool                buffer_initialized = false;

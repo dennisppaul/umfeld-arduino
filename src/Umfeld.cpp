@@ -157,14 +157,23 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[]) {
         if (umfeld::renderer > umfeld::DEFAULT) {
             umfeld::console("+++ setting renderer from paramter `size()`.");
             switch (umfeld::renderer) {
-                case umfeld::OPENGL_2_0:
+                case umfeld::RENDERER_OPEN_GL_2_0:
+#ifndef OPEN_GL_2_0
+                    umfeld::error("RENDERER_OPEN_GL_2_0 requires `OPEN_GL_2_0` to be defined e.g `-DOPEN_GL_2_0` in CLI or `set(UMFELD_OPENGL_VERSION \"2.0\")` in `CMakeLists.txt`");
+#endif
                     umfeld::subsystem_graphics = umfeld_create_subsystem_graphics_openglv20();
                     break;
-                case umfeld::OPENGL_ES_3_0:
+                case umfeld::RENDERER_OPEN_GL_ES_3_0:
+#ifndef OPEN_GL_ES_3_0
+                    umfeld::error("RENDERER_OPEN_GL_ES_3_0 requires `OPEN_GL_ES_3_0` to be defined e.g `-DOPEN_GL_ES_3_0` in CLI or `set(UMFELD_OPENGL_VERSION \"es3.0\")` in `CMakeLists.txt`");
+#endif
                     umfeld::warning("+++ OpenGL ES 3.0 not supported yet.");
                     break;
                 default:
-                case umfeld::OPENGL_3_3:
+                case umfeld::RENDERER_OPEN_GL_CORE_3_3:
+#ifndef OPEN_GL_CORE_3_3
+                    umfeld::error("RENDERER_OPEN_GL_CORE_3_3 requires `OPEN_GL_CORE_3_3` to be defined e.g `-DOPEN_GL_CORE_3_3` in CLI or `set(UMFELD_OPENGL_VERSION \"core3.3\")` in `CMakeLists.txt`");
+#endif
                     umfeld::subsystem_graphics = umfeld_create_subsystem_graphics_openglv33();
             }
         }
@@ -175,9 +184,15 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[]) {
                 umfeld::handle_subsystem_graphics_cleanup = true;
             } else {
                 umfeld::console("+++ no graphics subsystem provided, using default.");
-                // umfeld::subsystem_graphics = umfeld_create_subsystem_graphics_sdl2d();
-                // umfeld::subsystem_graphics = umfeld_create_subsystem_graphics_openglv20();
-                umfeld::subsystem_graphics                = umfeld_create_subsystem_graphics_openglv33();
+#if defined(OPEN_GL_CORE_3_3)
+                umfeld::subsystem_graphics = umfeld_create_subsystem_graphics_openglv33();
+#elif defined(OPEN_GL_2_0)
+                umfeld::subsystem_graphics = umfeld_create_subsystem_graphics_openglv20();
+#elif defined(OPEN_GL_ES_3_0)
+#error "OpenGL ES 3.0 not supported yet."
+#else
+                umfeld::subsystem_graphics = umfeld_create_subsystem_graphics_sdl2d();
+#endif
                 umfeld::handle_subsystem_graphics_cleanup = true;
             }
             if (umfeld::subsystem_graphics == nullptr) {

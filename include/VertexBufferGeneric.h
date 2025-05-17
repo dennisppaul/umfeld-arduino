@@ -22,8 +22,8 @@
 #include <vector>
 #include <tuple>
 #include <cstddef>
-#include <GL/glew.h>
 #include <type_traits>
+#include "UmfeldSDLOpenGL.h" // TODO move to cpp implementation
 #include "Vertex.h"
 
 #include <tuple>

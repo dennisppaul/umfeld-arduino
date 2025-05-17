@@ -19,7 +19,7 @@
 
 #pragma once
 
-#include <GL/glew.h>
+#include "UmfeldSDLOpenGL.h" // TODO move to cpp implementation
 
 #include "UmfeldFunctionsAdditional.h"
 #include "PGraphics.h"
@@ -114,6 +114,8 @@ namespace umfeld {
 
         std::string profile_str = "none ( pre 3.2 )";
         capabilities.profile    = OPENGL_PROFILE_NONE;
+
+#ifdef OPEN_GL_CORE_3_3
         if (capabilities.version_major > 2) {
             int profile = 0;
             glGetIntegerv(GL_CONTEXT_PROFILE_MASK, &profile);
@@ -127,6 +129,7 @@ namespace umfeld {
                 capabilities.profile = OPENGL_PROFILE_COMPATIBILITY;
             }
         }
+#endif // OPEN_GL_CORE_3_3
         console(fl("Profile"), profile_str);
     }
 
@@ -190,10 +193,18 @@ namespace umfeld {
                 _shape = GL_QUADS;
                 break;
             case QUAD_STRIP:
+#ifdef OPEN_GL_2_0
                 _shape = GL_QUAD_STRIP;
+#else
+                warning("QUAD_STRIP not supported in this OpenGL version");
+#endif
                 break;
             case POLYGON:
+#ifdef OPEN_GL_2_0
                 _shape = GL_POLYGON;
+#else
+                warning("QUAD_STRIP not supported in this OpenGL version");
+#endif
                 break;
             case POINTS:
                 _shape = GL_POINTS;
@@ -224,7 +235,7 @@ namespace umfeld {
 
         virtual void store_fbo_state()   = 0;
         virtual void restore_fbo_state() = 0;
-        virtual void bind_fbo()         = 0;
+        virtual void bind_fbo()          = 0;
         virtual void finish_fbo()        = 0;
 
         void beginDraw() override {

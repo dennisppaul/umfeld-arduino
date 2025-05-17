@@ -81,7 +81,12 @@ namespace umfeld {
     }
 
     static PGraphics* create_native_graphics(const bool render_to_offscreen) {
+#ifdef OPEN_GL_CORE_3_3
         return new PGraphicsOpenGLv33(render_to_offscreen);
+#else
+        error("RENDERER_OPEN_GL_CORE_3_3 requires `OPEN_GL_CORE_3_3` to be defined. e.g `-DOPEN_GL_CORE_3_3` in CLI or `set(UMFELD_OPENGL_VERSION \"core3.3\")` in `CMakeLists.txt`");
+        return nullptr;
+#endif
     }
 
     static SDL_Window* get_sdl_window() {
@@ -93,7 +98,7 @@ namespace umfeld {
     }
 
     static int get_renderer_type() {
-        return OPENGL_3_3;
+        return RENDERER_OPEN_GL_CORE_3_3;
     }
 
     static const char* name() {

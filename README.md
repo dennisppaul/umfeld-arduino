@@ -79,6 +79,7 @@ this project relies on the following packages:
 - [ffmpeg](https://ffmpeg.org) `@version(macOS, 7.1.1)`
 - [rtmidi](https://github.com/thestk/rtmidi) `@version(macOS, 6.0.0)`
 - [glm](https://glm.g-truc.net/) `@version(macOS, 1.0.1)`
+- [glad](https://github.com/Dav1dde/glad) `@version(2.0.8)` ( included as source files )
 - [dylibbundler](https://github.com/auriamg/macdylibbundler) ( only required for bundling standalone macOS applications. it can also be installed via homebrew with `brew install dylibbundler` ) `@version(macOS, 1.0.5)`
 - [PortAudio](https://www.portaudio.com) ( can be used as a replacement for SDL-based audio. in contrast to SDL it can output audio to multiple channels. it can also be installed via homebrew with `brew install portaudio` ) `@version(macOS, 19.7.0)`
 - [oscpack](http://www.rossbencina.com/code/oscpack) ( included as source files )

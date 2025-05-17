@@ -20,7 +20,6 @@
 #pragma once
 
 // #define PFONT_DEBUG_FONT
-// #define PFONT_INCLUDE_OPENGL
 
 #include <string>
 #include <codecvt>
@@ -28,10 +27,6 @@
 #include <algorithm>
 #include <vector>
 #include <unordered_map>
-
-#ifdef PFONT_INCLUDE_OPENGL
-#include <GL/glew.h>
-#endif // PFONT_INCLUDE_OPENGL
 
 #include "harfbuzz/hb.h"
 #include "harfbuzz/hb-ft.h"
@@ -604,57 +599,5 @@ namespace umfeld {
                 pen_y += pos[i].y_advance;
             }
         }
-
-#ifdef PFONT_INCLUDE_OPENGL
-        /**
-         * @deprecated this is handle by PGraphics
-         * @param font
-         * @return
-         */
-        GLuint create_font_texture(const FontData& font) const {
-            // TODO this does happen in OpenGL context ... as for PImage
-            std::vector<unsigned char> atlas_rgba(font.atlas_width * font.atlas_height * 4, 255);
-            for (int y = 0; y < font.atlas_height; y++) {
-                for (int x = 0; x < font.atlas_width; x++) {
-                    const unsigned char val = font.atlas[y * font.atlas_width + x];
-                    const int           idx = (y * font.atlas_width + x) * 4;
-                    // Store grayscale value into RGBA format (transparent text on white fond)
-                    atlas_rgba[idx + 0] = 255; // R
-                    atlas_rgba[idx + 1] = 255; // G
-                    atlas_rgba[idx + 2] = 255; // B
-                    atlas_rgba[idx + 3] = val; // A (fully opaque)
-                }
-            }
-
-            GLuint texture_id;
-            glGenTextures(1, &texture_id);
-            glBindTexture(GL_TEXTURE_2D, texture_id);
-
-            // Use linear filtering for smooth text rendering
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-            // Clamp to edges to avoid bleeding artifacts
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
-            // Upload the atlas (single-channel grayscale)
-            glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-            glTexImage2D(GL_TEXTURE_2D,
-                         0,
-                         UMFELD_DEFAULT_INTERNAL_PIXEL_FORMAT,
-                         font.atlas_width, font.atlas_height,
-                         0,
-                         UMFELD_DEFAULT_INTERNAL_PIXEL_FORMAT,
-                         UMFELD_DEFAULT_TEXTURE_PIXEL_TYPE,
-                         // font.atlas.data());
-                         atlas_rgba.data());
-
-            // Unbind for safety
-            glBindTexture(GL_TEXTURE_2D, 0);
-
-            return texture_id;
-        }
-#endif // PFONT_INCLUDE_OPENGL
     };
 } // namespace umfeld

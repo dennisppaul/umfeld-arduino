@@ -2,53 +2,10 @@ cmake_minimum_required(VERSION 3.20)
 
 project(umfeld-lib)
 
-#option(SET_COMPILER_FLAGS "Set Compiler Flags to C++17" OFF)
-
 message(STATUS "----------------------------------------")
 message(STATUS "UMFELD_APP    : ${PROJECT_NAME}")
 
 option(ENABLE_PORTAUDIO "Enable PortAudio output" ON)
-
-#if (NOT DEFINED UMFELD_APP OR "${UMFELD_APP}" STREQUAL "")
-#    message(STATUS "CHARACTER     : using umfeld standalone ( UMFELD_APP not set )")
-#    set(BUILD_STANDALONE ON)
-#else ()
-#    set(BUILD_STANDALONE OFF)
-#endif ()
-
-##########################################################################################################
-### COMPILER FLAGS                                                                                     ###
-##########################################################################################################
-#function(set_umfeld_compiler_flags)
-#    set(CMAKE_CXX_STANDARD 17 PARENT_SCOPE)
-#    set(CMAKE_CXX_STANDARD_REQUIRED ON PARENT_SCOPE)
-##    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DGL_SILENCE_DEPRECATION" PARENT_SCOPE)
-#    set(CMAKE_OSX_ARCHITECTURES "x86_64;arm64" CACHE STRING "Build architectures for Mac OS X" FORCE)
-#endfunction()
-
-# TODO somehow this does not work?!?
-## NOTE can and should be set in root cmake script
-#function(set_umfeld_compiler_flags)
-#    #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
-#    set(CMAKE_CXX_STANDARD 17)
-#    set(CMAKE_CXX_STANDARD_REQUIRED ON)
-#    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DGL_SILENCE_DEPRECATION")
-#    #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-c++17-extensions")
-#    #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -O3")
-#    #set(CMAKE_OSX_ARCHITECTURES "x86_64;arm64" CACHE STRING "Build architectures for Mac OS X")
-#endfunction()
-
-#if (SET_COMPILER_FLAGS)
-#    message(STATUS "COMPILER_FLAGS: Umfeld is setting compiler flags")
-#    # TODO check if this is necessary or if they can be inherited from the parent project
-#    # TODO does not work if called via function … investigate
-##    set_umfeld_compiler_flags()
-#    set(CMAKE_CXX_STANDARD 17)
-#    set(CMAKE_CXX_STANDARD_REQUIRED ON)
-#    set(CMAKE_OSX_ARCHITECTURES "x86_64;arm64" CACHE STRING "Build architectures for Mac OS X")
-#else (SET_COMPILER_FLAGS)
-#    message(STATUS "COMPILER_FLAGS: Umfeld is expecting compiler flags to be set by root script")
-#endif (SET_COMPILER_FLAGS)
 
 ##########################################################################################################
 ### CHECK FOR HOMEBREW                                                                                 ###
@@ -136,8 +93,6 @@ endif ()
 if (NOT TARGET umfeld-lib)
     add_library(umfeld-lib ${UMFELD_SOURCE_FILES})
 endif ()
-#target_compile_features(umfeld-lib PUBLIC cxx_std_17)
-#target_compile_options(umfeld-lib PUBLIC -std=c++17)
 
 # Specify include directories for the library
 target_include_directories(umfeld-lib PUBLIC
@@ -196,6 +151,64 @@ if (ENABLE_CAPTURE)
 endif (ENABLE_CAPTURE)
 
 ##########################################################################################################
+### OPEN_GL VERSION + GLAD                                                                             ###
+##########################################################################################################
+
+set(UMFELD_DEFAULT_OPENGL_VERSION "core3.3" CACHE STRING "OpenGL version used in umfeld")
+# NOTE auto-generated files with GLAD 2 ( on macOS ):
+#    brew install glad2
+#    glad --api="gl:core=3.3" --out-path=external/glad_opengl_33 c
+#    glad --api="gl:compatibility=2.0" --out-path=external/glad_opengl_20 c
+#    glad --api="gles2=3.0" --out-path=external/glad_opengles_30 c
+# TODO maybe move this into library folder(s)?
+set(UMFELD_GLAD_BASE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/external" CACHE STRING "GLAD base directory")
+
+# if OpenGL not set use default
+if (NOT UMFELD_OPENGL_VERSION)
+    set(UMFELD_OPENGL_VERSION "${UMFELD_DEFAULT_OPENGL_VERSION}")
+    message(STATUS "OPEN_GL(app)  : OPENGL_VERSION not set, using default: ${UMFELD_DEFAULT_OPENGL_VERSION}")
+else ()
+    message(STATUS "OPEN_GL(app)  : ${UMFELD_OPENGL_VERSION}")
+endif ()
+
+if (UMFELD_OPENGL_VERSION STREQUAL "core3.3" OR UMFELD_OPENGL_VERSION STREQUAL "3.3")
+    set(OPEN_GL_CORE_33 TRUE)
+elseif (UMFELD_OPENGL_VERSION STREQUAL "2.0")
+    set(OPEN_GL_20 TRUE)
+elseif (UMFELD_OPENGL_VERSION STREQUAL "es3.0")
+    set(OPEN_GL_ES_30 TRUE)
+else ()
+    message(STATUS "Invalid OPENGL_VERSION: ${UMFELD_OPENGL_VERSION} must be `core3.3`, `2.0`, or `es3.0`")
+    message(STATUS "using default: ${UMFELD_DEFAULT_OPENGL_VERSION}")
+    set(OPEN_GL_CORE_33 TRUE)
+endif ()
+
+# set GLAD path and define
+if (OPEN_GL_CORE_33)
+    target_compile_definitions(umfeld-lib-interface INTERFACE OPEN_GL_CORE_33)
+    target_compile_definitions(${PROJECT_NAME} PUBLIC OPEN_GL_CORE_33)
+    set(GLAD_DIR "${UMFELD_GLAD_BASE_DIR}/glad_opengl_33")
+    message(STATUS "OPEN_GL       : OPEN_GL_CORE_33")
+elseif (OPEN_GL_20)
+    target_compile_definitions(umfeld-lib-interface INTERFACE OPEN_GL_20)
+    target_compile_definitions(${PROJECT_NAME} PUBLIC OPEN_GL_20)
+    set(GLAD_DIR "${UMFELD_GLAD_BASE_DIR}/glad_opengl_20")
+    message(STATUS "OPEN_GL       : OPEN_GL_20")
+elseif (OPEN_GL_ES_30)
+    target_compile_definitions(umfeld-lib-interface INTERFACE OPEN_GL_ES_30)
+    target_compile_definitions(${PROJECT_NAME} PUBLIC OPEN_GL_ES_30)
+    set(GLAD_DIR "${UMFELD_GLAD_BASE_DIR}/glad_opengles_30")
+    message(STATUS "OPEN_GL       : OPEN_GL_ES_30")
+endif ()
+
+message(STATUS "GLAD_DIR      : ${GLAD_DIR}")
+
+# add GLAD as library
+file(GLOB GLAD_SRC "${GLAD_DIR}/src/*.c")
+add_library(glad STATIC ${GLAD_SRC})
+target_include_directories(glad PUBLIC "${GLAD_DIR}/include")
+
+##########################################################################################################
 ### CREATE EXECUTABLE                                                                                  ###
 ##########################################################################################################
 
@@ -230,29 +243,6 @@ else ()
     target_compile_definitions(umfeld-lib-interface INTERFACE SYSTEM_UNDEFINED)
     target_compile_definitions(${PROJECT_NAME} PUBLIC SYSTEM_UNDEFINED)
 endif ()
-
-# NOTE removed specific system check for now ( because it fails with ninja build system ). it may not be necessary to have such a specific check for RPI.
-#try_run(RUN_RESULT_VAR COMPILE_RESULT_VAR
-#        ${UMFELD_PATH}/tools/system_check
-#        ${UMFELD_PATH}/tools/system_check.cpp
-#        RUN_OUTPUT_VARIABLE SYSTEM_CHECK_OUTPUT)
-#
-#if(RUN_RESULT_VAR EQUAL 1)
-#    set(IS_WINDOWS ON)
-#    message(STATUS "Running on Windows")
-#elseif(RUN_RESULT_VAR EQUAL 2)
-#    set(IS_MACOS ON)
-#    message(STATUS "Running on macOS")
-#elseif(RUN_RESULT_VAR EQUAL 3)
-#    set(IS_RASPBERRY_PI ON)
-#    message(STATUS "Running on Raspberry Pi")
-#elseif(RUN_RESULT_VAR EQUAL 4)
-#    set(IS_LINUX ON)
-#    message(STATUS "Running on Linux (non-Raspberry Pi)")
-#else()
-#    set(IS_UNKNOWN_SYSTEM ON)
-#    message(STATUS "Running on an unknown system")
-#endif()
 
 ##########################################################################################################
 ### SUPRESS WARNINGS FOR APPLE                                                                         ###
@@ -369,6 +359,8 @@ if (NOT DISABLE_GRAPHICS)
     target_include_directories(${PROJECT_NAME} PUBLIC ${OPENGL_INCLUDE_DIRS})
     target_link_libraries(${PROJECT_NAME} PUBLIC ${GLEW_LIBRARIES})
     target_include_directories(${PROJECT_NAME} PUBLIC ${GLEW_INCLUDE_DIRS})
+    # TODO remove glew, add glad
+#    target_link_libraries(${PROJECT_NAME} PUBLIC glad)
     #target_link_libraries(${PROJECT_NAME} PUBLIC ${GLM_LIBRARIES})
     #target_include_directories(${PROJECT_NAME} PUBLIC ${GLM_INCLUDE_DIRS})
     target_link_libraries(${PROJECT_NAME} PUBLIC glm::glm)
@@ -402,7 +394,7 @@ if (NOT DISABLE_MIDI)
     target_include_directories(${PROJECT_NAME} PUBLIC ${RTMIDI_INCLUDE_DIRS})
     # add_definitions(${RTMIDI_CFLAGS_OTHER})
     # message(STATUS "RTMIDI_CFLAGS_OTHER: ${RTMIDI_CFLAGS_OTHER}")
-    foreach(flag ${RTMIDI_CFLAGS_OTHER})
+    foreach (flag ${RTMIDI_CFLAGS_OTHER})
         if (flag MATCHES "^-D[^=]+(=.+)?$")  # only pass valid -D macros
             target_compile_definitions(${PROJECT_NAME} PUBLIC "${flag}")
         elseif (flag STREQUAL "-pthread")

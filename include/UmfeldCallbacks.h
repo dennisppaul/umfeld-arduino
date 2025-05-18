@@ -30,6 +30,7 @@ void arguments(const std::vector<std::string>& args);
 void settings();
 void setup();
 void draw();
+void update();
 void windowResized(int width, int height);
 void post();
 void shutdown();

@@ -32,6 +32,7 @@ UMFELD_FUNC_WEAK void arguments(const std::vector<std::string>& args) { LOG_CALL
 UMFELD_FUNC_WEAK void settings() { LOG_CALLBACK_MSG("default settings"); }
 UMFELD_FUNC_WEAK void setup() { LOG_CALLBACK_MSG("default setup"); }
 UMFELD_FUNC_WEAK void draw() { LOG_CALLBACK_MSG("default draw"); }
+UMFELD_FUNC_WEAK void update() { LOG_CALLBACK_MSG("default update"); }
 UMFELD_FUNC_WEAK void windowResized(int width, int height) { LOG_CALLBACK_MSG("default windowResized"); }
 UMFELD_FUNC_WEAK void post() { LOG_CALLBACK_MSG("default post"); }
 UMFELD_FUNC_WEAK void shutdown() { LOG_CALLBACK_MSG("default shutdown"); }
@@ -481,6 +482,8 @@ SDL_AppResult SDL_AppIterate(void* appstate) {
             }
         }
     }
+
+    update();
 
     if (frame_duration >= umfeld::target_frame_duration) {
         handle_draw();

@@ -155,6 +155,30 @@ namespace umfeld {
 #endif
     }
 
+    template<typename... Args>
+    void console_n(const Args&... args) {
+#if (UMFELD_PRINT_CONSOLE)
+        std::ostringstream os;
+        ((os << to_printable(args)), ...);
+        std::cout
+            << timestamp() << " "
+            << "UMFELD.CONSOLE : "
+            << os.str();
+        std::flush(std::cout);
+#endif
+    }
+
+    template<typename... Args>
+    void console_c(const Args&... args) {
+#if (UMFELD_PRINT_CONSOLE)
+        std::ostringstream os;
+        ((os << to_printable(args)), ...);
+        std::cout
+            << os.str();
+        std::flush(std::cout);
+#endif
+    }
+
     inline std::string format_label(const std::string& label, const size_t width) {
         if (label.length() >= width) {
             return label + " : "; // Ensure spacing even if label is too long

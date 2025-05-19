@@ -37,11 +37,25 @@ static speed_t getBaudConstant(int baudrate) {
     return baudrate; // not used
 #else
     static std::map<int, speed_t> baudMap = {
-        {0, B0},       {50, B50},     {75, B75},     {110, B110},   {134, B134},
-        {150, B150},   {200, B200},   {300, B300},   {600, B600},   {1200, B1200},
-        {1800, B1800}, {2400, B2400}, {4800, B4800}, {9600, B9600}, {19200, B19200},
-        {38400, B38400}, {57600, B57600}, {115200, B115200}, {230400, B230400}
-    };
+        {0, B0},
+        {50, B50},
+        {75, B75},
+        {110, B110},
+        {134, B134},
+        {150, B150},
+        {200, B200},
+        {300, B300},
+        {600, B600},
+        {1200, B1200},
+        {1800, B1800},
+        {2400, B2400},
+        {4800, B4800},
+        {9600, B9600},
+        {19200, B19200},
+        {38400, B38400},
+        {57600, B57600},
+        {115200, B115200},
+        {230400, B230400}};
     auto it = baudMap.find(baudrate);
     return (it != baudMap.end()) ? it->second : B9600;
 #endif
@@ -73,7 +87,8 @@ void Serial::configure(bool flush_buffer, int baudrate, char parity, int dataBit
     GetCommState(handle, &dcb);
     dcb.BaudRate = baudrate;
     dcb.ByteSize = static_cast<BYTE>(dataBits);
-    dcb.Parity   = (parity == 'E') ? EVENPARITY : (parity == 'O') ? ODDPARITY : NOPARITY;
+    dcb.Parity   = (parity == 'E') ? EVENPARITY : (parity == 'O') ? ODDPARITY
+                                                                  : NOPARITY;
     dcb.StopBits = (stopBits == 2) ? TWOSTOPBITS : ONESTOPBIT;
     SetCommState(handle, &dcb);
 
@@ -155,20 +170,28 @@ void Serial::stop() {
 
 void Serial::poll() {
     constexpr int pollIntervalMs = 2;
-    auto now = std::chrono::steady_clock::now();
-    auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - lastPoll).count();
-    if (elapsed < pollIntervalMs) return;
+    auto          now            = std::chrono::steady_clock::now();
+    auto          elapsed        = std::chrono::duration_cast<std::chrono::milliseconds>(now - lastPoll).count();
+    if (elapsed < pollIntervalMs) {
+        return;
+    }
     lastPoll = now;
 
 #ifdef SYSTEM_WINDOWS
-    DWORD errors;
+    DWORD   errors;
     COMSTAT status;
-    if (!ClearCommError(handle, &errors, &status)) return;
-    if (status.cbInQue == 0) return;
+    if (!ClearCommError(handle, &errors, &status)) {
+        return;
+    }
+    if (status.cbInQue == 0) {
+        return;
+    }
 #else
     int bytesAvailable = 0;
     ioctl(handle, FIONREAD, &bytesAvailable);
-    if (bytesAvailable == 0) return;
+    if (bytesAvailable == 0) {
+        return;
+    }
 #endif
 
     char buf[256];
@@ -177,7 +200,7 @@ void Serial::poll() {
     if (ReadFile(handle, buf, sizeof(buf), &n, nullptr) && n > 0) {
         for (DWORD i = 0; i < n; ++i) {
             rxBuffer.push_back(buf[i]);
-            lastByte = (uint8_t)buf[i];
+            lastByte = (uint8_t) buf[i];
         }
     }
 #else
@@ -185,7 +208,7 @@ void Serial::poll() {
     if (n > 0) {
         for (int i = 0; i < n; ++i) {
             rxBuffer.push_back(buf[i]);
-            lastByte = (uint8_t)buf[i];
+            lastByte = (uint8_t) buf[i];
         }
     }
 #endif

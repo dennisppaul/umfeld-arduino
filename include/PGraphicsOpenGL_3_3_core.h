@@ -22,9 +22,9 @@
 #include "PGraphicsOpenGL.h"
 
 namespace umfeld {
-    class PGraphicsOpenGLv33 final : public PGraphicsOpenGL {
+    class PGraphicsOpenGL_3_3_core final : public PGraphicsOpenGL {
     public:
-        explicit PGraphicsOpenGLv33(bool render_to_offscreen);
+        explicit PGraphicsOpenGL_3_3_core(bool render_to_offscreen);
 
         /* --- OpenGL 3.3 specific implementation of shared methods --- */
 

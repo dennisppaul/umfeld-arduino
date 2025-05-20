@@ -18,7 +18,7 @@
  */
 
 #include "SubsystemGraphicsOpenGL.h"
-#include "PGraphicsOpenGLv33.h"
+#include "PGraphicsOpenGL_3_3_core.h"
 
 namespace umfeld {
     static SDL_Window*   window                                  = nullptr;
@@ -82,7 +82,7 @@ namespace umfeld {
 
     static PGraphics* create_native_graphics(const bool render_to_offscreen) {
 #ifdef OPENGL_ES_3_0
-        return new PGraphicsOpenGLv33(render_to_offscreen);
+        return new PGraphicsOpenGL_3_3_core(render_to_offscreen);
 #else
         error("RENDERER_OPENGL_ES_3_0 requires `OPENGL_ES_3_0` to be defined. e.g `-DOPENGL_ES_3_0` in CLI or `set(UMFELD_OPENGL_VERSION \"ES3.0\")` in `CMakeLists.txt`");
         return nullptr;

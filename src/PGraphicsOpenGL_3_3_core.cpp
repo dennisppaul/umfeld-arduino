@@ -28,7 +28,7 @@
 
 #include "Umfeld.h"
 #include "PGraphicsOpenGL.h"
-#include "PGraphicsOpenGLv33.h"
+#include "PGraphicsOpenGL_3_3_core.h"
 #include "Vertex.h"
 #include "Geometry.h"
 #include "VertexBuffer.h"
@@ -38,24 +38,24 @@
 
 using namespace umfeld;
 
-PGraphicsOpenGLv33::PGraphicsOpenGLv33(const bool render_to_offscreen) : PImage(0, 0, 0) {
+PGraphicsOpenGL_3_3_core::PGraphicsOpenGL_3_3_core(const bool render_to_offscreen) : PImage(0, 0, 0) {
     this->render_to_offscreen = render_to_offscreen;
 }
 
-void PGraphicsOpenGLv33::IMPL_background(const float a, const float b, const float c, const float d) {
+void PGraphicsOpenGL_3_3_core::IMPL_background(const float a, const float b, const float c, const float d) {
     glClearColor(a, b, c, d);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     // TODO should this also flush bins?
 }
 
-void PGraphicsOpenGLv33::IMPL_bind_texture(const int bind_texture_id) {
+void PGraphicsOpenGL_3_3_core::IMPL_bind_texture(const int bind_texture_id) {
     if (bind_texture_id != texture_id_current) {
         texture_id_current = bind_texture_id;
         glBindTexture(GL_TEXTURE_2D, texture_id_current); // NOTE this should be the only glBindTexture ( except for initializations )
     }
 }
 
-void PGraphicsOpenGLv33::IMPL_set_texture(PImage* img) {
+void PGraphicsOpenGL_3_3_core::IMPL_set_texture(PImage* img) {
     if (img == nullptr) {
         IMPL_bind_texture(texture_id_solid_color);
         return;
@@ -94,7 +94,7 @@ void PGraphicsOpenGLv33::IMPL_set_texture(PImage* img) {
  * @param line_strip_vertices
  * @param line_strip_closed
  */
-void PGraphicsOpenGLv33::emit_shape_stroke_line_strip(std::vector<Vertex>& line_strip_vertices, const bool line_strip_closed) {
+void PGraphicsOpenGL_3_3_core::emit_shape_stroke_line_strip(std::vector<Vertex>& line_strip_vertices, const bool line_strip_closed) {
     // NOTE relevant information for this method
     //     - closed
     //     - stroke_weight
@@ -160,7 +160,7 @@ void PGraphicsOpenGLv33::emit_shape_stroke_line_strip(std::vector<Vertex>& line_
      */
 }
 
-void PGraphicsOpenGLv33::emit_shape_fill_triangles(std::vector<Vertex>& triangle_vertices) {
+void PGraphicsOpenGL_3_3_core::emit_shape_fill_triangles(std::vector<Vertex>& triangle_vertices) {
     // NOTE relevant information for this method
     //     - textured_id
     //     - normal
@@ -196,7 +196,7 @@ void PGraphicsOpenGLv33::emit_shape_fill_triangles(std::vector<Vertex>& triangle
 }
 
 // TODO could move this to a shared method in `PGraphics` and use beginShape(TRIANGLES)
-void PGraphicsOpenGLv33::debug_text(const std::string& text, const float x, const float y) {
+void PGraphicsOpenGL_3_3_core::debug_text(const std::string& text, const float x, const float y) {
     const std::vector<Vertex> triangle_vertices = debug_font.generate(text, x, y, glm::vec4(color_fill));
     push_texture_id();
     IMPL_bind_texture(debug_font.textureID);
@@ -206,7 +206,7 @@ void PGraphicsOpenGLv33::debug_text(const std::string& text, const float x, cons
 
 /* --- UTILITIES --- */
 
-void PGraphicsOpenGLv33::beginDraw() {
+void PGraphicsOpenGL_3_3_core::beginDraw() {
     if (render_mode == RENDER_MODE_SHAPE) {
         static bool warning_once = true;
         if (warning_once) {
@@ -228,12 +228,12 @@ void PGraphicsOpenGLv33::beginDraw() {
     default_shader->set_uniform(SHADER_UNIFORM_PROJECTION_MATRIX, projection_matrix);
 }
 
-void PGraphicsOpenGLv33::endDraw() {
+void PGraphicsOpenGL_3_3_core::endDraw() {
     if (render_mode == RENDER_MODE_BUFFERED) {
         // TODO flush collected vertices
         // RM_flush_fill();
         // RM_flush_stroke();
-        // void PGraphicsOpenGLv33::RM_flush_stroke() {
+        // void PGraphicsOpenGL_3_3_core::RM_flush_stroke() {
         //     if (stroke_vertices_xyz_rgba.empty()) {
         //         return;
         //     }
@@ -264,7 +264,7 @@ void PGraphicsOpenGLv33::endDraw() {
         //     stroke_vertices_xyz_rgba.clear();
         // }
         //
-        // void PGraphicsOpenGLv33::RM_flush_fill() {
+        // void PGraphicsOpenGL_3_3_core::RM_flush_fill() {
         //     if (fill_vertices_xyz_rgba_uv.empty()) {
         //         return;
         //     }
@@ -305,7 +305,7 @@ void PGraphicsOpenGLv33::endDraw() {
     PGraphicsOpenGL::endDraw();
 }
 
-void PGraphicsOpenGLv33::render_framebuffer_to_screen(const bool use_blit) {
+void PGraphicsOpenGL_3_3_core::render_framebuffer_to_screen(const bool use_blit) {
     // modern OpenGL framebuffer rendering method
     if (use_blit) {
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -334,7 +334,7 @@ void PGraphicsOpenGLv33::render_framebuffer_to_screen(const bool use_blit) {
     }
 }
 
-void PGraphicsOpenGLv33::hint(const uint16_t property) {
+void PGraphicsOpenGL_3_3_core::hint(const uint16_t property) {
     // TODO @MERGE
     switch (property) {
         case ENABLE_SMOOTH_LINES:
@@ -361,7 +361,7 @@ void PGraphicsOpenGLv33::hint(const uint16_t property) {
     }
 }
 
-void PGraphicsOpenGLv33::upload_texture(PImage*         img,
+void PGraphicsOpenGL_3_3_core::upload_texture(PImage*         img,
                                         const uint32_t* pixel_data,
                                         const int       width,
                                         const int       height,
@@ -415,7 +415,7 @@ void PGraphicsOpenGLv33::upload_texture(PImage*         img,
     IMPL_bind_texture(tmp_bound_texture);
 }
 
-void PGraphicsOpenGLv33::download_texture(PImage* img) {
+void PGraphicsOpenGL_3_3_core::download_texture(PImage* img) {
     if (img == nullptr) {
         return;
     }
@@ -443,7 +443,7 @@ void PGraphicsOpenGLv33::download_texture(PImage* img) {
 #endif
 }
 
-void PGraphicsOpenGLv33::init(uint32_t*  pixels,
+void PGraphicsOpenGL_3_3_core::init(uint32_t*  pixels,
                               const int  width,
                               const int  height,
                               const int  format,
@@ -573,7 +573,7 @@ void PGraphicsOpenGLv33::init(uint32_t*  pixels,
 
 /* additional */
 
-void PGraphicsOpenGLv33::OGL3_create_solid_color_texture() {
+void PGraphicsOpenGL_3_3_core::OGL3_create_solid_color_texture() {
     GLuint texture_id;
     glGenTextures(1, &texture_id);
     glBindTexture(GL_TEXTURE_2D, texture_id); // NOTE no need to use `IMPL_bind_texture()`
@@ -596,7 +596,7 @@ void PGraphicsOpenGLv33::OGL3_create_solid_color_texture() {
     texture_id_solid_color = texture_id;
 }
 
-void PGraphicsOpenGLv33::OGL3_init_vertex_buffer(VertexBufferData& vertex_buffer) {
+void PGraphicsOpenGL_3_3_core::OGL3_init_vertex_buffer(VertexBufferData& vertex_buffer) {
     // Generate and bind VAO & VBO
     glGenVertexArrays(1, &vertex_buffer.VAO);
     glBindVertexArray(vertex_buffer.VAO);
@@ -628,7 +628,7 @@ void PGraphicsOpenGLv33::OGL3_init_vertex_buffer(VertexBufferData& vertex_buffer
     glBindVertexArray(0);
 }
 
-void PGraphicsOpenGLv33::OGL3_resize_vertex_buffer(const size_t buffer_size_bytes) {
+void PGraphicsOpenGL_3_3_core::OGL3_resize_vertex_buffer(const size_t buffer_size_bytes) {
     GLint bufferSize = 0;
     glGetBufferParameteriv(GL_ARRAY_BUFFER, GL_BUFFER_SIZE, &bufferSize);
 
@@ -640,7 +640,7 @@ void PGraphicsOpenGLv33::OGL3_resize_vertex_buffer(const size_t buffer_size_byte
     }
 }
 
-void PGraphicsOpenGLv33::OGL3_render_vertex_buffer(VertexBufferData&          vertex_buffer,
+void PGraphicsOpenGL_3_3_core::OGL3_render_vertex_buffer(VertexBufferData&          vertex_buffer,
                                                    const GLenum               primitive_mode,
                                                    const std::vector<Vertex>& shape_vertices) {
     // TODO maybe replace this with VertexBuffer
@@ -674,7 +674,7 @@ void PGraphicsOpenGLv33::OGL3_render_vertex_buffer(VertexBufferData&          ve
     glBindVertexArray(0);
 }
 
-void PGraphicsOpenGLv33::OGL3_tranform_model_matrix_and_render_vertex_buffer(VertexBufferData&          vertex_buffer,
+void PGraphicsOpenGL_3_3_core::OGL3_tranform_model_matrix_and_render_vertex_buffer(VertexBufferData&          vertex_buffer,
                                                                              const GLenum               mode,
                                                                              const std::vector<Vertex>& shape_vertices) const {
     static bool _emit_warning_only_once = false;
@@ -718,7 +718,7 @@ void PGraphicsOpenGLv33::OGL3_tranform_model_matrix_and_render_vertex_buffer(Ver
     }
 }
 
-void PGraphicsOpenGLv33::mesh(VertexBuffer* mesh_shape) {
+void PGraphicsOpenGL_3_3_core::mesh(VertexBuffer* mesh_shape) {
     if (mesh_shape == nullptr) {
         return;
     }
@@ -731,13 +731,13 @@ void PGraphicsOpenGLv33::mesh(VertexBuffer* mesh_shape) {
     }
 }
 
-PShader* PGraphicsOpenGLv33::loadShader(const std::string& vertex_code, const std::string& fragment_code, const std::string& geometry_code) {
+PShader* PGraphicsOpenGL_3_3_core::loadShader(const std::string& vertex_code, const std::string& fragment_code, const std::string& geometry_code) {
     const auto _shader = new PShader();
     _shader->load(vertex_code, fragment_code, geometry_code);
     return _shader;
 }
 
-void PGraphicsOpenGLv33::shader(PShader* shader) {
+void PGraphicsOpenGL_3_3_core::shader(PShader* shader) {
     if (shader == nullptr) {
         resetShader();
         return;
@@ -746,12 +746,12 @@ void PGraphicsOpenGLv33::shader(PShader* shader) {
     current_shader = shader;
 }
 
-void PGraphicsOpenGLv33::resetShader() {
+void PGraphicsOpenGL_3_3_core::resetShader() {
     default_shader->use();
     current_shader = default_shader;
 }
 
-bool PGraphicsOpenGLv33::read_framebuffer(std::vector<unsigned char>& pixels) {
+bool PGraphicsOpenGL_3_3_core::read_framebuffer(std::vector<unsigned char>& pixels) {
     store_fbo_state();
     if (framebuffer.msaa) {
         // NOTE this is a bit tricky. when the offscreen FBO is a multisample FBO ( MSAA ) we need to resolve it first
@@ -771,45 +771,45 @@ bool PGraphicsOpenGLv33::read_framebuffer(std::vector<unsigned char>& pixels) {
     return success;
 }
 
-void PGraphicsOpenGLv33::store_fbo_state() {
+void PGraphicsOpenGL_3_3_core::store_fbo_state() {
     glGetIntegerv(GL_CURRENT_PROGRAM, &previous_shader);
     glGetIntegerv(GL_VIEWPORT, previous_viewport);
     glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING, &previously_bound_read_FBO);
     glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &previously_bound_draw_FBO);
 }
 
-void PGraphicsOpenGLv33::bind_fbo() {
+void PGraphicsOpenGL_3_3_core::bind_fbo() {
     glBindFramebuffer(GL_FRAMEBUFFER, framebuffer.id);
 }
 
-void PGraphicsOpenGLv33::restore_fbo_state() {
+void PGraphicsOpenGL_3_3_core::restore_fbo_state() {
     glBindFramebuffer(GL_READ_FRAMEBUFFER, previously_bound_read_FBO);
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, previously_bound_draw_FBO);
     glViewport(previous_viewport[0], previous_viewport[1], previous_viewport[2], previous_viewport[3]);
     glUseProgram(previous_shader);
 }
 
-void PGraphicsOpenGLv33::camera(const float eyeX, const float eyeY, const float eyeZ, const float centerX, const float centerY, const float centerZ, const float upX, const float upY, const float upZ) {
+void PGraphicsOpenGL_3_3_core::camera(const float eyeX, const float eyeY, const float eyeZ, const float centerX, const float centerY, const float centerZ, const float upX, const float upY, const float upZ) {
     PGraphics::camera(eyeX, eyeY, eyeZ, centerX, centerY, centerZ, upX, upY, upZ);
     update_shader_view_matrix();
 }
 
-void PGraphicsOpenGLv33::frustum(const float left, const float right, const float bottom, const float top, const float near, const float far) {
+void PGraphicsOpenGL_3_3_core::frustum(const float left, const float right, const float bottom, const float top, const float near, const float far) {
     PGraphics::frustum(left, right, bottom, top, near, far);
     update_shader_view_matrix();
 }
 
-void PGraphicsOpenGLv33::ortho(const float left, const float right, const float bottom, const float top, const float near, const float far) {
+void PGraphicsOpenGL_3_3_core::ortho(const float left, const float right, const float bottom, const float top, const float near, const float far) {
     PGraphics::ortho(left, right, bottom, top, near, far);
     update_shader_view_matrix();
 }
 
-void PGraphicsOpenGLv33::perspective(const float fovy, const float aspect, const float near, const float far) {
+void PGraphicsOpenGL_3_3_core::perspective(const float fovy, const float aspect, const float near, const float far) {
     PGraphics::perspective(fovy, aspect, near, far);
     update_shader_view_matrix();
 }
 
-void PGraphicsOpenGLv33::update_shader_view_matrix() const {
+void PGraphicsOpenGL_3_3_core::update_shader_view_matrix() const {
     if (current_shader == default_shader) {
         default_shader->set_uniform(SHADER_UNIFORM_VIEW_MATRIX, view_matrix);
     }

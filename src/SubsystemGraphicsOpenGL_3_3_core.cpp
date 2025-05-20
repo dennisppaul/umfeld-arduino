@@ -18,42 +18,43 @@
  */
 
 #include "SubsystemGraphicsOpenGL.h"
-#include "PGraphicsOpenGLv20.h"
+#include "PGraphicsOpenGL_3_3_core.h"
 
 namespace umfeld {
-    static SDL_Window*   window     = nullptr;
-    static SDL_GLContext gl_context = nullptr;
+    static SDL_Window*   window                                  = nullptr;
+    static SDL_GLContext gl_context                              = nullptr;
+    static bool          blit_framebuffer_object_to_screenbuffer = true; // NOTE FBO is BLITted directly into the color buffer instead of rendered with a textured quad
 
     static void draw_pre();
     static void draw_post();
 
     static bool init() {
-        return OGL_init(window, gl_context, 2, 0, SDL_GL_CONTEXT_PROFILE_COMPATIBILITY);
+        return OGL_init(window, gl_context, 3, 3, SDL_GL_CONTEXT_PROFILE_CORE);
     }
 
     static void setup_pre() {
-        checkOpenGLError("SUBSYSTEM_GRAPHICS_OPENGL20::setup_pre(begin)");
+        checkOpenGLError("SUBSYSTEM_GRAPHICS_OPENGL33::setup_pre(begin)");
         OGL_setup_pre(window);
-        checkOpenGLError("SUBSYSTEM_GRAPHICS_OPENGL20::setup_pre(end)");
+        checkOpenGLError("SUBSYSTEM_GRAPHICS_OPENGL33::setup_pre(end)");
     }
 
     static void setup_post() {
-        checkOpenGLError("SUBSYSTEM_GRAPHICS_OPENGL20::setup_post(begin)");
+        checkOpenGLError("SUBSYSTEM_GRAPHICS_OPENGL33::setup_post(begin)");
         OGL_setup_post();
-        OGL_draw_post(window, false); // TODO maybe move this to shared methods once it is fully integrated
-        checkOpenGLError("SUBSYSTEM_GRAPHICS_OPENGL20::setup_post(end)");
+        OGL_draw_post(window, blit_framebuffer_object_to_screenbuffer); // TODO maybe move this to shared methods once it is fully integrated
+        checkOpenGLError("SUBSYSTEM_GRAPHICS_OPENGL33::setup_post(end)");
     }
 
     static void draw_pre() {
-        checkOpenGLError("SUBSYSTEM_GRAPHICS_OPENGL20::draw_pre(begin)");
+        checkOpenGLError("SUBSYSTEM_GRAPHICS_OPENGL33::draw_pre(begin)");
         OGL_draw_pre();
-        checkOpenGLError("SUBSYSTEM_GRAPHICS_OPENGL20::draw_pre(end)");
+        checkOpenGLError("SUBSYSTEM_GRAPHICS_OPENGL33::draw_pre(end)");
     }
 
     static void draw_post() {
-        checkOpenGLError("SUBSYSTEM_GRAPHICS_OPENGL20::draw_post(begin)");
-        OGL_draw_post(window, false);
-        checkOpenGLError("SUBSYSTEM_GRAPHICS_OPENGL20::draw_post(end)");
+        checkOpenGLError("SUBSYSTEM_GRAPHICS_OPENGL33::draw_post(begin)");
+        OGL_draw_post(window, blit_framebuffer_object_to_screenbuffer);
+        checkOpenGLError("SUBSYSTEM_GRAPHICS_OPENGL33::draw_post(end)");
     }
 
     static void shutdown() {
@@ -68,22 +69,22 @@ namespace umfeld {
     // ReSharper disable once CppParameterMayBeConstPtrOrRef
     static void event(SDL_Event* event) {
         if (event->type == SDL_EVENT_WINDOW_RESIZED) {
-            warning("TODO implement resize in OGLv20");
+            warning("TODO implement resize in OGLv33");
         }
     }
 
     // ReSharper disable once CppParameterMayBeConstPtrOrRef
     static void event_in_update_loop(SDL_Event* event) {
         if (event->type == SDL_EVENT_WINDOW_RESIZED) {
-            warning("TODO implement resize in OGLv20");
+            warning("TODO implement resize in OGLv33");
         }
     }
 
     static PGraphics* create_native_graphics(const bool render_to_offscreen) {
-#ifdef OPENGL_2_0
-        return new PGraphicsOpenGLv20(render_to_offscreen);
+#ifdef OPENGL_3_3_CORE
+        return new PGraphicsOpenGL_3_3_core(render_to_offscreen);
 #else
-        error("RENDERER_OPENGL_2_0 requires `OPENGL_2_0` to be defined. e.g `-DOPENGL_2_0` in CLI or `set(UMFELD_OPENGL_VERSION \"2.0\")` in `CMakeLists.txt`");
+        error("RENDERER_OPENGL_3_3_CORE requires `OPENGL_3_3_CORE` to be defined. e.g `-DOPENGL_3_3_CORE` in CLI or `set(UMFELD_OPENGL_VERSION \"3.3core\")` in `CMakeLists.txt`");
         return nullptr;
 #endif
     }
@@ -97,15 +98,15 @@ namespace umfeld {
     }
 
     static int get_renderer_type() {
-        return RENDERER_OPENGL_2_0;
+        return RENDERER_OPENGL_3_3_CORE;
     }
 
     static const char* name() {
-        return "OpenGL 2.0";
+        return "OpenGL 3.3 core";
     }
 } // namespace umfeld
 
-umfeld::SubsystemGraphics* umfeld_create_subsystem_graphics_openglv20() {
+umfeld::SubsystemGraphics* umfeld_create_subsystem_graphics_openglv33() {
     auto* graphics                   = new umfeld::SubsystemGraphics{};
     graphics->set_flags              = umfeld::set_flags;
     graphics->init                   = umfeld::init;
@@ -123,49 +124,3 @@ umfeld::SubsystemGraphics* umfeld_create_subsystem_graphics_openglv20() {
     graphics->name                   = umfeld::name;
     return graphics;
 }
-
-namespace umfeld {
-    // TODO implement set_resizable and fullscreen() (at runtime) and is_minimized()
-    //    SDL_SetWindowFullscreen(window?!?, fullscreen_state ? SDL_WINDOW_FULLSCREEN: SDL_WINDOW_FULLSCREEN_DESKTOP);
-    //    SDL_SetWindowResizable(window?!?, SDL_TRUE);
-    //    if (SDL_GetWindowFlags(window) & SDL_WINDOW_MINIMIZED) {}
-
-    // TODO these are currently in Umfeld.cpp
-    // std::string get_window_title() {
-    //     // TODO move this to subsystem and make it configurable
-    //     return UMFELD_WINDOW_TITLE;
-    // }
-    //
-    // void set_window_title(std::string title) {
-    //     // TODO move this to subsystem
-    // }
-
-    // TODO these functions below should go into a more generic place
-    void set_window_position(const int x, const int y) {
-        if (window == nullptr) {
-            return;
-        }
-        SDL_SetWindowPosition(window, x, y);
-    }
-
-    void get_window_position(int& x, int& y) {
-        if (window == nullptr) {
-            return;
-        }
-        SDL_GetWindowPosition(window, &x, &y);
-    }
-
-    void set_window_size(const int width, const int height) {
-        if (window == nullptr) {
-            return;
-        }
-        SDL_SetWindowSize(window, width, height);
-    }
-
-    void get_window_size(int& width, int& height) {
-        if (window == nullptr) {
-            return;
-        }
-        SDL_GetWindowSize(window, &width, &height);
-    }
-} // namespace umfeld

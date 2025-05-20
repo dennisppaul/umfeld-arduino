@@ -22,9 +22,9 @@
 #include "PGraphicsOpenGL.h"
 
 namespace umfeld {
-    class PGraphicsOpenGLv20 final : public PGraphicsOpenGL {
+    class PGraphicsOpenGL_2_0 final : public PGraphicsOpenGL {
     public:
-        explicit PGraphicsOpenGLv20(bool render_to_offscreen);
+        explicit PGraphicsOpenGL_2_0(bool render_to_offscreen);
 
         /* --- OpenGL 2.0 specific implementation of shared methods --- */
 
@@ -52,7 +52,7 @@ namespace umfeld {
         void restore_mvp_matrices() override;
 
         void        init(uint32_t* pixels, int width, int height, int format, bool generate_mipmap) override;
-        std::string name() override { return "PGraphicsOpenGLv20"; }
+        std::string name() override { return "PGraphicsOpenGL_2_0"; }
 
         /* --- standard drawing functions --- */
 

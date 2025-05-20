@@ -28,7 +28,7 @@
 #endif
 
 // // TODO remove WEAK define asap
-// #ifndef SYSTEM_WIN32
+// #ifndef SYSTEM_WINDOWS
 // #ifndef WEAK
 // #define WEAK __attribute__((weak))
 // #endif

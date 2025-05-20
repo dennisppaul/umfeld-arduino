@@ -6,7 +6,7 @@ message(STATUS "----------------------------------------")
 message(STATUS "UMFELD_APP    : ${PROJECT_NAME}")
 
 option(ENABLE_PORTAUDIO "Enable PortAudio output" ON)
-option(ENABLE_ANGLE "Enable ANGLE OpenGL ES emulation on macOS ( apple silicon )" ON)
+option(ENABLE_ANGLE "Enable ANGLE OpenGL ES emulation on macOS ( apple silicon )" OFF)
 
 ##########################################################################################################
 ### CHECK FOR HOMEBREW                                                                                 ###
@@ -237,8 +237,8 @@ elseif (UNIX)
     target_compile_definitions(${PROJECT_NAME} PUBLIC SYSTEM_UNIX)
 elseif (WIN32)
     message(STATUS "SYSTEM        : Windows")
-    target_compile_definitions(umfeld-lib-interface INTERFACE SYSTEM_WIN32)
-    target_compile_definitions(${PROJECT_NAME} PUBLIC SYSTEM_WIN32)
+    target_compile_definitions(umfeld-lib-interface INTERFACE SYSTEM_WINDOWS)
+    target_compile_definitions(${PROJECT_NAME} PUBLIC SYSTEM_WINDOWS)
 else ()
     message(STATUS "SYSTEM        : Undefined, Good Luck!")
     target_compile_definitions(umfeld-lib-interface INTERFACE SYSTEM_UNDEFINED)

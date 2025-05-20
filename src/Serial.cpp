@@ -22,20 +22,19 @@
 #include <iostream>
 #include <stdexcept>
 #include <cstring>
-#ifdef SYSTEM_WINDOWS
+#if defined(SYSTEM_WINDOWS)
 #include <setupapi.h>
 #include <tchar.h>
+#include <windows.h>
 #pragma comment(lib, "setupapi.lib")
-#else
+#elif (defined(SYSTEM_MACOS) || defined(SYSTEM_LINUX))
 #include <fcntl.h>
 #include <dirent.h>
 #include <map>
 #endif
 
+#if !defined(SYSTEM_WINDOWS)
 static speed_t getBaudConstant(int baudrate) {
-#ifdef SYSTEM_WINDOWS
-    return baudrate; // not used
-#else
     static std::map<int, speed_t> baudMap = {
         {0, B0},
         {50, B50},
@@ -58,8 +57,13 @@ static speed_t getBaudConstant(int baudrate) {
         {230400, B230400}};
     auto it = baudMap.find(baudrate);
     return (it != baudMap.end()) ? it->second : B9600;
-#endif
 }
+#else
+static int getBaudConstant(int baudrate) {
+    return baudrate; // Return the baudrate as is on Windows
+}
+#endif
+
 
 Serial::Serial(const std::string& portName, int baudrate, bool flush_buffer) : Serial(portName, baudrate, 'N', 8, 1, flush_buffer) {}
 

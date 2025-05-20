@@ -6,7 +6,7 @@ message(STATUS "----------------------------------------")
 message(STATUS "UMFELD_APP    : ${PROJECT_NAME}")
 
 option(ENABLE_PORTAUDIO "Enable PortAudio output" ON)
-option(ENABLE_ANGLE "Enable ANGLE OpenGL ES emulation on macOS ( apple silicon )" ON)
+option(ENABLE_ANGLE "Enable ANGLE OpenGL ES emulation on macOS ( apple silicon )" OFF)
 
 ##########################################################################################################
 ### CHECK FOR HOMEBREW                                                                                 ###

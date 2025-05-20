@@ -24,9 +24,9 @@
 #include <deque>
 #include <chrono>
 
-#ifdef SYSTEM_WINDOWS
+#if defined(SYSTEM_WIN32)
 #include <windows.h>
-#else
+#elif (defined(SYSTEM_MACOS) || defined(SYSTEM_LINUX))
 #include <termios.h>
 #include <unistd.h>
 #include <sys/ioctl.h>
@@ -60,17 +60,17 @@ public:
     void                            write(const std::string& str);
 
 private:
-#ifdef SYSTEM_WINDOWS
+#ifdef SYSTEM_WIN32
     HANDLE handle;
 #else
     int handle;
 #endif
-    std::deque<uint8_t> rxBuffer;
-    int lastByte = -1;
-    bool isOpen = false;
-    int bufferSize = 1;
-    int bufferDelimiter = -1;
-    std::chrono::steady_clock::time_point lastPoll = std::chrono::steady_clock::now();
+    std::deque<uint8_t>                   rxBuffer;
+    int                                   lastByte        = -1;
+    bool                                  isOpen          = false;
+    int                                   bufferSize      = 1;
+    int                                   bufferDelimiter = -1;
+    std::chrono::steady_clock::time_point lastPoll        = std::chrono::steady_clock::now();
 
     void configure(bool flush_buffer, int baudrate, char parity, int dataBits, int stopBits);
 };

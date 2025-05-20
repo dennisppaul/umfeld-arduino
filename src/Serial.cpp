@@ -22,20 +22,19 @@
 #include <iostream>
 #include <stdexcept>
 #include <cstring>
-#ifdef SYSTEM_WINDOWS
+#if defined(SYSTEM_WIN32)
 #include <setupapi.h>
 #include <tchar.h>
+#include <windows.h>
 #pragma comment(lib, "setupapi.lib")
-#else
+#elif (defined(SYSTEM_MACOS) || defined(SYSTEM_LINUX))
 #include <fcntl.h>
 #include <dirent.h>
 #include <map>
 #endif
 
+#if !defined(SYSTEM_WIN32)
 static speed_t getBaudConstant(int baudrate) {
-#ifdef SYSTEM_WINDOWS
-    return baudrate; // not used
-#else
     static std::map<int, speed_t> baudMap = {
         {0, B0},
         {50, B50},
@@ -58,13 +57,18 @@ static speed_t getBaudConstant(int baudrate) {
         {230400, B230400}};
     auto it = baudMap.find(baudrate);
     return (it != baudMap.end()) ? it->second : B9600;
-#endif
 }
+#else
+static int getBaudConstant(int baudrate) {
+    return baudrate; // Return the baudrate as is on Windows
+}
+#endif
+
 
 Serial::Serial(const std::string& portName, int baudrate, bool flush_buffer) : Serial(portName, baudrate, 'N', 8, 1, flush_buffer) {}
 
 Serial::Serial(const std::string& portName, int baudrate, char parity, int dataBits, int stopBits, bool flush_buffer) {
-#ifdef SYSTEM_WINDOWS
+#ifdef SYSTEM_WIN32
     std::wstring wport(portName.begin(), portName.end());
     handle = CreateFileW((L"\\.\\" + wport).c_str(), GENERIC_READ | GENERIC_WRITE, 0, nullptr, OPEN_EXISTING, 0, nullptr);
     if (handle == INVALID_HANDLE_VALUE) {
@@ -81,7 +85,7 @@ Serial::Serial(const std::string& portName, int baudrate, char parity, int dataB
 }
 
 void Serial::configure(bool flush_buffer, int baudrate, char parity, int dataBits, int stopBits) {
-#ifdef SYSTEM_WINDOWS
+#ifdef SYSTEM_WIN32
     DCB dcb       = {0};
     dcb.DCBlength = sizeof(dcb);
     GetCommState(handle, &dcb);
@@ -125,7 +129,7 @@ void Serial::configure(bool flush_buffer, int baudrate, char parity, int dataBit
 #endif
 
     if (flush_buffer) {
-#ifdef SYSTEM_WINDOWS
+#ifdef SYSTEM_WIN32
         PurgeComm(handle, PURGE_RXCLEAR | PURGE_TXCLEAR);
 #else
         tcflush(handle, TCIFLUSH);
@@ -139,7 +143,7 @@ void Serial::stop() {
     if (!isOpen) {
         return;
     }
-#ifdef SYSTEM_WINDOWS
+#ifdef SYSTEM_WIN32
     CloseHandle(handle);
 #else
     close(handle);
@@ -149,7 +153,7 @@ void Serial::stop() {
 
 // void Serial::poll() {
 //     char buf[256];
-// #ifdef SYSTEM_WINDOWS
+// #ifdef SYSTEM_WIN32
 //     DWORD n = 0;
 //     if (ReadFile(handle, buf, sizeof(buf), &n, nullptr) && n > 0) {
 //         for (DWORD i = 0; i < n; ++i) {
@@ -177,7 +181,7 @@ void Serial::poll() {
     }
     lastPoll = now;
 
-#ifdef SYSTEM_WINDOWS
+#ifdef SYSTEM_WIN32
     DWORD   errors;
     COMSTAT status;
     if (!ClearCommError(handle, &errors, &status)) {
@@ -195,7 +199,7 @@ void Serial::poll() {
 #endif
 
     char buf[256];
-#ifdef SYSTEM_WINDOWS
+#ifdef SYSTEM_WIN32
     DWORD n = 0;
     if (ReadFile(handle, buf, sizeof(buf), &n, nullptr) && n > 0) {
         for (DWORD i = 0; i < n; ++i) {
@@ -283,7 +287,7 @@ void Serial::bufferUntil(uint8_t b) {
 }
 
 void Serial::write(uint8_t b) {
-#ifdef SYSTEM_WINDOWS
+#ifdef SYSTEM_WIN32
     DWORD n;
     WriteFile(handle, &b, 1, &n, nullptr);
 #else
@@ -291,7 +295,7 @@ void Serial::write(uint8_t b) {
 #endif
 }
 void Serial::write(const std::vector<uint8_t>& data) {
-#ifdef SYSTEM_WINDOWS
+#ifdef SYSTEM_WIN32
     DWORD n;
     WriteFile(handle, data.data(), data.size(), &n, nullptr);
 #else
@@ -304,7 +308,7 @@ void Serial::write(const std::string& str) {
 
 std::vector<std::string> Serial::list(const std::vector<std::string>& filters) {
     std::vector<std::string> ports;
-#ifdef SYSTEM_WINDOWS
+#ifdef SYSTEM_WIN32
     for (int i = 1; i <= 256; ++i) {
         std::string  name  = "COM" + std::to_string(i);
         std::wstring wname = L"\\\\.\\" + std::wstring(name.begin(), name.end());

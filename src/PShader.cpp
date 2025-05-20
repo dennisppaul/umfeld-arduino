@@ -21,8 +21,8 @@ bool PShader::load(const std::string& vertex_code, const std::string& fragment_c
     GLuint       geometryShader = 0;
 
     if (!geometry_code.empty()) {
-#ifndef OPENGL_CORE_3_3
-        error("geometry shader requires `OPENGL_CORE_3_3` to be defined. e.g `-DOPENGL_CORE_3_3` in CLI or `set(UMFELD_OPENGL_VERSION \"core3.3\")` in `CMakeLists.txt`");
+#ifndef OPENGL_3_3_CORE
+        error("geometry shader requires `OPENGL_3_3_CORE` to be defined. e.g `-DOPENGL_3_3_CORE` in CLI or `set(UMFELD_OPENGL_VERSION \"3.3core\")` in `CMakeLists.txt`");
         return false;
 #else
         geometryShader = compileShader(geometry_code, GL_GEOMETRY_SHADER);

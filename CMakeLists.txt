@@ -155,7 +155,7 @@ endif (ENABLE_CAPTURE)
 ### OPEN_GL VERSION + GLAD                                                                             ###
 ##########################################################################################################
 
-set(UMFELD_DEFAULT_OPENGL_VERSION "core3.3" CACHE STRING "OpenGL version used in umfeld")
+set(UMFELD_DEFAULT_OPENGL_VERSION "3.3core" CACHE STRING "OpenGL version used in umfeld")
 # NOTE auto-generated files with GLAD 2 ( on macOS ):
 #    brew install glad2
 #    glad --api="gl:core=3.3" --out-path=external/glad_opengl_33 c
@@ -172,24 +172,24 @@ else ()
     message(STATUS "OPEN_GL(app)  : ${UMFELD_OPENGL_VERSION}")
 endif ()
 
-if (UMFELD_OPENGL_VERSION STREQUAL "core3.3" OR UMFELD_OPENGL_VERSION STREQUAL "3.3")
-    set(OPENGL_CORE_3_3 TRUE)
+if (UMFELD_OPENGL_VERSION STREQUAL "3.3core" OR UMFELD_OPENGL_VERSION STREQUAL "3.3")
+    set(OPENGL_3_3_CORE TRUE)
 elseif (UMFELD_OPENGL_VERSION STREQUAL "2.0")
     set(OPENGL_2_0 TRUE)
-elseif (UMFELD_OPENGL_VERSION STREQUAL "es3.0")
+elseif (UMFELD_OPENGL_VERSION STREQUAL "es3.0" OR UMFELD_OPENGL_VERSION STREQUAL "ES3.0")
     set(OPENGL_ES_3_0 TRUE)
 else ()
-    message(STATUS "Invalid OPENGL_VERSION: ${UMFELD_OPENGL_VERSION} must be `core3.3`, `2.0`, or `es3.0`")
+    message(STATUS "Invalid OPENGL_VERSION: ${UMFELD_OPENGL_VERSION} must be `3.3core`, `2.0`, or `ES3.0`")
     message(STATUS "using default: ${UMFELD_DEFAULT_OPENGL_VERSION}")
-    set(OPENGL_CORE_3_3 TRUE)
+    set(OPENGL_3_3_CORE TRUE)
 endif ()
 
 # set GLAD path and define
-if (OPENGL_CORE_3_3)
-    target_compile_definitions(umfeld-lib-interface INTERFACE OPENGL_CORE_3_3)
-    target_compile_definitions(${PROJECT_NAME} PUBLIC OPENGL_CORE_3_3)
+if (OPENGL_3_3_CORE)
+    target_compile_definitions(umfeld-lib-interface INTERFACE OPENGL_3_3_CORE)
+    target_compile_definitions(${PROJECT_NAME} PUBLIC OPENGL_3_3_CORE)
     set(GLAD_DIR "${UMFELD_GLAD_BASE_DIR}/glad_opengl_33")
-    message(STATUS "OPEN_GL       : OPENGL_CORE_3_3")
+    message(STATUS "OPEN_GL       : OPENGL_3_3_CORE")
 elseif (OPENGL_2_0)
     target_compile_definitions(umfeld-lib-interface INTERFACE OPENGL_2_0)
     target_compile_definitions(${PROJECT_NAME} PUBLIC OPENGL_2_0)

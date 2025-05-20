@@ -129,7 +129,7 @@ namespace umfeld {
         std::string profile_str = "none ( pre 3.2 )";
         capabilities.profile    = OPENGL_PROFILE_NONE;
 
-#ifdef OPENGL_CORE_3_3
+#ifdef OPENGL_3_3_CORE
         if (capabilities.version_major > 2) {
             int profile = 0;
             glGetIntegerv(GL_CONTEXT_PROFILE_MASK, &profile);
@@ -143,7 +143,7 @@ namespace umfeld {
                 capabilities.profile = OPENGL_PROFILE_COMPATIBILITY;
             }
         }
-#endif // OPENGL_CORE_3_3
+#endif // OPENGL_3_3_CORE
         console(fl("Profile"), profile_str);
     }
 

@@ -49,7 +49,7 @@ namespace umfeld {
         void endDraw() override;
 
         void        init(uint32_t* pixels, int width, int height, int format, bool generate_mipmap) override;
-        std::string name() override { return "PGraphicsOpenGLv33"; }
+        std::string name() override { return "PGraphicsOpenGLv33core ( or PGraphicsOpenGLvES30 )"; }
 
         void hint(uint16_t property) override;
         void debug_text(const std::string& text, float x, float y) override; // TODO move to PGraphics ( use glBeginShape() )

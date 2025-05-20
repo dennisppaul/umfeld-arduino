@@ -17,7 +17,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if defined(OPENGL_CORE_3_3) || defined(OPENGL_ES_3_0)
+#if defined(OPENGL_3_3_CORE) || defined(OPENGL_ES_3_0)
 
 #include <iostream>
 #include <vector>

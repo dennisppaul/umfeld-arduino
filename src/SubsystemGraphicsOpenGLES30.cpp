@@ -84,7 +84,7 @@ namespace umfeld {
 #ifdef OPENGL_ES_3_0
         return new PGraphicsOpenGLv33(render_to_offscreen);
 #else
-        error("RENDERER_OPENGL_ES_3_0 requires `OPENGL_ES_3_0` to be defined. e.g `-DOPENGL_ES_3_0` in CLI or `set(UMFELD_OPENGL_VERSION \"es3.0\")` in `CMakeLists.txt`");
+        error("RENDERER_OPENGL_ES_3_0 requires `OPENGL_ES_3_0` to be defined. e.g `-DOPENGL_ES_3_0` in CLI or `set(UMFELD_OPENGL_VERSION \"ES3.0\")` in `CMakeLists.txt`");
         return nullptr;
 #endif
     }

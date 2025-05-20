@@ -516,7 +516,7 @@ namespace umfeld {
         //         graphics->init(nullptr, width, height, 0, false);
         //         return graphics;
         //     }
-        //     case RENDERER_OPENGL_CORE_3_3:
+        //     case RENDERER_OPENGL_3_3_CORE:
         //     default: {
         //         const auto graphics = new PGraphicsOpenGLv33(true);
         //         graphics->init(nullptr, width, height, 0, false);

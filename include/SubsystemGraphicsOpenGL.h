@@ -105,7 +105,7 @@ namespace umfeld {
 
         /* initialize GLAD */
 // TODO maybe move to subsystem
-#if defined(OPENGL_CORE_3_3) || defined(OPENGL_2_0)
+#if defined(OPENGL_3_3_CORE) || defined(OPENGL_2_0)
         if (!gladLoadGL(SDL_GL_GetProcAddress)) {
             error("Failed to load OpenGL with GLAD");
             SDL_GL_DestroyContext(gl_context);
@@ -120,7 +120,7 @@ namespace umfeld {
             return false;
         }
 #else
-#error "Unsupported OpenGL version. Please define OPENGL_CORE_3_3 or OPENGL_2_0 or OPENGL_ES_30."
+#error "Unsupported OpenGL version. Please define OPENGL_3_3_CORE or OPENGL_2_0 or OPENGL_ES_30."
 #endif
 
         query_opengl_capabilities(open_gl_capabilities);

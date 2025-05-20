@@ -166,14 +166,14 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[]) {
                     break;
                 case umfeld::RENDERER_OPENGL_ES_3_0:
 #ifndef OPENGL_ES_3_0
-                    umfeld::error("RENDERER_OPENGL_ES_3_0 requires `OPENGL_ES_3_0` to be defined e.g `-DOPENGL_ES_3_0` in CLI or `set(UMFELD_OPENGL_VERSION \"es3.0\")` in `CMakeLists.txt`");
+                    umfeld::error("RENDERER_OPENGL_ES_3_0 requires `OPENGL_ES_3_0` to be defined e.g `-DOPENGL_ES_3_0` in CLI or `set(UMFELD_OPENGL_VERSION \"ES3.0\")` in `CMakeLists.txt`");
 #endif
                     umfeld::subsystem_graphics = umfeld_create_subsystem_graphics_openglves30();
                     break;
                 default:
-                case umfeld::RENDERER_OPENGL_CORE_3_3:
-#ifndef OPENGL_CORE_3_3
-                    umfeld::error("RENDERER_OPENGL_CORE_3_3 requires `OPENGL_CORE_3_3` to be defined e.g `-DOPENGL_CORE_3_3` in CLI or `set(UMFELD_OPENGL_VERSION \"core3.3\")` in `CMakeLists.txt`");
+                case umfeld::RENDERER_OPENGL_3_3_CORE:
+#ifndef OPENGL_3_3_CORE
+                    umfeld::error("RENDERER_OPENGL_3_3_CORE requires `OPENGL_3_3_CORE` to be defined e.g `-DOPENGL_3_3_CORE` in CLI or `set(UMFELD_OPENGL_VERSION \"3.3core\")` in `CMakeLists.txt`");
 #endif
                     umfeld::subsystem_graphics = umfeld_create_subsystem_graphics_openglv33();
             }
@@ -185,7 +185,7 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[]) {
                 umfeld::handle_subsystem_graphics_cleanup = true;
             } else {
                 umfeld::console("+++ no graphics subsystem provided, using default.");
-#if defined(OPENGL_CORE_3_3)
+#if defined(OPENGL_3_3_CORE)
                 umfeld::subsystem_graphics = umfeld_create_subsystem_graphics_openglv33();
 #elif defined(OPENGL_2_0)
                 umfeld::subsystem_graphics = umfeld_create_subsystem_graphics_openglv20();

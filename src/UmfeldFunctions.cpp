@@ -395,7 +395,7 @@ namespace umfeld {
     }
 
 #ifndef USE_SDL_SKETCH_PATH
-#if defined(SYSTEM_WIN32)
+#if defined(SYSTEM_WINDOWS)
 #include <windows.h>
     std::string sketchPath_impl() {
         std::vector<char> buffer(1024);
@@ -704,7 +704,7 @@ namespace umfeld {
         );
 
         if (folder_path) {
-#ifdef SYSTEM_WIN32
+#ifdef SYSTEM_WINDOWS
             // NOTE windows needs an extra slash at the end
             return std::string(folder_path) + "/";
 #else

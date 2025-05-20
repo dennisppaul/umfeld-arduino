@@ -24,7 +24,7 @@
 #include <deque>
 #include <chrono>
 
-#if defined(SYSTEM_WIN32)
+#if defined(SYSTEM_WINDOWS)
 #include <windows.h>
 #elif (defined(SYSTEM_MACOS) || defined(SYSTEM_LINUX))
 #include <termios.h>
@@ -60,7 +60,7 @@ public:
     void                            write(const std::string& str);
 
 private:
-#ifdef SYSTEM_WIN32
+#ifdef SYSTEM_WINDOWS
     HANDLE handle;
 #else
     int handle;

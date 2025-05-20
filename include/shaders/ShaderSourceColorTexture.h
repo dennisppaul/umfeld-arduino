@@ -23,39 +23,37 @@
 
 namespace umfeld {
     inline ShaderSource shader_source_color_texture{
-        .vertex   = R"(
-            #version 330 core
+        .vertex   = R"(#version 330 core
 
-            layout(location = 0) in vec4 aPosition;
-            layout(location = 1) in vec4 aNormal;
-            layout(location = 2) in vec4 aColor;
-            layout(location = 3) in vec2 aTexCoord;
+                    layout(location = 0) in vec4 aPosition;
+                    layout(location = 1) in vec4 aNormal;
+                    layout(location = 2) in vec4 aColor;
+                    layout(location = 3) in vec2 aTexCoord;
 
-            out vec4 vColor;
-            out vec2 vTexCoord;
+                    out vec4 vColor;
+                    out vec2 vTexCoord;
 
-            uniform mat4 uProjection;
-            uniform mat4 uViewMatrix;
-            uniform mat4 uModelMatrix;
+                    uniform mat4 uProjection;
+                    uniform mat4 uViewMatrix;
+                    uniform mat4 uModelMatrix;
 
-            void main() {
-                gl_Position = uProjection * uViewMatrix * uModelMatrix * aPosition;
-                vColor = aColor;
-                vTexCoord = aTexCoord;
-            }
+                    void main() {
+                        gl_Position = uProjection * uViewMatrix * uModelMatrix * aPosition;
+                        vColor = aColor;
+                        vTexCoord = aTexCoord;
+                    }
         )",
-        .fragment = R"(
-            #version 330 core
+        .fragment = R"(#version 330 core
 
-            in vec4 vColor;
-            in vec2 vTexCoord;
+                    in vec4 vColor;
+                    in vec2 vTexCoord;
 
-            out vec4 FragColor;
+                    out vec4 FragColor;
 
-            uniform sampler2D uTexture;
+                    uniform sampler2D uTexture;
 
-            void main() {
-                FragColor = texture(uTexture, vTexCoord) * vColor;
-            }
+                    void main() {
+                        FragColor = texture(uTexture, vTexCoord) * vColor;
+                    }
         )"};
 }

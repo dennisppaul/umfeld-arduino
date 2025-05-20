@@ -6,6 +6,7 @@ message(STATUS "----------------------------------------")
 message(STATUS "UMFELD_APP    : ${PROJECT_NAME}")
 
 option(ENABLE_PORTAUDIO "Enable PortAudio output" ON)
+option(ENABLE_ANGLE "Enable ANGLE OpenGL ES emulation on macOS ( apple silicon )" ON)
 
 ##########################################################################################################
 ### CHECK FOR HOMEBREW                                                                                 ###
@@ -342,9 +343,10 @@ endif ()
 
 # GRAPHICS + VIDEO + AUDIO
 if (NOT DISABLE_AUDIO)
-    # TODO always add portaudio?!?
-    target_link_libraries(${PROJECT_NAME} PUBLIC ${PORTAUDIO_LIBRARIES})
-    target_include_directories(${PROJECT_NAME} PUBLIC ${PORTAUDIO_INCLUDE_DIRS})
+    if (ENABLE_PORTAUDIO)
+        target_link_libraries(${PROJECT_NAME} PUBLIC ${PORTAUDIO_LIBRARIES})
+        target_include_directories(${PROJECT_NAME} PUBLIC ${PORTAUDIO_INCLUDE_DIRS})
+    endif (ENABLE_PORTAUDIO)
 endif (NOT DISABLE_AUDIO)
 
 if (NOT DISABLE_GRAPHICS OR NOT DISABLE_AUDIO)
@@ -454,6 +456,29 @@ else ()
 endif ()
 
 # run test from CLI with `cmake -B build -DBUILD_TESTING=ON ; cmake --build build ; ctest --test-dir build`
+
+##########################################################################################################
+### ANGLE                                                                                              ###
+##########################################################################################################
+
+if (ENABLE_ANGLE)
+    if (APPLE)
+        # TODO maybe move this into library folder(s)?
+        set(UMFELD_ANGLE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/external/angle" CACHE STRING "ANGLE directory")
+        message(STATUS "ANGLE_DIR     : ${UMFELD_ANGLE_DIR}")
+
+        add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+                COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                ${UMFELD_ANGLE_DIR}/libEGL.dylib
+                ${UMFELD_ANGLE_DIR}/libGLESv2.dylib
+                # NOTE this relies on the build output of `umfeld-lib` being placed inside a subfolder
+                #      like `${CMAKE_BINARY_DIR}/umfeld-lib-${PROJECT_NAME}` so that copying ../ lands in app dir
+                $<TARGET_FILE_DIR:${PROJECT_NAME}>/..
+        )
+    else ()
+        error("ANGLE not supported on this platform.")
+    endif (APPLE)
+endif (ENABLE_ANGLE)
 
 ##########################################################################################################
 ### END OF SCRIPT                                                                                      ###

@@ -54,7 +54,11 @@ namespace umfeld {
                          const int      profile) {
         /* setup opengl */
 
-        // SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG); // always required on Mac?
+#ifndef OPENGL_ES_3_0
+#ifdef SYSTEM_MACOS
+        SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG); // always required on Mac?
+#endif
+#endif
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, profile);
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, major_version);
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, minor_version);
@@ -75,6 +79,7 @@ namespace umfeld {
                                                  static_cast<int>(umfeld::width),
                                                  static_cast<int>(umfeld::height),
                                                  get_SDL_WindowFlags(flags));
+
         if (window == nullptr) {
             error("Couldn't create window: ", SDL_GetError());
             return false;
@@ -107,13 +112,15 @@ namespace umfeld {
             SDL_DestroyWindow(window);
             return false;
         }
-#elif defined(OPEN_GLES_30)
+#elif defined(OPENGL_ES_3_0)
         if (!gladLoadGLES2(SDL_GL_GetProcAddress)) {
             error("Failed to load OpenGL with GLAD");
             SDL_GL_DestroyContext(gl_context);
             SDL_DestroyWindow(window);
             return false;
         }
+#else
+#error "Unsupported OpenGL version. Please define OPENGL_CORE_3_3 or OPENGL_2_0 or OPENGL_ES_30."
 #endif
 
         query_opengl_capabilities(open_gl_capabilities);

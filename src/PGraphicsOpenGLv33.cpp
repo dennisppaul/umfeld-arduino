@@ -34,6 +34,7 @@
 #include "VertexBuffer.h"
 #include "PShader.h"
 #include "ShaderSourceColorTexture.h"
+#include "ShaderSourceColorTextureES.h"
 
 using namespace umfeld;
 
@@ -453,7 +454,11 @@ void PGraphicsOpenGLv33::init(uint32_t*  pixels,
 
     // stroke_shader_program = OGL_build_shader(shader_source_color.vertex, shader_source_color.fragment);
     // fill_shader_program   = OGL_build_shader(shader_source_color_texture.vertex, shader_source_color_texture.fragment);
+#ifdef OPENGL_ES_3_0
+    default_shader = loadShader(shader_source_color_texture_ES.vertex, shader_source_color_texture_ES.fragment);
+#else
     default_shader = loadShader(shader_source_color_texture.vertex, shader_source_color_texture.fragment);
+#endif
     if (default_shader == nullptr) {
         error("Failed to load default shader.");
     }

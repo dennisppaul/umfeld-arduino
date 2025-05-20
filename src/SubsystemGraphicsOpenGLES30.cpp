@@ -69,14 +69,14 @@ namespace umfeld {
     // ReSharper disable once CppParameterMayBeConstPtrOrRef
     static void event(SDL_Event* event) {
         if (event->type == SDL_EVENT_WINDOW_RESIZED) {
-            warning("TODO implement resize in OGLv33");
+            warning("TODO implement resize in OGLves30");
         }
     }
 
     // ReSharper disable once CppParameterMayBeConstPtrOrRef
     static void event_in_update_loop(SDL_Event* event) {
         if (event->type == SDL_EVENT_WINDOW_RESIZED) {
-            warning("TODO implement resize in OGLv33");
+            warning("TODO implement resize in OGLves30");
         }
     }
 
@@ -84,7 +84,7 @@ namespace umfeld {
 #ifdef OPENGL_ES_3_0
         return new PGraphicsOpenGLv33(render_to_offscreen);
 #else
-        error("RENDERER_OPENGL_CORE_3_3 requires `OPENGL_CORE_3_3` to be defined. e.g `-DOPENGL_CORE_3_3` in CLI or `set(UMFELD_OPENGL_VERSION \"core3.3\")` in `CMakeLists.txt`");
+        error("RENDERER_OPENGL_ES_3_0 requires `OPENGL_ES_3_0` to be defined. e.g `-DOPENGL_ES_3_0` in CLI or `set(UMFELD_OPENGL_VERSION \"es3.0\")` in `CMakeLists.txt`");
         return nullptr;
 #endif
     }

@@ -19,6 +19,9 @@
 
 #pragma once
 
+#include <regex>
+#include <string>
+
 #include "UmfeldSDLOpenGL.h" // TODO move to cpp implementation
 
 #include "UmfeldFunctionsAdditional.h"
@@ -81,7 +84,16 @@ namespace umfeld {
             return;
         }
 
+#ifdef OPENGL_ES_3_0
+        const std::regex versionRegex(R"(OpenGL ES (\d+)\.(\d+))");
+        std::cmatch      match;
+        if (std::regex_search(versionStr, match, versionRegex) && match.size() >= 3) {
+            major = std::stoi(match[1].str());
+            minor = std::stoi(match[2].str());
+        }
+#else
         sscanf(versionStr, "%d.%d", &major, &minor);
+#endif
     }
 
     /* opengl capabilities */

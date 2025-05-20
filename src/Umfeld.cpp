@@ -168,7 +168,7 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[]) {
 #ifndef OPEN_GL_ES_3_0
                     umfeld::error("RENDERER_OPEN_GL_ES_3_0 requires `OPEN_GL_ES_3_0` to be defined e.g `-DOPEN_GL_ES_3_0` in CLI or `set(UMFELD_OPENGL_VERSION \"es3.0\")` in `CMakeLists.txt`");
 #endif
-                    umfeld::warning("+++ OpenGL ES 3.0 not supported yet.");
+                    umfeld::subsystem_graphics = umfeld_create_subsystem_graphics_openglves30();
                     break;
                 default:
                 case umfeld::RENDERER_OPEN_GL_CORE_3_3:

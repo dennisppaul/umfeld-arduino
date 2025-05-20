@@ -97,6 +97,7 @@ namespace umfeld {
 
 umfeld::SubsystemGraphics* umfeld_create_subsystem_graphics_sdl2d();
 umfeld::SubsystemGraphics* umfeld_create_subsystem_graphics_openglv20();
+umfeld::SubsystemGraphics* umfeld_create_subsystem_graphics_openglves30();
 umfeld::SubsystemGraphics* umfeld_create_subsystem_graphics_openglv33();
 umfeld::SubsystemAudio*    umfeld_create_subsystem_audio_sdl();
 umfeld::SubsystemAudio*    umfeld_create_subsystem_audio_portaudio();

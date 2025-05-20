@@ -81,7 +81,7 @@ namespace umfeld {
     }
 
     static PGraphics* create_native_graphics(const bool render_to_offscreen) {
-#ifdef OPENGL_CORE_3_3
+#ifdef OPENGL_ES_3_0
         return new PGraphicsOpenGLv33(render_to_offscreen);
 #else
         error("RENDERER_OPENGL_CORE_3_3 requires `OPENGL_CORE_3_3` to be defined. e.g `-DOPENGL_CORE_3_3` in CLI or `set(UMFELD_OPENGL_VERSION \"core3.3\")` in `CMakeLists.txt`");

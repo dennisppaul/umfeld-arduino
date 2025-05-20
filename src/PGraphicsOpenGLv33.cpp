@@ -17,7 +17,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifdef OPENGL_CORE_3_3
+#if defined(OPENGL_CORE_3_3) || defined(OPENGL_ES_3_0)
 
 #include <iostream>
 #include <vector>
@@ -337,12 +337,16 @@ void PGraphicsOpenGLv33::hint(const uint16_t property) {
     // TODO @MERGE
     switch (property) {
         case ENABLE_SMOOTH_LINES:
+#ifndef OPENGL_ES_3_0
             glEnable(GL_LINE_SMOOTH);
             glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
+#endif
             break;
         case DISABLE_SMOOTH_LINES:
+#ifndef OPENGL_ES_3_0
             glDisable(GL_LINE_SMOOTH);
             glHint(GL_LINE_SMOOTH_HINT, GL_FASTEST);
+#endif
             break;
         case ENABLE_DEPTH_TEST:
             glEnable(GL_DEPTH_TEST);
@@ -421,6 +425,7 @@ void PGraphicsOpenGLv33::download_texture(PImage* img) {
         return;
     }
 
+#ifndef OPENGL_ES_3_0
     const int tmp_bound_texture = texture_id_current;
     IMPL_bind_texture(img->texture_id);
     glGetTexImage(GL_TEXTURE_2D, 0,
@@ -428,6 +433,13 @@ void PGraphicsOpenGLv33::download_texture(PImage* img) {
                   UMFELD_DEFAULT_TEXTURE_PIXEL_TYPE,
                   img->pixels);
     IMPL_bind_texture(tmp_bound_texture);
+#else
+    static bool emit_warning = true;
+    if (emit_warning) {
+        emit_warning = false;
+        warning("PGraphics / `download_texture` not implemented for OpenGL ES 3.0");
+    }
+#endif
 }
 
 void PGraphicsOpenGLv33::init(uint32_t*  pixels,
@@ -462,6 +474,12 @@ void PGraphicsOpenGLv33::init(uint32_t*  pixels,
 
         console("creating framebuffer texture: ", framebuffer.texture_id);
 
+#ifdef OPENGL_ES_3_0
+        if (framebuffer.msaa) {
+            warning("MSAA not supported in OpenGL ES 3.0 ... disabling MSAA.");
+            framebuffer.msaa = false;
+        }
+#endif
         if (framebuffer.msaa) {
             console("using multisample anti-aliasing (MSAA)");
 
@@ -474,12 +492,14 @@ void PGraphicsOpenGLv33::init(uint32_t*  pixels,
             console("number of used MSAA samples: ", samples);
             glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, framebuffer.texture_id);
             checkOpenGLError("glBindTexture");
+#ifndef OPENGL_ES_3_0
             glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE,
                                     samples,
                                     UMFELD_DEFAULT_INTERNAL_PIXEL_FORMAT,
                                     framebuffer.width,
                                     framebuffer.height,
                                     GL_TRUE);
+#endif
             checkOpenGLError("glTexImage2DMultisample");
             glFramebufferTexture2D(GL_FRAMEBUFFER,
                                    GL_COLOR_ATTACHMENT0,
@@ -789,4 +809,4 @@ void PGraphicsOpenGLv33::update_shader_view_matrix() const {
         default_shader->set_uniform(SHADER_UNIFORM_VIEW_MATRIX, view_matrix);
     }
 }
-#endif // OPENGL_CORE_3_3
+#endif // UMFELD_PGRAPHICS_OPENGLV33_CPP

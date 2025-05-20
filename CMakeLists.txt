@@ -277,7 +277,7 @@ if (NOT DISABLE_GRAPHICS)
     elseif (UNIX)
     elseif (WIN32)
     else ()
-        message(STATUS "plattform may not be supported.")
+        message(STATUS "platform may not be supported.")
     endif ()
 
     # FFMPEG
@@ -294,7 +294,7 @@ if (NOT DISABLE_GRAPHICS)
         elseif (UNIX)
         elseif (WIN32)
         else ()
-            message(STATUS "plattform may not be supported ... assuming windows.")
+            message(STATUS "platform may not be supported ... assuming windows.")
         endif ()
     endif (NOT DISABLE_VIDEO)
 endif (NOT DISABLE_GRAPHICS)
@@ -356,11 +356,7 @@ if (NOT DISABLE_GRAPHICS)
     # OpenGL + GLAD + GLM
     target_link_libraries(${PROJECT_NAME} PUBLIC ${OPENGL_LIBRARIES})
     target_include_directories(${PROJECT_NAME} PUBLIC ${OPENGL_INCLUDE_DIRS})
-#    target_link_libraries(${PROJECT_NAME} PUBLIC ${GLEW_LIBRARIES})
-#    target_include_directories(${PROJECT_NAME} PUBLIC ${GLEW_INCLUDE_DIRS})
     target_link_libraries(${PROJECT_NAME} PUBLIC glad)
-    #target_link_libraries(${PROJECT_NAME} PUBLIC ${GLM_LIBRARIES})
-    #target_include_directories(${PROJECT_NAME} PUBLIC ${GLM_INCLUDE_DIRS})
     target_link_libraries(${PROJECT_NAME} PUBLIC glm::glm)
     # font rendering
     target_link_libraries(${PROJECT_NAME} PUBLIC harfbuzz::harfbuzz)
@@ -379,9 +375,9 @@ if (NOT DISABLE_GRAPHICS)
             )
         elseif (UNIX)
         elseif (WIN32)
-            message(STATUS "plattform may not be supported")
+            message(STATUS "platform may not be supported")
         else ()
-            message(STATUS "plattform may not be supported ... assuming windows.")
+            message(STATUS "platform may not be supported ... assuming windows.")
         endif ()
     endif (NOT DISABLE_VIDEO)
 endif (NOT DISABLE_GRAPHICS)
@@ -390,8 +386,6 @@ endif (NOT DISABLE_GRAPHICS)
 if (NOT DISABLE_MIDI)
     target_link_libraries(${PROJECT_NAME} PUBLIC ${RTMIDI_LIBRARIES})
     target_include_directories(${PROJECT_NAME} PUBLIC ${RTMIDI_INCLUDE_DIRS})
-    # add_definitions(${RTMIDI_CFLAGS_OTHER})
-    # message(STATUS "RTMIDI_CFLAGS_OTHER: ${RTMIDI_CFLAGS_OTHER}")
     foreach (flag ${RTMIDI_CFLAGS_OTHER})
         if (flag MATCHES "^-D[^=]+(=.+)?$")  # only pass valid -D macros
             target_compile_definitions(${PROJECT_NAME} PUBLIC "${flag}")
@@ -399,7 +393,6 @@ if (NOT DISABLE_MIDI)
             target_compile_options(${PROJECT_NAME} PUBLIC "${flag}")
         endif ()
     endforeach ()
-    # target_compile_definitions(${PROJECT_NAME} PUBLIC ${RTMIDI_CFLAGS_OTHER})
 endif (NOT DISABLE_MIDI)
 
 ##########################################################################################################
@@ -437,14 +430,6 @@ endfunction()
 #if (WIN32)
 #    target_link_libraries(${PROJECT_NAME} PUBLIC pdcurses)
 #endif (WIN32)
-
-##########################################################################################################
-### NOTE                                                                                               ###
-##########################################################################################################
-
-# use these in projects:
-# - prepare umfeld ( before `add_executable` ): `include(${UMFELD_PATH}/cmake/default-pre.cmake)`
-# - prepare umfeld ( after `add_executable` ): `include(${UMFELD_PATH}/cmake/default-post.cmake)`
 
 ##########################################################################################################
 ### TEST                                                                                               ###

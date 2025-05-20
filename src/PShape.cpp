@@ -126,7 +126,7 @@ void PShape::draw() {
     //     default:
     //         mShape = GL_TRIANGLES;
     // }
-#ifdef OPEN_GL_2_0
+#ifdef OPENGL_2_0
     glBegin(mShape);
     for (int i = 0; i < vertices.size(); i += 6) {
         glColor3f(vertices[i + 3],

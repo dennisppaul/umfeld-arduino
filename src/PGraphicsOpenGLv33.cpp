@@ -17,7 +17,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifdef OPEN_GL_CORE_3_3
+#ifdef OPENGL_CORE_3_3
 
 #include <iostream>
 #include <vector>
@@ -789,4 +789,4 @@ void PGraphicsOpenGLv33::update_shader_view_matrix() const {
         default_shader->set_uniform(SHADER_UNIFORM_VIEW_MATRIX, view_matrix);
     }
 }
-#endif // OPEN_GL_CORE_3_3
+#endif // OPENGL_CORE_3_3

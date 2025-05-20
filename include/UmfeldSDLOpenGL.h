@@ -20,4 +20,8 @@
 #pragma once
 
 #include <SDL3/SDL.h>
+#ifndef OPENGL_ES_3_0
 #include "glad/gl.h"
+#else
+#include "glad/gles2.h"
+#endif

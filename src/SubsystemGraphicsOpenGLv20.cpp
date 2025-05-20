@@ -80,10 +80,10 @@ namespace umfeld {
     }
 
     static PGraphics* create_native_graphics(const bool render_to_offscreen) {
-#ifdef OPEN_GL_2_0
+#ifdef OPENGL_2_0
         return new PGraphicsOpenGLv20(render_to_offscreen);
 #else
-        error("RENDERER_OPENGL_2_0 requires `OPEN_GL_2_0` to be defined. e.g `-DOPEN_GL_2_0` in CLI or `set(UMFELD_OPENGL_VERSION \"2.0\")` in `CMakeLists.txt`");
+        error("RENDERER_OPENGL_2_0 requires `OPENGL_2_0` to be defined. e.g `-DOPENGL_2_0` in CLI or `set(UMFELD_OPENGL_VERSION \"2.0\")` in `CMakeLists.txt`");
         return nullptr;
 #endif
     }
@@ -97,7 +97,7 @@ namespace umfeld {
     }
 
     static int get_renderer_type() {
-        return RENDERER_OPEN_GL_2_0;
+        return RENDERER_OPENGL_2_0;
     }
 
     static const char* name() {

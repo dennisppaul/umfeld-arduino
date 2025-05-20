@@ -100,7 +100,7 @@ namespace umfeld {
 
         /* initialize GLAD */
 // TODO maybe move to subsystem
-#if defined(OPEN_GL_CORE_3_3) || defined(OPEN_GL_2_0)
+#if defined(OPENGL_CORE_3_3) || defined(OPENGL_2_0)
         if (!gladLoadGL(SDL_GL_GetProcAddress)) {
             error("Failed to load OpenGL with GLAD");
             SDL_GL_DestroyContext(gl_context);

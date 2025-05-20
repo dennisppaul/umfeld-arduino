@@ -49,10 +49,12 @@ namespace umfeld {
             case GL_INVALID_ENUM: return "Invalid enum (GL_INVALID_ENUM)";
             case GL_INVALID_VALUE: return "Invalid value (GL_INVALID_VALUE)";
             case GL_INVALID_OPERATION: return "Invalid operation (GL_INVALID_OPERATION)";
-            case GL_STACK_OVERFLOW: return "Stack overflow (GL_STACK_OVERFLOW)";
-            case GL_STACK_UNDERFLOW: return "Stack underflow (GL_STACK_UNDERFLOW)";
             case GL_OUT_OF_MEMORY: return "Out of memory (GL_OUT_OF_MEMORY)";
             case GL_INVALID_FRAMEBUFFER_OPERATION: return "Invalid framebuffer operation (GL_INVALID_FRAMEBUFFER_OPERATION)";
+#ifndef OPENGL_ES_3_0
+            case GL_STACK_OVERFLOW: return "Stack overflow (GL_STACK_OVERFLOW)";
+            case GL_STACK_UNDERFLOW: return "Stack underflow (GL_STACK_UNDERFLOW)";
+#endif
             default: return "Unknown OpenGL error";
         }
     }
@@ -115,7 +117,7 @@ namespace umfeld {
         std::string profile_str = "none ( pre 3.2 )";
         capabilities.profile    = OPENGL_PROFILE_NONE;
 
-#ifdef OPEN_GL_CORE_3_3
+#ifdef OPENGL_CORE_3_3
         if (capabilities.version_major > 2) {
             int profile = 0;
             glGetIntegerv(GL_CONTEXT_PROFILE_MASK, &profile);
@@ -129,7 +131,7 @@ namespace umfeld {
                 capabilities.profile = OPENGL_PROFILE_COMPATIBILITY;
             }
         }
-#endif // OPEN_GL_CORE_3_3
+#endif // OPENGL_CORE_3_3
         console(fl("Profile"), profile_str);
     }
 
@@ -142,13 +144,14 @@ namespace umfeld {
 
         console(separator(false));
 
+        // NOTE line and point capabilities queries are not available in OpenGL ES 3.0
+#ifndef OPENGL_ES_3_0
         GLfloat line_size_range[2]{};
         glGetFloatv(GL_LINE_WIDTH_RANGE, line_size_range);
         capabilities.line_size_min = line_size_range[0];
         capabilities.line_size_max = line_size_range[1];
         console(fl("line size min"), capabilities.line_size_min);
         console(fl("line size max"), capabilities.line_size_max);
-
         if (capabilities.line_size_min == 1.0f && capabilities.line_size_max == 1.0f) {
             console(fl("line support"), "since min and max line size is 1.0");
             console(fl(""), "it is likely that lines are not");
@@ -173,6 +176,7 @@ namespace umfeld {
         capabilities.point_size_granularity = point_size_granularity;
 
         console(separator());
+#endif
     }
 
     inline GLint get_draw_mode(const int shape) {
@@ -190,17 +194,21 @@ namespace umfeld {
                 _shape = GL_TRIANGLE_FAN;
                 break;
             case QUADS:
+#ifndef OPENGL_ES_3_0
                 _shape = GL_QUADS;
+#else
+                warning("QUADS not supported in this OpenGL version");
+#endif
                 break;
             case QUAD_STRIP:
-#ifdef OPEN_GL_2_0
+#ifdef OPENGL_2_0
                 _shape = GL_QUAD_STRIP;
 #else
                 warning("QUAD_STRIP not supported in this OpenGL version");
 #endif
                 break;
             case POLYGON:
-#ifdef OPEN_GL_2_0
+#ifdef OPENGL_2_0
                 _shape = GL_POLYGON;
 #else
                 warning("QUAD_STRIP not supported in this OpenGL version");

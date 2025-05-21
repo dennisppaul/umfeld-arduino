@@ -2,8 +2,6 @@
 
 # TODO this is not tested on RPI
 
-echo "+++ setting up umfeld      +++"
-
 echo "+++ updating package manager +++"
 
 sudo apt-get update -y

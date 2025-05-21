@@ -30,7 +30,7 @@ cmake -B build ; cmake --build build ; ./build/minimal
 
 on windows you need to install [MSYS2](https://www.msys2.org/) first and run the script from `MSYS2 UCRT64` console.
 
-on *some* linux systems you might need to installed `git` first with `sudo apt install -y git`.
+on *some* linux systems you might need to installed `git` first with `sudo apt install -y git`. note, that *Raspberry Pis* need a more intricate installation. see [Umfeld-on-RPI](documentation/Umfeld-on-RPI.md) for further information.
 
 if something goes wrong consult the detailed [DOCUMENTATION](documentation/DOCUMENTATION.md).
 

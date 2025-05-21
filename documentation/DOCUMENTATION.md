@@ -135,12 +135,21 @@ Java and C++ are similar in some aspects, but are very different in many others.
 
 ### Setting up Homebrew on macOS
 
-on some *clean* homebrew installations on macOS the environment variable `$LIBRARY_PATH` is not set or at least does not include the homebrew libraries. if so you may need to add the line `export LIBRARY_PATH=$LIBRARY_PATH:/usr/local/lib` to your profile e.g in `~/.zshrc` in *zsh* shell. note, that other shell environments use other profile files and mechanisms e.g *bash* uses `~/.bashrc`. find out which shell you are using by typing `echo $0`.
+on some *clean* homebrew installations on macOS the environment variable `$LIBRARY_PATH` is not set or at least does not include the homebrew libraries. if so you may need to add the line `export LIBRARY_PATH=$LIBRARY_PATH:/usr/local/lib` ( for intel-based machines ) or `export LIBRARY_PATH=$LIBRARY_PATH:/opt/homebrew/lib` ( *apple-silicon*-based machines ) to your profile e.g in `~/.zshrc` in *zsh* shell. note, that other shell environments use other profile files and mechanisms e.g *bash* uses `~/.bashrc`. find out which shell you are using by typing `echo $0`.
 
-if you have NO idea what this all means you might just try the following lines for *zsh*:
+if you have NO idea what this all means you might just try running the following lines for *zsh* in the terminal:
+
+#### on intel-based machines
 
 ```sh
 { echo -e "\n# set library path\n"; [ -n "$LIBRARY_PATH" ] && echo "export LIBRARY_PATH=/usr/local/lib:\"\$LIBRARY_PATH\"" || echo "export LIBRARY_PATH=/usr/local/lib"; } >> "$HOME/.zshrc"
+source "$HOME/.zshrc"
+```
+
+#### on *apple-silicon*-based machines
+
+```sh
+{ echo -e "\n# set library path\n"; [ -n "$LIBRARY_PATH" ] && echo "export LIBRARY_PATH=/opt/homebrew/lib:\"\$LIBRARY_PATH\"" || echo "export LIBRARY_PATH=/opt/homebrew/lib"; } >> "$HOME/.zshrc"
 source "$HOME/.zshrc"
 ```
 

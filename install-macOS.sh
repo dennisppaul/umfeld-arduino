@@ -27,6 +27,7 @@ echo -n "+++ checking for homebrew: "
 check_brew
 
 echo "+++ installing packages"
+brew update
 curl -fsSL "$BUNDLE_URL" -o Brewfile
 brew bundle --file=Brewfile
 rm Brewfile

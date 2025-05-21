@@ -10,6 +10,15 @@ check_brew() {
     else
         echo -n "not installed. installing homebrew now..."
         install_brew
+        # ensure brew is usable in this shell 
+        if [ -f /opt/homebrew/bin/brew ]; then
+            eval "$(/opt/homebrew/bin/brew shellenv)"
+        elif [ -f /usr/local/bin/brew ]; then
+            eval "$(/usr/local/bin/brew shellenv)"
+        else
+            echo "Homebrew installation failed or unknown path."
+            exit 1
+        fi
     fi
 }
 

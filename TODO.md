@@ -20,41 +20,30 @@ this is a VERY unsorted todo list and a note pad.
     void download_image(PImage* img, bool restore_texture = true) override;
     ```
 - [ ] @umfeld add function to `PFont` to generate a `PImage` with a static text as texture
-- [ ] @umfeld remove all references to graphics subsystem from PGraphics ( and derived classes )
 - [ ] @umfeld maybe add an option to return the generated triangles with endShape()
 - [ ] @umfeld add lighting ( see processing shaders `$HOME/Documents/dev/processing/git/processing4/core/src/processing/opengl/shaders` )
+- [ ] @umfeld load SVG into texture:
+    ```C
+    const std::string svg =
+        "<svg height='200' width='200'><circle cx='100' cy='100' r='80' stroke='white' stroke-width='4' fill='black'/></svg>";
+    
+      SDL_RWops *rw = SDL_RWFromConstMem(svg.c_str(), svg.size());
+      SDL_Surface *surface = IMG_Load_RW(rw, 1);
+      SDL_Texture *texture = SDL_CreateTextureFromSurface(renderer, surface);
+    ```
 
 ## Audio
 
-- [x] @umfeld basic audio classes 
-    - [x] oscillator ( wavetable )
-    - [x] sampler
-    - [x] filter ( low, high, band )
-    - [x] envelope + adsr
-    - [x] trigger/beat
+- [ ] @umfeld ==add option to run audio in own thread== ( see https://chatgpt.com/share/67dfc699-1d34-8004-a9a9-40716713ba2f )
 
 ## Environment
 
-- [ ] @umfeld ==add option to run audio in own thread== ( see https://chatgpt.com/share/67dfc699-1d34-8004-a9a9-40716713ba2f )
 - [ ] @umfeld add `set_window_title` with `SDL_SetWindowTitle(window, “TITLE”);` in subsystem
     - [ ] @umfeld fix set window title ( default to `$PROJECT_NAME`from CMake )
 - [ ] @umfeld @maybe iterate in reverse order through subsytems so that graphics is last to be exectued in `draw_post` … same for `setup_post`
 
 ## Building + Platforms
 
-- [ ] add `brew install sdl3_ttf`
-- [ ] fetch mit cmake?!?
-    ```cmake
-    include(FetchContent)
-    FetchContent_Declare(
-        SDL3_ttf
-        URL https://github.com/libsdl-org/SDL_ttf/releases/latest/download/SDL3_ttf-3.2.2.tar.gz
-    )
-    FetchContent_MakeAvailable(SDL3_ttf)
-    target_link_libraries(my_project PRIVATE SDL3_ttf::SDL3_ttf)
-    ```
-- [ ] add `stb_image_write.h`
-- [ ] add `FreeType2` and `Harfbuzz`
 - [ ] add iOS version of ffmpeg ( see https://github.com/kewlbear/FFmpeg-iOS-build-script ) and do somthing like this in CMake:
     ```cmake
     if(APPLE AND NOT CMAKE_SYSTEM_NAME MATCHES "iOS")
@@ -80,8 +69,7 @@ this is a VERY unsorted todo list and a note pad.
 ### OpenGL ES
 
 - [ ] @umfeld try to run this with OpenGL ES window https://github.com/ravbug/sdl3-sample
-- [ ] @umfeld what’s with ANGLE?
-    - @research test OpenGL ES emulation ANGLE with SDL https://gist.github.com/SasLuca/307a523d2c6f2900af5823f0792a8a93
+- [ ] @umfeld @research How to use ANGLE with SDL3 on iOS ( via Metal ) https://gist.github.com/SasLuca/307a523d2c6f2900af5823f0792a8a93
 
 ## Documentation
 
@@ -89,7 +77,7 @@ this is a VERY unsorted todo list and a note pad.
 - [ ] @umfeld start coding style doc
 - [ ] @umfeld documentation :: differences in shader handling ( set_uniforms )
 - [ ] @umfeld make a point of not supporting `colorMode(mode)`
-- [ ] make a step-by-step guide of how to create a library ( send to leo )
+- [ ] make a step-by-step guide of how to create a library
  ```
                      + -> emit_shape_stroke_line_strip -> triangulate, transform to world/screen space
  begin-end-shape ->  |
@@ -120,8 +108,6 @@ stroke(0.0f);             // black (0x000000)
 - [ ] @umfeld ask people for support and feature request etcetera … on github ( + discord )
 
 ## Libraries
-
-- [ ] gamepad ( e.g XBox controller as library or subsytem )
 
 ### CameraSDL Library
 
@@ -203,3 +189,18 @@ stroke(0.0f);             // black (0x000000)
 
 - [ ] @umfeld rename PFont, PImage, PVector etcetera to UFont, UImage, UVector
 - [ ] @umfeld PVector vs glm::vec3 at least some functions to convert between the two
+
+## Archived
+
+- [x] serial @archived(2025-05-21) @from(umfeld / TODO + NOTES > Libraries) @done(2025-05-21)
+- [x] gamepad ( e.g XBox controller as library or subsytem ) @archived(2025-05-21) @from(umfeld / TODO + NOTES > Libraries) @done(2025-05-21)
+- [x] @umfeld what’s with ANGLE? @archived(2025-05-21) @from(umfeld / TODO + NOTES > Building + Platforms > OpenGL ES) @done(2025-05-21)
+- [x] add `FreeType2` and `Harfbuzz` @archived(2025-05-21) @from(umfeld / TODO + NOTES > Building + Platforms) @done(2025-05-21)
+- [x] add `stb_image_write.h` @archived(2025-05-21) @from(umfeld / TODO + NOTES > Building + Platforms) @done(2025-05-21)
+- [x] @umfeld basic audio classes  @archived(2025-05-21) @from(umfeld / TODO + NOTES > Audio) @done(2025-05-21)
+    - [x] oscillator ( wavetable )
+    - [x] sampler
+    - [x] filter ( low, high, band )
+    - [x] envelope + adsr
+    - [x] trigger/beat
+- [x] @umfeld remove all references to graphics subsystem from PGraphics ( and derived classes ) @archived(2025-05-21) @from(umfeld / TODO + NOTES > Graphics) @done(2025-05-21)

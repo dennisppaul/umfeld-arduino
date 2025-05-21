@@ -64,6 +64,7 @@ cmake --build build
 pacman -Syu --noconfirm
 pacman -Syu --noconfirm # Repeat after first upgrade to ensure core tools are also updated
 pacman -S --noconfirm \
+  git \
   mingw-w64-ucrt-x86_64-toolchain \
   mingw-w64-ucrt-x86_64-cmake \
   mingw-w64-ucrt-x86_64-pkg-config \

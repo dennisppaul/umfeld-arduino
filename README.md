@@ -19,18 +19,41 @@
 
 ## Quickstart
 
+### 1. Install Dependencies
+
+```sh
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/dennisppaul/umfeld/refs/heads/main/install.sh)"
+```
+
+this script installs all required packages on macOS, Linux, or Windows ( in `MSYS2 UCRT64` ).
+
+### 2. Download Umfeld + Examples
+
 ```sh
 git clone https://github.com/dennisppaul/umfeld
 git clone https://github.com/dennisppaul/umfeld-examples
+```
+
+### 3. Build + run an example
+
+```sh
 cd umfeld
-./install.sh 
 cd ../umfeld-examples/Basics/minimal
 cmake -B build ; cmake --build build ; ./build/minimal
 ```
 
-on windows you need to install [MSYS2](https://www.msys2.org/) first and run the script from `MSYS2 UCRT64` console ( you might need to install `git` first with `pacman -S git` ). note, that after running `./install.sh` the console might disappear, in this case reopen the `MSYS2 UCRT64` console and continue at `cd umfeld` again.
+### Windows Notes
 
-on *some* linux systems you might need to installed `git` first with `sudo apt install -y git`. note, that *Raspberry Pis* need a more intricate installation. see [Umfeld-on-RPI](documentation/Umfeld-on-RPI.md) for further information.
+- install [MSYS2](https://www.msys2.org/) first
+- run all commands from the `MSYS2 UCRT64` console
+- if needed, install `git`, `bash` and `curl` with `pacman -S git bash curl`
+ 
+⚠️ Important ⚠️ when installing dependencies the console might close if `MSYS2` updates itself. this is normal! just reopen `MSYS2 UCRT64` and run the install dependencies command again.
+
+### Linux Notes
+
+- on *some* systems, you may need to install `git` and `curl` first with `sudo apt install -y git curl`. 
+- *Raspberry Pis* requires a more intricate installation. see [Umfeld-on-RPI](documentation/Umfeld-on-RPI.md) for platform-specific instructions.
 
 if something goes wrong consult the detailed [DOCUMENTATION](documentation/DOCUMENTATION.md).
 

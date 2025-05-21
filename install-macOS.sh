@@ -1,5 +1,9 @@
 #!/bin/bash
 
+set -e
+
+BUNDLE_URL="https://raw.githubusercontent.com/dennisppaul/umfeld/refs/heads/main/Brewfile"
+
 check_brew() {
     if command -v brew >/dev/null 2>&1; then
         echo "already installed."
@@ -23,6 +27,8 @@ echo -n "+++ checking for homebrew: "
 check_brew
 
 echo "+++ installing packages"
-brew bundle
+curl -fsSL "$BUNDLE_URL" -o Brewfile
+brew bundle --file=Brewfile
+rm Brewfile
 
-echo
+echo "+++ done"

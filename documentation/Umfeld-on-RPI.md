@@ -16,7 +16,7 @@ however, it has not been tested carefully. there might be glitches …
 
 ## Quickstart
 
-an `.img` image with *Umfeld* and all dependencies can be download from: http://dm-hb.de/umfeld-rpi and installed with tools like [Raspberry Pi Imager](https://www.raspberrypi.com/software/).
+Raspberry Pi OS (64-bit), *Debian Bookworm* with *Umfeld* and all dependencies pre-installed can be download as an image from: http://dm-hb.de/umfeld-rpi and installed with tools like [Raspberry Pi Imager](https://www.raspberrypi.com/software/).
 
 the image has been tested on a *Raspberry Pi 4 Model B* and *Raspberry Pi 400* with Raspberry Pi OS (64-bit), *Debian Bookworm* ( Released: 2025-05-13, Size: 1152MB ) installed.
 

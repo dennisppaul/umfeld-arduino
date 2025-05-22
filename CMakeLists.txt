@@ -477,7 +477,7 @@ if (ENABLE_ANGLE)
                 $<TARGET_FILE_DIR:${PROJECT_NAME}>/..
         )
     else ()
-        error("ANGLE not supported on this platform.")
+        message(ERROR "ANGLE not supported on this platform.")
     endif (APPLE)
 endif (ENABLE_ANGLE)
 

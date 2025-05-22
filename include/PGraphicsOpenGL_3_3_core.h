@@ -50,13 +50,13 @@ namespace umfeld {
 
         void        init(uint32_t* pixels, int width, int height, int format, bool generate_mipmap) override;
         std::string name() override {
-#ifdef OPENGL_ES_3_0
-            return "PGraphicsOpenGL_ES_3_0 )";
-#endif
-#ifdef OPENGL_3_3_CORE
+#if defined(OPENGL_ES_3_0)
+            return "PGraphicsOpenGL_ES_3_0";
+#elif defined(OPENGL_3_3_CORE)
             return "PGraphicsOpenGL_3_3_core";
+#else
+            return "Unknown";
 #endif
-return "Unknown";
         }
 
         void hint(uint16_t property) override;

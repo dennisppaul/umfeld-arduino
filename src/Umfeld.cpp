@@ -69,6 +69,23 @@ namespace umfeld {
         target_frame_duration = 1.0 / fps;
     }
 
+    static bool set_screen_size() {
+        const SDL_DisplayID display_id = SDL_GetPrimaryDisplay();
+        if (display_id == 0) {
+            warning("failed to get primary display: ", SDL_GetError());
+        } else {
+            const SDL_DisplayMode* mode = SDL_GetCurrentDisplayMode(display_id);
+            if (mode != nullptr) {
+                screen_size_x = mode->w;
+                screen_size_y = mode->h;
+                console(format_label("screen resolution", 30), screen_size_x, " x ", screen_size_y, " px");
+                return true;
+            }
+            warning("failed to get display mode: ", SDL_GetError());
+        }
+        return false;
+    }
+
     SDL_WindowFlags get_SDL_WindowFlags(SDL_WindowFlags& flags) {
         /*
          * SDL_WINDOW_FULLSCREEN           SDL_UINT64_C(0x0000000000000001)    //  window is in fullscreen mode
@@ -287,6 +304,14 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[]) {
     if (!SDL_Init(subsystem_flags)) {
         SDL_Log("couldn't initialize SDL: %s", SDL_GetError());
         return SDL_APP_FAILURE;
+    }
+
+    if (umfeld::subsystem_graphics != nullptr) {
+        umfeld::console(umfeld::separator());
+        umfeld::console("VIDEO CAPABILITIES");
+        umfeld::console(umfeld::separator());
+        umfeld::set_screen_size();
+        umfeld::console(umfeld::format_label("video driver", 30), SDL_GetCurrentVideoDriver());
     }
 
     // TODO make this configurable

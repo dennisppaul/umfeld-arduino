@@ -89,9 +89,6 @@ cmake -S . -B build \
   -DSDL_KMSDRM=ON \
   -DSDL_OPENGL=ON \
   -DSDL_OPENGLES=ON \
-  -DVIDEO_KMSDRM=ON \
-  -DVIDEO_X11=ON \
-  -DVIDEO_WAYLAND=ON \
   -DSDL_ALSA=ON \
   -DSDL_PULSEAUDIO=ON \
   -DSDL_PIPEWIRE=ON \
@@ -130,6 +127,12 @@ cmake --build build # `--parallel` might be too much for the RPI
 ```
 
 note, the first time might take a bit on a small machine. note, examples can not be run from `ssh` sessions ( without *X11 forwarding* ).
+
+## Running Applications Outside Windowing System
+
+- to switch to a console (TTY) press `CTRL+ALT+F3` ( or any `+F[3–6]` )
+- run application ( e.g `./build/minimal` )
+- to return to the desktop press `CTRL+ALT+F1` or `CTRL+ALT+F2`.
 
 ## X11 Forwarding
 

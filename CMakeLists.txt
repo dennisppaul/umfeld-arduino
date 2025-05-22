@@ -6,7 +6,7 @@ message(STATUS "----------------------------------------")
 message(STATUS "UMFELD_APP    : ${PROJECT_NAME}")
 
 option(ENABLE_PORTAUDIO "Enable PortAudio output" ON)
-option(ENABLE_ANGLE "Enable ANGLE OpenGL ES emulation on macOS ( apple silicon )" OFF)
+option(ENABLE_ANGLE "Enable ANGLE OpenGL ES emulation on macOS ( apple silicon )" ON)
 
 ##########################################################################################################
 ### CHECK FOR HOMEBREW                                                                                 ###
@@ -465,6 +465,7 @@ if (ENABLE_ANGLE)
     if (APPLE)
         # TODO maybe move this into library folder(s)?
         set(UMFELD_ANGLE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/external/angle" CACHE STRING "ANGLE directory")
+        message(STATUS "ANGLE_SUPPORT : ENABLED")
         message(STATUS "ANGLE_DIR     : ${UMFELD_ANGLE_DIR}")
 
         add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
@@ -479,6 +480,10 @@ if (ENABLE_ANGLE)
         error("ANGLE not supported on this platform.")
     endif (APPLE)
 endif (ENABLE_ANGLE)
+
+if (APPLE AND UMFELD_OPENGL_VERSION STREQUAL "es3.0" AND NOT ENABLE_ANGLE)
+    message(WARNING "OpenGL ES 3.0 requires `ENABLE_ANGLE` set to `ON` on macOS")
+endif ()
 
 ##########################################################################################################
 ### END OF SCRIPT                                                                                      ###

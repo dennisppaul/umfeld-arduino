@@ -37,9 +37,10 @@ git clone https://github.com/dennisppaul/umfeld-examples
 ### 3. Build + run an example
 
 ```sh
-cd umfeld
-cd ../umfeld-examples/Basics/minimal
-cmake -B build ; cmake --build build ; ./build/minimal
+cd umfeld-examples/Basics/minimal
+cmake -B build
+cmake --build build
+./build/minimal
 ```
 
 ### Windows Notes

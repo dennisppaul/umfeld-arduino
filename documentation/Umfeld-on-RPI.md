@@ -60,7 +60,7 @@ sudo apt install -y \
   librtmidi-dev \
   libglm-dev \
   portaudio19-dev
-#sudo apt-get install libsdl3-dev # currently (2025-05-22) not available
+#sudo apt install libsdl3-dev # currently (2025-05-22) not available
 ```
 
 **Note:** `gcc`, `git`, and `pkg-config` are typically pre-installed on Raspberry Pi OS with desktop, but are included above for completeness.
@@ -125,7 +125,7 @@ now enter the example directory, to build and run an example e.g a basic minimal
 ```sh
 cd umfeld-examples/Basics/minimal
 cmake -B build
-cmake --build build # --parallel
+cmake --build build # `--parallel` might be too much for the RPI
 ./build/minimal
 ```
 

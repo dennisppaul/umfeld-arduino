@@ -512,13 +512,13 @@ namespace umfeld {
         //
         // switch (renderer) {
         //     case RENDERER_OPENGL_2_0: {
-        //         const auto graphics = new PGraphicsOpenGLv20(true);
+        //         const auto graphics = new PGraphicsOpenGL_2_0(true);
         //         graphics->init(nullptr, width, height, 0, false);
         //         return graphics;
         //     }
         //     case RENDERER_OPENGL_3_3_CORE:
         //     default: {
-        //         const auto graphics = new PGraphicsOpenGLv33(true);
+        //         const auto graphics = new PGraphicsOpenGL_3_3_core(true);
         //         graphics->init(nullptr, width, height, 0, false);
         //         return graphics;
         //     }

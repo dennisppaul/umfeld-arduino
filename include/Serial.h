@@ -26,7 +26,7 @@
 
 #if defined(SYSTEM_WINDOWS)
 #include <windows.h>
-#elif (defined(SYSTEM_MACOS) || defined(SYSTEM_LINUX))
+#elif (defined(SYSTEM_MACOS) || defined(SYSTEM_UNIX))
 #include <termios.h>
 #include <unistd.h>
 #include <sys/ioctl.h>

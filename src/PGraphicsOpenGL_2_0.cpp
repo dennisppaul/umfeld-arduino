@@ -24,7 +24,7 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include "PGraphicsOpenGL.h"
-#include "PGraphicsOpenGLv20.h"
+#include "PGraphicsOpenGL_2_0.h"
 #include "PFont.h"
 #include "UmfeldFunctions.h"
 #include "UmfeldFunctionsAdditional.h"
@@ -37,16 +37,16 @@ static_assert(std::is_same_v<GLfloat, float>,
 
 using namespace umfeld;
 
-PGraphicsOpenGLv20::PGraphicsOpenGLv20(const bool render_to_offscreen) : PImage(0, 0, 0) {
+PGraphicsOpenGL_2_0::PGraphicsOpenGL_2_0(const bool render_to_offscreen) : PImage(0, 0, 0) {
     this->render_to_offscreen = render_to_offscreen;
 }
 
-void PGraphicsOpenGLv20::strokeWeight(const float weight) {
+void PGraphicsOpenGL_2_0::strokeWeight(const float weight) {
     PGraphics::strokeWeight(weight);
     glLineWidth(weight);
 }
 
-void PGraphicsOpenGLv20::rect(const float x, const float y, const float width, const float height) {
+void PGraphicsOpenGL_2_0::rect(const float x, const float y, const float width, const float height) {
     if (render_mode == RENDER_MODE_IMMEDIATE) {
         // compute rectangle corners using glm::vec2
         glm::vec2 p1, p2;
@@ -125,7 +125,7 @@ static void draw_ellipse(const GLenum shape,
     glEnd();
 }
 
-void PGraphicsOpenGLv20::ellipse(const float x, const float y, const float w, const float h) {
+void PGraphicsOpenGL_2_0::ellipse(const float x, const float y, const float w, const float h) {
     if (render_mode == RENDER_MODE_IMMEDIATE) {
         float cx, cy, width, height;
 
@@ -180,11 +180,11 @@ void PGraphicsOpenGLv20::ellipse(const float x, const float y, const float w, co
     }
 }
 
-void PGraphicsOpenGLv20::circle(const float x, const float y, const float diameter) {
+void PGraphicsOpenGL_2_0::circle(const float x, const float y, const float diameter) {
     ellipse(x, y, diameter, diameter);
 }
 
-void PGraphicsOpenGLv20::line(const float x1, const float y1, const float x2, const float y2) {
+void PGraphicsOpenGL_2_0::line(const float x1, const float y1, const float x2, const float y2) {
     if (render_mode == RENDER_MODE_IMMEDIATE) {
         if (!color_stroke.active) {
             return;
@@ -202,7 +202,7 @@ void PGraphicsOpenGLv20::line(const float x1, const float y1, const float x2, co
     }
 }
 
-void PGraphicsOpenGLv20::line(const float x1, const float y1, const float z1, const float x2, const float y2, const float z2) {
+void PGraphicsOpenGL_2_0::line(const float x1, const float y1, const float z1, const float x2, const float y2, const float z2) {
     if (render_mode == RENDER_MODE_IMMEDIATE) {
         if (!color_stroke.active) {
             return;
@@ -220,7 +220,7 @@ void PGraphicsOpenGLv20::line(const float x1, const float y1, const float z1, co
     }
 }
 
-void PGraphicsOpenGLv20::triangle(const float x1, const float y1, const float z1, const float x2, const float y2, const float z2, const float x3, const float y3, const float z3) {
+void PGraphicsOpenGL_2_0::triangle(const float x1, const float y1, const float z1, const float x2, const float y2, const float z2, const float x3, const float y3, const float z3) {
     if (render_mode == RENDER_MODE_IMMEDIATE) {
         if (!color_stroke.active) {
             glColor4f(color_stroke.r, color_stroke.g, color_stroke.b, color_stroke.a);
@@ -246,7 +246,7 @@ void PGraphicsOpenGLv20::triangle(const float x1, const float y1, const float z1
     }
 }
 
-void PGraphicsOpenGLv20::bezier(const float x1, const float y1, const float x2, const float y2, const float x3, const float y3, const float x4, const float y4) {
+void PGraphicsOpenGL_2_0::bezier(const float x1, const float y1, const float x2, const float y2, const float x3, const float y3, const float x4, const float y4) {
     if (render_mode == RENDER_MODE_IMMEDIATE) {
         if (!color_stroke.active) {
             return;
@@ -280,7 +280,7 @@ void PGraphicsOpenGLv20::bezier(const float x1, const float y1, const float x2, 
     }
 }
 
-void PGraphicsOpenGLv20::bezier(const float x1, const float y1, const float z1,
+void PGraphicsOpenGL_2_0::bezier(const float x1, const float y1, const float z1,
                                 const float x2, const float y2, const float z2,
                                 const float x3, const float y3, const float z3,
                                 const float x4, const float y4, const float z4) {
@@ -319,7 +319,7 @@ void PGraphicsOpenGLv20::bezier(const float x1, const float y1, const float z1,
     }
 }
 
-void PGraphicsOpenGLv20::point(const float x, const float y, const float z) {
+void PGraphicsOpenGL_2_0::point(const float x, const float y, const float z) {
     if (render_mode == RENDER_MODE_IMMEDIATE) {
         if (!color_stroke.active) {
             return;
@@ -349,23 +349,23 @@ void PGraphicsOpenGLv20::point(const float x, const float y, const float z) {
 
 /* font */
 
-PFont* PGraphicsOpenGLv20::loadFont(const std::string& file, const float size) {
+PFont* PGraphicsOpenGL_2_0::loadFont(const std::string& file, const float size) {
     auto* font = new PFont(file.c_str(), size, static_cast<float>(pixel_density));
     return font;
 }
 
-void PGraphicsOpenGLv20::textFont(PFont* font) {
+void PGraphicsOpenGL_2_0::textFont(PFont* font) {
     current_font = font;
 }
 
-void PGraphicsOpenGLv20::textSize(const float size) {
+void PGraphicsOpenGL_2_0::textSize(const float size) {
     if (current_font == nullptr) {
         return;
     }
     current_font->textSize(size);
 }
 
-void PGraphicsOpenGLv20::text_str(const std::string& text, const float x, const float y, const float z) {
+void PGraphicsOpenGL_2_0::text_str(const std::string& text, const float x, const float y, const float z) {
     if (current_font == nullptr) {
         return;
     }
@@ -379,7 +379,7 @@ void PGraphicsOpenGLv20::text_str(const std::string& text, const float x, const 
 #endif // DISABLE_GRAPHICS
 }
 
-float PGraphicsOpenGLv20::textWidth(const std::string& text) {
+float PGraphicsOpenGL_2_0::textWidth(const std::string& text) {
     if (current_font == nullptr) {
         return 0;
     }
@@ -389,7 +389,7 @@ float PGraphicsOpenGLv20::textWidth(const std::string& text) {
 #endif // DISABLE_GRAPHICS
 }
 
-void PGraphicsOpenGLv20::pixelDensity(const int density) {
+void PGraphicsOpenGL_2_0::pixelDensity(const int density) {
     static bool emitted_warning = false;
     if (!emitted_warning && init_properties_locked) {
         warning("`pixelDensity()` should not be set after context is created. use `retina_support` in settings instead.");
@@ -398,16 +398,16 @@ void PGraphicsOpenGLv20::pixelDensity(const int density) {
     pixel_density = density;
 }
 
-void PGraphicsOpenGLv20::text(const char* value, const float x, const float y, const float z) {
+void PGraphicsOpenGL_2_0::text(const char* value, const float x, const float y, const float z) {
     text_str(value, x, y, z);
 }
 
-PImage* PGraphicsOpenGLv20::loadImage(const std::string& filename) {
+PImage* PGraphicsOpenGL_2_0::loadImage(const std::string& filename) {
     auto* img = new PImage(filename);
     return img;
 }
 
-void PGraphicsOpenGLv20::image(PImage* img, const float x, const float y, float w, float h) {
+void PGraphicsOpenGL_2_0::image(PImage* img, const float x, const float y, float w, float h) {
     if (!color_fill.active) {
         return;
     }
@@ -453,7 +453,7 @@ void PGraphicsOpenGLv20::image(PImage* img, const float x, const float y, float 
             error("image cannot create texture.");
             return;
         }
-        console("PGraphicsOpenGLv20::image // uploaded texture image to GPU: ", img->texture_id);
+        console("PGraphicsOpenGL_2_0::image // uploaded texture image to GPU: ", img->texture_id);
     }
 
     const uint8_t tmp_rect_mode          = rect_mode;
@@ -480,11 +480,11 @@ void PGraphicsOpenGLv20::image(PImage* img, const float x, const float y, float 
     rect_mode = tmp_rect_mode;
 }
 
-void PGraphicsOpenGLv20::image(PImage* img, const float x, const float y) {
+void PGraphicsOpenGL_2_0::image(PImage* img, const float x, const float y) {
     image(img, x, y, img->width, img->height);
 }
 
-void PGraphicsOpenGLv20::texture(PImage* img) {
+void PGraphicsOpenGL_2_0::texture(PImage* img) {
     if (img == nullptr) {
         IMPL_bind_texture(TEXTURE_NONE);
         return;
@@ -502,7 +502,7 @@ void PGraphicsOpenGLv20::texture(PImage* img) {
             error("image cannot create texture.");
             return;
         }
-        console("PGraphicsOpenGLv20::texture // uploaded texture image to GPU: ", img->texture_id);
+        console("PGraphicsOpenGL_2_0::texture // uploaded texture image to GPU: ", img->texture_id);
     }
 
     enabled_texture_in_shape = true;
@@ -511,7 +511,7 @@ void PGraphicsOpenGLv20::texture(PImage* img) {
 }
 
 // TODO could move this to a shared method in `PGraphics` and use beginShape(TRIANGLES)
-void PGraphicsOpenGLv20::debug_text(const std::string& text, const float x, const float y) {
+void PGraphicsOpenGL_2_0::debug_text(const std::string& text, const float x, const float y) {
     const std::vector<Vertex> triangle_vertices = debug_font.generate(text, x, y, glm::vec4(color_fill));
     push_texture_id();
     glEnable(GL_TEXTURE_2D);
@@ -528,62 +528,62 @@ void PGraphicsOpenGLv20::debug_text(const std::string& text, const float x, cons
     glDisable(GL_TEXTURE_2D);
 }
 
-void PGraphicsOpenGLv20::popMatrix() {
+void PGraphicsOpenGL_2_0::popMatrix() {
     PGraphics::popMatrix();
     glPopMatrix();
 }
 
-void PGraphicsOpenGLv20::pushMatrix() {
+void PGraphicsOpenGL_2_0::pushMatrix() {
     PGraphics::pushMatrix();
     glPushMatrix();
 }
 
-void PGraphicsOpenGLv20::translate(const float x, const float y, const float z) {
+void PGraphicsOpenGL_2_0::translate(const float x, const float y, const float z) {
     PGraphics::translate(x, y, z);
     glTranslatef(x, y, z);
 }
 
-void PGraphicsOpenGLv20::rotateX(const float angle) {
+void PGraphicsOpenGL_2_0::rotateX(const float angle) {
     PGraphics::rotateX(angle);
     glRotatef(degrees(angle), 1.0f, 0.0f, 0.0f);
 }
 
-void PGraphicsOpenGLv20::rotateY(const float angle) {
+void PGraphicsOpenGL_2_0::rotateY(const float angle) {
     PGraphics::rotateY(angle);
     glRotatef(degrees(angle), 0.0f, 1.0f, 0.0f);
 }
 
-void PGraphicsOpenGLv20::rotateZ(const float angle) {
+void PGraphicsOpenGL_2_0::rotateZ(const float angle) {
     PGraphics::rotateZ(angle);
     glRotatef(degrees(angle), 0.0f, 0.0f, 1.0f);
 }
 
-void PGraphicsOpenGLv20::rotate(const float angle) {
+void PGraphicsOpenGL_2_0::rotate(const float angle) {
     PGraphics::rotate(angle);
     glRotatef(degrees(angle), 0.0f, 0.0f, 1.0f);
 }
 
-void PGraphicsOpenGLv20::rotate(const float angle, const float x, const float y, const float z) {
+void PGraphicsOpenGL_2_0::rotate(const float angle, const float x, const float y, const float z) {
     PGraphics::rotate(angle, x, y, z);
     glRotatef(degrees(angle), x, y, z);
 }
 
-void PGraphicsOpenGLv20::scale(const float x) {
+void PGraphicsOpenGL_2_0::scale(const float x) {
     PGraphics::scale(x);
     glScalef(x, x, x);
 }
 
-void PGraphicsOpenGLv20::scale(const float x, const float y) {
+void PGraphicsOpenGL_2_0::scale(const float x, const float y) {
     PGraphics::scale(x, y);
     glScalef(x, y, 1.0f);
 }
 
-void PGraphicsOpenGLv20::scale(const float x, const float y, const float z) {
+void PGraphicsOpenGL_2_0::scale(const float x, const float y, const float z) {
     PGraphics::scale(x, y, z);
     glScalef(x, y, z);
 }
 
-void PGraphicsOpenGLv20::init(uint32_t* pixels,
+void PGraphicsOpenGL_2_0::init(uint32_t* pixels,
                               const int width,
                               const int height,
                               int       format,
@@ -628,7 +628,7 @@ void PGraphicsOpenGLv20::init(uint32_t* pixels,
     }
 }
 
-void PGraphicsOpenGLv20::hint(const uint16_t property) {
+void PGraphicsOpenGL_2_0::hint(const uint16_t property) {
     // TODO @MERGE
     switch (property) {
         case ENABLE_SMOOTH_LINES:
@@ -651,15 +651,15 @@ void PGraphicsOpenGLv20::hint(const uint16_t property) {
     }
 }
 
-void PGraphicsOpenGLv20::upload_texture(PImage* img, const uint32_t* pixel_data, int width, int height, int offset_x, int offset_y, bool mipmapped) {
+void PGraphicsOpenGL_2_0::upload_texture(PImage* img, const uint32_t* pixel_data, int width, int height, int offset_x, int offset_y, bool mipmapped) {
     error("`upload_texture` not implemented ( might be called from `PImage`, `Capture` ,or `Movie` )");
 }
 
-void PGraphicsOpenGLv20::download_texture(PImage* img) {
+void PGraphicsOpenGL_2_0::download_texture(PImage* img) {
     error("`download_texture` not implemented ( might be called from `PImage`, `Capture` ,or `Movie` )");
 }
 
-void PGraphicsOpenGLv20::render_framebuffer_to_screen(bool use_blit) {
+void PGraphicsOpenGL_2_0::render_framebuffer_to_screen(bool use_blit) {
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glPushAttrib(GL_ALL_ATTRIB_BITS);
 
@@ -698,7 +698,7 @@ void PGraphicsOpenGLv20::render_framebuffer_to_screen(bool use_blit) {
     glPopAttrib();
 }
 
-bool PGraphicsOpenGLv20::read_framebuffer(std::vector<unsigned char>& pixels) {
+bool PGraphicsOpenGL_2_0::read_framebuffer(std::vector<unsigned char>& pixels) {
     store_fbo_state();
     if (render_to_offscreen) {
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -710,7 +710,7 @@ bool PGraphicsOpenGLv20::read_framebuffer(std::vector<unsigned char>& pixels) {
     return success;
 }
 
-void PGraphicsOpenGLv20::reset_mvp_matrices() {
+void PGraphicsOpenGL_2_0::reset_mvp_matrices() {
     PGraphics::reset_mvp_matrices();
 
     // glMatrixMode(GL_PROJECTION);
@@ -742,7 +742,7 @@ void PGraphicsOpenGLv20::reset_mvp_matrices() {
     // glTranslatef(0, -height, 0);
 }
 
-void PGraphicsOpenGLv20::restore_mvp_matrices() {
+void PGraphicsOpenGL_2_0::restore_mvp_matrices() {
     PGraphics::restore_mvp_matrices();
 
     /* restore MVP matrices */
@@ -752,7 +752,7 @@ void PGraphicsOpenGLv20::restore_mvp_matrices() {
     glPopMatrix();
 }
 
-void PGraphicsOpenGLv20::beginDraw() {
+void PGraphicsOpenGL_2_0::beginDraw() {
     if (render_to_offscreen) {
         store_fbo_state();
     }
@@ -772,42 +772,42 @@ void PGraphicsOpenGLv20::beginDraw() {
     }
 }
 
-void PGraphicsOpenGLv20::endDraw() {
+void PGraphicsOpenGL_2_0::endDraw() {
     PGraphicsOpenGL::endDraw();
 }
 
-void PGraphicsOpenGLv20::bind_fbo() {
+void PGraphicsOpenGL_2_0::bind_fbo() {
     glPushAttrib(GL_ALL_ATTRIB_BITS);
     glPushMatrix();
     glBindFramebuffer(GL_FRAMEBUFFER, framebuffer.id);
 }
 
-void PGraphicsOpenGLv20::finish_fbo() {
+void PGraphicsOpenGL_2_0::finish_fbo() {
     glPopMatrix();
     glPopAttrib();
 }
 
-void PGraphicsOpenGLv20::store_fbo_state() {
+void PGraphicsOpenGL_2_0::store_fbo_state() {
     glGetIntegerv(GL_FRAMEBUFFER_BINDING, &previously_bound_FBO);
 }
 
-void PGraphicsOpenGLv20::restore_fbo_state() {
+void PGraphicsOpenGL_2_0::restore_fbo_state() {
     glBindFramebuffer(GL_FRAMEBUFFER, previously_bound_FBO);
 }
 
-void PGraphicsOpenGLv20::IMPL_background(const float a, const float b, const float c, const float d) {
+void PGraphicsOpenGL_2_0::IMPL_background(const float a, const float b, const float c, const float d) {
     glClearColor(a, b, c, d);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
-void PGraphicsOpenGLv20::IMPL_bind_texture(const int bind_texture_id) {
+void PGraphicsOpenGL_2_0::IMPL_bind_texture(const int bind_texture_id) {
     if (bind_texture_id != texture_id_current) {
         texture_id_current = bind_texture_id;
         glBindTexture(GL_TEXTURE_2D, texture_id_current); // NOTE this should be the only glBindTexture ( except for initializations )
     }
 }
 
-void PGraphicsOpenGLv20::IMPL_set_texture(PImage* img) {
+void PGraphicsOpenGL_2_0::IMPL_set_texture(PImage* img) {
     // if (img == nullptr) {
     //     IMPL_bind_texture(texture_id_solid_color);
     //     return;
@@ -836,7 +836,7 @@ void PGraphicsOpenGLv20::IMPL_set_texture(PImage* img) {
 
 /* --- shape --- */
 
-void PGraphicsOpenGLv20::beginShape(const int shape) {
+void PGraphicsOpenGL_2_0::beginShape(const int shape) {
     if (render_mode == RENDER_MODE_IMMEDIATE) {
         outline_vertices.clear();
         shape_has_begun  = true;
@@ -850,7 +850,7 @@ void PGraphicsOpenGLv20::beginShape(const int shape) {
     }
 }
 
-void PGraphicsOpenGLv20::endShape(const bool close_shape) {
+void PGraphicsOpenGL_2_0::endShape(const bool close_shape) {
     if (render_mode == RENDER_MODE_IMMEDIATE) {
         if (shape_has_begun) {
             glEnd();
@@ -884,7 +884,7 @@ void PGraphicsOpenGLv20::endShape(const bool close_shape) {
     }
 }
 
-void PGraphicsOpenGLv20::vertex(const float x, const float y, const float z) {
+void PGraphicsOpenGL_2_0::vertex(const float x, const float y, const float z) {
     if (render_mode == RENDER_MODE_IMMEDIATE) {
 
         if (!shape_has_begun) {
@@ -909,7 +909,7 @@ void PGraphicsOpenGLv20::vertex(const float x, const float y, const float z) {
     }
 }
 
-void PGraphicsOpenGLv20::vertex(const float x, const float y, const float z, const float u, const float v) {
+void PGraphicsOpenGL_2_0::vertex(const float x, const float y, const float z, const float u, const float v) {
     if (render_mode == RENDER_MODE_IMMEDIATE) {
         if (!shape_has_begun) {
             console("`vertex()` should only be called between `beginShape()` and `endShape()`");
@@ -941,7 +941,7 @@ static void emit_vertex(const Vertex& v) {
     glVertex3f(v.position.x, v.position.y, v.position.z);
 }
 
-void PGraphicsOpenGLv20::emit_shape_stroke_line_strip(std::vector<Vertex>& line_strip_vertices, const bool line_strip_closed) {
+void PGraphicsOpenGL_2_0::emit_shape_stroke_line_strip(std::vector<Vertex>& line_strip_vertices, const bool line_strip_closed) {
     glBegin(GL_LINE_STRIP);
     for (const auto& v: line_strip_vertices) {
         emit_vertex(v);
@@ -952,7 +952,7 @@ void PGraphicsOpenGLv20::emit_shape_stroke_line_strip(std::vector<Vertex>& line_
     glEnd();
 }
 
-void PGraphicsOpenGLv20::emit_shape_fill_triangles(std::vector<Vertex>& triangle_vertices) {
+void PGraphicsOpenGL_2_0::emit_shape_fill_triangles(std::vector<Vertex>& triangle_vertices) {
     glBegin(GL_TRIANGLES);
     for (const auto& v: triangle_vertices) {
         emit_vertex(v);
@@ -960,25 +960,25 @@ void PGraphicsOpenGLv20::emit_shape_fill_triangles(std::vector<Vertex>& triangle
     glEnd();
 }
 
-void PGraphicsOpenGLv20::camera(const float eyeX, const float eyeY, const float eyeZ,
+void PGraphicsOpenGL_2_0::camera(const float eyeX, const float eyeY, const float eyeZ,
                                 const float centerX, const float centerY, const float centerZ,
                                 const float upX, const float upY, const float upZ) {
     PGraphics::camera(eyeX, eyeY, eyeZ, centerX, centerY, centerZ, upX, upY, upZ);
 }
 
-void PGraphicsOpenGLv20::camera() {
+void PGraphicsOpenGL_2_0::camera() {
     PGraphics::camera();
 }
 
-void PGraphicsOpenGLv20::frustum(const float left, const float right, const float bottom, const float top, const float near, const float far) {
+void PGraphicsOpenGL_2_0::frustum(const float left, const float right, const float bottom, const float top, const float near, const float far) {
     PGraphics::frustum(left, right, bottom, top, near, far);
 }
 
-void PGraphicsOpenGLv20::ortho(const float left, const float right, const float bottom, const float top, const float near, const float far) {
+void PGraphicsOpenGL_2_0::ortho(const float left, const float right, const float bottom, const float top, const float near, const float far) {
     PGraphics::ortho(left, right, bottom, top, near, far);
 }
 
-void PGraphicsOpenGLv20::perspective(const float fovy, const float aspect, const float near, const float far) {
+void PGraphicsOpenGL_2_0::perspective(const float fovy, const float aspect, const float near, const float far) {
     PGraphics::perspective(fovy, aspect, near, far);
 }
 #endif // OPENGL_2_0

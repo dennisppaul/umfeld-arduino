@@ -27,10 +27,13 @@
 #include <tchar.h>
 #include <windows.h>
 #pragma comment(lib, "setupapi.lib")
-#elif (defined(SYSTEM_MACOS) || defined(SYSTEM_LINUX))
+#elif (defined(SYSTEM_MACOS) || defined(SYSTEM_UNIX))
 #include <fcntl.h>
 #include <dirent.h>
 #include <map>
+#include <termios.h>
+#include <unistd.h>
+#include <sys/ioctl.h>
 #endif
 
 #if !defined(SYSTEM_WINDOWS)

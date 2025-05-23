@@ -1,3 +1,5 @@
+# Processing Function Availability Status
+
 below is a list of all Processing functions from the official [Processing Reference](https://processing.org/reference). if a line starts with `- [ ]` it means the function is not (yet) implemented, if it starts with `- [x]` it means the function is implemented. if a line start with just `- ` it means the item is part of the environment ( i.e the C/C++ language ) already ( e.g `- for :: Controls a sequence of repetitions` ). also look for notes that highlight differences `@note()` to the original Processing behavior.
 
 ## Data
@@ -158,11 +160,11 @@ below is a list of all Processing functions from the official [Processing Refere
 
 ## Rendering
 
-- [ ] `PGraphics` :: Main graphics and rendering context, as well as the base API implementation for processing "core"
+- [x] `PGraphics` :: Main graphics and rendering context, as well as the base API implementation for processing "core"
 - [ ] `blendMode()` :: Blends the pixels in the display window according to a defined mode
 - [ ] `clip()` :: Limits the rendering to the boundaries of a rectangle defined by the parameters
 - [x] `createGraphics()` :: Creates and returns a new `PGraphics` object of the types P2D or P3D
-- [x] `hint()` :: This function is used to enable or disable special features that control how graphics are drawn
+- [x] `hint()` :: This function is used to enable or disable special features that control how graphics are drawn @note(the function exists but A LOT of hints are not available)
 - [ ] `noClip()` :: Disables the clipping previously started by the `clip()` function
 
 ### Shaders
@@ -175,7 +177,7 @@ below is a list of all Processing functions from the official [Processing Refere
 ## Image
 
 - [x] `PImage` :: Datatype for storing images
-- [ ] `createImage()` :: Creates a new `PImage` (the datatype for storing images)
+- [x] `createImage()` :: Creates a new `PImage` (the datatype for storing images)
 
 ### Pixels
 

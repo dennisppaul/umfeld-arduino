@@ -43,20 +43,25 @@ cmake --build build
 ./build/minimal
 ```
 
+if something goes wrong consult the detailed [DOCUMENTATION](documentation/DOCUMENTATION.md).
+
 ### Windows Notes
 
 - install [MSYS2](https://www.msys2.org/) first
 - run all commands from the `MSYS2 UCRT64` console
 - if needed, install `git`, `bash` and `curl` with `pacman -S git bash curl`
  
-⚠️ Important ⚠️ when installing dependencies the console might close if `MSYS2` updates itself. this is normal! just reopen `MSYS2 UCRT64` and run the install dependencies command again.
+⚠️ Important ⚠️ when installing dependencies the console might close if `MSYS2` updates itself. this is normal! just reopen `MSYS2 UCRT64` and run the *Install Dependencies* command again.
+
+### Raspberry Pi Notes
+
+- *Quickstart* guide does not work on *Raspberry Pi*
+- the quickest way to get started on *Raspberry Pi* is to use the pre-configured image 
+- see [Umfeld-on-RPI / Quickstart](documentation/Umfeld-on-RPI.md) for platform-specific instructions
 
 ### Linux Notes
 
-- on *some* systems, you may need to install `git` and `curl` first with `sudo apt install -y git curl`. 
-- *Raspberry Pis* requires a more intricate installation. see [Umfeld-on-RPI](documentation/Umfeld-on-RPI.md) for platform-specific instructions.
-
-if something goes wrong consult the detailed [DOCUMENTATION](documentation/DOCUMENTATION.md).
+on *some* systems, you may need to install `git` and `curl` with `sudo apt install -y git curl` before installing the dependencies.
 
 ## Why *Umfeld*?
 
@@ -119,3 +124,11 @@ this project relies on the following packages:
 ( `@version(macOS, X.X.X)` states the platform and version number of the library with which *Umfeld* has been tested on macOS. other versions might work as well but are not guaranteed to. )
 
 and as mentioned before of course [Processing.org](https://processing.org)
+
+## Documents
+
+- [DOCUMENTATION](documentation/DOCUMENTATION.md) :: detailed documentation on how to build from source, caveats, application structure etcetera
+- [Processing Function Availability Status](documentation/Processing-Function-Availability-Status.md) :: list of functions that are part of *Processing.org* and available in *Umfeld*
+- [Additional Umfeld Functions](Additional-Umfeld-Functions.md) :: list of functions added to *Umfeld* that are not part of *Processing.org*
+- [Umfeld in CLion](documentation/Umfeld-in-CLion.md) :: instructions on how to run an *Umfeld* application as a *CMake* project in *CLion*
+- [Umfeld in Visual Studio Code](documentation/Umfeld-in-Visual-Studio-Code.md) :: instructions on how to run an *Umfeld* application as a *CMake* project in *isual Studio Code*

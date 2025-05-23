@@ -1,8 +1,30 @@
 # Umfeld on Raspberry Pi (RPI)
 
-RPI currently uses X11 as the rendering system when in desktop environment. however, there is also an allegedly much faster KMS ( or KMSDRM ) rendering system which can start fullscreen windows without(!) a GUI i.e from the command-line ( and even from a remote machine via SSH ). i have tested this already, it does work but requires some extra development. stay tuned.
+*Umfeld* runs on Raspberry Pi devices with support for both *OpenGL ES 3.0* and *OpenGL 2.0* rendering backends. 
 
-PS: RPI does not support antialiasing i.e make sure to set the value `antialiasing` to `0` in `settings()`:
+On the Raspberry Pi OS desktop, it uses X11 for window management, but it can also run directly from the command line without a graphical user interface using the *KMSDRM* system ( requires *OpenGL ES 3.0* ). This setup allows *Umfeld* to launch fullscreen graphics applications more efficiently—perfect for installations, performance setups, or headless operation over SSH.
+
+## Quickstart
+
+A ready-to-use Raspberry Pi OS (64-bit) ( *Debian Bookworm* ) image with *Umfeld* and all dependencies pre-installed is available at:
+
+**Download:** http://dm-hb.de/umfeld-rpi
+
+You can install the image using tools such as the [Raspberry Pi Imager](https://www.raspberrypi.com/software/).
+
+**Default login:**
+
+- Hostname: `umfeld.local`  
+- Username: `umfeld`  
+- Password: `umfeld123`
+
+this image is based on Raspberry Pi OS (64-bit) based on *Debian Bookworm* (Release date: 2025-05-13, Image size: 1152 MB) and has been tested on the **Raspberry Pi 4 Model B** and **Raspberry Pi 400**.
+
+## Limitations and Issues
+
+⚠️ WARNING ⚠️ there are still quite a few glitches on RPIs. for example, audio is still shaky.
+
+RPI does not support antialiasing i.e make sure to set the value `antialiasing` to `0` in `settings()`:
 
 ```cpp
 void settings(){
@@ -11,20 +33,6 @@ void settings(){
 ```
 
 this step by step guide has been tested on a *Raspberry Pi 4 Model B* and *Raspberry Pi 400* with Raspberry Pi OS (64-bit), *Debian Bookworm* ( Released: 2025-05-13, Size: 1152MB ) installed.
-
-however, it has not been tested carefully. there might be glitches …
-
-## Quickstart
-
-Raspberry Pi OS (64-bit), *Debian Bookworm* with *Umfeld* and all dependencies pre-installed can be download as an image from: http://dm-hb.de/umfeld-rpi and installed with tools like [Raspberry Pi Imager](https://www.raspberrypi.com/software/).
-
-the image has been tested on a *Raspberry Pi 4 Model B* and *Raspberry Pi 400* with Raspberry Pi OS (64-bit), *Debian Bookworm* ( Released: 2025-05-13, Size: 1152MB ) installed.
-
-the credentials are:
-
-- name : `umfeld.local` 
-- user: `umfeld` 
-- password: `umfeld123`
 
 ## Preparing the Build Environment on Raspberry Pi OS (with desktop)
 

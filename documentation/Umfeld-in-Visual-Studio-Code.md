@@ -19,7 +19,7 @@ after opening the folder:
 - press `CMD+SHIFT+P` ( or `CTRL+SHIFT+P` on linux and windows )
 - type `cmake: configure` and run the command ( you can let the CMake decide which compiler to use or pick one of you choice )
 
-this will configure your project and create a build folder ( default is `build` ).
+this will configure your project and create a build folder ( default is `build/` ).
 
 ## build the project
 
@@ -35,4 +35,4 @@ after building, you can:
 - press `CMD+SHIFT+P`
 - type `cmake: run` ( or use `cmake: debug to launch with debugger` )
 
-alternatively, find the output binary in your build/ folder and run it manually in a terminal.
+alternatively, find the output binary in your build folder ( default is `build/` ) and run it manually in a terminal.

@@ -2,7 +2,7 @@
 
 ## v2.1.0 (2025-05-24)
 
-- *Umfeld* no runs on macOS, Linux ( including RPI ), and Windows ( still a lot of glitches )
+- *Umfeld* now runs on macOS, Linux ( including RPI ), and Windows ( still a lot of glitches )
 - OpenGL ES 3.0 now works ( as a subset of OpenGL 3.3 core ) ( + on macOS ( M3 ) ANGLE (Almost Native Graphics Layer Engine) works now to develop OpenGL ES )
 - KMSDRM now works on RPIs ( i.e running applications without desktop environment )
 - added support for gamepad

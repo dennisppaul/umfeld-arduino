@@ -46,7 +46,7 @@ cmake -S . -B build \
   -DSDL_PULSEAUDIO=ON \
   -DSDL_PIPEWIRE=ON \
   -DSDL_JACK=ON \
-  -DCMAKE_BUILD_TYPE=Release
+  -DCMAKE_BUILD_TYPE=Release # add -DSDL_UNIX_CONSOLE_BUILD=ON i fno X11/wayland windowing system is installed
 cmake --build build   # Avoid using -j$(nproc) or `--parallel` for now, it may overwhelm the RPi
 sudo cmake --install build --prefix /usr/local
 

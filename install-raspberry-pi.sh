@@ -41,8 +41,7 @@ sudo apt install -y \
 # detect if running headless (no X11/Wayland)
 echo "+++ detecting display system  +++"
 USE_CONSOLE_BUILD=OFF
-if [[ -z "$DISPLAY" && -z "$WAYLAND_DISPLAY" ]] && \
-   ! pgrep -x Xorg >/dev/null && ! pgrep -f wayland >/dev/null; then
+if [[ -z "$DISPLAY" && -z "$WAYLAND_DISPLAY" ]]; then
   echo "+++ no X11 or Wayland detected, enabling SDL_UNIX_CONSOLE_BUILD"
   USE_CONSOLE_BUILD=ON
 else

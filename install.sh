@@ -15,7 +15,7 @@ case "$(uname -s)" in
     Linux)
         if grep -qi raspberry /proc/device-tree/model 2>/dev/null; then
             echo "detected Raspberry Pi"
-            exec /bin/bash -c "$(curl -fsSL ${BASE_URL}/install-raspberry-pi.sh)"
+            curl -fsSL ${BASE_URL}/install-raspberry-pi.sh | bash
         else
             echo "detected Linux"
             exec /bin/bash -c "$(curl -fsSL ${BASE_URL}/install-linux.sh)"

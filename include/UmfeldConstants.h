@@ -25,8 +25,13 @@
 #include "UmfeldDefines.h"
 
 namespace umfeld {
+    static constexpr int   VERSION_MAJOR                 = 2; // SemVer: increase when introducing breaking changes
+    static constexpr int   VERSION_MINOR                 = 1; // SemVer: increase when introducing new features
+    static constexpr int   VERSION_PATCH                 = 0; // SemVer: increase when introducing bug fixes
     static constexpr int   DEFAULT                       = -1;
     static constexpr int   NOT_INITIALIZED               = -1;
+    static constexpr int   DEFAULT_CONSOLE_WIDTH         = 78;
+    static constexpr int   DEFAULT_CONSOLE_LABEL_WIDTH   = 39;
     static constexpr int   DEFAULT_WINDOW_WIDTH          = 1024;
     static constexpr int   DEFAULT_WINDOW_HEIGHT         = 768;
     static constexpr int   DEFAULT_PIXEL_FORMAT_RGBA     = 0;

@@ -72,7 +72,7 @@ namespace umfeld {
     }
 
     static std::string fl(const std::string& text) {
-        constexpr size_t column_width = 30;
+        constexpr size_t column_width = DEFAULT_CONSOLE_LABEL_WIDTH;
         return format_label(text, column_width);
     }
 

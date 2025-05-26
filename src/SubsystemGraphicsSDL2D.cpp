@@ -47,8 +47,8 @@ namespace umfeld {
             return false;
         }
 
-        std::cout << "Renderer Name    : " << SDL_GetRendererName(sdl_renderer) << std::endl;
-        std::cout << "Renderer Property: " << SDL_GetRendererProperties(sdl_renderer) << std::endl;
+        console(format_label("renderer Name"), SDL_GetRendererName(sdl_renderer));
+        console(format_label("renderer property"), SDL_GetRendererProperties(sdl_renderer));
 
         SDL_ShowWindow(window);
         return true;

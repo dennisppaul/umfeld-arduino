@@ -52,13 +52,13 @@ namespace umfeld {
         const SDL_JoystickID* gamepads     = SDL_GetGamepads(&num_gamepads);
         if (print) {
             if (num_gamepads > 0) {
-                console("number of gamepads connected: ", num_gamepads);
+                console(umfeld::format_label("number of gamepads connected"), num_gamepads);
                 for (int i = 0; i < num_gamepads; ++i) {
                     SDL_Gamepad* gamepad = SDL_GetGamepadFromID(gamepads[i]);
                     if (gamepad) {
-                        console("[", i, "] Gamepad #", gamepads[i], " '", SDL_GetGamepadName(gamepad));
+                        console(format_label(""), "[", i, "] Gamepad #", gamepads[i], " '", SDL_GetGamepadName(gamepad));
                     } else {
-                        console("[", i, "] Gamepad #", gamepads[i], " not valid");
+                        console(format_label(""), "[", i, "] Gamepad #", gamepads[i], " not valid");
                     }
                 }
             } else {

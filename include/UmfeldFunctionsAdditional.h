@@ -179,14 +179,14 @@ namespace umfeld {
 #endif
     }
 
-    inline std::string format_label(const std::string& label, const size_t width) {
+    inline std::string format_label(const std::string& label, const size_t width = DEFAULT_CONSOLE_LABEL_WIDTH) {
         if (label.length() >= width) {
             return label + " : "; // Ensure spacing even if label is too long
         }
         return label + std::string(width - label.length(), ' ') + " : ";
     }
 
-    inline std::string separator(const bool equal_sign = true, const std::size_t length = 78) {
+    inline std::string separator(const bool equal_sign = true, const std::size_t length = DEFAULT_CONSOLE_WIDTH) {
         return std::string(length, equal_sign ? '=' : '-');
     }
 } // namespace umfeld

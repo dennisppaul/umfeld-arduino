@@ -30,6 +30,8 @@ namespace umfeld {
     static constexpr int   VERSION_PATCH                 = 0; // SemVer: increase when introducing bug fixes
     static constexpr int   DEFAULT                       = -1;
     static constexpr int   NOT_INITIALIZED               = -1;
+    static constexpr int   DISPLAY_WIDTH                 = -1;
+    static constexpr int   DISPLAY_HEIGHT                = -1;
     static constexpr int   DEFAULT_CONSOLE_WIDTH         = 78;
     static constexpr int   DEFAULT_CONSOLE_LABEL_WIDTH   = 39;
     static constexpr int   DEFAULT_WINDOW_WIDTH          = 1024;

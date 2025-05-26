@@ -69,16 +69,16 @@ namespace umfeld {
         target_frame_duration = 1.0 / fps;
     }
 
-    static bool set_screen_size() {
+    static bool set_display_size() {
         const SDL_DisplayID display_id = SDL_GetPrimaryDisplay();
         if (display_id == 0) {
             warning(format_label("failed to get primary display"), SDL_GetError());
         } else {
             const SDL_DisplayMode* mode = SDL_GetCurrentDisplayMode(display_id);
             if (mode != nullptr) {
-                screen_size_x = mode->w;
-                screen_size_y = mode->h;
-                console(format_label("screen resolution"), screen_size_x, " x ", screen_size_y, " px");
+                display_width  = mode->w;
+                display_height = mode->h;
+                console(format_label("display resolution"), display_width, " x ", display_height, " px");
                 return true;
             }
             warning(umfeld::format_label("failed to get display mode"), SDL_GetError());
@@ -316,8 +316,14 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[]) {
         umfeld::console(umfeld::separator());
         umfeld::console("VIDEO CAPABILITIES");
         umfeld::console(umfeld::separator());
-        umfeld::set_screen_size();
+        umfeld::set_display_size();
         umfeld::console(umfeld::format_label("video driver"), SDL_GetCurrentVideoDriver());
+        if (umfeld::width == umfeld::DISPLAY_WIDTH) {
+            umfeld::width = umfeld::display_width;
+        }
+        if (umfeld::height == umfeld::DISPLAY_HEIGHT) {
+            umfeld::height = umfeld::display_height;
+        }
     }
 
     // TODO make this configurable
@@ -374,9 +380,7 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[]) {
         }
     }
 
-    // TODO feed back the values to the global variables
-    //      NEED TO find a good place to do this … also for audio
-    //      values should be updated before `setup()` is called:
+    // NOTE feed back subsystem values to the global variables. values are updated before `setup()` is called
     if (umfeld::g != nullptr && umfeld::enable_graphics) {
         umfeld::width  = umfeld::g->width;
         umfeld::height = umfeld::g->height;

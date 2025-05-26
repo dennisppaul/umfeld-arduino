@@ -95,8 +95,8 @@ namespace umfeld {
     inline float      pmouseX        = 0;
     inline float      pmouseY        = 0;
     inline int        renderer       = DEFAULT;
-    inline int        screen_size_x  = DEFAULT;
-    inline int        screen_size_y  = DEFAULT;
+    inline int        display_width  = DEFAULT;
+    inline int        display_height  = DEFAULT;
 
     /* public variables *mainly for internal use* */
 

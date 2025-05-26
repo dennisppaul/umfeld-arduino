@@ -56,7 +56,7 @@ if something goes wrong consult the detailed [DOCUMENTATION](documentation/DOCUM
 ### Raspberry Pi Notes
 
 - *Quickstart* guide does not work on *Raspberry Pi*
-- the quickest way to get started on *Raspberry Pi* is to use the pre-configured image 
+- the quickest way to get started on *Raspberry Pi* is to use the [pre-configured image](http://dm-hb.de/umfeld-rpi)
 - see [Umfeld-on-RPI / Quickstart](documentation/Umfeld-on-RPI.md) for platform-specific instructions
 
 ### Linux Notes

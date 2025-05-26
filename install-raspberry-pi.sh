@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# TODO this is not tested on RPI
+set -e
 
 echo "+++ updating package manager  +++"
 
@@ -24,7 +24,9 @@ sudo apt install -y \
   libavdevice-dev \
   librtmidi-dev \
   libglm-dev \
-  portaudio19-dev
+  portaudio19-dev \
+  libegl1-mesa-dev \
+  libgles2-mesa-dev
 #sudo apt install libsdl3-dev # currently (2025-05-22) not available
 
 echo "+++ building SDL3 from source +++"
@@ -36,8 +38,20 @@ sudo apt install -y \
   libegl-dev \
   libgl-dev
 
+# detect if running headless (no X11/Wayland)
+echo "+++ detecting display system  +++"
+USE_CONSOLE_BUILD=OFF
+if [[ -z "$DISPLAY" && -z "$WAYLAND_DISPLAY" ]] && \
+   ! pgrep -x Xorg >/dev/null && ! pgrep -f wayland >/dev/null; then
+  echo "+++ no X11 or Wayland detected, enabling SDL_UNIX_CONSOLE_BUILD"
+  USE_CONSOLE_BUILD=ON
+else
+  echo "+++ graphical environment detected"
+fi
+
 git clone https://github.com/libsdl-org/SDL.git
 cd SDL
+
 cmake -S . -B build \
   -DSDL_KMSDRM=ON \
   -DSDL_OPENGL=ON \
@@ -46,8 +60,10 @@ cmake -S . -B build \
   -DSDL_PULSEAUDIO=ON \
   -DSDL_PIPEWIRE=ON \
   -DSDL_JACK=ON \
-  -DCMAKE_BUILD_TYPE=Release # add -DSDL_UNIX_CONSOLE_BUILD=ON i fno X11/wayland windowing system is installed
-cmake --build build   # Avoid using -j$(nproc) or `--parallel` for now, it may overwhelm the RPi
+  -DSDL_UNIX_CONSOLE_BUILD=$USE_CONSOLE_BUILD \
+  -DCMAKE_BUILD_TYPE=Release
+
+cmake --build build
 sudo cmake --install build --prefix /usr/local
 
 echo "+++ testing SDL3 pkg-config:"

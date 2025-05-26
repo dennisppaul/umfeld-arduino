@@ -152,10 +152,49 @@ if (ENABLE_CAPTURE)
 endif (ENABLE_CAPTURE)
 
 ##########################################################################################################
+### CHECK SYSTEM TYPE                                                                                  ###
+##########################################################################################################
+
+if (APPLE)
+    message(STATUS "SYSTEM        : macOS")
+    target_compile_definitions(umfeld-lib-interface INTERFACE SYSTEM_MACOS)
+    target_compile_definitions(${PROJECT_NAME} PUBLIC SYSTEM_MACOS)
+elseif (UNIX)
+    # default to UNIX
+    set(SYSTEM_TYPE "UNIX")
+    set(SYSTEM_DEFINE SYSTEM_UNIX)
+    # try to detect Raspberry Pi
+    if (EXISTS "/proc/device-tree/model")
+        file(READ "/proc/device-tree/model" DEVICE_MODEL)
+        string(TOLOWER "${DEVICE_MODEL}" DEVICE_MODEL_LOWER)
+        if (DEVICE_MODEL_LOWER MATCHES "raspberry")
+            message(STATUS "SYSTEM        : Raspberry Pi")
+            set(SYSTEM_TYPE "Raspberry Pi")
+            set(SYSTEM_DEFINE SYSTEM_RASPBERRY_PI)
+        endif ()
+    endif ()
+    message(STATUS "SYSTEM        : ${SYSTEM_TYPE}")
+    target_compile_definitions(umfeld-lib-interface INTERFACE ${SYSTEM_DEFINE})
+    target_compile_definitions(${PROJECT_NAME} PUBLIC ${SYSTEM_DEFINE})
+elseif (WIN32)
+    message(STATUS "SYSTEM        : Windows")
+    target_compile_definitions(umfeld-lib-interface INTERFACE SYSTEM_WINDOWS)
+    target_compile_definitions(${PROJECT_NAME} PUBLIC SYSTEM_WINDOWS)
+else ()
+    message(STATUS "SYSTEM        : Undefined, Good Luck!")
+    target_compile_definitions(umfeld-lib-interface INTERFACE SYSTEM_UNDEFINED)
+    target_compile_definitions(${PROJECT_NAME} PUBLIC SYSTEM_UNDEFINED)
+endif ()
+
+##########################################################################################################
 ### OPEN_GL VERSION + GLAD                                                                             ###
 ##########################################################################################################
 
-set(UMFELD_DEFAULT_OPENGL_VERSION "3.3core" CACHE STRING "OpenGL version used in umfeld")
+if (DEFINED SYSTEM_DEFINE AND SYSTEM_DEFINE STREQUAL "SYSTEM_RASPBERRY_PI")
+    set(UMFELD_DEFAULT_OPENGL_VERSION "es3.0" CACHE STRING "OpenGL version used in umfeld")
+else ()
+    set(UMFELD_DEFAULT_OPENGL_VERSION "3.3core" CACHE STRING "OpenGL version used in umfeld")
+endif ()
 # NOTE auto-generated files with GLAD 2 ( on macOS ):
 #    brew install glad2
 #    glad --api="gl:core=3.3" --out-path=external/glad_opengl_33 c
@@ -222,28 +261,6 @@ target_sources(${PROJECT_NAME}
         ${UMFELD_SOURCE_FILES}
 )
 #endif (BUILD_STANDALONE)
-
-##########################################################################################################
-### CHECK SYSTEM TYPE                                                                                  ###
-##########################################################################################################
-
-if (APPLE)
-    message(STATUS "SYSTEM        : macOS")
-    target_compile_definitions(umfeld-lib-interface INTERFACE SYSTEM_MACOS)
-    target_compile_definitions(${PROJECT_NAME} PUBLIC SYSTEM_MACOS)
-elseif (UNIX)
-    message(STATUS "SYSTEM        : UNIX ( including RPI )")
-    target_compile_definitions(umfeld-lib-interface INTERFACE SYSTEM_UNIX)
-    target_compile_definitions(${PROJECT_NAME} PUBLIC SYSTEM_UNIX)
-elseif (WIN32)
-    message(STATUS "SYSTEM        : Windows")
-    target_compile_definitions(umfeld-lib-interface INTERFACE SYSTEM_WINDOWS)
-    target_compile_definitions(${PROJECT_NAME} PUBLIC SYSTEM_WINDOWS)
-else ()
-    message(STATUS "SYSTEM        : Undefined, Good Luck!")
-    target_compile_definitions(umfeld-lib-interface INTERFACE SYSTEM_UNDEFINED)
-    target_compile_definitions(${PROJECT_NAME} PUBLIC SYSTEM_UNDEFINED)
-endif ()
 
 ##########################################################################################################
 ### SUPRESS WARNINGS FOR APPLE                                                                         ###
@@ -477,7 +494,7 @@ if (ENABLE_ANGLE)
                 $<TARGET_FILE_DIR:${PROJECT_NAME}>/..
         )
     else ()
-        message(ERROR "ANGLE not supported on this platform.")
+        message(STATUS "ANGLE_SUPPORT : DISABLED ( not supported on this platform )")
     endif (APPLE)
 endif (ENABLE_ANGLE)
 

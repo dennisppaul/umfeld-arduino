@@ -50,10 +50,10 @@ below is a list of all Processing functions from the official [Processing Refere
 
 ### Primitive
 
-- `boolean` :: Datatype for the Boolean values `true` and `false` @note( `boolean` is called `bool` in C/C++ )
+- `boolean` :: Datatype for the Boolean values `true` and `false` @note(`boolean` is called `bool` in C/C++)
 - `byte` :: Datatype for bytes, 8 bits of information storing numerical values from 127 to -128
 - `char` :: Datatype for characters, typographic symbols such as A, d, and $
-- `color` :: Datatype for storing color values @note( `color` is replaced by `uint32_t` )
+- `color` :: Datatype for storing color values @note(`color` is replaced by `uint32_t`)
 - `double` :: Datatype for floating-point numbers larger than those that can be stored in a `float`
 - `float` :: Data type for floating-point numbers, e `[sic!]`
 - `int` :: Datatype for integers, numbers without a decimal point
@@ -533,15 +533,15 @@ below is a list of all Processing functions from the official [Processing Refere
 - [x] `frameCount` :: The system variable that contains the number of frames displayed since the program started
 - [x] `frameRate` :: The system variable that contains the approximate frame rate of the software as it executes
 - [ ] `frameRate()` :: Specifies the number of frames to be displayed every second
-- [ ] `fullScreen()` :: Opens a sketch using the full size of the computer's display
+- [ ] `fullScreen()` :: Opens a sketch using the full size of the computer's display @note(currently not implemented but a similar behavior can be achieved by setting `fullscreen = true` in `settings()`)
 - [x] `height` :: System variable which stores the height of the display window
 - [x] `noCursor()` :: Hides the cursor from view
 - [ ] `noSmooth()` :: Draws all geometry and fonts with jagged (aliased) edges and images with hard edges between the pixels when enlarged rather than interpolating pixels
 - [ ] `pixelDensity()` :: It makes it possible for Processing to render using all the pixels on high resolutions screens
 - [ ] `pixelHeight` :: The actual pixel height when using high resolution display
 - [ ] `pixelWidth` :: The actual pixel width when using high resolution display
-- [x] `settings()` :: Used when absolutely necessary to define the parameters to `size()` with a variable
-- [x] `size()` :: Defines the dimension of the display window in units of pixels @note(can only be used in `settings()`)
+- [x] `settings()` :: Used when absolutely necessary to define the parameters to `size()` with a variable @note(this is the only place to call `size()` now)
+- [x] `size()` :: Defines the dimension of the display window in units of pixels @note(can only be used in `settings()`) @note(in addition to specifying the size in pixels `size(DISPLAY_WIDTH, DISPLAY_HEIGHT)` can select the maximum display size; this is very helpful in combination with `fullscreen = true;` )
 - [ ] `smooth()` :: Draws all geometry with smooth (anti-aliased) edges
 - [x] `width` :: System variable which stores the width of the display window
 - [ ] `windowMove()` :: The `windowMove()` function defines the position of the Processing sketch in relation to the upper-left corner of the computer screen

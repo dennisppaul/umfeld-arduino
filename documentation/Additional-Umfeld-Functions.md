@@ -4,12 +4,12 @@ below is a list of functions that have been added to *Umfeld* and are not availa
 
 ## System
 
-- `size` :: 
-- `error` :: print a system log style error message
-- `warning` :: print a system log style warning message 
-- `console` :: print a system log style message 
-- `console_n` :: print a message without a newline
-- `console_c` :: clear the console
+- `arguments` :: callback containing command-line arguments, called right before `settings()`
+- `error` :: print a system log style error message @note(can be deactivated with compile defintion `UMFELD_PRINT_ERRORS` set to `0`)
+- `warning` :: print a system log style warning message @note(can be deactivated with compile defintion `UMFELD_PRINT_WARNINGS` set to `0`)
+- `console` :: print a system log style message @note(can be deactivated with compile defintion `UMFELD_PRINT_CONSOLE` set to `0`)
+- `console_n` :: print a system log style message without newline
+- `console_c` :: print a system log style message without timestamp and timestamp
 - `timestamp` :: print a timestamp in ISO8601 format ( e.g `2025-04-13 22:30:33.983` )
 - `time_function_ms` :: measures the time a function requires to finish in milliseconds
 - `set_frame_rate` :: set frame rate

@@ -125,8 +125,8 @@ now the system is fully set up to build SDL3-based applications with KMSDRM supp
 first clone [umfeld](https://github.com/dennisppaul/umfeld) and the [umfeld-examples](https://github.com/dennisppaul/umfeld-examples) repositories with submodules from GitHub:
 
 ```sh
-git clone https://github.com/dennisppaul/umfeld.git
-git clone https://github.com/dennisppaul/umfeld-examples.git
+git clone https://github.com/dennisppaul/umfeld
+git clone https://github.com/dennisppaul/umfeld-examples
 ```
 
 now enter the example directory, to build and run an example e.g a basic minimal example:

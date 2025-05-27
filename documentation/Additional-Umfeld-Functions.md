@@ -4,6 +4,7 @@ below is a list of functions that have been added to *Umfeld* and are not availa
 
 ## System
 
+- `size` :: 
 - `error` :: print a system log style error message
 - `warning` :: print a system log style warning message 
 - `console` :: print a system log style message 

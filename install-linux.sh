@@ -2,7 +2,7 @@
 
 # fail fast if any command fails and elevate privileges
 set -e
-echo "--- requesting sudo access once    ---"
+echo "--- requesting sudo access once"
 sudo -v
 # keep-alive: update existing `sudo` time stamp until script is done
 # (this runs in background and exits when this script finishes)
@@ -12,12 +12,12 @@ KEEP_SUDO_ALIVE_PID="$!"
 trap 'kill "$KEEP_SUDO_ALIVE_PID"' EXIT
 
 # update and upgrade system packages
-echo "--- updating apt                   ---"
+echo "--- updating apt"
 sudo apt-get update -y
 sudo apt-get upgrade -y
 
 # install basic build tools and graphics utilities
-echo "--- installing build tools         ---"
+echo "--- installing build tools"
 sudo apt-get install -y \
   git \
   clang \
@@ -25,7 +25,7 @@ sudo apt-get install -y \
   mesa-utils
 
 # install umfeld dependencies
-echo "--- installing dependencies        ---"
+echo "--- installing dependencies"
 sudo apt-get install -y \
   libharfbuzz-dev \
   libfreetype6-dev \
@@ -49,9 +49,10 @@ sudo apt-get install -y \
   libwayland-dev \
   libxkbcommon-dev \
   wayland-protocols
+#sudo apt install libsdl3-dev # currently (2025-05-22) not available
 
 # install SDL3 from source into system
-echo "--- installing SDL3 from source... ---"
+echo "--- installing SDL3 from source..."
 
 TMP_DIR=$(mktemp -d)
 cd "$TMP_DIR"
@@ -67,4 +68,6 @@ sudo cmake --install build
 cd ~
 rm -rf "$TMP_DIR"
 
-echo "--- installed SDL3 successfully    ---"
+echo "--- installed SDL3 successfully"
+
+echo "--- installed dependencies successfully"

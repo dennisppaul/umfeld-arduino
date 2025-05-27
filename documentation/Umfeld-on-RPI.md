@@ -67,7 +67,9 @@ sudo apt install -y \
   libavdevice-dev \
   librtmidi-dev \
   libglm-dev \
-  portaudio19-dev
+  portaudio19-dev \
+  libegl1-mesa-dev \
+  libgles2-mesa-dev
 #sudo apt install libsdl3-dev # currently (2025-05-22) not available
 ```
 
@@ -101,10 +103,12 @@ cmake -S . -B build \
   -DSDL_PULSEAUDIO=ON \
   -DSDL_PIPEWIRE=ON \
   -DSDL_JACK=ON \
-  -DCMAKE_BUILD_TYPE=Release
-cmake --build build   # Avoid using -j$(nproc) or `--parallel` for now, it may overwhelm the RPi
+  -DCMAKE_BUILD_TYPE=Release 
+cmake --build build # Avoid using -j$(nproc) or `--parallel` for now, it may overwhelm the RPi
 sudo cmake --install build --prefix /usr/local
 ```
+
+note, if building for non-GUI systems ( e.g *Raspberry Pi OS Lite* ) add `-DSDL_UNIX_CONSOLE_BUILD=ON` to `cmake -S . -B…` command above.
 
 once installed, confirm SDL3 is available to projects:
 

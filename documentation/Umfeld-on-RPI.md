@@ -8,7 +8,7 @@ On the Raspberry Pi OS desktop, it uses X11 for window management, but it can al
 
 A ready-to-use Raspberry Pi OS (64-bit) ( *Debian Bookworm* ) image with *Umfeld* and all dependencies pre-installed is available at:
 
-**Download:** http://dm-hb.de/umfeld-rpi
+**Download:** http://dm-hb.de/umfeld-rpi or http://dm-hb.de/umfeld-rpi-lite ( no GUI )
 
 You can install the image using tools such as the [Raspberry Pi Imager](https://www.raspberrypi.com/software/).
 

@@ -131,7 +131,7 @@ Java and C++ are similar in some aspects, but are very different in many others.
 
 - a LOT of functions + methods + strategies are not yet implemented (the goal is to implement these on demand).
 - color system is fixed to range from `0.0 ... 1.0` and only works with RGB(A) and uses RGBA internally always
-- only tested on macOS + Raspberry Pi OS + (Windows 10/11) + Ubuntu. although theoretically the external libraries as well as the build system should be cross-platform ( i.e macOS, Windows and any UNIX-like system ) it may, however, require
+- tested on macOS(15.5) + Raspberry Pi OS + Windows (10+11) + Ubuntu (20.04+22.04). although theoretically the external libraries as well as the build system should be cross-platform ( i.e macOS, Windows and any UNIX-like system ) it may, however, require
   some tweaking.
 
 ### Setting up Homebrew on macOS
@@ -249,3 +249,28 @@ if changes are made to `umfeld-example-app.cpp` ( or any other source or header 
 ```
 $ cmake --build build
 ```
+
+## Umfeld and OpenGL
+
+*Umfeld* supports several different OpenGL versions:
+
+| VERSION         | C/C++ CONSTANT             | CMAKE             | DESCRIPTION                                               |
+| --------------- | -------------------------- | ----------------- | --------------------------------------------------------- |
+| OpenGL core 3.3 | `RENDERER_OPENGL_3_3_CORE` | `OPENGL_3_3_CORE` | desktop platforms (macOS, Linux, Windows).                |
+| OpenGL ES 2.0   | `RENDERER_OPENGL_2_0`      | `OPENGL_2_0`      | older embedded systems or where only ES 2.0 is supported. |
+| OpenGL ES 3.0   | `RENDERER_OPENGL_ES_3_0`   | `OPENGL_ES_3_0`   | iOS and WebGL 2.0 compatibility.                          |
+
+the OpenGL renderer can be explicitly selected in `size()` or left empty for default:
+
+```C++
+size(1024, 768, RENDERER_OPENGL_3_3_CORE); 
+```
+
+additionally, the OpenGL version must be defined in the applications CMake script in `UMFELD_OPENGL_VERSION` and *before* `add_umfeld_libs()`:
+
+```cmake
+set(UMFELD_OPENGL_VERSION "OPENGL_3_3_CORE")
+add_umfeld_libs()
+```
+
+if left blank *Umfeld* tries to find the *best* version.

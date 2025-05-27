@@ -68,16 +68,15 @@ this is a VERY unsorted todo list and a note pad.
 
 ### OpenGL ES
 
-- [ ] @umfeld try to run this with OpenGL ES window https://github.com/ravbug/sdl3-sample
 - [ ] @umfeld @research How to use ANGLE with SDL3 on iOS ( via Metal ) https://gist.github.com/SasLuca/307a523d2c6f2900af5823f0792a8a93
 
 ## Documentation
 
-- [ ] @umfeld what’s new in umfeld? audio, `loadOBJ` mesh
 - [ ] @umfeld start coding style doc
 - [ ] @umfeld documentation :: differences in shader handling ( set_uniforms )
 - [ ] @umfeld make a point of not supporting `colorMode(mode)`
 - [ ] make a step-by-step guide of how to create a library
+- [ ] write article about the `PGraphics` pipeline
  ```
                      + -> emit_shape_stroke_line_strip -> triangulate, transform to world/screen space
  begin-end-shape ->  |
@@ -98,20 +97,17 @@ stroke(0.0f);             // black (0x000000)
 - [ ] @umfeld start a series of *educated* examples
 - [ ] @umfeld start dedicated font example
 - [ ] @umfeld try with font [Inter](https://rsms.me/inter/)
-- [ ] @umfeld @example add nice stroke example with rotierender box, square, open-closed-shape + line 0.5,0.85,1.0 style
-- [ ] @umfeld @example add example for library
 - [ ] @umfeld add example that moves around the application window @maybe
 
 ## Community
 
 - [ ] @umfeld on discord https://d3-is.de/umfeld ( https://discord.gg/hrckzRaW7g )
-- [ ] @umfeld ask people for support and feature request etcetera … on github ( + discord )
 
 ## Libraries
 
 ### CameraSDL Library
 
-- [ ] @umfeld @research test SDL_camera
+- [ ] @umfeld CameraSDL class ( as library via PImage )
 - [ ] @umfeld test SDL camera with PImage ( https://chatgpt.com/share/67da6661-ce48-8004-97e5-e3ed384011c8 ):
     ```c
     // create camera
@@ -181,26 +177,12 @@ stroke(0.0f);             // black (0x000000)
     }
     ```
 
-## research
+## Research
 
 - [ ] test with plugdata … again https://electro-smith.us18.list-manage.com/track/click?u=b473fcb56373b822c9fef8190&id=ff45d69a66&e=734f91f8ec
 
-## unsorted
+## Unsorted
 
-- [ ] @umfeld rename PFont, PImage, PVector etcetera to UFont, UImage, UVector
+- [ ] @umfeld @maybe rename PFont, PImage, PVector etcetera to UFont, UImage, UVector
 - [ ] @umfeld PVector vs glm::vec3 at least some functions to convert between the two
-
-## Archived
-
-- [x] serial @archived(2025-05-21) @from(umfeld / TODO + NOTES > Libraries) @done(2025-05-21)
-- [x] gamepad ( e.g XBox controller as library or subsytem ) @archived(2025-05-21) @from(umfeld / TODO + NOTES > Libraries) @done(2025-05-21)
-- [x] @umfeld what’s with ANGLE? @archived(2025-05-21) @from(umfeld / TODO + NOTES > Building + Platforms > OpenGL ES) @done(2025-05-21)
-- [x] add `FreeType2` and `Harfbuzz` @archived(2025-05-21) @from(umfeld / TODO + NOTES > Building + Platforms) @done(2025-05-21)
-- [x] add `stb_image_write.h` @archived(2025-05-21) @from(umfeld / TODO + NOTES > Building + Platforms) @done(2025-05-21)
-- [x] @umfeld basic audio classes  @archived(2025-05-21) @from(umfeld / TODO + NOTES > Audio) @done(2025-05-21)
-    - [x] oscillator ( wavetable )
-    - [x] sampler
-    - [x] filter ( low, high, band )
-    - [x] envelope + adsr
-    - [x] trigger/beat
-- [x] @umfeld remove all references to graphics subsystem from PGraphics ( and derived classes ) @archived(2025-05-21) @from(umfeld / TODO + NOTES > Graphics) @done(2025-05-21)
+- [ ] @umfeld check weird gamepad behavior

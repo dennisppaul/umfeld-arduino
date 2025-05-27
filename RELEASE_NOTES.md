@@ -9,6 +9,7 @@
 - replaced GLEW with GLAD ( OpenGL function loading library, prerequisite for OpenGL ES 3.0 )
 - added support for serial communinication with `Serial`
 - updated RPI image at http://dm-hb.de/umfeld-rpi
+- added a *lighter* RPI image without GUI ( i.e X11 or wayland ) at http://dm-hb.de/umfeld-rpi-lite
 - updated documentation
 
 ## v2.0.1 (2025-04-10)

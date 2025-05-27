@@ -84,7 +84,7 @@ namespace umfeld {
 #ifdef OPENGL_3_3_CORE
         return new PGraphicsOpenGL_3_3_core(render_to_offscreen);
 #else
-        error("RENDERER_OPENGL_3_3_CORE requires `OPENGL_3_3_CORE` to be defined. e.g `-DOPENGL_3_3_CORE` in CLI or `set(UMFELD_OPENGL_VERSION \"3.3core\")` in `CMakeLists.txt`");
+        error("RENDERER_OPENGL_3_3_CORE requires `OPENGL_3_3_CORE` to be defined. e.g `-DOPENGL_3_3_CORE` in CLI or `set(UMFELD_OPENGL_VERSION \"OPENGL_3_3_CORE\")` in `CMakeLists.txt`");
         return nullptr;
 #endif
     }

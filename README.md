@@ -55,7 +55,7 @@ if something goes wrong consult the detailed [DOCUMENTATION](documentation/DOCUM
 
 ### Raspberry Pi Notes
 
-the quickest way to get started on *Raspberry Pi* is to use the [pre-configured image](http://dm-hb.de/umfeld-rpi) or see [Umfeld-on-RPI / Quickstart](documentation/Umfeld-on-RPI.md) for platform-specific instructions.
+the quickest way to get started on *Raspberry Pi* is to use the [pre-configured image](http://dm-hb.de/umfeld-rpi) or see [Umfeld-on-RPI / Quickstart](documentation/Umfeld-on-RPI.md#Quickstart) for platform-specific instructions.
 
 ### Linux Notes
 

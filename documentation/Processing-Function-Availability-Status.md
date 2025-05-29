@@ -360,7 +360,7 @@ below is a list of all Processing functions from the official [Processing Refere
 
 ### Image
 
-- [ ] `saveFrame()` :: Saves a numbered sequence of images, one image each time the function is run
+- [x] `saveFrame()` :: Saves a numbered sequence of images, one image each time the function is run
 - [ ] `save()` :: Saves an image from the display window
 
 ## Color

@@ -20,6 +20,7 @@
 #pragma once
 
 #include <string>
+#include "UmfeldConstants.h"
 
 namespace umfeld {
 
@@ -54,8 +55,9 @@ namespace umfeld {
         /** number of samples per channel ( also referred to as *frames* )
          * e.g for a 2 channel device with `output_channels = 2` length of `output_buffer` length is `output_channels * buffer_size`
          */
-        int buffer_size{DEFAULT_AUDIO_BUFFER_SIZE};
-        int sample_rate{DEFAULT_SAMPLE_RATE};
+        int  buffer_size{DEFAULT_AUDIO_BUFFER_SIZE};
+        int  sample_rate{DEFAULT_SAMPLE_RATE};
+        bool threaded{DEFAULT_AUDIO_RUN_IN_THREAD};
         // int         format; // TODO currently supporting F32 only
     };
 

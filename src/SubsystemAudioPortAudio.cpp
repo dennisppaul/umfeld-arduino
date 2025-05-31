@@ -51,8 +51,19 @@ namespace umfeld {
         PaStream* stream{nullptr};
 
         explicit PAudioPortAudio(PAudio* audio) : audio(audio),
-                                                  update_interval((audio->buffer_size * 1000) / audio->sample_rate) {
+                                                  update_interval((audio->buffer_size * 1000) / (audio->sample_rate * 4)) {
+            if (audio == nullptr) {
+                error("PAudioPortAudio: audio is nullptr");
+                return;
+            }
             this->audio = audio;
+            // TODO implement threaded audio processing
+            if (audio->threaded) {
+                console("PAudioPortAudio: threaded audio processing enabled");
+            } else {
+                console("PAudioPortAudio: threaded audio processing disabled");
+            }
+            console("PAudioPortAudio: update interval: ", update_interval.count(), "ms");
             if (!init()) {
                 error("PAudioPortAudio: could not intialize");
                 return;
@@ -95,43 +106,46 @@ namespace umfeld {
                 return;
             }
 
-            if (isPaused) {
-                return;
-            }
+            if (!audio->threaded) {
 
-            const auto now = std::chrono::high_resolution_clock::now();
-            if (now - last_audio_update >= update_interval) {
-                // check if input is available
-                const long availableInputFrames = Pa_GetStreamReadAvailable(stream);
-                if (availableInputFrames >= audio->buffer_size) {
-                    const PaError err = Pa_ReadStream(stream, audio->input_buffer, audio->buffer_size);
-                    if (err != paNoError) {
-                        error("Error reading from stream: ", Pa_GetErrorText(err));
-                        return;
-                    }
+                if (isPaused) {
+                    return;
                 }
 
-                // check if output buffer has space
-                const long availableOutputFrames = Pa_GetStreamWriteAvailable(stream);
-
-                // call `audioevent` respecting non-present audio devices and available frames
-                if ((availableInputFrames >= audio->buffer_size || audio->input_channels == 0) &&
-                    (availableOutputFrames >= audio->buffer_size || audio->output_channels == 0)) {
-                    if (a != nullptr && audio == umfeld::a) {
-                        callback_audioEvent();
+                const auto now = std::chrono::high_resolution_clock::now();
+                if (now - last_audio_update >= update_interval) {
+                    // check if input is available
+                    const long availableInputFrames = Pa_GetStreamReadAvailable(stream);
+                    if (availableInputFrames >= audio->buffer_size) {
+                        const PaError err = Pa_ReadStream(stream, audio->input_buffer, audio->buffer_size);
+                        if (err != paNoError) {
+                            error("Error reading from stream: ", Pa_GetErrorText(err));
+                            return;
+                        }
                     }
-                    callback_audioEvent(*audio);
-                }
 
-                if (availableOutputFrames >= audio->buffer_size) {
-                    const PaError err = Pa_WriteStream(stream, audio->output_buffer, audio->buffer_size);
-                    if (err != paNoError) {
-                        error("Error writing to stream: ", Pa_GetErrorText(err), "");
-                        return;
+                    // check if output buffer has space
+                    const long availableOutputFrames = Pa_GetStreamWriteAvailable(stream);
+
+                    // call `audioevent` respecting non-present audio devices and available frames
+                    if ((availableInputFrames >= audio->buffer_size || audio->input_channels == 0) &&
+                        (availableOutputFrames >= audio->buffer_size || audio->output_channels == 0)) {
+                        if (a != nullptr && audio == umfeld::a) {
+                            callback_audioEvent();
+                        }
+                        callback_audioEvent(*audio);
                     }
-                }
 
-                last_audio_update = now;
+                    if (availableOutputFrames >= audio->buffer_size) {
+                        const PaError err = Pa_WriteStream(stream, audio->output_buffer, audio->buffer_size);
+                        if (err != paNoError) {
+                            error("Error writing to stream: ", Pa_GetErrorText(err), "");
+                            return;
+                        }
+                    }
+
+                    last_audio_update = now;
+                }
             }
         }
 
@@ -167,6 +181,33 @@ namespace umfeld {
             }
             console("could not find device by id '", device_id, "' using default device.");
             return DEFAULT_AUDIO_DEVICE;
+        }
+
+        static int audio_callback(const void*                     inputBuffer,
+                                  void*                           outputBuffer,
+                                  unsigned long                   framesPerBuffer,
+                                  const PaStreamCallbackTimeInfo* timeInfo,
+                                  PaStreamCallbackFlags           statusFlags,
+                                  void*                           userData) {
+            PAudio* audio = (PAudio*) userData;
+
+            // Copy input data into your buffer (if any input)
+            if (audio->input_channels > 0 && inputBuffer != nullptr) {
+                memcpy(audio->input_buffer, inputBuffer, framesPerBuffer * audio->input_channels * sizeof(float));
+            }
+
+            // Call your event/callback function
+            if (audio == umfeld::a) {
+                callback_audioEvent();
+            }
+            callback_audioEvent(*audio);
+
+            // Copy output data from your buffer (if any output)
+            if (audio->output_channels > 0 && outputBuffer != nullptr) {
+                memcpy(outputBuffer, audio->output_buffer, framesPerBuffer * audio->output_channels * sizeof(float));
+            }
+
+            return paContinue; // Keep going
         }
 
         bool init() {
@@ -276,17 +317,32 @@ namespace umfeld {
             }
 
             // --- Open Duplex Stream (input + output) ---
-
-            const PaError err = Pa_OpenStream(
-                &stream,
-                audio->input_channels > 0 ? &inputParams : nullptr,
-                audio->output_channels > 0 ? &outputParams : nullptr,
-                audio->sample_rate,
-                audio->buffer_size,
-                paClipOff, // No clipping
-                nullptr,   // No callback (blocking mode)
-                nullptr    // No user data
-            );
+            PaError err;
+            if (audio->threaded) {
+                console("Opening audio stream in threaded mode");
+                err = Pa_OpenStream(
+                    &stream,
+                    audio->input_channels > 0 ? &inputParams : nullptr,
+                    audio->output_channels > 0 ? &outputParams : nullptr,
+                    audio->sample_rate,
+                    audio->buffer_size,
+                    paClipOff,
+                    audio_callback, // Pointer to your callback function
+                    audio           // Pointer to your audio struct (as user data)
+                );
+            } else {
+                console("Opening audio stream in non-threaded mode");
+                err = Pa_OpenStream(
+                    &stream,
+                    audio->input_channels > 0 ? &inputParams : nullptr,
+                    audio->output_channels > 0 ? &outputParams : nullptr,
+                    audio->sample_rate,
+                    audio->buffer_size,
+                    paClipOff, // No clipping
+                    nullptr,   // No callback (blocking mode)
+                    nullptr    // No user data
+                );
+            }
 
             if (err != paNoError) {
                 error("audio->audio_input_channels : ", audio->input_channels);
@@ -337,6 +393,7 @@ namespace umfeld {
     }
 
     static bool init() {
+        // TODO this is a bit hacky, but it works for now. look into this …
         Pa_Initialize();
         print_audio_devices();
         Pa_Terminate();

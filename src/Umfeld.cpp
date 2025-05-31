@@ -353,16 +353,17 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[]) {
                 // NOTE fill in the values from `Umfeld.h`
                 umfeld::AudioUnitInfo _audio_unit_info;
                 // _audio_unit_info.unique_id       = 0; // NOTE set by subsystem
+                _audio_unit_info.input_device_id    = umfeld::audio_input_device_id;
+                _audio_unit_info.input_device_name  = umfeld::audio_input_device_name;
                 _audio_unit_info.input_buffer       = nullptr;
                 _audio_unit_info.input_channels     = umfeld::audio_input_channels;
+                _audio_unit_info.output_device_id   = umfeld::audio_output_device_id;
+                _audio_unit_info.output_device_name = umfeld::audio_output_device_name;
                 _audio_unit_info.output_buffer      = nullptr;
                 _audio_unit_info.output_channels    = umfeld::audio_output_channels;
                 _audio_unit_info.buffer_size        = umfeld::audio_buffer_size;
                 _audio_unit_info.sample_rate        = umfeld::audio_sample_rate;
-                _audio_unit_info.input_device_id    = umfeld::audio_input_device_id;
-                _audio_unit_info.input_device_name  = umfeld::audio_input_device_name;
-                _audio_unit_info.output_device_id   = umfeld::audio_output_device_id;
-                _audio_unit_info.output_device_name = umfeld::audio_output_device_name;
+                _audio_unit_info.threaded           = umfeld::audio_threaded;
                 umfeld::a                           = umfeld::subsystem_audio->create_audio(&_audio_unit_info);
             }
         }
@@ -387,16 +388,17 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[]) {
     }
     if (umfeld::a != nullptr && umfeld::enable_audio) {
         // NOTE copy values back to global variables after initialization … a bit hackish but well.
+        umfeld::audio_input_device_id    = umfeld::a->input_device_id;
+        umfeld::audio_input_device_name  = umfeld::a->input_device_name;
         umfeld::audio_input_buffer       = umfeld::a->input_buffer;
         umfeld::audio_input_channels     = umfeld::a->input_channels;
+        umfeld::audio_output_device_id   = umfeld::a->output_device_id;
+        umfeld::audio_output_device_name = umfeld::a->output_device_name;
         umfeld::audio_output_buffer      = umfeld::a->output_buffer;
         umfeld::audio_output_channels    = umfeld::a->output_channels;
         umfeld::audio_buffer_size        = umfeld::a->buffer_size;
         umfeld::audio_sample_rate        = umfeld::a->sample_rate;
-        umfeld::audio_input_device_id    = umfeld::a->input_device_id;
-        umfeld::audio_input_device_name  = umfeld::a->input_device_name;
-        umfeld::audio_output_device_id   = umfeld::a->output_device_id;
-        umfeld::audio_output_device_name = umfeld::a->output_device_name;
+        umfeld::audio_threaded           = umfeld::a->threaded;
     }
 
     setup();

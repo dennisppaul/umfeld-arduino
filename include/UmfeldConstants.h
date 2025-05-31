@@ -46,6 +46,7 @@ namespace umfeld {
     static constexpr int   DEFAULT_AUDIO_BUFFER_SIZE     = 2048;
     static constexpr int   DEFAULT_INPUT_CHANNELS        = 1;
     static constexpr int   DEFAULT_OUTPUT_CHANNELS       = 2;
+    static constexpr bool  DEFAULT_AUDIO_RUN_IN_THREAD   = false;
     static constexpr int   DEFAULT_BYTES_PER_PIXELS      = 4;
     static constexpr int   AUDIO_DEVICE_FIND_BY_NAME     = -2;
     static constexpr int   AUDIO_DEVICE_NOT_FOUND        = -3;

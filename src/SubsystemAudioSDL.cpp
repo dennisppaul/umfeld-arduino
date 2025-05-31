@@ -17,17 +17,23 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <thread>
+#include <chrono>
+
 #include "Umfeld.h"
 #include "Subsystems.h"
 #include "PAudio.h"
 
 namespace umfeld {
     struct PAudioSDL {
-        PAudio*          audio_device{nullptr};
-        int              logical_input_device_id{0};
-        SDL_AudioStream* sdl_input_stream{nullptr};
-        int              logical_output_device_id{0};
-        SDL_AudioStream* sdl_output_stream{nullptr};
+        PAudio*                           audio_device{nullptr};
+        int                               logical_input_device_id{0};
+        SDL_AudioStream*                  sdl_input_stream{nullptr};
+        int                               logical_output_device_id{0};
+        SDL_AudioStream*                  sdl_output_stream{nullptr};
+        SDL_Thread*                       audio_thread_handle{nullptr};
+        bool                              is_running{true};
+        high_resolution_clock::time_point next_time = high_resolution_clock::now();
     };
 
     struct AudioUnitInfoSDL : AudioUnitInfo {
@@ -331,59 +337,52 @@ namespace umfeld {
         }
     }
 
-    static void update_loop() {
-        // NOTE consult https://wiki.libsdl.org/SDL3/Tutorials/AudioStream
-        for (const auto _device: _audio_devices) {
-            if (_device != nullptr &&
-                _device->audio_device != nullptr) {
+    static void update_audio_streams(PAudioSDL* const _device) {
+        const int _num_sample_frames = _device->audio_device->buffer_size;
 
-                const int _num_sample_frames = _device->audio_device->buffer_size;
+        /* prepare samples from input stream */
 
-                /* prepare samples from input stream */
-
-                if (!SDL_AudioDevicePaused(_device->logical_input_device_id)) {
-                    if (_device->sdl_input_stream != nullptr) {
-                        SDL_AudioStream* _stream = _device->sdl_input_stream;
-                        if (!SDL_AudioStreamDevicePaused(_stream)) {
-                            const int input_bytes_available = SDL_GetAudioStreamAvailable(_stream);
-                            const int num_required_bytes    = static_cast<int>(_num_sample_frames) * _device->audio_device->input_channels * sizeof(float);
-                            if (input_bytes_available >= num_required_bytes) {
-                                float* buffer = _device->audio_device->input_buffer;
-                                if (buffer != nullptr) {
-                                    if (SDL_GetAudioStreamData(_stream, buffer, num_required_bytes) < 0) {
-                                        console("could not get data from ", _device->audio_device->input_device_name, " input stream: ", SDL_GetError());
-                                    }
-                                }
+        if (!SDL_AudioDevicePaused(_device->logical_input_device_id)) {
+            if (_device->sdl_input_stream != nullptr) {
+                SDL_AudioStream* _stream = _device->sdl_input_stream;
+                if (!SDL_AudioStreamDevicePaused(_stream)) {
+                    const int input_bytes_available = SDL_GetAudioStreamAvailable(_stream);
+                    const int num_required_bytes    = static_cast<int>(_num_sample_frames) * _device->audio_device->input_channels * sizeof(float);
+                    if (input_bytes_available >= num_required_bytes) {
+                        float* buffer = _device->audio_device->input_buffer;
+                        if (buffer != nullptr) {
+                            if (SDL_GetAudioStreamData(_stream, buffer, num_required_bytes) < 0) {
+                                console("could not get data from ", _device->audio_device->input_device_name, " input stream: ", SDL_GetError());
                             }
                         }
                     }
                 }
+            }
+        }
 
-                /* request samples for output stream */
+        /* request samples for output stream */
 
-                if (!SDL_AudioDevicePaused(_device->logical_output_device_id)) {
-                    if (_device->sdl_output_stream != nullptr) {
-                        SDL_AudioStream* _stream = _device->sdl_output_stream;
-                        if (!SDL_AudioStreamDevicePaused(_stream)) {
-                            const int request_num_sample_frames = _device->audio_device->buffer_size;
-                            if (SDL_GetAudioStreamQueued(_stream) < request_num_sample_frames) {
-                                // NOTE for main audio device
-                                if (a != nullptr) {
-                                    if (_device->audio_device == a) {
-                                        callback_audioEvent();
-                                    }
-                                }
+        if (!SDL_AudioDevicePaused(_device->logical_output_device_id)) {
+            if (_device->sdl_output_stream != nullptr) {
+                SDL_AudioStream* _stream = _device->sdl_output_stream;
+                if (!SDL_AudioStreamDevicePaused(_stream)) {
+                    const int request_num_sample_frames = _device->audio_device->buffer_size;
+                    if (SDL_GetAudioStreamQueued(_stream) < request_num_sample_frames) {
+                        // NOTE for main audio device
+                        if (a != nullptr) {
+                            if (_device->audio_device == a) {
+                                callback_audioEvent();
+                            }
+                        }
 
-                                // NOTE for all registered audio devices ( including main audio device )
-                                callback_audioEvent(*_device->audio_device);
+                        // NOTE for all registered audio devices ( including main audio device )
+                        callback_audioEvent(*_device->audio_device);
 
-                                const int    num_processed_bytes = static_cast<int>(_num_sample_frames) * _device->audio_device->output_channels * sizeof(float);
-                                const float* buffer              = _device->audio_device->output_buffer;
-                                if (buffer != nullptr) {
-                                    if (!SDL_PutAudioStreamData(_stream, buffer, num_processed_bytes)) {
-                                        console("could not send data to ", _device->audio_device->output_device_name, " output stream: ", SDL_GetError());
-                                    }
-                                }
+                        const int    num_processed_bytes = static_cast<int>(_num_sample_frames) * _device->audio_device->output_channels * sizeof(float);
+                        const float* buffer              = _device->audio_device->output_buffer;
+                        if (buffer != nullptr) {
+                            if (!SDL_PutAudioStreamData(_stream, buffer, num_processed_bytes)) {
+                                console("could not send data to ", _device->audio_device->output_device_name, " output stream: ", SDL_GetError());
                             }
                         }
                     }
@@ -392,18 +391,53 @@ namespace umfeld {
         }
     }
 
+    static int update_loop_threaded(void* userdata) {
+        const auto audio_device_sdl = static_cast<PAudioSDL*>(userdata);
+        if (audio_device_sdl == nullptr) {
+            error("could not start 'update_loop_threaded' : userdata (PAudioSDL) is nullptr");
+            return -1;
+        }
+        if (audio_device_sdl->audio_device == nullptr) {
+            error("could not start 'update_loop_threaded' : audio device is nullptr");
+            return -1;
+        }
+        while (audio_device_sdl->is_running) {
+            const double frame_duration_ms = (1000.0 * audio_device_sdl->audio_device->buffer_size) / audio_device_sdl->audio_device->sample_rate;
+            audio_device_sdl->next_time += microseconds(static_cast<int>(frame_duration_ms * 1000));
+            std::this_thread::sleep_until(audio_device_sdl->next_time);
+            update_audio_streams(audio_device_sdl);
+        }
+        return 0;
+    }
+
+    static void update_loop() {
+        // NOTE consult https://wiki.libsdl.org/SDL3/Tutorials/AudioStream
+        for (const auto _device: _audio_devices) {
+            if (_device != nullptr && _device->audio_device != nullptr) {
+                if (!_device->audio_device->threaded) {
+                    update_audio_streams(_device);
+                }
+            }
+        }
+    }
+
     static void shutdown() {
-        for (const auto audio_device: _audio_devices) {
-            if (audio_device != nullptr) {
-                SDL_CloseAudioDevice(audio_device->logical_input_device_id);
-                SDL_CloseAudioDevice(audio_device->logical_output_device_id);
-                SDL_DestroyAudioStream(audio_device->sdl_input_stream);
-                SDL_DestroyAudioStream(audio_device->sdl_output_stream);
+        for (const auto audio_device_sdl: _audio_devices) {
+            if (audio_device_sdl != nullptr) {
+                if (audio_device_sdl->audio_device != nullptr && audio_device_sdl->audio_device->threaded) {
+                    console("waiting for audio update thread to finish: ", audio_device_sdl->audio_device->input_device_name, "+", audio_device_sdl->audio_device->output_device_name);
+                    audio_device_sdl->is_running = false;
+                    SDL_WaitThread(audio_device_sdl->audio_thread_handle, nullptr);
+                }
+                SDL_CloseAudioDevice(audio_device_sdl->logical_input_device_id);
+                SDL_CloseAudioDevice(audio_device_sdl->logical_output_device_id);
+                SDL_DestroyAudioStream(audio_device_sdl->sdl_input_stream);
+                SDL_DestroyAudioStream(audio_device_sdl->sdl_output_stream);
                 // NOTE below needs to be handled by caller of `create_audio`
                 // delete(audio_device->audio_device);
                 // delete[] audio_device->audio_device->input_buffer;
                 // delete[] audio_device->audio_device->output_buffer;
-                delete audio_device;
+                delete audio_device_sdl;
             }
         }
         _audio_devices.clear();
@@ -569,9 +603,38 @@ namespace umfeld {
         _audio_devices.push_back(_device);
     }
 
+    bool start_threaded_update(PAudioSDL* const audio_device_sdl) {
+        if (audio_device_sdl->audio_device->threaded) {
+            console("creating audio device in threaded mode: ",
+                    audio_device_sdl->audio_device->input_device_name, "+",
+                    audio_device_sdl->audio_device->output_device_name);
+            audio_device_sdl->is_running          = true;
+            audio_device_sdl->audio_thread_handle = SDL_CreateThread(update_loop_threaded,
+                                                                     "AudioUpdateThread",
+                                                                     audio_device_sdl);
+            if (audio_device_sdl->audio_thread_handle == nullptr) {
+                error("could not create audio update thread: ", SDL_GetError());
+                delete audio_device_sdl;
+                return false;
+            }
+        }
+        return true;
+    }
+
+    static void setup_post() {
+        for (const auto audio_device_sdl: _audio_devices) {
+            if (!start_threaded_update(audio_device_sdl)) {
+                warning("failed to start audio update thread for device: ",
+                        audio_device_sdl->audio_device->input_device_name, "+",
+                        audio_device_sdl->audio_device->output_device_name);
+            }
+        }
+    }
+
     static PAudio* create_audio(const AudioUnitInfo* device_info) {
         const auto audio_device = new PAudio{device_info};
         register_audio_devices(audio_device);
+        // NOTE threaded audio update must be started manually
         return audio_device;
     }
 } // namespace umfeld
@@ -580,6 +643,7 @@ umfeld::SubsystemAudio* umfeld_create_subsystem_audio_sdl() {
     auto* audio         = new umfeld::SubsystemAudio{};
     audio->set_flags    = umfeld::set_flags;
     audio->init         = umfeld::init;
+    audio->setup_post   = umfeld::setup_post;
     audio->update_loop  = umfeld::update_loop;
     audio->shutdown     = umfeld::shutdown;
     audio->name         = umfeld::name;

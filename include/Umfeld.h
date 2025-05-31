@@ -63,12 +63,13 @@ namespace umfeld {
     inline int         audio_input_channels     = DEFAULT_INPUT_CHANNELS;
     inline float*      audio_output_buffer      = nullptr;
     inline int         audio_output_channels    = DEFAULT_OUTPUT_CHANNELS;
-    inline int         audio_sample_rate        = 0;
-    inline int         audio_buffer_size        = 0;
+    inline int         audio_sample_rate        = DEFAULT_SAMPLE_RATE;
+    inline int         audio_buffer_size        = DEFAULT_AUDIO_BUFFER_SIZE;
     inline int         audio_input_device_id    = DEFAULT_AUDIO_DEVICE;
     inline std::string audio_input_device_name  = DEFAULT_AUDIO_DEVICE_NAME;
     inline int         audio_output_device_id   = DEFAULT_AUDIO_DEVICE;
     inline std::string audio_output_device_name = DEFAULT_AUDIO_DEVICE_NAME;
+    inline bool        audio_threaded           = DEFAULT_AUDIO_RUN_IN_THREAD;
 
     // TODO consider renaming `a` to `audio` … which would however conflict with the `audio` function
     // [[deprecated("use audio instead")]]
@@ -96,7 +97,7 @@ namespace umfeld {
     inline float      pmouseY        = 0;
     inline int        renderer       = DEFAULT;
     inline int        display_width  = DEFAULT;
-    inline int        display_height  = DEFAULT;
+    inline int        display_height = DEFAULT;
 
     /* public variables *mainly for internal use* */
 

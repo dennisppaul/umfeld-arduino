@@ -55,6 +55,7 @@ if (APPLE)
             ${CMAKE_CURRENT_SOURCE_DIR}/src/libraries/ip/*.cpp
             ${CMAKE_CURRENT_SOURCE_DIR}/src/libraries/ip/posix/*.cpp
             ${CMAKE_CURRENT_SOURCE_DIR}/src/libraries/osc/*.cpp
+            ${CMAKE_CURRENT_SOURCE_DIR}/src/libraries/pffft/*.c
     )
 elseif (UNIX)
     file(GLOB UMFELD_SOURCE_FILES
@@ -66,6 +67,7 @@ elseif (UNIX)
             ${CMAKE_CURRENT_SOURCE_DIR}/src/libraries/ip/*.cpp
             ${CMAKE_CURRENT_SOURCE_DIR}/src/libraries/ip/posix/*.cpp
             ${CMAKE_CURRENT_SOURCE_DIR}/src/libraries/osc/*.cpp
+            ${CMAKE_CURRENT_SOURCE_DIR}/src/libraries/pffft/*.c
     )
 elseif (WIN32)
     file(GLOB UMFELD_SOURCE_FILES
@@ -77,6 +79,7 @@ elseif (WIN32)
             ${CMAKE_CURRENT_SOURCE_DIR}/src/libraries/ip/*.cpp
             ${CMAKE_CURRENT_SOURCE_DIR}/src/libraries/ip/win32/*.cpp
             ${CMAKE_CURRENT_SOURCE_DIR}/src/libraries/osc/*.cpp
+            ${CMAKE_CURRENT_SOURCE_DIR}/src/libraries/pffft/*.c
     )
 else ()
     file(GLOB UMFELD_SOURCE_FILES
@@ -88,6 +91,7 @@ else ()
             ${CMAKE_CURRENT_SOURCE_DIR}/src/libraries/ip/*.cpp
             ${CMAKE_CURRENT_SOURCE_DIR}/src/libraries/ip/posix/*.cpp
             ${CMAKE_CURRENT_SOURCE_DIR}/src/libraries/osc/*.cpp
+            ${CMAKE_CURRENT_SOURCE_DIR}/src/libraries/pffft/*.c
     )
 endif ()
 
@@ -104,11 +108,13 @@ target_include_directories(umfeld-lib PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/include/libraries/ip
         ${CMAKE_CURRENT_SOURCE_DIR}/include/libraries/libtess2
         ${CMAKE_CURRENT_SOURCE_DIR}/include/libraries/osc
+        ${CMAKE_CURRENT_SOURCE_DIR}/include/libraries/pffft
 )
 
 ##########################################################################################################
 ### EN/DISABLE LIBRARIES                                                                               ###
 ##########################################################################################################
+
 if (NOT TARGET umfeld-lib-interface)
     add_library(umfeld-lib-interface INTERFACE) # this enables `glm::aligned_vec*` types
 endif ()
@@ -434,6 +440,21 @@ function(add_umfeld_libs)
     set_target_properties(${PROJECT_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
     target_link_libraries(${PROJECT_NAME} PRIVATE umfeld-lib-interface)
     target_link_libraries(${PROJECT_NAME} PRIVATE umfeld-lib)
+
+    # pffft SIMD detection
+    # TODO maybe make this more platform specific?
+    if(CMAKE_SYSTEM_PROCESSOR MATCHES "arm" OR CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64")
+        message(STATUS "ARM/NEON detected")
+        add_compile_definitions(PFFFT_SIMD_DISABLE) # pffft enables NEON by default
+    elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "x86" OR CMAKE_SYSTEM_PROCESSOR MATCHES "amd64" OR CMAKE_SYSTEM_PROCESSOR MATCHES "i686")
+        message(STATUS "x86/SSE detected")
+        add_compile_definitions(PFFFT_SIMD_ENABLE)
+        if(MSVC)
+            add_compile_options(/arch:SSE2)
+        else()
+            add_compile_options(-msse2 -mfpmath=sse)
+        endif()
+    endif()
 endfunction()
 
 

@@ -24,6 +24,19 @@
 #include "Subsystems.h"
 #include "PAudio.h"
 
+
+// TODO see if thread pinning is needed or useful for SDL audio threads ( especially on Raspberry Pi )
+// #include <sched.h>
+//
+// void pin_thread_to_core(SDL_Thread *thread, int core_id) {
+//     cpu_set_t cpuset;
+//     CPU_ZERO(&cpuset);
+//     CPU_SET(core_id, &cpuset);
+//
+//     pthread_t posix_id = pthread_self(); // or get from SDL_ThreadData if needed
+//     pthread_setaffinity_np(posix_id, sizeof(cpu_set_t), &cpuset);
+// }
+
 namespace umfeld {
     struct PAudioSDL {
         PAudio*                           audio_device{nullptr};

@@ -103,7 +103,7 @@ void PGraphicsOpenGL_3_3_core::emit_shape_stroke_line_strip(std::vector<Vertex>&
     //     - (shader_id)
     //     - (texture_id)
 
-    // NOTE this is a very central method! up until everything should have been done in generic PGraphics.
+    // NOTE this is a very central method! up until here everything should have been done in generic PGraphics.
     //      - vertices are in model space
     //      - vertices are in line strip format ( i.e not triangulated or anything yet )
     //      - decide on rendering mode ( triangulated, native, etcetera )
@@ -162,16 +162,22 @@ void PGraphicsOpenGL_3_3_core::emit_shape_stroke_line_strip(std::vector<Vertex>&
 
 void PGraphicsOpenGL_3_3_core::emit_shape_fill_triangles(std::vector<Vertex>& triangle_vertices) {
     // NOTE relevant information for this method
-    //     - textured_id
-    //     - normal
-    //     - (shader_id)
+    //     - vertex ( i.e position, normal, color, tex_coord )
+    //     - textured_id ( current id or solid color )
+    //     - shader_id ( default or no shader )
 
-    // NOTE this is a very central method! up until everything should have been done in generic PGraphics.
+    // NOTE this is a very central method! up until here everything should have been done in generic PGraphics.
     //      - vertices are in model space
+    //      ```C
+    //      const glm::mat4 modelview = model_matrix;
+    //      for (auto& p: transformed_vertices) {
+    //          p.position = glm::vec4(modelview * p.position);
+    //      }
+    //      ```
 
     // NOTE this is the magic place. here we can do everything we want with the triangle_vertices
     //      e.g export to PDF or SVG, or even do some post processing.
-    //      ideally up until here everything could stau in PGraphics i.e all client side drawing
+    //      ideally up until here everything could stay in PGraphics i.e all client side drawing
     //      like point, line, rect, ellipse and begin-end-shape
 
     // TODO maybe add triangle recorder here ( need to transform vertices to world space )
@@ -362,12 +368,12 @@ void PGraphicsOpenGL_3_3_core::hint(const uint16_t property) {
 }
 
 void PGraphicsOpenGL_3_3_core::upload_texture(PImage*         img,
-                                        const uint32_t* pixel_data,
-                                        const int       width,
-                                        const int       height,
-                                        const int       offset_x,
-                                        const int       offset_y,
-                                        const bool      mipmapped) {
+                                              const uint32_t* pixel_data,
+                                              const int       width,
+                                              const int       height,
+                                              const int       offset_x,
+                                              const int       offset_y,
+                                              const bool      mipmapped) {
     if (img == nullptr) {
         return;
     }
@@ -444,10 +450,10 @@ void PGraphicsOpenGL_3_3_core::download_texture(PImage* img) {
 }
 
 void PGraphicsOpenGL_3_3_core::init(uint32_t*  pixels,
-                              const int  width,
-                              const int  height,
-                              const int  format,
-                              const bool generate_mipmap) {
+                                    const int  width,
+                                    const int  height,
+                                    const int  format,
+                                    const bool generate_mipmap) {
     (void) format;                         // TODO should this always be ignored? NOTE main graphics are always RGBA
     (void) generate_mipmap;                // TODO should this always be ignored?
     const int msaa_samples = antialiasing; // TODO not cool to take this from Umfeld
@@ -490,11 +496,11 @@ void PGraphicsOpenGL_3_3_core::init(uint32_t*  pixels,
 
             GLint maxSamples;
             glGetIntegerv(GL_MAX_SAMPLES, &maxSamples);
-            console("Max supported MSAA samples : ", maxSamples);
+            console(format_label("Max supported MSAA samples"), maxSamples);
 
             GLuint    msaaDepthBuffer;
             const int samples = std::min(msaa_samples, maxSamples); // Number of MSAA samples
-            console("number of used MSAA samples: ", samples);
+            console(format_label("number of used MSAA samples"), samples);
             glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, framebuffer.texture_id);
             checkOpenGLError("glBindTexture");
 #ifndef OPENGL_ES_3_0
@@ -565,6 +571,8 @@ void PGraphicsOpenGL_3_3_core::init(uint32_t*  pixels,
         }
         texture_id = framebuffer.texture_id; // TODO maybe get rid of one of the texture_id variables
     }
+
+    console(format_label("'Vertex' struct size"), sizeof(Vertex));
 
     OGL3_create_solid_color_texture();
     texture_id_current = TEXTURE_NONE;
@@ -641,8 +649,8 @@ void PGraphicsOpenGL_3_3_core::OGL3_resize_vertex_buffer(const size_t buffer_siz
 }
 
 void PGraphicsOpenGL_3_3_core::OGL3_render_vertex_buffer(VertexBufferData&          vertex_buffer,
-                                                   const GLenum               primitive_mode,
-                                                   const std::vector<Vertex>& shape_vertices) {
+                                                         const GLenum               primitive_mode,
+                                                         const std::vector<Vertex>& shape_vertices) {
     // TODO maybe replace this with VertexBuffer
     // Ensure there are vertices to render
     if (shape_vertices.empty()) {
@@ -675,8 +683,8 @@ void PGraphicsOpenGL_3_3_core::OGL3_render_vertex_buffer(VertexBufferData&      
 }
 
 void PGraphicsOpenGL_3_3_core::OGL3_tranform_model_matrix_and_render_vertex_buffer(VertexBufferData&          vertex_buffer,
-                                                                             const GLenum               mode,
-                                                                             const std::vector<Vertex>& shape_vertices) const {
+                                                                                   const GLenum               mode,
+                                                                                   const std::vector<Vertex>& shape_vertices) const {
     static bool _emit_warning_only_once = false;
     if (mode != GL_TRIANGLES && mode != GL_LINE_STRIP) {
         if (!_emit_warning_only_once) {

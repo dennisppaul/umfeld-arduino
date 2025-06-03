@@ -145,9 +145,9 @@ namespace umfeld {
         BURN              // not implemented
     };
     enum RenderMode {
-        RENDER_MODE_IMMEDIATE = 0x90,
-        RENDER_MODE_BUFFERED,
-        RENDER_MODE_SHAPE
+        RENDER_MODE_IMMEDIATE = 0x90, // tries to render immediately, but may buffer vertices
+        RENDER_MODE_BUFFERED,         // buffers vertices and renders them at the end of the frame
+        RENDER_MODE_SHAPE             // renders shapes immediately, but via `beginShape()` and `endShape()` ( only for OpenGL 2.0 )
     };
     enum Hint {
         ENABLE_SMOOTH_LINES = 0xA0,

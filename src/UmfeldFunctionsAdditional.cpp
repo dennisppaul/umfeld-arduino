@@ -291,9 +291,10 @@ namespace umfeld {
                     vertex.tex_coord = {
                         attrib.texcoords[2 * index.texcoord_index + 0],
                         1.0f - attrib.texcoords[2 * index.texcoord_index + 1] // Flip Y-axis
-                    };
+                        ,
+                        0.0f};
                 } else {
-                    vertex.tex_coord = {0.0f, 0.0f}; // No texture coordinates
+                    vertex.tex_coord = {0.0f, 0.0f, 0.0f}; // No texture coordinates
                 }
 
                 // Normals
@@ -371,7 +372,7 @@ namespace umfeld {
 
                 vertices.emplace_back(glm::vec3(vx, vy, vz),
                                       glm::vec4(red, green, blue, 1.0f),
-                                      glm::vec2(tx, ty));
+                                      glm::vec3(tx, ty, 0.0f));
             }
         }
         return vertices;

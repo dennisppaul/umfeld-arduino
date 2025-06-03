@@ -17,7 +17,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-// ReSharper disable CppCStyleCast
+// ReSharper disable once CppUnusedIncludeDirective
 #include <glm/glm.hpp>
 #include <iostream>
 
@@ -27,6 +27,9 @@
 using namespace umfeld;
 
 void VertexBuffer::init() {
+    if (buffer_initialized) {
+        return;
+    }
     checkVAOSupport();
     glGenBuffers(1, &vbo);
     if (vao_supported) {
@@ -36,8 +39,10 @@ void VertexBuffer::init() {
 }
 
 VertexBuffer::~VertexBuffer() {
-    glDeleteBuffers(1, &vbo);
-    if (vao_supported) {
+    if (vbo) {
+        glDeleteBuffers(1, &vbo);
+    }
+    if (vao_supported && vao) {
         glDeleteVertexArrays(1, &vao);
     }
 }
@@ -49,8 +54,8 @@ void VertexBuffer::checkVAOSupport() {
     if ((major > 3) || (major == 3 && minor >= 3)) {
         vao_supported = true; // OpenGL 3.3+ supports VAOs
     } else {
-        // For OpenGL 2.0, check if GL_ARB_vertex_array_object is available
-        const auto extensions = (const char*) glGetString(GL_EXTENSIONS);
+        // NOTE for OpenGL 2.0, check if GL_ARB_vertex_array_object is available
+        const auto extensions = reinterpret_cast<const char*>(glGetString(GL_EXTENSIONS));
         if (extensions && strstr(extensions, "GL_ARB_vertex_array_object")) {
             vao_supported = true;
         }
@@ -104,34 +109,25 @@ void VertexBuffer::upload() {
     }
 
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferData(GL_ARRAY_BUFFER, _vertices.size() * sizeof(Vertex), _vertices.data(), GL_DYNAMIC_DRAW);
 
-    // TODO align this with render pipeline default shader >>>
-    // set up attribute pointers. NOTE make sure to align to locations in shader.
-    constexpr int ATTRIBUTE_LOCATION_POSITION = 0;
-    constexpr int ATTRIBUTE_LOCATION_NORMAL   = 1;
-    constexpr int ATTRIBUTE_LOCATION_COLOR    = 2;
-    constexpr int ATTRIBUTE_LOCATION_TEXCOORD = 3;
-    constexpr int ATTRIBUTE_SIZE_POSITION     = 4;
-    constexpr int ATTRIBUTE_SIZE_NORMAL       = 4;
-    constexpr int ATTRIBUTE_SIZE_COLOR        = 4;
-    constexpr int ATTRIBUTE_SIZE_TEXCOORD     = 2;
-    glVertexAttribPointer(ATTRIBUTE_LOCATION_POSITION, ATTRIBUTE_SIZE_POSITION, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(offsetof(Vertex, position)));
-    glEnableVertexAttribArray(ATTRIBUTE_LOCATION_POSITION);
-    glVertexAttribPointer(ATTRIBUTE_LOCATION_NORMAL, ATTRIBUTE_SIZE_NORMAL, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(offsetof(Vertex, normal)));
-    glEnableVertexAttribArray(ATTRIBUTE_LOCATION_NORMAL);
-    glVertexAttribPointer(ATTRIBUTE_LOCATION_COLOR, ATTRIBUTE_SIZE_COLOR, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(offsetof(Vertex, color)));
-    glEnableVertexAttribArray(ATTRIBUTE_LOCATION_COLOR);
-    glVertexAttribPointer(ATTRIBUTE_LOCATION_TEXCOORD, ATTRIBUTE_SIZE_TEXCOORD, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(offsetof(Vertex, tex_coord)));
-    glEnableVertexAttribArray(ATTRIBUTE_LOCATION_TEXCOORD);
-    // <<< TODO align this with render pipeline default shader
+    const size_t current_size   = _vertices.size();
+    const size_t required_bytes = current_size * sizeof(Vertex);
+
+    if (current_size > server_buffer_size) {
+        // NOTE buffer needs to grow - reallocate entire buffer
+        glBufferData(GL_ARRAY_BUFFER, required_bytes, _vertices.data(), GL_DYNAMIC_DRAW);
+        server_buffer_size = current_size;
+    } else {
+        // NOTE buffer is same size or smaller - use sub data upload
+        glBufferSubData(GL_ARRAY_BUFFER, 0, required_bytes, _vertices.data());
+    }
+
+    setup_vertex_attributes();
 
     if (vao_supported) {
         glBindVertexArray(0);
     }
     glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-    server_buffer_size = _vertices.size();
 }
 
 void VertexBuffer::draw() {
@@ -154,14 +150,7 @@ void VertexBuffer::draw() {
     } else {
         glBindBuffer(GL_ARRAY_BUFFER, vbo);
 
-        glEnableVertexAttribArray(0);
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*) offsetof(Vertex, position));
-
-        glEnableVertexAttribArray(1);
-        glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*) offsetof(Vertex, color));
-
-        glEnableVertexAttribArray(2);
-        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*) offsetof(Vertex, tex_coord));
+        setup_vertex_attributes();
 
         glDrawArrays(mode, 0, _vertices.size());
 
@@ -173,24 +162,48 @@ void VertexBuffer::draw() {
 }
 
 void VertexBuffer::update() {
-    if (!buffer_initialized) { init(); }
-
     if (_vertices.empty()) {
         return;
     }
 
-    if (!initial_upload) {
-        initial_upload = true;
-        upload();
-        return;
+    if (vao_supported) {
+        glBindVertexArray(vao);
     }
 
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    if (_vertices.size() > server_buffer_size ||
-        _vertices.size() + VBO_BUFFER_CHUNK_SIZE_BYTES / sizeof(Vertex) < server_buffer_size) {
-        resize_buffer();
+
+    const size_t current_size   = _vertices.size();
+    const size_t required_bytes = current_size * sizeof(Vertex);
+
+    if (current_size > server_buffer_size) {
+        // NOTE buffer needs to grow - reallocate entire buffer
+        glBufferData(GL_ARRAY_BUFFER, required_bytes, _vertices.data(), GL_DYNAMIC_DRAW);
+        server_buffer_size = current_size;
+
+        // NOTE only setup vertex attributes when buffer is reallocated or first time
+        if (!vao_supported) {
+            setup_vertex_attributes();
+        }
     } else {
-        glBufferSubData(GL_ARRAY_BUFFER, 0, _vertices.size() * sizeof(Vertex), _vertices.data());
+        // NOTE buffer is same size or smaller - use sub data upload
+        glBufferSubData(GL_ARRAY_BUFFER, 0, required_bytes, _vertices.data());
+    }
+
+    if (vao_supported) {
+        glBindVertexArray(0);
     }
     glBindBuffer(GL_ARRAY_BUFFER, 0);
+}
+
+void VertexBuffer::setup_vertex_attributes() {
+    glVertexAttribPointer(ATTRIBUTE_LOCATION_POSITION, ATTRIBUTE_SIZE_POSITION, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(offsetof(Vertex, position)));
+    glEnableVertexAttribArray(ATTRIBUTE_LOCATION_POSITION);
+    glVertexAttribPointer(ATTRIBUTE_LOCATION_NORMAL, ATTRIBUTE_SIZE_NORMAL, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(offsetof(Vertex, normal)));
+    glEnableVertexAttribArray(ATTRIBUTE_LOCATION_NORMAL);
+    glVertexAttribPointer(ATTRIBUTE_LOCATION_COLOR, ATTRIBUTE_SIZE_COLOR, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(offsetof(Vertex, color)));
+    glEnableVertexAttribArray(ATTRIBUTE_LOCATION_COLOR);
+    glVertexAttribPointer(ATTRIBUTE_LOCATION_TEXCOORD, ATTRIBUTE_SIZE_TEXCOORD, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(offsetof(Vertex, tex_coord)));
+    glEnableVertexAttribArray(ATTRIBUTE_LOCATION_TEXCOORD);
+    glVertexAttribPointer(ATTRIBUTE_LOCATION_USERDATA, ATTRIBUTE_SIZE_USERDATA, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(offsetof(Vertex, userdata)));
+    glEnableVertexAttribArray(ATTRIBUTE_LOCATION_USERDATA);
 }

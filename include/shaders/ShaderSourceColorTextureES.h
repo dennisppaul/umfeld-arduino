@@ -30,6 +30,7 @@ namespace umfeld {
                     layout(location = 1) in vec4 aNormal;
                     layout(location = 2) in vec4 aColor;
                     layout(location = 3) in vec2 aTexCoord;
+                    layout(location = 4) in float userdata;
 
                     out vec4 vColor;
                     out vec2 vTexCoord;

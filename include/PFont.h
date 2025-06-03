@@ -82,15 +82,15 @@ namespace umfeld {
 
             // TODO see if pixel density needs to or should be respected in the atlas
 
-            // texture_id = create_font_texture(*font); // NOTE this is done in PGraphics
+            // tex_id = create_font_texture(*font); // NOTE this is done in PGraphics
             width  = static_cast<float>(font->atlas_width);
             height = static_cast<float>(font->atlas_height);
             format = 4;
             pixels = new uint32_t[static_cast<int>(width * height)];
             copy_atlas_to_rgba(*font, reinterpret_cast<unsigned char*>(pixels));
 
-            console("PFont      : created atlas");
-            console("atlas size : ", width, "×", height);
+            console(format_label("PFont"), "atlas created");
+            console(format_label("PFont atlas size"), width, "×", height, " px");
             textSize(font_size);
             textLeading(font_size * 1.2f);
 #ifdef PFONT_DEBUG_FONT

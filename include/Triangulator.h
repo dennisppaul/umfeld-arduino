@@ -78,7 +78,7 @@ namespace umfeld {
 
         const glm::vec4 color     = inputVertices[0].color;
         const glm::vec4 normal    = inputVertices[0].normal;
-        const glm::vec2 tex_coord = inputVertices[0].tex_coord;
+        const glm::vec3 tex_coord = inputVertices[0].tex_coord;
         for (int i = 0; i < elementCount * 3; i += 3) {
             const int idx0 = tessElements[i];
             const int idx1 = tessElements[i + 1];

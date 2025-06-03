@@ -837,7 +837,7 @@ namespace umfeld {
 
                 ring[j] = Vertex{pos,
                                  color,
-                                 glm::vec2(j / float(sides), i / float(n)),
+                                 glm::vec3(j / static_cast<float>(sides), i / static_cast<float>(n), 0.0f),
                                  glm::aligned_vec4(glm::normalize(dir), 0.0f)};
             }
 

@@ -27,11 +27,12 @@ namespace umfeld {
         static constexpr auto DEFAULT_POSITION  = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
         static constexpr auto DEFAULT_NORMAL    = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
         static constexpr auto DEFAULT_COLOR     = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
-        static constexpr auto DEFAULT_TEX_COORD = glm::vec2(0.0f, 0.0f);
+        static constexpr auto DEFAULT_TEX_COORD = glm::vec3(0.0f, 0.0f, 0.0f);
         glm::aligned_vec4     position;
         glm::aligned_vec4     normal;
         glm::aligned_vec4     color;
-        glm::vec2             tex_coord;
+        glm::vec3             tex_coord;
+        float                 userdata{0};
 
         // NOTE aligned_vec4 makes sure all data types are aligned to 16 bytes ( GLM_ENABLE_EXPERIMENTAL )
         //      make sure this does not cause any issues … it s experimental after all
@@ -42,11 +43,11 @@ namespace umfeld {
             : position(x, y, z, DEFAULT_POSITION.w),
               normal(DEFAULT_NORMAL),
               color(r, g, b, a),
-              tex_coord(u, v) {}
+              tex_coord(u, v, 0.0f) {}
 
         explicit Vertex(const glm::vec3& position,
                         const glm::vec4& color     = DEFAULT_COLOR,
-                        const glm::vec2& tex_coord = DEFAULT_TEX_COORD,
+                        const glm::vec3& tex_coord = DEFAULT_TEX_COORD,
                         const glm::vec4& normal    = DEFAULT_NORMAL)
             : position(position, DEFAULT_POSITION.w),
               normal(normal),

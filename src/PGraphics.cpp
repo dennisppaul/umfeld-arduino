@@ -930,7 +930,7 @@ std::vector<Vertex> PGraphics::triangulate_better_quality(const std::vector<Vert
             for (int i = 0; i < 3; ++i) {
                 triangleList.emplace_back(glm::vec3(tri[i].x, tri[i].y, 0.0f),
                                           first_color,
-                                          glm::vec2(0.0f, 0.0f),
+                                          glm::vec3(0.0f, 0.0f, 0.0f),
                                           first_normal);
             }
         }
@@ -1027,7 +1027,7 @@ void PGraphics::triangulate_line_strip_vertex(const std::vector<Vertex>& line_st
                            triangles);
     line_vertices.reserve(triangles.size());
     for (const auto& triangle: triangles) {
-        line_vertices.emplace_back(glm::vec3(triangle, 0.0f), color, glm::vec2(0.0f, 0.0f), normal);
+        line_vertices.emplace_back(glm::vec3(triangle, 0.0f), color, glm::vec3(0.0f, 0.0f, 0.0f), normal);
     }
 }
 
@@ -1276,11 +1276,11 @@ void PGraphics::vertex(const float x, const float y, const float z, const float 
 
     if (color_stroke.active) {
         const glm::vec4 strokeColor = as_vec4(color_stroke);
-        shape_stroke_vertex_buffer.emplace_back(position, strokeColor, glm::vec2{u, v}, current_normal);
+        shape_stroke_vertex_buffer.emplace_back(position, strokeColor, glm::vec3{u, v, 0.0f}, current_normal);
     }
 
     if (color_fill.active) {
         const glm::vec4 fillColor = as_vec4(color_fill);
-        shape_fill_vertex_buffer.emplace_back(position, fillColor, glm::vec2{u, v}, current_normal);
+        shape_fill_vertex_buffer.emplace_back(position, fillColor, glm::vec3{u, v, 0.0f}, current_normal);
     }
 }

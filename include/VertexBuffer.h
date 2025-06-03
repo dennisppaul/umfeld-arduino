@@ -28,6 +28,18 @@
 namespace umfeld {
     class VertexBuffer {
     public:
+        // NOTE make sure to align to locations in shader.
+        static constexpr int ATTRIBUTE_LOCATION_POSITION = 0;
+        static constexpr int ATTRIBUTE_LOCATION_NORMAL   = 1;
+        static constexpr int ATTRIBUTE_LOCATION_COLOR    = 2;
+        static constexpr int ATTRIBUTE_LOCATION_TEXCOORD = 3;
+        static constexpr int ATTRIBUTE_LOCATION_USERDATA = 4;
+        static constexpr int ATTRIBUTE_SIZE_POSITION     = 4;
+        static constexpr int ATTRIBUTE_SIZE_NORMAL       = 4;
+        static constexpr int ATTRIBUTE_SIZE_COLOR        = 4;
+        static constexpr int ATTRIBUTE_SIZE_TEXCOORD     = 3;
+        static constexpr int ATTRIBUTE_SIZE_USERDATA     = 1;
+
         ~VertexBuffer();
 
         void                 add_vertex(const Vertex& vertex);
@@ -43,8 +55,8 @@ namespace umfeld {
     private:
         const int           VBO_BUFFER_CHUNK_SIZE_BYTES = 1024 * 16 * sizeof(Vertex);
         std::vector<Vertex> _vertices;
-        GLuint                 vbo                = 0;
-        GLuint                 vao                = 0;
+        GLuint              vbo                = 0;
+        GLuint              vao                = 0;
         bool                vao_supported      = false;
         bool                initial_upload     = false;
         bool                buffer_initialized = false;
@@ -52,8 +64,9 @@ namespace umfeld {
         int                 shape = TRIANGLES;
         bool                dirty = false;
 
-        void resize_buffer();
-        void upload();
-        void checkVAOSupport();
+        void        resize_buffer();
+        void        upload();
+        static void setup_vertex_attributes();
+        void        checkVAOSupport();
     };
 } // namespace umfeld

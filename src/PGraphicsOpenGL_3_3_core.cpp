@@ -572,7 +572,8 @@ void PGraphicsOpenGL_3_3_core::init(uint32_t*  pixels,
         texture_id = framebuffer.texture_id; // TODO maybe get rid of one of the texture_id variables
     }
 
-    console(format_label("'Vertex' struct size"), sizeof(Vertex));
+    // static_assert(sizeof(Vertex) == 64, "Vertex struct must be 64 bytes"); // NOTE check this on other systems
+    console(format_label("'Vertex' struct size"), sizeof(Vertex), " bytes");
 
     OGL3_create_solid_color_texture();
     texture_id_current = TEXTURE_NONE;

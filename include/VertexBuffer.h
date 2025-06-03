@@ -65,8 +65,12 @@ namespace umfeld {
         bool                dirty              = false;
 
         void        resize_buffer();
+        static void enable_vertex_attributes();
+        static void disable_vertex_attributes();
         void        upload();
-        static void setup_vertex_attributes();
         void        checkVAOSupport();
+        bool        needs_buffer_resize(size_t current_size) const;
+        bool        needs_buffer_shrink(size_t current_size) const;
+        void        upload_with_resize(size_t current_size, size_t required_bytes);
     };
 } // namespace umfeld

@@ -60,9 +60,9 @@ namespace umfeld {
         bool                vao_supported      = false;
         bool                initial_upload     = false;
         bool                buffer_initialized = false;
-        int                 server_buffer_size{0};
-        int                 shape = TRIANGLES;
-        bool                dirty = false;
+        int                 server_buffer_size = 0;
+        int                 shape              = TRIANGLES;
+        bool                dirty              = false;
 
         void        resize_buffer();
         void        upload();

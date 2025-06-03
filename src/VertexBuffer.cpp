@@ -99,37 +99,6 @@ void VertexBuffer::resize_buffer() {
     }
 }
 
-void VertexBuffer::upload() {
-    if (_vertices.empty()) {
-        return;
-    }
-
-    if (vao_supported) {
-        glBindVertexArray(vao);
-    }
-
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
-
-    const size_t current_size   = _vertices.size();
-    const size_t required_bytes = current_size * sizeof(Vertex);
-
-    if (current_size > server_buffer_size) {
-        // NOTE buffer needs to grow - reallocate entire buffer
-        glBufferData(GL_ARRAY_BUFFER, required_bytes, _vertices.data(), GL_DYNAMIC_DRAW);
-        server_buffer_size = current_size;
-    } else {
-        // NOTE buffer is same size or smaller - use sub data upload
-        glBufferSubData(GL_ARRAY_BUFFER, 0, required_bytes, _vertices.data());
-    }
-
-    setup_vertex_attributes();
-
-    if (vao_supported) {
-        glBindVertexArray(0);
-    }
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-}
-
 void VertexBuffer::draw() {
     if (!buffer_initialized) { init(); }
 
@@ -161,7 +130,7 @@ void VertexBuffer::draw() {
     }
 }
 
-void VertexBuffer::update() {
+void VertexBuffer::upload() {
     if (_vertices.empty()) {
         return;
     }
@@ -179,18 +148,38 @@ void VertexBuffer::update() {
         // NOTE buffer needs to grow - reallocate entire buffer
         glBufferData(GL_ARRAY_BUFFER, required_bytes, _vertices.data(), GL_DYNAMIC_DRAW);
         server_buffer_size = current_size;
-
-        // NOTE only setup vertex attributes when buffer is reallocated or first time
-        if (!vao_supported) {
-            setup_vertex_attributes();
-        }
     } else {
         // NOTE buffer is same size or smaller - use sub data upload
         glBufferSubData(GL_ARRAY_BUFFER, 0, required_bytes, _vertices.data());
     }
 
+    setup_vertex_attributes();
+
     if (vao_supported) {
         glBindVertexArray(0);
+    }
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+}
+
+void VertexBuffer::update() {
+    if (!buffer_initialized) { init(); }
+
+    if (_vertices.empty()) {
+        return;
+    }
+
+    if (!initial_upload) {
+        initial_upload = true;
+        upload();
+        return;
+    }
+
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    if (_vertices.size() > server_buffer_size ||
+        _vertices.size() + VBO_BUFFER_CHUNK_SIZE_BYTES / sizeof(Vertex) < server_buffer_size) {
+        resize_buffer();
+    } else {
+        glBufferSubData(GL_ARRAY_BUFFER, 0, _vertices.size() * sizeof(Vertex), _vertices.data());
     }
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 }

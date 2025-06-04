@@ -85,8 +85,8 @@ void PGraphicsOpenGL_3_3_core::IMPL_set_texture(PImage* img) {
 /**
  * implement this method for respective renderer e.g
  *
- * - OpenGLv3.3 ( shader based, buffered mode, vertex array objects ),
- * - OpenGLv2.0 ( fixed function pipeline, immediate mode, vertex buffer arrays ),
+ * - OpenGL_3_3_core + OpenGL_ES_3_0 ( shader based, buffered mode, vertex array objects )
+ * - OpenGL_2_0 ( fixed function pipeline, immediate mode, vertex buffer arrays )
  * - SDL2
  *
  * and maybe later vulkan, metal, etc.
@@ -94,7 +94,7 @@ void PGraphicsOpenGL_3_3_core::IMPL_set_texture(PImage* img) {
  * @param line_strip_vertices
  * @param line_strip_closed
  */
-void PGraphicsOpenGL_3_3_core::emit_shape_stroke_line_strip(std::vector<Vertex>& line_strip_vertices, const bool line_strip_closed) {
+void PGraphicsOpenGL_3_3_core::IMPL_emit_shape_stroke_line_strip(std::vector<Vertex>& line_strip_vertices, const bool line_strip_closed) {
     // NOTE relevant information for this method
     //     - closed
     //     - stroke_weight
@@ -160,7 +160,7 @@ void PGraphicsOpenGL_3_3_core::emit_shape_stroke_line_strip(std::vector<Vertex>&
      */
 }
 
-void PGraphicsOpenGL_3_3_core::emit_shape_fill_triangles(std::vector<Vertex>& triangle_vertices) {
+void PGraphicsOpenGL_3_3_core::IMPL_emit_shape_fill_triangles(std::vector<Vertex>& triangle_vertices) {
     // NOTE relevant information for this method
     //     - vertex ( i.e position, normal, color, tex_coord )
     //     - textured_id ( current id or solid color )
@@ -183,9 +183,9 @@ void PGraphicsOpenGL_3_3_core::emit_shape_fill_triangles(std::vector<Vertex>& tr
     // TODO maybe add triangle recorder here ( need to transform vertices to world space )
 
     if (render_mode == RENDER_MODE_BUFFERED) {
-        // TODO collect triangles and current texture information for retained mode here.
+        // TODO collect recorded_triangles and current texture information for retained mode here.
         //      - maybe sort by transparency ( and by depth )
-        //      - maybe sort transparent triangles by depth
+        //      - maybe sort transparent recorded_triangles by depth
         //      - maybe sort by fill and stroke
         //      ```C
         //      add_stroke_vertex_xyz_rgba(position, color, tex_coord); // applies transformation

@@ -941,7 +941,7 @@ static void emit_vertex(const Vertex& v) {
     glVertex3f(v.position.x, v.position.y, v.position.z);
 }
 
-void PGraphicsOpenGL_2_0::emit_shape_stroke_line_strip(std::vector<Vertex>& line_strip_vertices, const bool line_strip_closed) {
+void PGraphicsOpenGL_2_0::IMPL_emit_shape_stroke_line_strip(std::vector<Vertex>& line_strip_vertices, const bool line_strip_closed) {
     glBegin(GL_LINE_STRIP);
     for (const auto& v: line_strip_vertices) {
         emit_vertex(v);
@@ -952,7 +952,7 @@ void PGraphicsOpenGL_2_0::emit_shape_stroke_line_strip(std::vector<Vertex>& line
     glEnd();
 }
 
-void PGraphicsOpenGL_2_0::emit_shape_fill_triangles(std::vector<Vertex>& triangle_vertices) {
+void PGraphicsOpenGL_2_0::IMPL_emit_shape_fill_triangles(std::vector<Vertex>& triangle_vertices) {
     glBegin(GL_TRIANGLES);
     for (const auto& v: triangle_vertices) {
         emit_vertex(v);

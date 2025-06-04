@@ -6,7 +6,8 @@ message(STATUS "----------------------------------------")
 message(STATUS "UMFELD_APP    : ${PROJECT_NAME}")
 
 option(ENABLE_PORTAUDIO "Enable PortAudio output" ON)
-option(ENABLE_ANGLE "Enable ANGLE OpenGL ES emulation on macOS ( apple silicon )" ON)
+option(ENABLE_ANGLE "Enable ANGLE OpenGL ES emulation on macOS ( apple silicon )" OFF)
+option(DISABLE_PDF "Disable PDF expot" OFF)
 
 ##########################################################################################################
 ### CHECK FOR HOMEBREW                                                                                 ###
@@ -144,6 +145,12 @@ if (DISABLE_VIDEO)
     target_compile_definitions(${PROJECT_NAME} PUBLIC DISABLE_VIDEO)
     message(STATUS "DISABLING     : video")
 endif (DISABLE_VIDEO)
+
+if (DISABLE_PDF)
+    target_compile_definitions(umfeld-lib-interface INTERFACE DISABLE_PDF)
+    target_compile_definitions(${PROJECT_NAME} PUBLIC DISABLE_PDF)
+    message(STATUS "DISABLING     : pdf")
+endif (DISABLE_PDF)
 
 if (ENABLE_PORTAUDIO)
     target_compile_definitions(umfeld-lib-interface INTERFACE ENABLE_PORTAUDIO)
@@ -298,6 +305,7 @@ if (NOT DISABLE_GRAPHICS)
     find_package(SDL3 CONFIG REQUIRED)
     find_package(harfbuzz CONFIG REQUIRED)
     pkg_check_modules(FREETYPE REQUIRED freetype2)
+    pkg_check_modules(CAIRO REQUIRED cairo)
 
     if (APPLE)
     elseif (UNIX)
@@ -407,6 +415,12 @@ if (NOT DISABLE_GRAPHICS)
             message(STATUS "platform may not be supported ... assuming windows.")
         endif ()
     endif (NOT DISABLE_VIDEO)
+    # PDF
+    if (NOT DISABLE_PDF)
+        target_include_directories(${PROJECT_NAME} PUBLIC ${CAIRO_INCLUDE_DIRS})
+        target_link_libraries(${PROJECT_NAME} PUBLIC ${CAIRO_LIBRARIES})
+        target_compile_options(${PROJECT_NAME} PUBLIC ${CAIRO_CFLAGS_OTHER})
+    endif (NOT DISABLE_PDF)
 endif (NOT DISABLE_GRAPHICS)
 
 # MIDI
@@ -443,18 +457,18 @@ function(add_umfeld_libs)
 
     # pffft SIMD detection
     # TODO maybe make this more platform specific?
-    if(CMAKE_SYSTEM_PROCESSOR MATCHES "arm" OR CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64")
+    if (CMAKE_SYSTEM_PROCESSOR MATCHES "arm" OR CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64")
         message(STATUS "ARM/NEON detected")
         add_compile_definitions(PFFFT_SIMD_DISABLE) # pffft enables NEON by default
-    elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "x86" OR CMAKE_SYSTEM_PROCESSOR MATCHES "amd64" OR CMAKE_SYSTEM_PROCESSOR MATCHES "i686")
+    elseif (CMAKE_SYSTEM_PROCESSOR MATCHES "x86" OR CMAKE_SYSTEM_PROCESSOR MATCHES "amd64" OR CMAKE_SYSTEM_PROCESSOR MATCHES "i686")
         message(STATUS "x86/SSE detected")
         add_compile_definitions(PFFFT_SIMD_ENABLE)
-        if(MSVC)
+        if (MSVC)
             add_compile_options(/arch:SSE2)
-        else()
+        else ()
             add_compile_options(-msse2 -mfpmath=sse)
-        endif()
-    endif()
+        endif ()
+    endif ()
 endfunction()
 
 

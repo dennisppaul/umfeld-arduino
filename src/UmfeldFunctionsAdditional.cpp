@@ -334,7 +334,7 @@ namespace umfeld {
     std::vector<Vertex> loadOBJ_no_material(const std::string& filename) {
         tinyobj::ObjReader       reader;
         tinyobj::ObjReaderConfig config;
-        config.triangulate = true; // Ensure we only get triangles
+        config.triangulate = true; // Ensure we only get recorded_triangles
 
         if (!reader.ParseFromFile(filename, config)) {
             if (!reader.Error().empty()) {

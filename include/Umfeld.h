@@ -27,6 +27,7 @@
 #include "UmfeldConstants.h"
 #include "UmfeldCallbacks.h"
 #include "UmfeldFunctions.h"
+#include "UmfeldRecorder.h"
 #include "UmfeldFunctionsGraphics.h"
 #include "Subsystems.h"
 

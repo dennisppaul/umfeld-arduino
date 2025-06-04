@@ -168,6 +168,10 @@ namespace umfeld {
 #endif
         RENDERER_SDL_2D,
     };
+    enum Exporter {
+        OBJ,
+        PDF
+    };
     const std::string SHADER_UNIFORM_MODEL_MATRIX      = "uModelMatrix";
     const std::string SHADER_UNIFORM_VIEW_MATRIX       = "uViewMatrix";
     const std::string SHADER_UNIFORM_PROJECTION_MATRIX = "uProjection";

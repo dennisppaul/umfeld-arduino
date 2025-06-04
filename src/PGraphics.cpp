@@ -85,6 +85,13 @@ void PGraphics::background(const float a) {
 }
 
 void PGraphics::background(const float a, const float b, const float c, const float d) {
+    static bool emitted_warning = false;
+    if (!emitted_warning) {
+        if (a < 0 || a > 1 || b < 0 || b > 1 || c < 0 || c > 1 || d < 0 || d > 1) {
+            warning("`background()` values should be in range [0, 1].");
+        }
+        emitted_warning = true;
+    }
     IMPL_background(a, b, c, d);
 }
 
@@ -168,6 +175,14 @@ void PGraphics::scale(const float x, const float y, const float z) {
 /* --- color, stroke, and fill --- */
 
 void PGraphics::fill(const float r, const float g, const float b, const float alpha) {
+    static bool emitted_warning = false;
+    if (!emitted_warning) {
+        if (r < 0 || r > 1 || g < 0 || g > 1 || b < 0 || b > 1 || alpha < 0 || alpha > 1) {
+            warning("`fill()` values should be in range [0, 1].");
+        }
+        emitted_warning = true;
+    }
+
     color_fill.r      = r;
     color_fill.g      = g;
     color_fill.b      = b;
@@ -189,6 +204,14 @@ void PGraphics::noFill() {
 }
 
 void PGraphics::stroke(const float r, const float g, const float b, const float alpha) {
+    static bool emitted_warning = false;
+    if (!emitted_warning) {
+        if (r < 0 || r > 1 || g < 0 || g > 1 || b < 0 || b > 1 || alpha < 0 || alpha > 1) {
+            warning("`stroke()` values should be in range [0, 1].");
+        }
+        emitted_warning = true;
+    }
+
     color_stroke.r      = r;
     color_stroke.g      = g;
     color_stroke.b      = b;
@@ -197,6 +220,14 @@ void PGraphics::stroke(const float r, const float g, const float b, const float 
 }
 
 void PGraphics::stroke(const float gray, const float alpha) {
+    static bool emitted_warning = false;
+    if (!emitted_warning) {
+        if (gray < 0 || gray > 1 || alpha < 0 || alpha > 1) {
+            warning("`stroke()` values should be in range [0, 1].");
+        }
+        emitted_warning = true;
+    }
+
     color_stroke.r      = gray;
     color_stroke.g      = gray;
     color_stroke.b      = gray;
@@ -1140,6 +1171,20 @@ void PGraphics::endShape(const bool close_shape) {
     shape_fill_vertex_buffer.clear();
     shape_stroke_vertex_buffer.clear();
     shape_has_begun = false;
+}
+
+void PGraphics::emit_shape_fill_triangles(std::vector<Vertex>& triangle_vertices) {
+    if (triangle_emitter_callback) {
+        triangle_emitter_callback(triangle_vertices);
+    }
+    IMPL_emit_shape_fill_triangles(triangle_vertices);
+}
+
+void PGraphics::emit_shape_stroke_line_strip(std::vector<Vertex>& line_strip_vertices, const bool line_strip_closed) {
+    if (stroke_emitter_callback) {
+        stroke_emitter_callback(line_strip_vertices, line_strip_closed);
+    }
+    IMPL_emit_shape_stroke_line_strip(line_strip_vertices, line_strip_closed);
 }
 
 void PGraphics::process_collected_fill_vertices() {

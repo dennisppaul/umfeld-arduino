@@ -52,6 +52,20 @@ namespace umfeld {
         PGraphics();
         ~PGraphics() override = default;
 
+        void set_triangle_emitter_callback(void (*callback)(std::vector<Vertex>& triangle_vertices)) {
+            this->triangle_emitter_callback = callback;
+        }
+        void (*get_triangle_emitter_callback() const)(std::vector<Vertex>&) {
+            return this->triangle_emitter_callback;
+        }
+
+        void set_stroke_emitter_callback(void (*callback)(std::vector<Vertex>& triangle_vertices, bool line_strip_closed)) {
+            this->stroke_emitter_callback = callback;
+        }
+        void (*get_stroke_emitter_callback() const)(std::vector<Vertex>&, bool) {
+            return this->stroke_emitter_callback;
+        }
+
         /* --- implementation specific methods --- */
 
         virtual void IMPL_background(float a, float b, float c, float d) = 0; // NOTE this needs to clear the color buffer and depth buffer
@@ -68,14 +82,16 @@ namespace umfeld {
          *        and transforming vertices needs to happen here. any drawing should use this method.
          * @param triangle_vertices
          */
-        virtual void emit_shape_fill_triangles(std::vector<Vertex>& triangle_vertices) = 0;
+        virtual void emit_shape_fill_triangles(std::vector<Vertex>& triangle_vertices);
+        virtual void IMPL_emit_shape_fill_triangles(std::vector<Vertex>& triangle_vertices) = 0;
         /**
          * @brief method should emit the stroke vertices to the rendering backend. recording, collecting,
          *        and transforming vertices needs to happen here. any drawing should use this method.
          * @param line_strip_vertices
          * @param line_strip_closed
          */
-        virtual void emit_shape_stroke_line_strip(std::vector<Vertex>& line_strip_vertices, bool line_strip_closed) = 0;
+        virtual void emit_shape_stroke_line_strip(std::vector<Vertex>& line_strip_vertices, bool line_strip_closed);
+        virtual void IMPL_emit_shape_stroke_line_strip(std::vector<Vertex>& line_strip_vertices, bool line_strip_closed) = 0;
         virtual void beginDraw();
         virtual void endDraw();
         virtual void reset_mvp_matrices();
@@ -209,6 +225,7 @@ namespace umfeld {
         virtual void        set_default_graphics_state() {}
         void                set_render_mode(const int render_mode) { this->render_mode = render_mode; }
         virtual std::string name() { return "PGraphics"; }
+        float               get_stroke_weight() const { return stroke_weight; }
 
         template<typename T>
         void text(const T& value, const float x, const float y, const float z = 0.0f) {
@@ -281,6 +298,8 @@ namespace umfeld {
         UFont                            debug_font;
         bool                             in_camera_block{false};
         PShader*                         current_shader{nullptr};
+        void (*triangle_emitter_callback)(std::vector<Vertex>&){nullptr};
+        void (*stroke_emitter_callback)(std::vector<Vertex>&, bool){nullptr};
 
     public:
         PShader*               default_shader{nullptr};

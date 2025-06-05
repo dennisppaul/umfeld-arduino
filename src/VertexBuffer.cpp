@@ -99,7 +99,7 @@ void VertexBuffer::resize_buffer() {
     }
 }
 
-void VertexBuffer::draw() {
+void VertexBuffer::draw(const bool map_draw_mode) {
     if (!buffer_initialized) { init(); }
 
     if (_vertices.empty()) {
@@ -110,7 +110,8 @@ void VertexBuffer::draw() {
         dirty = false;
         update();
     }
-    const int mode = get_draw_mode(shape);
+
+    const int mode = map_draw_mode ? get_draw_mode(shape) : shape;
 
     if (vao_supported) {
         glBindVertexArray(vao);

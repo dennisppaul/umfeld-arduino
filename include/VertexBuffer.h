@@ -44,7 +44,7 @@ namespace umfeld {
 
         void                 add_vertex(const Vertex& vertex);
         void                 add_vertices(const std::vector<Vertex>& new_vertices);
-        void                 draw();
+        void                 draw(bool map_draw_mode = true);
         void                 clear();
         void                 update();
         std::vector<Vertex>& vertices_data() { return _vertices; }

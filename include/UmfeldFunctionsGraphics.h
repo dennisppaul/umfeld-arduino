@@ -118,6 +118,7 @@ namespace umfeld {
     void     perspective(float fovYDegrees, float aspect, float near, float far);
     void     printCamera();
     void     printProjection();
+    void     lights();
     /* --- additional --- */
     void debug_text(const std::string& text, float x, float y);
 

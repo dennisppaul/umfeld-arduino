@@ -750,7 +750,7 @@ namespace umfeld {
     }
 
     inline void generate_sphere(std::vector<Vertex>& vertices, const int stacks, const int slices) {
-        constexpr float radius = 0.5f;
+        constexpr float radius = 1.0f;
         for (int i = 0; i < stacks; ++i) {
             const float theta1 = glm::pi<float>() * (static_cast<float>(i) / stacks);
             const float theta2 = glm::pi<float>() * (static_cast<float>(i + 1) / stacks);

@@ -6,7 +6,6 @@ this is a VERY unsorted todo list and a note pad.
 
 - [ ] in `PGraphicsDefault2D` implement 3D by manually transforming points onto 2D 
 - [ ] @umfeld add camera ( see https://chatgpt.com/share/67dfbe72-855c-8004-8b37-28d10d5c7ab3 )
-- [ ] @umfeld add normals to sphere and box shapes
 - [ ] `GL_POINTS` might need some shader love ( i.e `gl_PointSize` + `gl_PointCoord` for point sprites ) @later
 - [ ] @umfeld add `PShape`-based fonts
 - [ ] separate transparent + non-transparent primitives
@@ -37,8 +36,6 @@ this is a VERY unsorted todo list and a note pad.
 
 ## Environment
 
-- [x] @umfeld add `set_window_title` with `SDL_SetWindowTitle(window, “TITLE”);` in subsystem
-    - [x] @umfeld fix set window title ( default to `$PROJECT_NAME` from CMake )
 - [ ] @umfeld @maybe iterate in reverse order through subsytems so that graphics is last to be exectued in `draw_post` … same for `setup_post`
 
 ## Building + Platforms
@@ -188,4 +185,7 @@ stroke(0.0f);             // black (0x000000)
 
 ## Archived
 
+- [x] @umfeld add `set_window_title` with `SDL_SetWindowTitle(window, “TITLE”);` in subsystem @archived(2025-06-05) @from(umfeld / TODO + NOTES > Environment) @done(2025-06-05)
+    - [x] @umfeld fix set window title ( default to `$PROJECT_NAME` from CMake )
+- [x] @umfeld add normals to sphere and box shapes @archived(2025-06-05) @from(umfeld / TODO + NOTES > Graphics) @done(2025-06-05)
 - [x] @umfeld add exporters ( `saveImage()`, `savePDF()`, `saveOBJ()` ) @archived(2025-06-05) @from(umfeld / TODO + NOTES > Graphics) @done(2025-06-05)

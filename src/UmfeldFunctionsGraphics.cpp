@@ -630,6 +630,13 @@ namespace umfeld {
         g->printProjection();
     }
 
+    void lights() {
+        if (g == nullptr) {
+            return;
+        }
+        g->lights();
+    }
+
     /* additional */
 
     void debug_text(const std::string& text, const float x, const float y) {

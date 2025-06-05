@@ -206,7 +206,7 @@ namespace umfeld {
         virtual void perspective(float fovy, float aspect, float near, float far);
         virtual void printCamera();
         virtual void printProjection();
-        // virtual void    lights()                                                                                           = 0;
+        virtual void lights();
 
         /* --- additional --- */
 
@@ -307,7 +307,6 @@ namespace umfeld {
         void (*stroke_emitter_callback)(std::vector<Vertex>&, bool){nullptr};
 
     public:
-        PShader*               default_shader{nullptr};
         glm::mat4              model_matrix{};
         glm::mat4              view_matrix{};
         glm::mat4              projection_matrix{};

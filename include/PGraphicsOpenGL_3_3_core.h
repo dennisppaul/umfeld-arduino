@@ -73,6 +73,8 @@ namespace umfeld {
         void     ortho(float left, float right, float bottom, float top, float near, float far) override;
         void     perspective(float fovy, float aspect, float near, float far) override;
 
+        PShader* default_shader{nullptr};
+
     private:
         struct RenderBatch {
             int    start_index;

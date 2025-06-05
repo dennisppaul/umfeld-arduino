@@ -39,7 +39,7 @@
 
 namespace umfeld {
 
-    constexpr bool winding_order_CCW = true;
+    inline bool winding_order = CCW;
 
     struct Segment {
         glm::vec2 position;
@@ -709,16 +709,19 @@ namespace umfeld {
         glm::vec3 p6(0.5f, 0.5f, 0.5f);
         glm::vec3 p7(-0.5f, 0.5f, 0.5f);
 
-        // Define a helper to create a quad face from 4 corners and a normal
-        auto add_face = [&](const glm::vec3& a, const glm::vec3& b, const glm::vec3& c, const glm::vec3& d,
+        // define a helper to create a quad face from 4 corners and a normal
+        auto add_face = [&](const glm::vec3& a,
+                            const glm::vec3& b,
+                            const glm::vec3& c,
+                            const glm::vec3& d,
                             const glm::vec3& normal) {
-            // Texture coordinates (just mapped from 0 to 1)
+            // texture coordinates (just mapped from 0 to 1)
             glm::vec3 uv0(0.0f, 0.0f, 0.0f);
             glm::vec3 uv1(1.0f, 0.0f, 0.0f);
             glm::vec3 uv2(1.0f, 1.0f, 0.0f);
             glm::vec3 uv3(0.0f, 1.0f, 0.0f);
 
-            if (winding_order_CCW) {
+            if (winding_order == CCW) {
                 vertices.emplace_back(a, glm::vec4(1.0f), uv0, glm::vec4(normal, 0.0f));
                 vertices.emplace_back(c, glm::vec4(1.0f), uv2, glm::vec4(normal, 0.0f));
                 vertices.emplace_back(b, glm::vec4(1.0f), uv1, glm::vec4(normal, 0.0f));
@@ -737,7 +740,7 @@ namespace umfeld {
             }
         };
 
-        // Faces
+        // faces
         add_face(p0, p1, p2, p3, glm::vec3(0.0f, 0.0f, -1.0f)); // Back
         add_face(p5, p4, p7, p6, glm::vec3(0.0f, 0.0f, 1.0f));  // Front
         add_face(p4, p0, p3, p7, glm::vec3(-1.0f, 0.0f, 0.0f)); // Left
@@ -746,39 +749,8 @@ namespace umfeld {
         add_face(p3, p2, p6, p7, glm::vec3(0.0f, 1.0f, 0.0f));  // Top
     }
 
-    inline void generate_box(std::vector<glm::vec3>& vertices) {
-        // Define 8 corner points of a unit cube (centered at origin)
-        glm::vec3 p0(-0.5f, -0.5f, -0.5f); // Bottom-left-back
-        glm::vec3 p1(0.5f, -0.5f, -0.5f);  // Bottom-right-back
-        glm::vec3 p2(0.5f, 0.5f, -0.5f);   // Top-right-back
-        glm::vec3 p3(-0.5f, 0.5f, -0.5f);  // Top-left-back
-        glm::vec3 p4(-0.5f, -0.5f, 0.5f);  // Bottom-left-front
-        glm::vec3 p5(0.5f, -0.5f, 0.5f);   // Bottom-right-front
-        glm::vec3 p6(0.5f, 0.5f, 0.5f);    // Top-right-front
-        glm::vec3 p7(-0.5f, 0.5f, 0.5f);   // Top-left-front
-
-        // Define triangles for each of the 6 faces (2 triangles per face)
-        std::vector<glm::vec3> triangles = {
-            // Back Face (-Z)
-            p0, p1, p2, p2, p3, p0,
-            // Front Face (+Z)
-            p5, p4, p7, p7, p6, p5,
-            // Left Face (-X)
-            p4, p0, p3, p3, p7, p4,
-            // Right Face (+X)
-            p1, p5, p6, p6, p2, p1,
-            // Bottom Face (-Y)
-            p4, p5, p1, p1, p0, p4,
-            // Top Face (+Y)
-            p3, p2, p6, p6, p7, p3};
-
-        // Convert to Vertex format
-        for (const auto& pos: triangles) {
-            vertices.push_back({pos});
-        }
-    }
-
-    inline void generate_sphere(std::vector<Vertex>& vertices, const int stacks = 10, const int slices = 10, const float radius = 0.5f) {
+    inline void generate_sphere(std::vector<Vertex>& vertices, const int stacks, const int slices) {
+        constexpr float radius = 0.5f;
         for (int i = 0; i < stacks; ++i) {
             const float theta1 = glm::pi<float>() * (static_cast<float>(i) / stacks);
             const float theta2 = glm::pi<float>() * (static_cast<float>(i + 1) / stacks);
@@ -811,7 +783,7 @@ namespace umfeld {
                 Vertex v2 = compute_vertex(theta2, phi2);
                 Vertex v3 = compute_vertex(theta1, phi2);
 
-                if (winding_order_CCW) {
+                if (winding_order == CCW) {
                     // first triangle (counter-clockwise)
                     vertices.push_back(v0);
                     vertices.push_back(v2);
@@ -836,51 +808,7 @@ namespace umfeld {
         }
     }
 
-    inline void generate_sphere(std::vector<glm::vec3>& vertices, const int stacks = 10, const int slices = 10, const float radius = 0.5f) {
-        // Loop through latitude (stacks)
-        for (int i = 0; i < stacks; ++i) {
-            const float theta1 = glm::pi<float>() * (static_cast<float>(i) / stacks); // From 0 to PI
-            const float theta2 = glm::pi<float>() * (static_cast<float>(i + 1) / stacks);
-
-            // Loop through longitude (slices)
-            for (int j = 0; j < slices; ++j) {
-                const float phi1 = 2.0f * glm::pi<float>() * (static_cast<float>(j) / slices); // From 0 to 2PI
-                const float phi2 = 2.0f * glm::pi<float>() * (static_cast<float>(j + 1) / slices);
-
-                // Convert spherical coordinates to Cartesian (x, y, z)
-                auto p0 = glm::vec3(
-                    radius * sin(theta1) * cos(phi1),
-                    radius * cos(theta1),
-                    radius * sin(theta1) * sin(phi1));
-
-                auto p1 = glm::vec3(
-                    radius * sin(theta2) * cos(phi1),
-                    radius * cos(theta2),
-                    radius * sin(theta2) * sin(phi1));
-
-                auto p2 = glm::vec3(
-                    radius * sin(theta2) * cos(phi2),
-                    radius * cos(theta2),
-                    radius * sin(theta2) * sin(phi2));
-
-                auto p3 = glm::vec3(
-                    radius * sin(theta1) * cos(phi2),
-                    radius * cos(theta1),
-                    radius * sin(theta1) * sin(phi2));
-
-                // Two triangles per quad
-                vertices.push_back({p0});
-                vertices.push_back({p1});
-                vertices.push_back({p2});
-
-                vertices.push_back({p2});
-                vertices.push_back({p3});
-                vertices.push_back({p0});
-            }
-        }
-    }
-
-    inline std::vector<Vertex> generateTubeMesh(
+    inline std::vector<Vertex> generate_tube_mesh(
         const std::vector<Vertex>& points,
         float                      radius = 0.05f,
         bool                       closed = false,
@@ -983,9 +911,9 @@ namespace umfeld {
         return tubeVertices;
     }
 
-    inline std::vector<glm::vec3> generateTubeMesh(const std::vector<glm::vec3>& points,
-                                                   float                         radius = 0.05f,
-                                                   bool                          closed = false) {
+    inline std::vector<glm::vec3> generate_tube_mesh(const std::vector<glm::vec3>& points,
+                                                     float                         radius = 0.05f,
+                                                     bool                          closed = false) {
         std::vector<glm::vec3> tubeVertices;
         size_t                 n = points.size();
         if (n < 2) {

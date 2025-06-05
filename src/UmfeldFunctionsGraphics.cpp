@@ -372,7 +372,7 @@ namespace umfeld {
         return g->textDescent();
     }
 
-    void textLeading(float leading) {
+    void textLeading(const float leading) {
         if (g == nullptr) {
             return;
         }
@@ -511,6 +511,20 @@ namespace umfeld {
             return;
         }
         g->sphere(width, height, depth);
+    }
+
+    void sphereDetail(const int ures, const int vres) {
+        if (g == nullptr) {
+            return;
+        }
+        g->sphereDetail(ures, vres);
+    }
+
+    void sphereDetail(const int res) {
+        if (g == nullptr) {
+            return;
+        }
+        g->sphereDetail(res);
     }
 
     void mesh(VertexBuffer* mesh_shape) {

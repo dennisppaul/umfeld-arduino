@@ -188,6 +188,8 @@ namespace umfeld {
         virtual void     box(const float size) { box(size, size, size); }
         virtual void     sphere(float width, float height, float depth);
         virtual void     sphere(const float size) { sphere(size, size, size); }
+        virtual void     sphereDetail(int ures, int vres);
+        virtual void     sphereDetail(const int res) { sphereDetail(res, res); }
         void             process_collected_fill_vertices();
         void             process_collected_stroke_vertices(bool close_shape);
         virtual void     shader(PShader* shader) {} // TODO maybe not implement them like this
@@ -286,6 +288,8 @@ namespace umfeld {
         std::vector<ColorState>          color_fill_stack{};
         std::vector<Vertex>              box_vertices_LUT{};
         std::vector<Vertex>              sphere_vertices_LUT{};
+        int                              sphere_u_resolution{DEFAULT_SPHERE_RESOLUTION};
+        int                              sphere_v_resolution{DEFAULT_SPHERE_RESOLUTION};
         int                              shape_mode_cache{POLYGON};
         static constexpr uint32_t        VBO_BUFFER_CHUNK_SIZE{1024 * 1024}; // 1MB
         std::vector<Vertex>              shape_stroke_vertex_buffer{VBO_BUFFER_CHUNK_SIZE};

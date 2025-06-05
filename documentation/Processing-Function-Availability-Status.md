@@ -50,14 +50,18 @@ below is a list of all Processing functions from the official [Processing Refere
 
 ### Primitive
 
-- `boolean` :: Datatype for the Boolean values `true` and `false` @note(`boolean` is called `bool` in C/C++)
-- `byte` :: Datatype for bytes, 8 bits of information storing numerical values from 127 to -128
-- `char` :: Datatype for characters, typographic symbols such as A, d, and $
-- `color` :: Datatype for storing color values @note(`color` is replaced by `uint32_t`)
-- `double` :: Datatype for floating-point numbers larger than those that can be stored in a `float`
-- `float` :: Data type for floating-point numbers, e `[sic!]`
-- `int` :: Datatype for integers, numbers without a decimal point
-- `long` :: Datatype for large integers
+@note(these primitive types are more or less the same as in Processing with some few differences)
+
+- [x] `bool` ~~`boolean`~~ :: Datatype for the Boolean values `true` and `false` @note(`boolean` is called `bool` in C/C++)
+- [x] `int8_t` ~~`byte`~~ :: Datatype for bytes, 8 bits of information storing numerical values from 127 to -128 @note(`byte` exists in C++17 as `std::byte` but it is an opaque, non-numeric type; use `int8_t` for numeric byte values)
+- [x] `char` :: Datatype for characters, typographic symbols such as A, d, and $ @note(In C++, `char` is also used for raw bytes and may be signed or unsigned depending on platform)
+- [x] `uint32_t` ~~`color`~~ :: Datatype for storing color values @note(Processing’s `color` is equivalent to a packed RGBA integer; use `uint32_t`)
+- [x] `double` :: Datatype for floating-point numbers larger than those that can be stored in a `float` @note(Provides higher 64-bit precision and range than `float`) @note(single-precision 32-bit floating-point number)
+- [x] `float` :: Data type for floating-point numbers, e `[sic!]`
+- [x] `int` :: Datatype for integers, numbers without a decimal point @note(platform dependent, but typically 32-bit)
+- [x] `long` :: Datatype for large integers @note(On most modern platforms, `long` is 64-bit on Unix-like systems, but only 32-bit on Windows; for fixed size, prefer `int64_t`)
+
+@note(on integers: in C/C++ it is quite common to specify the size of the integer value used e.g `uint8_t` for an unsigned 8-bit integer or `int32_t` for a signed 32-bit integer etcetera )
 
 ### String Functions
 
@@ -106,7 +110,7 @@ below is a list of all Processing functions from the official [Processing Refere
 
 - [x] `key` :: The system variable that always contains the value of the most recent key on the keyboard that was used ( either pressed or released)
 - [ ] `keyCode` :: Used to detect special keys such as the UP, DOWN, LEFT, RIGHT arrow keys and ALT, CONTROL, SHIFT
-- [x] `keyPressed` :: The boolean system variable that is `true` if any key is pressed and `false` if no keys are pressed @note(renamed to `isKeyPressed`)
+- [x] `isKeyPressed` ~~`keyPressed`~~ :: The boolean system variable that is `true` if any key is pressed and `false` if no keys are pressed @note(renamed to `isKeyPressed`)
 - [x] `keyReleased()` :: Called once every time a key is released
 - [x] `keyPressed()` :: Called once every time a key is pressed
 - [ ] `keyTyped()` :: Called once every time a key is pressed, but action keys such as Ctrl, Shift, and Alt are ignored
@@ -117,7 +121,7 @@ below is a list of all Processing functions from the official [Processing Refere
 - [x] `mouseDragged()` :: Called once every time the mouse moves and a mouse button is pressed
 - [ ] `mouseClicked()` :: Called once after a mouse button has been pressed and then released
 - [x] `mouseMoved()` :: Called every time the mouse moves and a mouse button is not pressed
-- [x] `mousePressed` :: Variable storing if a mouse button is pressed @note(renamed to `isMousePressed`)
+- [x] `isMousePressed` ~~`mousePressed`~~ :: Variable storing if a mouse button is pressed @note(renamed to `isMousePressed`)
 - [x] `mousePressed()` :: Called once after every time a mouse button is pressed
 - [x] `mouseReleased()` :: Called every time a mouse button is released
 - [x] `mouseWheel()` :: The code within the `mouseWheel()` event function is run when the mouse wheel is moved
@@ -185,11 +189,11 @@ below is a list of all Processing functions from the official [Processing Refere
 - [ ] `copy()` :: Copies the entire image
 - [ ] `filter()` :: Converts the image to grayscale or black and white
 - [ ] `get()` :: Reads the color of any pixel or grabs a rectangle of pixels
-- [ ] `loadPixels()` :: Loads the pixel data for the display window into the*pixels[]*array
+- [ ] `loadPixels()` :: Loads the pixel data for the display window into the `pixels[]` array
 - [ ] `mask()` :: Masks part of an image with another image as an alpha channel
 - [ ] `pixels[]` :: Array containing the values for all the pixels in the display window
 - [ ] `set()` :: Writes a color to any pixel or writes an image into another
-- [ ] `updatePixels()` :: Updates the display window with the data in the*pixels[]*array
+- [ ] `updatePixels()` :: Updates the display window with the data in the `pixels[]` array
 
 ### Loading & Displaying
 
@@ -250,7 +254,7 @@ below is a list of all Processing functions from the official [Processing Refere
 ### 3D Primitives
 
 - [x] `box()` :: A box is an extruded  `rectangle`
-- [ ] `sphereDetail()` :: Controls the detail used to render a sphere by adjusting the number of vertices of the sphere mesh
+- [x] `sphereDetail()` :: Controls the detail used to render a sphere by adjusting the number of vertices of the sphere mesh
 - [x] `sphere()` :: A sphere is a hollow ball made from tessellated triangles
 
 ### Attributes
@@ -338,11 +342,11 @@ below is a list of all Processing functions from the official [Processing Refere
 
 - [ ] `PrintWriter` :: Allows characters to print to a text-output stream
 - [ ] `beginRaw()` :: To create vectors from 3D data, use the  `beginRaw()`  and  `endRaw()`  commands
-- [ ] `beginRecord()` :: Opens a new file and all subsequent drawing functions are echoed to this file as well as the display window
+- [x] `beginRecord()` :: Opens a new file and all subsequent drawing functions are echoed to this file as well as the display window
 - [ ] `createOutput()` :: Similar to  `createInput()` , this creates a Java  `OutputStream`  for a given filename or path
 - [ ] `createWriter()` :: Creates a new file in the sketch folder, and a `PrintWriter` object to write to it
 - [ ] `endRaw()` :: Complement to `beginRaw()` ; they must always be used together
-- [ ] `endRecord()` :: Stops the recording process started by `beginRecord()` and closes the file
+- [x] `endRecord()` :: Stops the recording process started by `beginRecord()` and closes the file
 - [x] `saveBytes()` :: Opposite of `loadBytes()` , will write an entire array of bytes to a file
 - [ ] `saveJSONArray()` :: Writes the contents of a `JSONArray` object to a file
 - [ ] `saveJSONObject()` :: Writes the contents of a `JSONObject` object to a file

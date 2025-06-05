@@ -139,7 +139,7 @@ void PGraphicsOpenGL_3_3_core::IMPL_emit_shape_stroke_line_strip(std::vector<Ver
             OGL3_tranform_model_matrix_and_render_vertex_buffer(vertex_buffer_data, GL_LINE_STRIP, line_strip_vertices);
         }
         if (line_render_mode == STROKE_RENDER_MODE_TUBE_3D) {
-            const std::vector<Vertex> line_vertices = generateTubeMesh(line_strip_vertices,
+            const std::vector<Vertex> line_vertices = generate_tube_mesh(line_strip_vertices,
                                                                        stroke_weight / 2.0f,
                                                                        line_strip_closed,
                                                                        color_stroke);

@@ -43,7 +43,7 @@ PGraphics::PGraphics() : PImage(0, 0, 0) {
     PGraphics::stroke(0.0f);
     PGraphics::ellipseDetail(ELLIPSE_DETAIL_DEFAULT);
     generate_box(box_vertices_LUT);
-    generate_sphere(sphere_vertices_LUT);
+    generate_sphere(sphere_vertices_LUT, sphere_u_resolution, sphere_u_resolution);
 }
 
 void PGraphics::beginDraw() {
@@ -656,7 +656,7 @@ void PGraphics::circle(const float x, const float y, const float diameter) {
     ellipse(x, y, diameter, diameter);
 }
 
-PImage* PGraphics::loadImage(const std::string& file, bool use_relative_path) {
+PImage* PGraphics::loadImage(const std::string& file, const bool use_relative_path) {
     const std::string abolsute_path = use_relative_path ? file : sketchPath() + file;
     if (!file_exists(abolsute_path)) {
         error("loadImage() failed! file not found: '", file, "'. the 'sketchPath()' is currently set to '", sketchPath(), "'. looking for file at: '", abolsute_path, "'");
@@ -853,6 +853,13 @@ void PGraphics::sphere(const float width, const float height, const float depth)
                       v.normal});
     }
     endShape();
+}
+
+void PGraphics::sphereDetail(const int ures, const int vres) {
+    sphere_u_resolution = std::max(3, ures); // longitudinal (around)
+    sphere_v_resolution = std::max(2, vres); // latitudinal (top to bottom)
+    sphere_vertices_LUT.clear();
+    generate_sphere(sphere_vertices_LUT, sphere_u_resolution, sphere_u_resolution);
 }
 
 void PGraphics::resize_ellipse_points_LUT() {

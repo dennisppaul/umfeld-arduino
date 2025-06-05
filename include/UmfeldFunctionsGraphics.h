@@ -101,6 +101,8 @@ namespace umfeld {
     void     box(float width, float height, float depth);
     void     sphere(float size);
     void     sphere(float width, float height, float depth);
+    void     sphereDetail(int ures, int vres);
+    void     sphereDetail(int res);
     void     mesh(VertexBuffer* mesh_shape = nullptr);
     void     shader(PShader* shader = nullptr);
     PShader* loadShader(const std::string& vertex_code, const std::string& fragment_code, const std::string& geometry_code = "");

@@ -349,14 +349,14 @@ void PGraphicsOpenGL_2_0::point(const float x, const float y, const float z) {
 
 /* font */
 
-PFont* PGraphicsOpenGL_2_0::loadFont(const std::string& file, const float size) {
-    auto* font = new PFont(file.c_str(), size, static_cast<float>(pixel_density));
-    return font;
-}
-
-void PGraphicsOpenGL_2_0::textFont(PFont* font) {
-    current_font = font;
-}
+// PFont* PGraphicsOpenGL_2_0::loadFont(const std::string& file, const float size) {
+//     auto* font = new PFont(file.c_str(), size, static_cast<float>(pixel_density));
+//     return font;
+// }
+//
+// void PGraphicsOpenGL_2_0::textFont(PFont* font) {
+//     current_font = font;
+// }
 
 void PGraphicsOpenGL_2_0::textSize(const float size) {
     if (current_font == nullptr) {
@@ -402,10 +402,10 @@ void PGraphicsOpenGL_2_0::text(const char* value, const float x, const float y, 
     text_str(value, x, y, z);
 }
 
-PImage* PGraphicsOpenGL_2_0::loadImage(const std::string& filename) {
-    auto* img = new PImage(filename);
-    return img;
-}
+// PImage* PGraphicsOpenGL_2_0::loadImage(const std::string& filename) {
+//     auto* img = new PImage(filename);
+//     return img;
+// }
 
 void PGraphicsOpenGL_2_0::image(PImage* img, const float x, const float y, float w, float h) {
     if (!color_fill.active) {

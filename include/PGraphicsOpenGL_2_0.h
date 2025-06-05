@@ -76,12 +76,10 @@ namespace umfeld {
         void    endShape(bool close_shape = false) override;
         void    vertex(float x, float y, float z = 0.0f) override;
         void    vertex(float x, float y, float z, float u, float v) override;
-        PFont*  loadFont(const std::string& file, float size) override;
         void    textFont(PFont* font) override;
         void    textSize(float size) override;
         void    text(const char* value, float x, float y, float z = 0.0f) override;
         float   textWidth(const std::string& text) override;
-        PImage* loadImage(const std::string& filename) override;
         void    image(PImage* img, float x, float y, float w, float h) override;
         void    image(PImage* img, float x, float y) override;
         void    texture(PImage* img) override;

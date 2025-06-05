@@ -656,8 +656,8 @@ void PGraphics::circle(const float x, const float y, const float diameter) {
     ellipse(x, y, diameter, diameter);
 }
 
-PImage* PGraphics::loadImage(const std::string& file) {
-    const std::string abolsute_path = sketchPath() + file;
+PImage* PGraphics::loadImage(const std::string& file, bool use_relative_path) {
+    const std::string abolsute_path = use_relative_path ? file : sketchPath() + file;
     if (!file_exists(abolsute_path)) {
         error("loadImage() failed! file not found: '", file, "'. the 'sketchPath()' is currently set to '", sketchPath(), "'. looking for file at: '", abolsute_path, "'");
         return nullptr;
@@ -665,8 +665,8 @@ PImage* PGraphics::loadImage(const std::string& file) {
     return new PImage(abolsute_path);
 }
 
-PFont* PGraphics::loadFont(const std::string& file, const float size) {
-    const std::string abolsute_path = sketchPath() + file;
+PFont* PGraphics::loadFont(const std::string& file, const float size, const bool use_relative_path) {
+    const std::string abolsute_path = use_relative_path ? file : sketchPath() + file;
     if (!file_exists(abolsute_path)) {
         error("loadFont() failed! file not found: '", file, "'. the 'sketchPath()' is currently set to '", sketchPath(), "'. looking for file at: '", abolsute_path, "'");
         return nullptr;

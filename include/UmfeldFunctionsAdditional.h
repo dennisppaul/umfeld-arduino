@@ -34,6 +34,7 @@
 namespace umfeld {
 
     class PAudio;
+    class PImage;
     struct AudioUnitInfo;
     class LibraryListener;
     struct Vertex;
@@ -76,6 +77,7 @@ namespace umfeld {
     void                     unregister_library(const LibraryListener* listener); /* implemented in subsystems */
     std::vector<Vertex>      loadOBJ(const std::string& file, bool material = true);
     Sampler*                 loadSample(const std::string& file);
+    void                     saveImage(const PImage* image, const std::string& filename);
     PAudio*                  createAudio(const AudioUnitInfo* device_info);
 
     /* --- utilities --- */

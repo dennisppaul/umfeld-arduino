@@ -1,9 +1,11 @@
 # Umfeld / Roadmap
 
-- add *buffered mode* to `PGraphics`
-- add PDF + OBJ export
-- add lighting to `PGraphics`
-- port to platforms:
-    - [ ] iOS
+- [x] add *buffered mode* to `PGraphics`
+- [x] add PDF + OBJ export
+- [ ] add lighting to `PGraphics`
+- [ ] add 3D camera
+- [ ] add pixel manipulation
+- [ ] port to platforms:
+    - iOS
     - [ ] Android
     - [ ] WebGL

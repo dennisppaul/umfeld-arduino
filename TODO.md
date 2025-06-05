@@ -4,7 +4,6 @@ this is a VERY unsorted todo list and a note pad.
 
 ## Graphics
 
-- [ ] @umfeld add exporters ( `saveImage()`, `savePDF()`, `saveOBJ()` )
 - [ ] in `PGraphicsDefault2D` implement 3D by manually transforming points onto 2D 
 - [ ] @umfeld add camera ( see https://chatgpt.com/share/67dfbe72-855c-8004-8b37-28d10d5c7ab3 )
 - [ ] @umfeld add normals to sphere and box shapes
@@ -186,3 +185,7 @@ stroke(0.0f);             // black (0x000000)
 - [ ] @umfeld @maybe rename PFont, PImage, PVector etcetera to UFont, UImage, UVector
 - [ ] @umfeld PVector vs glm::vec3 at least some functions to convert between the two
 - [ ] @umfeld check weird gamepad behavior
+
+## Archived
+
+- [x] @umfeld add exporters ( `saveImage()`, `savePDF()`, `saveOBJ()` ) @archived(2025-06-05) @from(umfeld / TODO + NOTES > Graphics) @done(2025-06-05)

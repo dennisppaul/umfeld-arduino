@@ -655,6 +655,28 @@ namespace umfeld {
 
     void noCursor() { SDL_HideCursor(); }
 
+    void saveImage(const PImage* image, const std::string& filename) {
+        if (!image->pixels || image->width <= 0 || image->height <= 0) {
+            warning("invalid PImage. not saving image.");
+            return;
+        }
+
+        const int _width  = image->width;
+        const int _height = image->height;
+
+        if (ends_with(filename, ".png")) {
+            stbi_write_png(filename.c_str(), _width, _height, DEFAULT_BYTES_PER_PIXELS, image->pixels, _width * DEFAULT_BYTES_PER_PIXELS);
+        } else if (ends_with(filename, ".jpg")) {
+            stbi_write_jpg(filename.c_str(), _width, _height, DEFAULT_BYTES_PER_PIXELS, image->pixels, save_image_jpeg_quailty);
+        } else if (ends_with(filename, ".bmp")) {
+            stbi_write_bmp(filename.c_str(), _width, _height, DEFAULT_BYTES_PER_PIXELS, image->pixels);
+        } else if (ends_with(filename, ".tga")) {
+            stbi_write_tga(filename.c_str(), _width, _height, DEFAULT_BYTES_PER_PIXELS, image->pixels);
+        } else {
+            warning("Unsupported file format: ", filename, ". Supported formats are: .png, .jpg, .bmp, .tga");
+        }
+    }
+
     void saveFrame(const std::string& filename) {
         if (g == nullptr) {
             return;
@@ -679,9 +701,9 @@ namespace umfeld {
 
         // save image
         if (ends_with(filename, ".png")) {
-            stbi_write_png(filename.c_str(), _width, _height, DEFAULT_BYTES_PER_PIXELS, flippedPixels.data(), _width * 4);
+            stbi_write_png(filename.c_str(), _width, _height, DEFAULT_BYTES_PER_PIXELS, flippedPixels.data(), _width * DEFAULT_BYTES_PER_PIXELS);
         } else if (ends_with(filename, ".jpg")) {
-            stbi_write_jpg(filename.c_str(), _width, _height, DEFAULT_BYTES_PER_PIXELS, flippedPixels.data(), 100);
+            stbi_write_jpg(filename.c_str(), _width, _height, DEFAULT_BYTES_PER_PIXELS, flippedPixels.data(), save_image_jpeg_quailty);
         } else if (ends_with(filename, ".bmp")) {
             stbi_write_bmp(filename.c_str(), _width, _height, DEFAULT_BYTES_PER_PIXELS, flippedPixels.data());
         } else if (ends_with(filename, ".tga")) {

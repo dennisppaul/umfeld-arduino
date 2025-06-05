@@ -53,7 +53,7 @@ namespace umfeld {
     void     image(PImage* img, float x, float y, float w, float h);
     void     image(PImage* img, float x, float y);
     void     texture(PImage* img = nullptr);
-    PImage*  loadImage(const std::string& filename);
+    PImage*  loadImage(const std::string& filename, bool use_relative_path = true);
     void     line(float x1, float y1, float x2, float y2);
     void     line(float x1, float y1, float z1, float x2, float y2, float z2);
     void     triangle(float x1, float y1, float z1, float x2, float y2, float z2, float x3, float y3, float z3);
@@ -71,7 +71,7 @@ namespace umfeld {
     void     strokeCap(int cap);
     void     vertex(float x, float y, float z = 0.0);
     void     vertex(float x, float y, float z, float u, float v);
-    PFont*   loadFont(const std::string& file, float size); // @development maybe use smart pointers here
+    PFont*   loadFont(const std::string& file, float size, bool use_relative_path = true);
     void     textFont(PFont* font);
     void     textSize(float size);
     void     text(const std::string& text, float x, float y, float z = 0.0f);

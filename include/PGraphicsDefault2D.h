@@ -132,7 +132,7 @@ namespace umfeld {
 
         void   vertex(float x, float y, float z = 0.0f) override {}
         void   vertex(float x, float y, float z, float u, float v) override {}
-        PFont* loadFont(const std::string& file, float size) override { return nullptr; }
+        PFont* loadFont(const std::string& file, float size, bool use_relative_path) override { return nullptr; }
         void   textFont(PFont* font) override {}
         void   textSize(float size) override {}
 
@@ -148,7 +148,7 @@ namespace umfeld {
 
         float textWidth(const std::string& text) override { return 0; }
 
-        PImage* loadImage(const std::string& filename) override {
+        PImage* loadImage(const std::string& filename, bool use_relative_path) override {
             // auto* img = new PImage(filename);
             //
             // // Create SDL texture (RGBA format)

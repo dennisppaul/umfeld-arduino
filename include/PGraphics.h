@@ -171,7 +171,7 @@ namespace umfeld {
         virtual void     image(PImage* img, float x, float y, float w, float h);
         virtual void     image(PImage* img, float x, float y);
         virtual void     texture(PImage* img = nullptr);
-        virtual PImage*  loadImage(const std::string& file);
+        virtual PImage*  loadImage(const std::string& file, bool use_relative_path = true);
         virtual void     pointSize(float size);
         virtual void     rectMode(int mode);
         virtual void     textFont(PFont* font);
@@ -182,7 +182,7 @@ namespace umfeld {
         virtual float    textAscent();
         virtual float    textDescent();
         virtual void     textLeading(float leading);
-        virtual PFont*   loadFont(const std::string& file, float size);
+        virtual PFont*   loadFont(const std::string& file, float size, bool use_relative_path = true);
         virtual void     box(float width, float height, float depth);
         virtual void     box(const float size) { box(size, size, size); }
         virtual void     sphere(float width, float height, float depth);

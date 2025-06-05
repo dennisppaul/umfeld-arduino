@@ -49,14 +49,6 @@
 
 /* --- DEFAULTS --- */
 
-#define DEFAULT_WINDOW_TITLE "Umfeld"
-
-/* --- UMFELD_WINDOW_TITLE --- */
-
-#ifndef UMFELD_WINDOW_TITLE // can be set in `CMakeLists.txt` // TODO consider moving this to settings?
-#define UMFELD_WINDOW_TITLE DEFAULT_WINDOW_TITLE
-#endif
-
 #ifndef UMFELD_PRINT_ERRORS
 #define UMFELD_PRINT_ERRORS TRUE
 #endif

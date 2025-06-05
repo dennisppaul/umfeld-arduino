@@ -74,7 +74,7 @@ namespace umfeld {
         /* window */
 
         SDL_WindowFlags flags = SDL_WINDOW_OPENGL;
-        window                = SDL_CreateWindow(get_window_title().c_str(),
+        window                = SDL_CreateWindow(DEFAULT_WINDOW_TITLE,
                                                  static_cast<int>(umfeld::width),  // TODO would be better if this is passed as a parameter
                                                  static_cast<int>(umfeld::height), // TODO would be better if this is passed as a parameter
                                                  get_SDL_WindowFlags(flags));

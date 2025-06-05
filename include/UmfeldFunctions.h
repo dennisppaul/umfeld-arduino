@@ -290,6 +290,8 @@ namespace umfeld {
     // ## Structure
 
     void exit();
+    void setLocation(int x, int y);
+    void setTitle(const std::string& title);
 
     // ( part of original processing but not in the Reference )
 

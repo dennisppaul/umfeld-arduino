@@ -43,7 +43,12 @@ namespace umfeld {
     struct SubsystemGraphics : Subsystem {
         PGraphics* (*create_native_graphics)(bool render_to_offscreen);
         void (*post)();
-        void (*set_title)(const char* title);
+        void (*set_title)(std::string& title);
+        std::string (*get_title)();
+        void (*set_window_position)(int x, int y);
+        void (*get_window_position)(int& x, int& y);
+        void (*set_window_size)(int width, int height);
+        void (*get_window_size)(int& width, int& height);
         SDL_Window* (*get_sdl_window)();
         void* (*get_renderer)();
         int (*get_renderer_type)();

@@ -38,7 +38,7 @@ namespace umfeld {
 
     static bool init() {
         SDL_WindowFlags flags = 0;
-        if (!SDL_CreateWindowAndRenderer(get_window_title().c_str(),
+        if (!SDL_CreateWindowAndRenderer(DEFAULT_WINDOW_TITLE,
                                          static_cast<int>(umfeld::width),
                                          static_cast<int>(umfeld::height),
                                          get_SDL_WindowFlags(flags),
@@ -85,6 +85,49 @@ namespace umfeld {
         return new PGraphicsDefault2D(sdl_renderer);
     }
 
+    // ReSharper disable once CppParameterMayBeConstPtrOrRef
+    static void set_title(std::string& title) {
+        if (window) {
+            SDL_SetWindowTitle(window, title.c_str());
+        }
+    }
+
+    static std::string get_title() {
+        if (window) {
+            std::string title = SDL_GetWindowTitle(window);
+            return title;
+        }
+        return "";
+    }
+
+    static void set_window_position(const int x, const int y) {
+        if (window == nullptr) {
+            return;
+        }
+        SDL_SetWindowPosition(window, x, y);
+    }
+
+    static void get_window_position(int& x, int& y) {
+        if (window == nullptr) {
+            return;
+        }
+        SDL_GetWindowPosition(window, &x, &y);
+    }
+
+    static void set_window_size(const int width, const int height) {
+        if (window == nullptr) {
+            return;
+        }
+        SDL_SetWindowSize(window, width, height);
+    }
+
+    static void get_window_size(int& width, int& height) {
+        if (window == nullptr) {
+            return;
+        }
+        SDL_GetWindowSize(window, &width, &height);
+    }
+
     static SDL_Window* get_sdl_window() {
         return window;
     }
@@ -103,17 +146,21 @@ namespace umfeld {
 } // namespace umfeld
 
 umfeld::SubsystemGraphics* umfeld_create_subsystem_graphics_sdl2d() {
-    auto* graphics       = new umfeld::SubsystemGraphics{};
-    graphics->set_flags  = umfeld::set_flags;
-    graphics->init       = umfeld::init;
-    graphics->setup_pre  = umfeld::setup_pre;
-    graphics->setup_post = umfeld::setup_post;
-    graphics->draw_pre   = umfeld::draw_pre;
-    graphics->draw_post  = umfeld::draw_post;
-    // graphics->event                = umfeld::event;
-    // graphics->event_in_update_loop           = umfeld::event_in_update_loop;
+    auto* graphics                   = new umfeld::SubsystemGraphics{};
+    graphics->set_flags              = umfeld::set_flags;
+    graphics->init                   = umfeld::init;
+    graphics->setup_pre              = umfeld::setup_pre;
+    graphics->setup_post             = umfeld::setup_post;
+    graphics->draw_pre               = umfeld::draw_pre;
+    graphics->draw_post              = umfeld::draw_post;
     graphics->shutdown               = umfeld::shutdown;
     graphics->create_native_graphics = umfeld::create_native_graphics;
+    graphics->set_title              = umfeld::set_title;
+    graphics->get_title              = umfeld::get_title;
+    graphics->set_window_size        = umfeld::set_window_size;
+    graphics->get_window_size        = umfeld::get_window_size;
+    graphics->set_window_position    = umfeld::set_window_position;
+    graphics->get_window_position    = umfeld::get_window_position;
     graphics->get_sdl_window         = umfeld::get_sdl_window;
     graphics->get_renderer           = umfeld::get_renderer;
     graphics->get_renderer_type      = umfeld::get_renderer_type;

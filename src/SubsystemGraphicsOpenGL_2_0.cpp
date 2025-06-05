@@ -88,6 +88,49 @@ namespace umfeld {
 #endif
     }
 
+    // ReSharper disable once CppParameterMayBeConstPtrOrRef
+    static void set_title(std::string& title) {
+        if (window) {
+            SDL_SetWindowTitle(window, title.c_str());
+        }
+    }
+
+    static std::string get_title() {
+        if (window) {
+            std::string title = SDL_GetWindowTitle(window);
+            return title;
+        }
+        return "";
+    }
+
+    static void set_window_position(const int x, const int y) {
+        if (window == nullptr) {
+            return;
+        }
+        SDL_SetWindowPosition(window, x, y);
+    }
+
+    static void get_window_position(int& x, int& y) {
+        if (window == nullptr) {
+            return;
+        }
+        SDL_GetWindowPosition(window, &x, &y);
+    }
+
+    static void set_window_size(const int width, const int height) {
+        if (window == nullptr) {
+            return;
+        }
+        SDL_SetWindowSize(window, width, height);
+    }
+
+    static void get_window_size(int& width, int& height) {
+        if (window == nullptr) {
+            return;
+        }
+        SDL_GetWindowSize(window, &width, &height);
+    }
+
     static SDL_Window* get_sdl_window() {
         return window;
     }
@@ -117,6 +160,12 @@ umfeld::SubsystemGraphics* umfeld_create_subsystem_graphics_openglv20() {
     graphics->event                  = umfeld::event;
     graphics->event_in_update_loop   = umfeld::event_in_update_loop;
     graphics->create_native_graphics = umfeld::create_native_graphics;
+    graphics->set_title              = umfeld::set_title;
+    graphics->get_title              = umfeld::get_title;
+    graphics->set_window_size        = umfeld::set_window_size;
+    graphics->get_window_size        = umfeld::get_window_size;
+    graphics->set_window_position    = umfeld::set_window_position;
+    graphics->get_window_position    = umfeld::get_window_position;
     graphics->get_sdl_window         = umfeld::get_sdl_window;
     graphics->get_renderer           = umfeld::get_renderer;
     graphics->get_renderer_type      = umfeld::get_renderer_type;
@@ -124,48 +173,7 @@ umfeld::SubsystemGraphics* umfeld_create_subsystem_graphics_openglv20() {
     return graphics;
 }
 
-namespace umfeld {
-    // TODO implement set_resizable and fullscreen() (at runtime) and is_minimized()
-    //    SDL_SetWindowFullscreen(window?!?, fullscreen_state ? SDL_WINDOW_FULLSCREEN: SDL_WINDOW_FULLSCREEN_DESKTOP);
-    //    SDL_SetWindowResizable(window?!?, SDL_TRUE);
-    //    if (SDL_GetWindowFlags(window) & SDL_WINDOW_MINIMIZED) {}
-
-    // TODO these are currently in Umfeld.cpp
-    // std::string get_window_title() {
-    //     // TODO move this to subsystem and make it configurable
-    //     return UMFELD_WINDOW_TITLE;
-    // }
-    //
-    // void set_window_title(std::string title) {
-    //     // TODO move this to subsystem
-    // }
-
-    // TODO these functions below should go into a more generic place
-    void set_window_position(const int x, const int y) {
-        if (window == nullptr) {
-            return;
-        }
-        SDL_SetWindowPosition(window, x, y);
-    }
-
-    void get_window_position(int& x, int& y) {
-        if (window == nullptr) {
-            return;
-        }
-        SDL_GetWindowPosition(window, &x, &y);
-    }
-
-    void set_window_size(const int width, const int height) {
-        if (window == nullptr) {
-            return;
-        }
-        SDL_SetWindowSize(window, width, height);
-    }
-
-    void get_window_size(int& width, int& height) {
-        if (window == nullptr) {
-            return;
-        }
-        SDL_GetWindowSize(window, &width, &height);
-    }
-} // namespace umfeld
+// TODO implement set_resizable and fullscreen() (at runtime) and is_minimized()
+//    SDL_SetWindowFullscreen(window?!?, fullscreen_state ? SDL_WINDOW_FULLSCREEN: SDL_WINDOW_FULLSCREEN_DESKTOP);
+//    SDL_SetWindowResizable(window?!?, SDL_TRUE);
+//    if (SDL_GetWindowFlags(window) & SDL_WINDOW_MINIMIZED) {}

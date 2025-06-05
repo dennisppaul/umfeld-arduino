@@ -71,7 +71,10 @@ namespace umfeld {
     void                     audio_start(PAudio* device = nullptr);
     void                     audio_stop(PAudio* device = nullptr);
     bool                     is_initialized();
-    std::string              get_window_title(); // TODO maybe add setter
+    std::string              getTitle();
+    void                     getLocation(const int& x, int& y);
+    void                     setWindowSize(int width, int height); // TODO does not work ATM
+    void                     getWindowSize(int& width, int& height);
     void                     set_frame_rate(float fps);
     void                     register_library(LibraryListener* listener);         /* implemented in subsystems */
     void                     unregister_library(const LibraryListener* listener); /* implemented in subsystems */

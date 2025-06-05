@@ -3,7 +3,8 @@ cmake_minimum_required(VERSION 3.20)
 project(umfeld-lib)
 
 message(STATUS "----------------------------------------")
-message(STATUS "UMFELD_APP    : ${PROJECT_NAME}")
+message(STATUS "UMFELD LIBRARY")
+message(STATUS "----------------------------------------")
 
 option(ENABLE_PORTAUDIO "Enable PortAudio output" ON)
 option(ENABLE_ANGLE "Enable ANGLE OpenGL ES emulation on macOS ( apple silicon )" OFF)

@@ -37,8 +37,8 @@ this is a VERY unsorted todo list and a note pad.
 
 ## Environment
 
-- [ ] @umfeld add `set_window_title` with `SDL_SetWindowTitle(window, “TITLE”);` in subsystem
-    - [ ] @umfeld fix set window title ( default to `$PROJECT_NAME`from CMake )
+- [x] @umfeld add `set_window_title` with `SDL_SetWindowTitle(window, “TITLE”);` in subsystem
+    - [x] @umfeld fix set window title ( default to `$PROJECT_NAME` from CMake )
 - [ ] @umfeld @maybe iterate in reverse order through subsytems so that graphics is last to be exectued in `draw_post` … same for `setup_post`
 
 ## Building + Platforms

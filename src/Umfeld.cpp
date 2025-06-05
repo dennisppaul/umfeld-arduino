@@ -56,13 +56,56 @@ namespace umfeld {
         return initialized;
     }
 
-    std::string get_window_title() {
-        // TODO move this to subsystem and make it configurable
-        return UMFELD_WINDOW_TITLE;
+    void setTitle(const std::string& title) {
+        window_title = title; // NOTE update global variable
+        if (subsystem_graphics) {
+            if (subsystem_graphics->set_title) {
+                subsystem_graphics->set_title(window_title);
+            }
+        }
     }
 
-    void set_window_title(std::string title) {
-        // TODO move this to subsystem
+    std::string getTitle() {
+        if (subsystem_graphics) {
+            if (subsystem_graphics->get_title) {
+                const std::string title = subsystem_graphics->get_title();
+                window_title            = title; // NOTE update global variable
+                return title;
+            }
+        }
+        return window_title;
+    }
+
+    void setLocation(const int x, const int y) {
+        if (subsystem_graphics) {
+            if (subsystem_graphics->set_window_position) {
+                subsystem_graphics->set_window_position(x, y);
+            }
+        }
+    }
+
+    void getLocation(const int& x, int& y) {
+        if (subsystem_graphics) {
+            if (subsystem_graphics->set_window_position) {
+                subsystem_graphics->set_window_position(x, y);
+            }
+        }
+    }
+
+    void setWindowSize(const int width, const int height) {
+        if (subsystem_graphics) {
+            if (subsystem_graphics->set_window_size) {
+                subsystem_graphics->set_window_size(width, height);
+            }
+        }
+    }
+
+    void getWindowSize(int& width, int& height) {
+        if (subsystem_graphics) {
+            if (subsystem_graphics->get_window_size) {
+                subsystem_graphics->get_window_size(width, height);
+            }
+        }
     }
 
     void set_frame_rate(const float fps) {
@@ -155,7 +198,7 @@ static uint32_t compile_subsystems_flag() {
     return subsystem_flags;
 }
 
-SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[]) {
+SDL_AppResult SDL_AppInit(void** appstate, const int argc, char* argv[]) {
 
     /*
      * 1. prepare umfeld application ( e.g args, settings )
@@ -231,6 +274,9 @@ SDL_AppResult SDL_AppInit(void** appstate, int argc, char* argv[]) {
                 umfeld::console(umfeld::format_label("created subsystem graphics"), umfeld::subsystem_graphics->name());
             } else {
                 umfeld::console(umfeld::format_label("created subsystem graphics"), "( no name specified )");
+            }
+            if (umfeld::subsystem_graphics->set_title) {
+                umfeld::subsystem_graphics->set_title(umfeld::window_title);
             }
         }
     } else {

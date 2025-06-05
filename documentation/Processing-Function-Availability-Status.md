@@ -481,9 +481,9 @@ below is a list of all Processing functions from the official [Processing Refere
 - [ ] `redraw()` :: Executes the code within `draw()` one time
 - `return` :: Keyword used to indicate the value to return from a function
 - `; (semicolon)` :: A statement terminator which separates elements of the program
-- [ ] `setLocation()` :: The `setLocation()` function defines the position of the Processing sketch in relation to the upper-left corner of the computer screen
+- [x] `setLocation()` :: The `setLocation()` function defines the position of the Processing sketch in relation to the upper-left corner of the computer screen
 - [ ] `setResizable()` :: By default, Processing sketches can't be resized
-- [ ] `setTitle()` :: The `setTitle()` function defines the title to appear at the top of the sketch window
+- [x] `setTitle()` :: The `setTitle()` function defines the title to appear at the top of the sketch window
 - [x] `setup()` :: The `setup()` function is called once when the program starts
 - `static` :: Keyword used to define a variable as a "class variable" and a method as a "class method
 - ~~`super` :: Keyword used to reference the superclass of a subclass~~

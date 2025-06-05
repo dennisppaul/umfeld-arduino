@@ -37,13 +37,18 @@ namespace umfeld {
         void set_uniform(const std::string& name, const glm::vec2& value);
         void set_uniform(const std::string& name, const glm::vec3& value);
         void set_uniform(const std::string& name, const glm::vec4& value);
+        void set_uniform(const std::string& name, const glm::mat3& value);
         void set_uniform(const std::string& name, const glm::mat4& value);
+        void check_uniform_location(const std::string& name) const;
 
         // TODO maybe move these to implementation
         bool        load(const std::string& vertex_code, const std::string& fragment_code, const std::string& geometry_code = "");
         void        use() const;
         static void unuse();
         GLuint      get_program_id() const { return programID; }
+
+        bool debug_uniform_location = true;
+        bool has_model_matrix       = false;
 
     private:
         GLuint                                 programID;

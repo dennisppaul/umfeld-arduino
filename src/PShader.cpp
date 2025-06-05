@@ -106,42 +106,65 @@ GLint PShader::getUniformLocation(const std::string& name) {
     return uniformLocations[name];
 }
 
+void PShader::check_uniform_location(const std::string& name) const {
+    if (!debug_uniform_location) { return; }
+    const GLint loc = glGetUniformLocation(programID, name.c_str());
+    if (loc == -1) {
+        std::cerr << "WARNING: uniform '" << name << "' not active or not found!\n";
+        return;
+    }
+}
+
 void PShader::set_uniform(const std::string& name, const int value) {
     if (!programID) { return; }
+    check_uniform_location(name);
     glUniform1i(getUniformLocation(name), value);
 }
 
 void PShader::set_uniform(const std::string& name, const int value_a, const int value_b) {
     if (!programID) { return; }
+    check_uniform_location(name);
     glUniform2i(getUniformLocation(name), value_a, value_b);
 }
 
 void PShader::set_uniform(const std::string& name, const float value) {
     if (!programID) { return; }
+    check_uniform_location(name);
     glUniform1f(getUniformLocation(name), value);
 }
 
 void PShader::set_uniform(const std::string& name, const float value_a, const float value_b) {
     if (!programID) { return; }
+    check_uniform_location(name);
     glUniform2f(getUniformLocation(name), value_a, value_b);
 }
 
 void PShader::set_uniform(const std::string& name, const glm::vec2& value) {
     if (!programID) { return; }
+    check_uniform_location(name);
     glUniform2fv(getUniformLocation(name), 1, &value[0]);
 }
 
 void PShader::set_uniform(const std::string& name, const glm::vec3& value) {
     if (!programID) { return; }
+    check_uniform_location(name);
     glUniform3fv(getUniformLocation(name), 1, &value[0]);
 }
 
 void PShader::set_uniform(const std::string& name, const glm::vec4& value) {
     if (!programID) { return; }
+    check_uniform_location(name);
     glUniform4fv(getUniformLocation(name), 1, &value[0]);
+}
+
+void PShader::set_uniform(const std::string& name, const glm::mat3& value) {
+    if (!programID) { return; }
+    check_uniform_location(name);
+    glUniformMatrix3fv(getUniformLocation(name), 1, GL_FALSE, &value[0][0]);
 }
 
 void PShader::set_uniform(const std::string& name, const glm::mat4& value) {
     if (!programID) { return; }
+    check_uniform_location(name);
     glUniformMatrix4fv(getUniformLocation(name), 1, GL_FALSE, &value[0][0]);
 }

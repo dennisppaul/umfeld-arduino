@@ -86,41 +86,22 @@ namespace umfeld {
                 : start_index(start), num_vertices(count), texture_id(texID) {}
         };
 
-        // struct VertexBufferData {
-        //     GLuint              VAO{0};
-        //     GLuint              VBO{0};
-        //     std::vector<Vertex> vertices{};
-        //     const uint32_t      num_vertices;
-        //     explicit VertexBufferData(const uint32_t vertex_count) : num_vertices(vertex_count) {
-        //         vertices.resize(vertex_count);
-        //     }
-        //     bool uninitialized() const {
-        //         return VAO == 0 || VBO == 0;
-        //     }
-        // };
-
-        static constexpr bool     RENDER_POINT_AS_CIRCLE                 = true;
-        static constexpr bool     RENDER_PRIMITVES_AS_SHAPES             = true;
-        static constexpr uint8_t  NUM_FILL_VERTEX_ATTRIBUTES_XYZ_RGBA_UV = 9;
-        static constexpr uint8_t  NUM_STROKE_VERTEX_ATTRIBUTES_XYZ_RGBA  = 7;
-        GLuint                    texture_id_solid_color{};
-        // static constexpr uint32_t VBO_BUFFER_CHUNK_SIZE                  = 1024 * 1024; // 1MB
-        // VertexBufferData          vertex_buffer_data{VBO_BUFFER_CHUNK_SIZE};
-        VertexBuffer          vertex_buffer{};
-        std::vector<RenderBatch>  renderBatches; // TODO revive for buffered mode
-        GLint                     previously_bound_read_FBO = 0;
-        GLint                     previously_bound_draw_FBO = 0;
-        GLint                     previous_viewport[4]{};
-        GLint                     previous_shader{0};
+        static constexpr bool    RENDER_POINT_AS_CIRCLE                 = true;
+        static constexpr bool    RENDER_PRIMITVES_AS_SHAPES             = true;
+        static constexpr uint8_t NUM_FILL_VERTEX_ATTRIBUTES_XYZ_RGBA_UV = 9;
+        static constexpr uint8_t NUM_STROKE_VERTEX_ATTRIBUTES_XYZ_RGBA  = 7;
+        GLuint                   texture_id_solid_color{};
+        VertexBuffer             vertex_buffer{};
+        std::vector<RenderBatch> renderBatches; // TODO revive for buffered mode
+        GLint                    previously_bound_read_FBO = 0;
+        GLint                    previously_bound_draw_FBO = 0;
+        GLint                    previous_viewport[4]{};
+        GLint                    previous_shader{0};
 
         /* --- OpenGL 3.3 specific methods --- */
 
         void        OGL3_tranform_model_matrix_and_render_vertex_buffer(VertexBuffer& vertex_buffer, GLenum primitive_mode, const std::vector<Vertex>& shape_vertices) const;
         static void OGL3_render_vertex_buffer(VertexBuffer& vertex_buffer, GLenum primitive_mode, const std::vector<Vertex>& shape_vertices);
-        // void        OGL3_tranform_model_matrix_and_render_vertex_buffer(VertexBufferData& vertex_buffer, GLenum mode, const std::vector<Vertex>& shape_vertices) const;
-        // static void OGL3_init_vertex_buffer(VertexBufferData& vertex_buffer);
-        // static void OGL3_render_vertex_buffer(VertexBufferData& vertex_buffer, GLenum primitive_mode, const std::vector<Vertex>& shape_vertices);
-        // static void OGL3_resize_vertex_buffer(size_t buffer_size_bytes);
         void        OGL3_create_solid_color_texture();
         void        update_shader_view_matrix() const;
     };

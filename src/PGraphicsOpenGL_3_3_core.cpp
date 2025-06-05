@@ -19,7 +19,6 @@
 
 #if defined(OPENGL_3_3_CORE) || defined(OPENGL_ES_3_0)
 
-#include <iostream>
 #include <vector>
 
 #include "UmfeldSDLOpenGL.h"
@@ -127,10 +126,6 @@ void PGraphicsOpenGL_3_3_core::IMPL_emit_shape_stroke_line_strip(std::vector<Ver
         //      - STROKE_RENDER_MODE_TUBE_3D
         //      - STROKE_RENDER_MODE_BARYCENTRIC_SHADER
         //      - STROKE_RENDER_MODE_GEOMETRY_SHADER
-        // if (vertex_buffer_data.uninitialized()) {
-        //     OGL3_init_vertex_buffer(vertex_buffer_data);
-        // }
-        vertex_buffer.init(); // TODO check if this is needed?
         if (line_render_mode == STROKE_RENDER_MODE_TRIANGULATE_2D) {
             std::vector<Vertex> line_vertices;
             triangulate_line_strip_vertex(line_strip_vertices, line_strip_closed, line_vertices);
@@ -195,10 +190,6 @@ void PGraphicsOpenGL_3_3_core::IMPL_emit_shape_fill_triangles(std::vector<Vertex
         //      ```
     }
     if (render_mode == RENDER_MODE_IMMEDIATE) {
-        // if (vertex_buffer_data.uninitialized()) {
-        //     OGL3_init_vertex_buffer(vertex_buffer_data);
-        // }
-        vertex_buffer.init(); // TODO check if this is needed?
         OGL3_tranform_model_matrix_and_render_vertex_buffer(vertex_buffer, GL_TRIANGLES, triangle_vertices);
     }
 }
@@ -234,6 +225,7 @@ void PGraphicsOpenGL_3_3_core::beginDraw() {
     default_shader->set_uniform(SHADER_UNIFORM_MODEL_MATRIX, model_matrix);
     default_shader->set_uniform(SHADER_UNIFORM_VIEW_MATRIX, view_matrix);
     default_shader->set_uniform(SHADER_UNIFORM_PROJECTION_MATRIX, projection_matrix);
+    default_shader->has_model_matrix = true;
 }
 
 void PGraphicsOpenGL_3_3_core::endDraw() {
@@ -607,84 +599,6 @@ void PGraphicsOpenGL_3_3_core::OGL3_create_solid_color_texture() {
     texture_id_solid_color = texture_id;
 }
 
-// void PGraphicsOpenGL_3_3_core::OGL3_init_vertex_buffer(VertexBufferData& vertex_buffer) {
-//     // Generate and bind VAO & VBO
-//     glGenVertexArrays(1, &vertex_buffer.VAO);
-//     glBindVertexArray(vertex_buffer.VAO);
-//
-//     glGenBuffers(1, &vertex_buffer.VBO);
-//     glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer.VBO);
-//
-//     // Allocate GPU memory (without initializing data, as it will be updated before use)
-//     glBufferData(GL_ARRAY_BUFFER, static_cast<GLsizeiptr>(vertex_buffer.num_vertices * sizeof(Vertex)), nullptr, GL_DYNAMIC_DRAW);
-//
-//     // set up attribute pointers. NOTE make sure to align to locations in shader.
-//     constexpr int ATTRIBUTE_LOCATION_POSITION = 0;
-//     constexpr int ATTRIBUTE_LOCATION_NORMAL   = 1;
-//     constexpr int ATTRIBUTE_LOCATION_COLOR    = 2;
-//     constexpr int ATTRIBUTE_LOCATION_TEXCOORD = 3;
-//     constexpr int ATTRIBUTE_SIZE_POSITION     = 4;
-//     constexpr int ATTRIBUTE_SIZE_NORMAL       = 4;
-//     constexpr int ATTRIBUTE_SIZE_COLOR        = 4;
-//     constexpr int ATTRIBUTE_SIZE_TEXCOORD     = 2;
-//     glVertexAttribPointer(ATTRIBUTE_LOCATION_POSITION, ATTRIBUTE_SIZE_POSITION, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(offsetof(Vertex, position)));
-//     glEnableVertexAttribArray(ATTRIBUTE_LOCATION_POSITION);
-//     glVertexAttribPointer(ATTRIBUTE_LOCATION_NORMAL, ATTRIBUTE_SIZE_NORMAL, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(offsetof(Vertex, normal)));
-//     glEnableVertexAttribArray(ATTRIBUTE_LOCATION_NORMAL);
-//     glVertexAttribPointer(ATTRIBUTE_LOCATION_COLOR, ATTRIBUTE_SIZE_COLOR, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(offsetof(Vertex, color)));
-//     glEnableVertexAttribArray(ATTRIBUTE_LOCATION_COLOR);
-//     glVertexAttribPointer(ATTRIBUTE_LOCATION_TEXCOORD, ATTRIBUTE_SIZE_TEXCOORD, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(offsetof(Vertex, tex_coord)));
-//     glEnableVertexAttribArray(ATTRIBUTE_LOCATION_TEXCOORD);
-//
-//     glBindVertexArray(0);
-// }
-
-// void PGraphicsOpenGL_3_3_core::OGL3_resize_vertex_buffer(const size_t buffer_size_bytes) {
-//     GLint bufferSize = 0;
-//     glGetBufferParameteriv(GL_ARRAY_BUFFER, GL_BUFFER_SIZE, &bufferSize);
-//
-//     if (buffer_size_bytes > static_cast<size_t>(bufferSize)) {
-//         // allocate extra space to reduce reallocations
-//         const size_t growSize = std::max(static_cast<int>(buffer_size_bytes), bufferSize + static_cast<int>(VBO_BUFFER_CHUNK_SIZE));
-//         console("increasing vertex buffer array to ", growSize, " ( no worries, this should be all good )");
-//         glBufferData(GL_ARRAY_BUFFER, static_cast<int>(growSize), nullptr, GL_DYNAMIC_DRAW);
-//     }
-// }
-
-// void PGraphicsOpenGL_3_3_core::OGL3_render_vertex_buffer(VertexBufferData&          vertex_buffer,
-//                                                          const GLenum               primitive_mode,
-//                                                          const std::vector<Vertex>& shape_vertices) {
-//     // TODO maybe replace this with VertexBuffer
-//     // Ensure there are vertices to render
-//     if (shape_vertices.empty()) {
-//         return;
-//     }
-//
-//     // Ensure primitive is initialized
-//     if (vertex_buffer.uninitialized()) {
-//         OGL3_init_vertex_buffer(vertex_buffer);
-//     }
-//
-//     // Update VBO with collected vertex data
-//     glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer.VBO);
-//
-//     constexpr bool hint_check_buffer_size = true;
-//     if (hint_check_buffer_size) {
-//         const size_t buffer_size = shape_vertices.size() * sizeof(Vertex);
-//         OGL3_resize_vertex_buffer(buffer_size);
-//     }
-//
-//     // Update only necessary data
-//     glBufferSubData(GL_ARRAY_BUFFER, 0, static_cast<int>(shape_vertices.size() * sizeof(Vertex)), shape_vertices.data());
-//
-//     // Bind VAO and draw the shape
-//     glBindVertexArray(vertex_buffer.VAO);
-//     glDrawArrays(primitive_mode, 0, static_cast<GLsizei>(shape_vertices.size()));
-//
-//     // Unbind VAO for safety (optional)
-//     glBindVertexArray(0);
-// }
-
 void PGraphicsOpenGL_3_3_core::OGL3_tranform_model_matrix_and_render_vertex_buffer(VertexBuffer&              vertex_buffer,
                                                                                    const GLenum               primitive_mode,
                                                                                    const std::vector<Vertex>& shape_vertices) const {
@@ -717,14 +631,14 @@ void PGraphicsOpenGL_3_3_core::OGL3_tranform_model_matrix_and_render_vertex_buff
         }
     }
     if (mModelMatrixTransformOnGPU) {
-        if (current_shader == default_shader) {
-            default_shader->set_uniform(SHADER_UNIFORM_MODEL_MATRIX, model_matrix);
+        if (current_shader->has_model_matrix) {
+            current_shader->set_uniform(SHADER_UNIFORM_MODEL_MATRIX, model_matrix);
         }
     }
     OGL3_render_vertex_buffer(vertex_buffer, primitive_mode, transformed_vertices);
     if (mModelMatrixTransformOnGPU) {
-        if (current_shader == default_shader) {
-            default_shader->set_uniform(SHADER_UNIFORM_MODEL_MATRIX, glm::mat4(1.0f));
+        if (current_shader->has_model_matrix) {
+            current_shader->set_uniform(SHADER_UNIFORM_MODEL_MATRIX, glm::mat4(1.0f));
         }
     }
 }
@@ -743,18 +657,23 @@ void PGraphicsOpenGL_3_3_core::mesh(VertexBuffer* mesh_shape) {
     if (mesh_shape == nullptr) {
         return;
     }
-    if (current_shader == default_shader) {
-        default_shader->set_uniform(SHADER_UNIFORM_MODEL_MATRIX, model_matrix);
+    if (current_shader->has_model_matrix) {
+        current_shader->set_uniform(SHADER_UNIFORM_MODEL_MATRIX, model_matrix);
     }
     mesh_shape->draw();
-    if (current_shader == default_shader) {
-        default_shader->set_uniform(SHADER_UNIFORM_MODEL_MATRIX, glm::mat4(1.0f));
+    if (current_shader->has_model_matrix) {
+        current_shader->set_uniform(SHADER_UNIFORM_MODEL_MATRIX, glm::mat4(1.0f));
     }
 }
 
 PShader* PGraphicsOpenGL_3_3_core::loadShader(const std::string& vertex_code, const std::string& fragment_code, const std::string& geometry_code) {
     const auto _shader = new PShader();
-    _shader->load(vertex_code, fragment_code, geometry_code);
+    const bool result  = _shader->load(vertex_code, fragment_code, geometry_code);
+    if (!result) {
+        error("Failed to load shader: ", vertex_code, " ", fragment_code, " ", geometry_code);
+        delete _shader;
+        return nullptr;
+    }
     return _shader;
 }
 
@@ -764,7 +683,9 @@ void PGraphicsOpenGL_3_3_core::shader(PShader* shader) {
         return;
     }
     shader->use();
-    current_shader = shader;
+    const GLint location     = glGetUniformLocation(shader->get_program_id(), SHADER_UNIFORM_MODEL_MATRIX.c_str());
+    shader->has_model_matrix = location >= -1;
+    current_shader           = shader;
 }
 
 void PGraphicsOpenGL_3_3_core::resetShader() {
@@ -832,6 +753,7 @@ void PGraphicsOpenGL_3_3_core::perspective(const float fovy, const float aspect,
 }
 
 void PGraphicsOpenGL_3_3_core::update_shader_view_matrix() const {
+    // TODO maybe do this also for `current_shader`?
     if (current_shader == default_shader) {
         default_shader->set_uniform(SHADER_UNIFORM_VIEW_MATRIX, view_matrix);
     }

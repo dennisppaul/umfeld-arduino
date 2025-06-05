@@ -836,7 +836,10 @@ void PGraphics::rect(const float x, const float y, const float width, const floa
 void PGraphics::box(const float width, const float height, const float depth) {
     beginShape(TRIANGLES);
     for (const auto& v: box_vertices_LUT) {
-        vertex(v.x * width, v.y * height, v.z * depth);
+        vertex(Vertex{glm::vec4(v.position.x * width, v.position.y * height, v.position.z * depth, v.position.w),
+                      v.color,
+                      v.tex_coord,
+                      v.normal});
     }
     endShape();
 }
@@ -844,7 +847,10 @@ void PGraphics::box(const float width, const float height, const float depth) {
 void PGraphics::sphere(const float width, const float height, const float depth) {
     beginShape(TRIANGLES);
     for (const auto& v: sphere_vertices_LUT) {
-        vertex(v.x * width, v.y * height, v.z * depth);
+        vertex(Vertex{glm::vec4(v.position.x * width, v.position.y * height, v.position.z * depth, v.position.w),
+                      v.color,
+                      v.tex_coord,
+                      v.normal});
     }
     endShape();
 }
@@ -1327,5 +1333,22 @@ void PGraphics::vertex(const float x, const float y, const float z, const float 
     if (color_fill.active) {
         const glm::vec4 fillColor = as_vec4(color_fill);
         shape_fill_vertex_buffer.emplace_back(position, fillColor, glm::vec3{u, v, 0.0f}, current_normal);
+    }
+}
+void PGraphics::vertex(Vertex v) {
+    if (!color_stroke.active && !color_fill.active) {
+        return;
+    }
+
+    if (color_stroke.active) {
+        const glm::vec4 strokeColor = as_vec4(color_stroke);
+        shape_stroke_vertex_buffer.emplace_back(v.position, strokeColor, v.tex_coord, v.normal);
+    }
+
+    if (color_fill.active) {
+        const glm::vec4 fillColor = as_vec4(color_fill);
+        // TODO maybe use v.color instead of color_fill?
+        // shape_fill_vertex_buffer.emplace_back(v);
+        shape_fill_vertex_buffer.emplace_back(v.position, fillColor, v.tex_coord, v.normal);
     }
 }

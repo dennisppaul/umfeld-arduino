@@ -39,6 +39,8 @@
 
 namespace umfeld {
 
+    constexpr bool winding_order_CCW = true;
+
     struct Segment {
         glm::vec2 position;
         glm::vec2 normal;
@@ -617,7 +619,7 @@ namespace umfeld {
             return {}; // Not enough vertices to form at least one quad
         }
 
-        size_t              numQuads = (quadStrip.size() - 2) / 2; // Each quad requires 2 new vertices
+        const size_t        numQuads = (quadStrip.size() - 2) / 2; // Each quad requires 2 new vertices
         std::vector<Vertex> quads;
         quads.reserve(numQuads * 4); // Each quad has 4 vertices
 
@@ -695,6 +697,55 @@ namespace umfeld {
         return triangles;
     }
 
+    inline void generate_box(std::vector<Vertex>& vertices) {
+        // 8 corner points of the unit cube
+        glm::vec3 p0(-0.5f, -0.5f, -0.5f); // Back face
+        glm::vec3 p1(0.5f, -0.5f, -0.5f);
+        glm::vec3 p2(0.5f, 0.5f, -0.5f);
+        glm::vec3 p3(-0.5f, 0.5f, -0.5f);
+
+        glm::vec3 p4(-0.5f, -0.5f, 0.5f); // Front face
+        glm::vec3 p5(0.5f, -0.5f, 0.5f);
+        glm::vec3 p6(0.5f, 0.5f, 0.5f);
+        glm::vec3 p7(-0.5f, 0.5f, 0.5f);
+
+        // Define a helper to create a quad face from 4 corners and a normal
+        auto add_face = [&](const glm::vec3& a, const glm::vec3& b, const glm::vec3& c, const glm::vec3& d,
+                            const glm::vec3& normal) {
+            // Texture coordinates (just mapped from 0 to 1)
+            glm::vec3 uv0(0.0f, 0.0f, 0.0f);
+            glm::vec3 uv1(1.0f, 0.0f, 0.0f);
+            glm::vec3 uv2(1.0f, 1.0f, 0.0f);
+            glm::vec3 uv3(0.0f, 1.0f, 0.0f);
+
+            if (winding_order_CCW) {
+                vertices.emplace_back(a, glm::vec4(1.0f), uv0, glm::vec4(normal, 0.0f));
+                vertices.emplace_back(c, glm::vec4(1.0f), uv2, glm::vec4(normal, 0.0f));
+                vertices.emplace_back(b, glm::vec4(1.0f), uv1, glm::vec4(normal, 0.0f));
+
+                vertices.emplace_back(a, glm::vec4(1.0f), uv0, glm::vec4(normal, 0.0f));
+                vertices.emplace_back(d, glm::vec4(1.0f), uv3, glm::vec4(normal, 0.0f));
+                vertices.emplace_back(c, glm::vec4(1.0f), uv2, glm::vec4(normal, 0.0f));
+            } else {
+                vertices.emplace_back(a, glm::vec4(1.0f), uv0, glm::vec4(normal, 0.0f));
+                vertices.emplace_back(b, glm::vec4(1.0f), uv1, glm::vec4(normal, 0.0f));
+                vertices.emplace_back(c, glm::vec4(1.0f), uv2, glm::vec4(normal, 0.0f));
+
+                vertices.emplace_back(c, glm::vec4(1.0f), uv2, glm::vec4(normal, 0.0f));
+                vertices.emplace_back(d, glm::vec4(1.0f), uv3, glm::vec4(normal, 0.0f));
+                vertices.emplace_back(a, glm::vec4(1.0f), uv0, glm::vec4(normal, 0.0f));
+            }
+        };
+
+        // Faces
+        add_face(p0, p1, p2, p3, glm::vec3(0.0f, 0.0f, -1.0f)); // Back
+        add_face(p5, p4, p7, p6, glm::vec3(0.0f, 0.0f, 1.0f));  // Front
+        add_face(p4, p0, p3, p7, glm::vec3(-1.0f, 0.0f, 0.0f)); // Left
+        add_face(p1, p5, p6, p2, glm::vec3(1.0f, 0.0f, 0.0f));  // Right
+        add_face(p4, p5, p1, p0, glm::vec3(0.0f, -1.0f, 0.0f)); // Bottom
+        add_face(p3, p2, p6, p7, glm::vec3(0.0f, 1.0f, 0.0f));  // Top
+    }
+
     inline void generate_box(std::vector<glm::vec3>& vertices) {
         // Define 8 corner points of a unit cube (centered at origin)
         glm::vec3 p0(-0.5f, -0.5f, -0.5f); // Bottom-left-back
@@ -724,6 +775,64 @@ namespace umfeld {
         // Convert to Vertex format
         for (const auto& pos: triangles) {
             vertices.push_back({pos});
+        }
+    }
+
+    inline void generate_sphere(std::vector<Vertex>& vertices, const int stacks = 10, const int slices = 10, const float radius = 0.5f) {
+        for (int i = 0; i < stacks; ++i) {
+            const float theta1 = glm::pi<float>() * (static_cast<float>(i) / stacks);
+            const float theta2 = glm::pi<float>() * (static_cast<float>(i + 1) / stacks);
+
+            for (int j = 0; j < slices; ++j) {
+                const float phi1 = 2.0f * glm::pi<float>() * (static_cast<float>(j) / slices);
+                const float phi2 = 2.0f * glm::pi<float>() * (static_cast<float>(j + 1) / slices);
+
+                auto compute_vertex = [&](const float theta, const float phi) -> Vertex {
+                    const glm::vec3 pos = {
+                        radius * sin(theta) * cos(phi),
+                        radius * cos(theta),
+                        radius * sin(theta) * sin(phi)};
+                    const glm::vec3 normal = glm::normalize(pos);
+                    const glm::vec3 tex    = {
+                        phi / (2.0f * glm::pi<float>()), // u
+                        theta / glm::pi<float>(),        // v
+                        0.0f                             // padding / unused
+                    };
+                    return Vertex{
+                        glm::vec4(pos, 1.0f),
+                        Vertex::DEFAULT_COLOR, // white
+                        tex,
+                        glm::vec4(normal, 0.0f),
+                    };
+                };
+
+                Vertex v0 = compute_vertex(theta1, phi1);
+                Vertex v1 = compute_vertex(theta2, phi1);
+                Vertex v2 = compute_vertex(theta2, phi2);
+                Vertex v3 = compute_vertex(theta1, phi2);
+
+                if (winding_order_CCW) {
+                    // first triangle (counter-clockwise)
+                    vertices.push_back(v0);
+                    vertices.push_back(v2);
+                    vertices.push_back(v1);
+
+                    // second triangle (counter-clockwise)
+                    vertices.push_back(v0);
+                    vertices.push_back(v3);
+                    vertices.push_back(v2);
+                } else {
+                    // first triangle
+                    vertices.push_back(v0);
+                    vertices.push_back(v1);
+                    vertices.push_back(v2);
+
+                    // second triangle
+                    vertices.push_back(v2);
+                    vertices.push_back(v3);
+                    vertices.push_back(v0);
+                }
+            }
         }
     }
 

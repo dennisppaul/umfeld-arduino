@@ -151,6 +151,7 @@ namespace umfeld {
         virtual void endShape(bool close_shape = false);
         virtual void vertex(float x, float y, float z = 0.0f);
         virtual void vertex(float x, float y, float z, float u, float v);
+        virtual void vertex(Vertex v);
 
         // ## Structure
 
@@ -283,8 +284,8 @@ namespace umfeld {
         inline static const Triangulator triangulator{};
         std::vector<ColorState>          color_stroke_stack{};
         std::vector<ColorState>          color_fill_stack{};
-        std::vector<glm::vec3>           box_vertices_LUT{};
-        std::vector<glm::vec3>           sphere_vertices_LUT{};
+        std::vector<Vertex>              box_vertices_LUT{};
+        std::vector<Vertex>              sphere_vertices_LUT{};
         int                              shape_mode_cache{POLYGON};
         static constexpr uint32_t        VBO_BUFFER_CHUNK_SIZE{1024 * 1024}; // 1MB
         std::vector<Vertex>              shape_stroke_vertex_buffer{VBO_BUFFER_CHUNK_SIZE};

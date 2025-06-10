@@ -650,8 +650,8 @@ void PGraphicsOpenGL_3_3_core::OGL3_render_vertex_buffer(VertexBuffer& vertex_bu
         return;
     }
     vertex_buffer.add_vertices(shape_vertices);
-    vertex_buffer.set_shape(primitive_mode);
-    vertex_buffer.draw(false);
+    vertex_buffer.set_shape(primitive_mode, false);
+    vertex_buffer.draw();
 }
 
 void PGraphicsOpenGL_3_3_core::update_shader_matrices(PShader* shader) const {

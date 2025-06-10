@@ -194,7 +194,7 @@ namespace umfeld {
     inline GLint get_draw_mode(const int shape) {
         // TODO separate between client-side data storage ( vertices, shape etcetera ) and OpenGL implementation ( maybe create a vertex_buffer class )
         // TODO add shapes drawing
-        int _shape;
+        int _shape = shape;
         switch (shape) {
             case TRIANGLES:
                 _shape = GL_TRIANGLES;

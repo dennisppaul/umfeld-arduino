@@ -44,12 +44,12 @@ namespace umfeld {
 
         void                 add_vertex(const Vertex& vertex);
         void                 add_vertices(const std::vector<Vertex>& new_vertices);
-        void                 draw(bool map_draw_mode = true);
+        void                 draw();
         void                 clear();
         void                 update();
         std::vector<Vertex>& vertices_data() { return _vertices; }
         void                 init();
-        void                 set_shape(const int shape) { this->shape = shape; }
+        void                 set_shape(int shape, bool map_to_opengl_draw_mode = true);
         int                  get_shape() const { return shape; }
 
     private:

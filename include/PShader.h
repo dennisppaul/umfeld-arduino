@@ -40,6 +40,7 @@ namespace umfeld {
         void set_uniform(const std::string& name, const glm::mat3& value);
         void set_uniform(const std::string& name, const glm::mat4& value);
         void check_uniform_location(const std::string& name) const;
+        void check_for_matrix_uniforms();
 
         // TODO maybe move these to implementation
         bool        load(const std::string& vertex_code, const std::string& fragment_code, const std::string& geometry_code = "");
@@ -49,6 +50,8 @@ namespace umfeld {
 
         bool debug_uniform_location = true;
         bool has_model_matrix       = false;
+        bool has_view_matrix        = false;
+        bool has_projection_matrix  = false;
 
     private:
         GLuint                                 programID;

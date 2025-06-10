@@ -19,6 +19,9 @@
 
 #if defined(OPENGL_3_3_CORE) || defined(OPENGL_ES_3_0)
 
+// TODO check if this is necessary
+// #define UMFELD_OGL33_RESET_MATRICES_ON_SHADER
+
 #include <vector>
 
 #include "UmfeldSDLOpenGL.h"
@@ -225,7 +228,7 @@ void PGraphicsOpenGL_3_3_core::beginDraw() {
     default_shader->set_uniform(SHADER_UNIFORM_MODEL_MATRIX, model_matrix);
     default_shader->set_uniform(SHADER_UNIFORM_VIEW_MATRIX, view_matrix);
     default_shader->set_uniform(SHADER_UNIFORM_PROJECTION_MATRIX, projection_matrix);
-    default_shader->has_model_matrix = true;
+    update_shader_matrices(default_shader);
 }
 
 void PGraphicsOpenGL_3_3_core::endDraw() {
@@ -631,16 +634,14 @@ void PGraphicsOpenGL_3_3_core::OGL3_tranform_model_matrix_and_render_vertex_buff
         }
     }
     if (mModelMatrixTransformOnGPU) {
-        if (current_shader->has_model_matrix) {
-            current_shader->set_uniform(SHADER_UNIFORM_MODEL_MATRIX, model_matrix);
-        }
+        update_shader_matrices(current_shader);
     }
     OGL3_render_vertex_buffer(vertex_buffer, primitive_mode, transformed_vertices);
+#ifdef UMFELD_OGL33_RESET_MATRICES_ON_SHADER
     if (mModelMatrixTransformOnGPU) {
-        if (current_shader->has_model_matrix) {
-            current_shader->set_uniform(SHADER_UNIFORM_MODEL_MATRIX, glm::mat4(1.0f));
-        }
+        reset_shader_matrices(current_shader);
     }
+#endif
 }
 
 void PGraphicsOpenGL_3_3_core::OGL3_render_vertex_buffer(VertexBuffer& vertex_buffer, const GLenum primitive_mode, const std::vector<Vertex>& shape_vertices) {
@@ -653,17 +654,41 @@ void PGraphicsOpenGL_3_3_core::OGL3_render_vertex_buffer(VertexBuffer& vertex_bu
     vertex_buffer.draw(false);
 }
 
+void PGraphicsOpenGL_3_3_core::update_shader_matrices(PShader* shader) const {
+    if (shader == nullptr) { return; }
+    if (shader->has_model_matrix) {
+        shader->set_uniform(SHADER_UNIFORM_MODEL_MATRIX, model_matrix);
+    }
+    if (shader->has_view_matrix) {
+        shader->set_uniform(SHADER_UNIFORM_VIEW_MATRIX, view_matrix);
+    }
+    if (shader->has_projection_matrix) {
+        shader->set_uniform(SHADER_UNIFORM_PROJECTION_MATRIX, projection_matrix);
+    }
+}
+
+void PGraphicsOpenGL_3_3_core::reset_shader_matrices(PShader* shader) {
+    if (shader == nullptr) { return; }
+    if (shader->has_model_matrix) {
+        shader->set_uniform(SHADER_UNIFORM_MODEL_MATRIX, glm::mat4(1.0f));
+    }
+    if (shader->has_view_matrix) {
+        shader->set_uniform(SHADER_UNIFORM_VIEW_MATRIX, glm::mat4(1.0f));
+    }
+    if (shader->has_projection_matrix) {
+        shader->set_uniform(SHADER_UNIFORM_PROJECTION_MATRIX, glm::mat4(1.0f));
+    }
+}
+
 void PGraphicsOpenGL_3_3_core::mesh(VertexBuffer* mesh_shape) {
     if (mesh_shape == nullptr) {
         return;
     }
-    if (current_shader->has_model_matrix) {
-        current_shader->set_uniform(SHADER_UNIFORM_MODEL_MATRIX, model_matrix);
-    }
+    update_shader_matrices(current_shader);
     mesh_shape->draw();
-    if (current_shader->has_model_matrix) {
-        current_shader->set_uniform(SHADER_UNIFORM_MODEL_MATRIX, glm::mat4(1.0f));
-    }
+#ifdef UMFELD_OGL33_RESET_MATRICES_ON_SHADER
+    reset_shader_matrices(current_shader);
+#endif
 }
 
 PShader* PGraphicsOpenGL_3_3_core::loadShader(const std::string& vertex_code, const std::string& fragment_code, const std::string& geometry_code) {
@@ -683,14 +708,13 @@ void PGraphicsOpenGL_3_3_core::shader(PShader* shader) {
         return;
     }
     shader->use();
-    const GLint location     = glGetUniformLocation(shader->get_program_id(), SHADER_UNIFORM_MODEL_MATRIX.c_str());
-    shader->has_model_matrix = location >= -1;
-    current_shader           = shader;
+    current_shader = shader;
 }
 
 void PGraphicsOpenGL_3_3_core::resetShader() {
     default_shader->use();
     default_shader->set_uniform(SHADER_UNIFORM_TEXTURE_UNIT, 0);
+    update_shader_matrices(default_shader);
     current_shader = default_shader;
 }
 
@@ -734,28 +758,22 @@ void PGraphicsOpenGL_3_3_core::restore_fbo_state() {
 
 void PGraphicsOpenGL_3_3_core::camera(const float eyeX, const float eyeY, const float eyeZ, const float centerX, const float centerY, const float centerZ, const float upX, const float upY, const float upZ) {
     PGraphics::camera(eyeX, eyeY, eyeZ, centerX, centerY, centerZ, upX, upY, upZ);
-    update_shader_view_matrix();
+    update_shader_matrices(current_shader);
 }
 
 void PGraphicsOpenGL_3_3_core::frustum(const float left, const float right, const float bottom, const float top, const float near, const float far) {
     PGraphics::frustum(left, right, bottom, top, near, far);
-    update_shader_view_matrix();
+    update_shader_matrices(current_shader);
 }
 
 void PGraphicsOpenGL_3_3_core::ortho(const float left, const float right, const float bottom, const float top, const float near, const float far) {
     PGraphics::ortho(left, right, bottom, top, near, far);
-    update_shader_view_matrix();
+    update_shader_matrices(current_shader);
 }
 
 void PGraphicsOpenGL_3_3_core::perspective(const float fovy, const float aspect, const float near, const float far) {
     PGraphics::perspective(fovy, aspect, near, far);
-    update_shader_view_matrix();
+    update_shader_matrices(current_shader);
 }
 
-void PGraphicsOpenGL_3_3_core::update_shader_view_matrix() const {
-    // TODO maybe do this also for `current_shader`?
-    if (current_shader == default_shader) {
-        default_shader->set_uniform(SHADER_UNIFORM_VIEW_MATRIX, view_matrix);
-    }
-}
 #endif // UMFELD_PGRAPHICS_OPENGLV33_CPP

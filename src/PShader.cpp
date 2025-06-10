@@ -45,6 +45,8 @@ bool PShader::load(const std::string& vertex_code, const std::string& fragment_c
         glDeleteShader(geometryShader);
     }
 
+    check_for_matrix_uniforms();
+
     return true;
 }
 
@@ -55,6 +57,16 @@ void PShader::use() const {
 
 void PShader::unuse() {
     glUseProgram(0);
+}
+
+void PShader::check_for_matrix_uniforms() {
+    if (!programID) { return; }
+    GLint location        = glGetUniformLocation(programID, SHADER_UNIFORM_MODEL_MATRIX.c_str());
+    has_model_matrix      = location != -1;
+    location              = glGetUniformLocation(programID, SHADER_UNIFORM_VIEW_MATRIX.c_str());
+    has_view_matrix       = location != -1;
+    location              = glGetUniformLocation(programID, SHADER_UNIFORM_PROJECTION_MATRIX.c_str());
+    has_projection_matrix = location != -1;
 }
 
 GLuint PShader::compileShader(const std::string& source, const GLenum type) {
@@ -95,6 +107,7 @@ GLint PShader::getUniformLocation(const std::string& name) {
                   << " expected " << programID << ", got " << currentlyBoundProgram << std::endl;
     }
 #endif
+    // ReSharper disable once CppDFAUnreachableCode
     if (!programID) { return 0; }
     if (uniformLocations.find(name) == uniformLocations.end()) {
         uniformLocations[name] = glGetUniformLocation(programID, name.c_str());
@@ -111,7 +124,6 @@ void PShader::check_uniform_location(const std::string& name) const {
     const GLint loc = glGetUniformLocation(programID, name.c_str());
     if (loc == -1) {
         std::cerr << "WARNING: uniform '" << name << "' not active or not found!\n";
-        return;
     }
 }
 

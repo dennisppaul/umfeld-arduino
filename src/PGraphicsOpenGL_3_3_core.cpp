@@ -19,9 +19,6 @@
 
 #if defined(OPENGL_3_3_CORE) || defined(OPENGL_ES_3_0)
 
-// TODO check if this is necessary
-// #define UMFELD_OGL33_RESET_MATRICES_ON_SHADER
-
 #include <vector>
 
 #include "UmfeldSDLOpenGL.h"
@@ -135,8 +132,7 @@ void PGraphicsOpenGL_3_3_core::IMPL_emit_shape_stroke_line_strip(std::vector<Ver
             std::vector<Vertex> line_vertices;
             triangulate_line_strip_vertex(line_strip_vertices,
                                           line_strip_closed,
-                                          line_vertices,
-                                          true);
+                                          line_vertices);
             OGL3_render_vertex_buffer(vertex_buffer, GL_TRIANGLES, line_vertices);
         }
         if (line_render_mode == STROKE_RENDER_MODE_NATIVE) {
@@ -625,6 +621,7 @@ void PGraphicsOpenGL_3_3_core::OGL3_tranform_model_matrix_and_render_vertex_buff
         return;
     }
 
+#ifdef VERTICES_CLIENT_SIDE_TRANSFORM
     // NOTE depending on the number of vertices transformation are handle on the GPU
     //      i.e all shapes *up to* quads are transformed on CPU
     static constexpr int MAX_NUM_VERTICES_CLIENT_SIDE_TRANSFORM = 0;
@@ -636,6 +633,7 @@ void PGraphicsOpenGL_3_3_core::OGL3_tranform_model_matrix_and_render_vertex_buff
             for (auto& p: transformed_vertices) {
                 p.position = glm::vec4(modelview * p.position);
             }
+            console("transforming model matrix on CPU for ", shape_vertices.size(), " vertices.");
         } else {
             mModelMatrixTransformOnGPU = true;
         }
@@ -644,11 +642,16 @@ void PGraphicsOpenGL_3_3_core::OGL3_tranform_model_matrix_and_render_vertex_buff
         update_shader_matrices(current_shader);
     }
     OGL3_render_vertex_buffer(vertex_buffer, primitive_mode, transformed_vertices);
+#else
 #ifdef UMFELD_OGL33_RESET_MATRICES_ON_SHADER
     if (mModelMatrixTransformOnGPU) {
         reset_shader_matrices(current_shader);
     }
-#endif
+#endif // UMFELD_OGL33_RESET_MATRICES_ON_SHADER
+    update_shader_matrices(current_shader);
+    OGL3_render_vertex_buffer(vertex_buffer, primitive_mode, shape_vertices);
+#endif // VERTICES_CLIENT_SIDE_TRANSFORM
+    current_shader->set_uniform(SHADER_UNIFORM_MODEL_MATRIX, glm::mat4(1.0f));
 }
 
 void PGraphicsOpenGL_3_3_core::OGL3_render_vertex_buffer(VertexBuffer& vertex_buffer, const GLenum primitive_mode, const std::vector<Vertex>& shape_vertices) {

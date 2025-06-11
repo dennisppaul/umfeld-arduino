@@ -1049,19 +1049,19 @@ static glm::vec3 world_to_screen(
 
 void PGraphics::triangulate_line_strip_vertex(const std::vector<Vertex>& line_strip,
                                               const bool                 close_shape,
-                                              std::vector<Vertex>&       line_vertices,
-                                              const bool                 omit_model_matrix) const {
+                                              std::vector<Vertex>&       line_vertices) const {
     const glm::vec4        color  = line_strip[0].color;
     const glm::vec4        normal = line_strip[0].normal;
     std::vector<glm::vec2> points(line_strip.size());
     std::vector<glm::vec2> triangles;
 
-    glm::mat4 mvp;
-    if (omit_model_matrix) {
-        mvp = projection_matrix * view_matrix;
-    } else {
-        mvp = projection_matrix * view_matrix * model_matrix;
-    }
+    const glm::mat4 mvp = projection_matrix * view_matrix * model_matrix;
+    // glm::mat4 mvp;
+    // if (omit_model_matrix) {
+    //     mvp = projection_matrix * view_matrix;
+    // } else {
+    //     mvp = projection_matrix * view_matrix * model_matrix;
+    // }
     for (int i = 0; i < line_strip.size(); ++i) {
         // glm::vec3 _position = line_strip[i].position;
         // to_screen_space(_position);

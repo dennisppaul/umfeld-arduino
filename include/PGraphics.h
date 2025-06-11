@@ -224,7 +224,10 @@ namespace umfeld {
         int                 getPixelDensity() const { return pixel_density; }
         void                stroke_mode(const int line_render_mode) { this->line_render_mode = line_render_mode; }
         void                stroke_properties(float stroke_join_round_resolution, float stroke_cap_round_resolution, float stroke_join_miter_max_angle);
-        void                triangulate_line_strip_vertex(const std::vector<Vertex>& line_strip, bool close_shape, std::vector<Vertex>& line_vertices) const;
+        void                triangulate_line_strip_vertex(const std::vector<Vertex>& line_strip,
+                                                          bool                       close_shape,
+                                                          std::vector<Vertex>&       line_vertices,
+                                                          bool                       omit_model_matrix = false) const;
         virtual void        set_default_graphics_state() {}
         void                set_render_mode(const int render_mode) { this->render_mode = render_mode; }
         virtual std::string name() { return "PGraphics"; }

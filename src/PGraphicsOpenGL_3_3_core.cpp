@@ -116,7 +116,9 @@ void PGraphicsOpenGL_3_3_core::IMPL_emit_shape_stroke_line_strip(std::vector<Ver
     if (render_mode == RENDER_MODE_BUFFERED) {
         if (line_render_mode == STROKE_RENDER_MODE_TRIANGULATE_2D) {
             std::vector<Vertex> line_vertices;
-            triangulate_line_strip_vertex(line_strip_vertices, line_strip_closed, line_vertices);
+            triangulate_line_strip_vertex(line_strip_vertices,
+                                          line_strip_closed,
+                                          line_vertices);
             // TODO collect `line_vertices` and render as `GL_TRIANGLES` at end of frame
         }
         if (line_render_mode == STROKE_RENDER_MODE_NATIVE) {
@@ -131,7 +133,10 @@ void PGraphicsOpenGL_3_3_core::IMPL_emit_shape_stroke_line_strip(std::vector<Ver
         //      - STROKE_RENDER_MODE_GEOMETRY_SHADER
         if (line_render_mode == STROKE_RENDER_MODE_TRIANGULATE_2D) {
             std::vector<Vertex> line_vertices;
-            triangulate_line_strip_vertex(line_strip_vertices, line_strip_closed, line_vertices);
+            triangulate_line_strip_vertex(line_strip_vertices,
+                                          line_strip_closed,
+                                          line_vertices,
+                                          true);
             OGL3_render_vertex_buffer(vertex_buffer, GL_TRIANGLES, line_vertices);
         }
         if (line_render_mode == STROKE_RENDER_MODE_NATIVE) {
@@ -225,9 +230,6 @@ void PGraphicsOpenGL_3_3_core::beginDraw() {
     PGraphicsOpenGL::beginDraw();
     texture_id_current = TEXTURE_NONE;
     IMPL_bind_texture(texture_id_solid_color);
-    default_shader->set_uniform(SHADER_UNIFORM_MODEL_MATRIX, model_matrix);
-    default_shader->set_uniform(SHADER_UNIFORM_VIEW_MATRIX, view_matrix);
-    default_shader->set_uniform(SHADER_UNIFORM_PROJECTION_MATRIX, projection_matrix);
     update_shader_matrices(default_shader);
 }
 
@@ -455,8 +457,13 @@ void PGraphicsOpenGL_3_3_core::init(uint32_t*  pixels,
     (void) generate_mipmap;                // TODO should this always be ignored?
     const int msaa_samples = antialiasing; // TODO not cool to take this from Umfeld
 
-    // stroke_shader_program = OGL_build_shader(shader_source_color.vertex, shader_source_color.fragment);
-    // fill_shader_program   = OGL_build_shader(shader_source_color_texture.vertex, shader_source_color_texture.fragment);
+    // TODO create shader system with `get_versioned_source(string)` for:
+    //     - point shader
+    //     - line shader
+    //     - triangle shader ( with texture )
+    //     - @maybe triangle shader ( without texture )
+    //     maybe remove "transform on CPU" and use vertex shader for this
+
 #ifdef OPENGL_ES_3_0
     default_shader = loadShader(shader_source_color_texture_ES.vertex, shader_source_color_texture_ES.fragment);
 #else
@@ -620,7 +627,7 @@ void PGraphicsOpenGL_3_3_core::OGL3_tranform_model_matrix_and_render_vertex_buff
 
     // NOTE depending on the number of vertices transformation are handle on the GPU
     //      i.e all shapes *up to* quads are transformed on CPU
-    static constexpr int MAX_NUM_VERTICES_CLIENT_SIDE_TRANSFORM = 4;
+    static constexpr int MAX_NUM_VERTICES_CLIENT_SIDE_TRANSFORM = 0;
     bool                 mModelMatrixTransformOnGPU             = false;
     std::vector<Vertex>  transformed_vertices                   = shape_vertices; // NOTE make copy
     if (model_matrix_dirty) {
@@ -645,10 +652,10 @@ void PGraphicsOpenGL_3_3_core::OGL3_tranform_model_matrix_and_render_vertex_buff
 }
 
 void PGraphicsOpenGL_3_3_core::OGL3_render_vertex_buffer(VertexBuffer& vertex_buffer, const GLenum primitive_mode, const std::vector<Vertex>& shape_vertices) {
-    vertex_buffer.clear();
     if (shape_vertices.empty()) {
         return;
     }
+    vertex_buffer.clear();
     vertex_buffer.add_vertices(shape_vertices);
     vertex_buffer.set_shape(primitive_mode, false);
     vertex_buffer.draw();

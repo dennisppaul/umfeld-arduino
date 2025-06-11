@@ -4,7 +4,6 @@ this is a VERY unsorted todo list and a note pad.
 
 ## Graphics
 
-- [ ] in `PGraphicsDefault2D` implement 3D by manually transforming points onto 2D 
 - [ ] @umfeld add camera ( see https://chatgpt.com/share/67dfbe72-855c-8004-8b37-28d10d5c7ab3 )
 - [ ] `GL_POINTS` might need some shader love ( i.e `gl_PointSize` + `gl_PointCoord` for point sprites ) @later
 - [ ] @umfeld add `PShape`-based fonts
@@ -12,13 +11,8 @@ this is a VERY unsorted todo list and a note pad.
     - [ ] @umfeld implement extra buffer for transparent primitives
     - [ ] WB OIT https://learnopengl.com/Guest-Articles/2020/OIT/Weighted-Blended
     - [ ] https://www.khronos.org/opengl/wiki/Transparency_Sorting
-- [ ] @umfeld add to OpenGL2.0
-    ```C
-    void upload_image(PImage* img, const uint32_t* pixel_data, int width, int height, int offset_x, int offset_y, bool mipmapped) override;
-    void download_image(PImage* img, bool restore_texture = true) override;
-    ```
 - [ ] @umfeld add function to `PFont` to generate a `PImage` with a static text as texture
-- [ ] @umfeld maybe add an option to return the generated triangles with endShape()
+- [x] @umfeld maybe add an option to return the generated triangles with endShape()
 - [ ] @umfeld add lighting ( see processing shaders `$HOME/Documents/dev/processing/git/processing4/core/src/processing/opengl/shaders` )
 - [ ] @umfeld load SVG into texture:
     ```C
@@ -28,6 +22,15 @@ this is a VERY unsorted todo list and a note pad.
       SDL_RWops *rw = SDL_RWFromConstMem(svg.c_str(), svg.size());
       SDL_Surface *surface = IMG_Load_RW(rw, 1);
       SDL_Texture *texture = SDL_CreateTextureFromSurface(renderer, surface);
+    ```
+- [ ] in `PGraphicsDefault2D` implement 3D by manually transforming points onto 2D 
+
+### OpenGL 2.0
+
+- [ ] @umfeld add to OpenGL2.0
+    ```C
+    void upload_image(PImage* img, const uint32_t* pixel_data, int width, int height, int offset_x, int offset_y, bool mipmapped) override;
+    void download_image(PImage* img, bool restore_texture = true) override;
     ```
 
 ## Audio

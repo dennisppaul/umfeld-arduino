@@ -21,8 +21,33 @@
 
 namespace umfeld {
     struct ShaderSource {
+        // NOTE that it is important to start the header immediately with `#version` to avoid
+        //      issues with the shader compiler ( e.g on Windows ).
+#if defined(OPENGL_ES_3_0)
+        std::string header = R"(#version 300 es
+                                precision mediump float;
+                                precision mediump int;
+        )";
+#elif defined(OPENGL_3_3_CORE)
+        inline static std::string header = R"(#version 330 core
+        )";
+#elif defined(OPENGL_2_0)
+        std::string header = R"(#version 110
+        )";
+#endif
         const char* vertex;
         const char* fragment;
         const char* geometry;
+
+        static std::string get_versioned_source(const std::string& source) {
+            if (source.empty()) {
+                return "";
+            }
+            // NOTE add a newline after the header to ensure proper formatting
+            if (header.back() != '\n') {
+                return header + '\n' + source;
+            }
+            return header + source;
+        }
     };
-}
+} // namespace umfeld

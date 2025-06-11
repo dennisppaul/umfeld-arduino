@@ -104,6 +104,6 @@ namespace umfeld {
         static void OGL3_render_vertex_buffer(VertexBuffer& vertex_buffer, GLenum primitive_mode, const std::vector<Vertex>& shape_vertices);
         void        OGL3_create_solid_color_texture();
         void        update_shader_matrices(PShader* shader) const;
-        static void reset_shader_matrices(PShader* shader);
+        static void        reset_shader_matrices(PShader* shader) ;
     };
 } // namespace umfeld

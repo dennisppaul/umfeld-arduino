@@ -74,6 +74,8 @@ namespace umfeld {
         void     frustum(float left, float right, float bottom, float top, float near, float far) override;
         void     ortho(float left, float right, float bottom, float top, float near, float far) override;
         void     perspective(float fovy, float aspect, float near, float far) override;
+        void     lights() override;
+        void     noLights() override;
 
         PShader* shader_fill_texture{nullptr};
         PShader* shader_fill_texture_lights{nullptr};

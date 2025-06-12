@@ -89,3 +89,12 @@
 #endif // HSBA
 
 #define TIME_FUNCTION_MS(fn) time_function_ms([&]() { fn; })
+
+#define UMFELD_EMIT_WARNING(fmt, ...)                      \
+    do {                                                   \
+        static bool emitted_warning_##__COUNTER__ = false; \
+        if (!emitted_warning_##__COUNTER__) {              \
+            warning(fmt, ##__VA_ARGS__);                   \
+            emitted_warning_##__COUNTER__ = true;          \
+        }                                                  \
+    } while (0)

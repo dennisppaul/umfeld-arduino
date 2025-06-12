@@ -119,6 +119,7 @@ namespace umfeld {
     void     printCamera();
     void     printProjection();
     void     lights();
+    void     noLights();
     /* --- additional --- */
     void debug_text(const std::string& text, float x, float y);
 

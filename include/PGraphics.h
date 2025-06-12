@@ -194,7 +194,7 @@ namespace umfeld {
         virtual void     sphereDetail(const int res) { sphereDetail(res, res); }
         void             process_collected_fill_vertices();
         void             process_collected_stroke_vertices(bool close_shape);
-        virtual void     shader(PShader* shader) {} // TODO maybe not implement them like this
+        virtual void     shader(PShader* shader) {} // TODO maybe not implement them empty like this
         virtual PShader* loadShader(const std::string& vertex_code, const std::string& fragment_code, const std::string& geometry_code = "") { return nullptr; };
         virtual void     resetShader() {}
         virtual void     normal(float x, float y, float z, float w = 0);
@@ -209,6 +209,7 @@ namespace umfeld {
         virtual void printCamera();
         virtual void printProjection();
         virtual void lights();
+        virtual void noLights() {}
 
         /* --- additional --- */
 
@@ -224,8 +225,8 @@ namespace umfeld {
         void                to_world_space(glm::vec3& model_position) const;                     // NOTE: convert from model space to works space
         void                linse(const float x1, const float y1, const float x2, const float y2) { line(x1, y1, x2, y2); }
         int                 getPixelDensity() const { return pixel_density; }
-        void                point_mode(const int point_render_mode) { this->point_render_mode = point_render_mode; }
-        void                stroke_mode(const int line_render_mode) { this->line_render_mode = line_render_mode; }
+        void                set_point_render_mode(const int point_render_mode) { this->point_render_mode = point_render_mode; }
+        void                set_stroke_render_mode(const int stroke_render_mode) { this->stroke_render_mode = stroke_render_mode; }
         void                stroke_properties(float stroke_join_round_resolution, float stroke_cap_round_resolution, float stroke_join_miter_max_angle);
         void                triangulate_line_strip_vertex(const std::vector<Vertex>& line_strip,
                                                           bool                       close_shape,
@@ -281,7 +282,7 @@ namespace umfeld {
         int                              texture_id_current{TEXTURE_NONE};
         bool                             shape_has_begun{false};
         int                              polygon_triangulation_strategy{POLYGON_TRIANGULATION_BETTER};
-        int                              line_render_mode{STROKE_RENDER_MODE_TRIANGULATE_2D};
+        int                              stroke_render_mode{STROKE_RENDER_MODE_TRIANGULATE_2D};
         int                              point_render_mode{POINT_RENDER_MODE_TRIANGULATE};
         int                              stroke_join_mode{BEVEL_FAST};
         int                              stroke_cap_mode{PROJECT};

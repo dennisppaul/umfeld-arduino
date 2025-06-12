@@ -399,8 +399,8 @@ below is a list of all Processing functions from the official [Processing Refere
 - [ ] `directionalLight()` :: Adds a directional light
 - [ ] `lightFalloff()` :: Sets the falloff rates for point lights, spotlights, and ambient lights
 - [ ] `lightSpecular()` :: Sets the specular color for lights
-- [ ] `lights()` :: Sets the default ambient light, directional light, falloff, and specular values
-- [ ] `noLights()` :: Disable all lighting
+- [x] `lights()` :: Sets the default ambient light, directional light, falloff, and specular values
+- [x] `noLights()` :: Disable all lighting
 - [x] `normal()` :: Sets the current normal vector
 - [ ] `pointLight()` :: Adds a point light
 - [ ] `spotLight()` :: Adds a spotlight

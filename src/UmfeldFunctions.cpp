@@ -244,14 +244,19 @@ namespace umfeld {
 
     std::string nf(const float num, const int left, const int right) {
         std::ostringstream out;
-        out << std::fixed << std::setprecision(right);
-        std::string numStr          = out.str();
-        numStr                      = std::to_string(static_cast<int>(num)) + numStr.substr(numStr.find('.'));
-        const int integerPartLength = static_cast<int>(numStr.find('.'));
-        if (integerPartLength < left) {
-            numStr.insert(0, left - integerPartLength, '0');
+        out << std::fixed << std::setprecision(right) << num;
+        std::string numStr = out.str();                   // e.g. " 12.3" or "12.3"
+
+        // find the dot (should always succeed now)
+        auto dotPos = numStr.find('.');
+        std::string integerPart = numStr.substr(0, dotPos);
+        std::string fractional  = numStr.substr(dotPos); // ".3"
+
+        // pad the integer part with leading zeros
+        if ((int)integerPart.length() < left) {
+            integerPart.insert(0, left - integerPart.length(), '0');
         }
-        return numStr;
+        return integerPart + fractional;
     }
 
     std::string nfc(const int num) {

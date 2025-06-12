@@ -52,6 +52,7 @@ namespace umfeld {
         bool has_model_matrix       = false;
         bool has_view_matrix        = false;
         bool has_projection_matrix  = false;
+        bool has_texture_unit       = false;
 
     private:
         GLuint                                 programID;

@@ -31,6 +31,7 @@ namespace umfeld {
 
         void IMPL_emit_shape_stroke_line_strip(std::vector<Vertex>& line_strip_vertices, bool line_strip_closed) override;
         void IMPL_emit_shape_fill_triangles(std::vector<Vertex>& triangle_vertices) override;
+        void IMPL_emit_shape_stroke_points(std::vector<Vertex>& point_vertices, float point_size) override;
 
         void IMPL_background(float a, float b, float c, float d) override;
         void IMPL_bind_texture(int bind_texture_id) override;
@@ -74,7 +75,11 @@ namespace umfeld {
         void     ortho(float left, float right, float bottom, float top, float near, float far) override;
         void     perspective(float fovy, float aspect, float near, float far) override;
 
-        PShader* default_shader{nullptr};
+        PShader* shader_fill_texture{nullptr};
+        PShader* shader_fill_texture_lights{nullptr};
+        PShader* shader_stroke{nullptr};
+        PShader* shader_point{nullptr};
+        PShader* custom_shader{nullptr};
 
     private:
         struct RenderBatch {
@@ -100,10 +105,12 @@ namespace umfeld {
 
         /* --- OpenGL 3.3 specific methods --- */
 
-        void        OGL3_tranform_model_matrix_and_render_vertex_buffer(VertexBuffer& vertex_buffer, GLenum primitive_mode, const std::vector<Vertex>& shape_vertices) const;
+        // void        OGL3_tranform_model_matrix_and_render_vertex_buffer(VertexBuffer& vertex_buffer, GLenum primitive_mode, const std::vector<Vertex>& shape_vertices) const;
         static void OGL3_render_vertex_buffer(VertexBuffer& vertex_buffer, GLenum primitive_mode, const std::vector<Vertex>& shape_vertices);
         void        OGL3_create_solid_color_texture();
+        void        update_all_shader_matrices() const;
         void        update_shader_matrices(PShader* shader) const;
-        static void        reset_shader_matrices(PShader* shader) ;
+        static void reset_shader_matrices(PShader* shader);
+        static void add_line_quad(const Vertex& p0, const Vertex& p1, float thickness, std::vector<Vertex>& out);
     };
 } // namespace umfeld

@@ -92,6 +92,8 @@ namespace umfeld {
          */
         virtual void emit_shape_stroke_line_strip(std::vector<Vertex>& line_strip_vertices, bool line_strip_closed);
         virtual void IMPL_emit_shape_stroke_line_strip(std::vector<Vertex>& line_strip_vertices, bool line_strip_closed) = 0;
+        virtual void emit_shape_stroke_points(std::vector<Vertex>& point_vertices, float point_size);
+        virtual void IMPL_emit_shape_stroke_points(std::vector<Vertex>& point_vertices, float point_size) = 0;
         virtual void beginDraw();
         virtual void endDraw();
         virtual void reset_mvp_matrices();
@@ -222,6 +224,7 @@ namespace umfeld {
         void                to_world_space(glm::vec3& model_position) const;                     // NOTE: convert from model space to works space
         void                linse(const float x1, const float y1, const float x2, const float y2) { line(x1, y1, x2, y2); }
         int                 getPixelDensity() const { return pixel_density; }
+        void                point_mode(const int point_render_mode) { this->point_render_mode = point_render_mode; }
         void                stroke_mode(const int line_render_mode) { this->line_render_mode = line_render_mode; }
         void                stroke_properties(float stroke_join_round_resolution, float stroke_cap_round_resolution, float stroke_join_miter_max_angle);
         void                triangulate_line_strip_vertex(const std::vector<Vertex>& line_strip,
@@ -304,7 +307,6 @@ namespace umfeld {
         int                              render_mode{RENDER_MODE_IMMEDIATE};
         UFont                            debug_font;
         bool                             in_camera_block{false};
-        PShader*                         current_shader{nullptr};
         void (*triangle_emitter_callback)(std::vector<Vertex>&){nullptr};
         void (*stroke_emitter_callback)(std::vector<Vertex>&, bool){nullptr};
 

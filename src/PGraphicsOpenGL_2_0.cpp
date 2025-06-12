@@ -281,9 +281,9 @@ void PGraphicsOpenGL_2_0::bezier(const float x1, const float y1, const float x2,
 }
 
 void PGraphicsOpenGL_2_0::bezier(const float x1, const float y1, const float z1,
-                                const float x2, const float y2, const float z2,
-                                const float x3, const float y3, const float z3,
-                                const float x4, const float y4, const float z4) {
+                                 const float x2, const float y2, const float z2,
+                                 const float x3, const float y3, const float z3,
+                                 const float x4, const float y4, const float z4) {
     if (render_mode == RENDER_MODE_IMMEDIATE) {
 
         if (!color_stroke.active) {
@@ -353,10 +353,10 @@ void PGraphicsOpenGL_2_0::point(const float x, const float y, const float z) {
 //     auto* font = new PFont(file.c_str(), size, static_cast<float>(pixel_density));
 //     return font;
 // }
-//
-// void PGraphicsOpenGL_2_0::textFont(PFont* font) {
-//     current_font = font;
-// }
+
+void PGraphicsOpenGL_2_0::textFont(PFont* font) {
+     current_font = font;
+}
 
 void PGraphicsOpenGL_2_0::textSize(const float size) {
     if (current_font == nullptr) {
@@ -584,10 +584,10 @@ void PGraphicsOpenGL_2_0::scale(const float x, const float y, const float z) {
 }
 
 void PGraphicsOpenGL_2_0::init(uint32_t* pixels,
-                              const int width,
-                              const int height,
-                              int       format,
-                              bool      generate_mipmap) {
+                               const int width,
+                               const int height,
+                               int       format,
+                               bool      generate_mipmap) {
     this->width        = width;
     this->height       = height;
     framebuffer.width  = width;
@@ -960,9 +960,22 @@ void PGraphicsOpenGL_2_0::IMPL_emit_shape_fill_triangles(std::vector<Vertex>& tr
     glEnd();
 }
 
+void PGraphicsOpenGL_2_0::IMPL_emit_shape_stroke_points(std::vector<Vertex>& point_vertices, float point_size) {
+    // TODO this is not tested WIP
+    glPointSize(point_size);
+    glBegin(GL_POINTS);
+    for (const auto& v: point_vertices) {
+        glColor4f(v.color.r, v.color.g, v.color.b, v.color.a);
+        // glTexCoord2f(v.tex_coord.x, v.tex_coord.y);
+        // glNormal3f(v.normal.x, v.normal.y, v.normal.z);
+        glVertex3f(v.position.x, v.position.y, v.position.z);
+    }
+    glEnd();
+}
+
 void PGraphicsOpenGL_2_0::camera(const float eyeX, const float eyeY, const float eyeZ,
-                                const float centerX, const float centerY, const float centerZ,
-                                const float upX, const float upY, const float upZ) {
+                                 const float centerX, const float centerY, const float centerZ,
+                                 const float upX, const float upY, const float upZ) {
     PGraphics::camera(eyeX, eyeY, eyeZ, centerX, centerY, centerZ, upX, upY, upZ);
 }
 

@@ -845,14 +845,22 @@ void PGraphics::box(const float width, const float height, const float depth) {
 }
 
 void PGraphics::sphere(const float width, const float height, const float depth) {
+    pushMatrix();
+    scale(width, height, depth);
     beginShape(TRIANGLES);
     for (const auto& v: sphere_vertices_LUT) {
-        vertex(Vertex{glm::vec4(v.position.x * width, v.position.y * height, v.position.z * depth, v.position.w),
-                      v.color,
-                      v.tex_coord,
-                      v.normal});
+        vertex(v);
     }
     endShape();
+    popMatrix();
+    // beginShape(TRIANGLES);
+    // for (const auto& v: sphere_vertices_LUT) {
+    //     vertex(Vertex{glm::vec4(v.position.x * width, v.position.y * height, v.position.z * depth, v.position.w),
+    //                   v.color,
+    //                   v.tex_coord,
+    //                   v.normal});
+    // }
+    // endShape();
 }
 
 void PGraphics::sphereDetail(const int ures, const int vres) {
@@ -1056,12 +1064,6 @@ void PGraphics::triangulate_line_strip_vertex(const std::vector<Vertex>& line_st
     std::vector<glm::vec2> triangles;
 
     const glm::mat4 mvp = projection_matrix * view_matrix * model_matrix;
-    // glm::mat4 mvp;
-    // if (omit_model_matrix) {
-    //     mvp = projection_matrix * view_matrix;
-    // } else {
-    //     mvp = projection_matrix * view_matrix * model_matrix;
-    // }
     for (int i = 0; i < line_strip.size(); ++i) {
         // glm::vec3 _position = line_strip[i].position;
         // to_screen_space(_position);
@@ -1208,6 +1210,14 @@ void PGraphics::emit_shape_stroke_line_strip(std::vector<Vertex>& line_strip_ver
     IMPL_emit_shape_stroke_line_strip(line_strip_vertices, line_strip_closed);
 }
 
+void PGraphics::emit_shape_stroke_points(std::vector<Vertex>& point_vertices, float point_size) {
+    // TODO maybe add a callback for points or send strokes with one vertex TBD?
+    // if (stroke_emitter_callback) {
+    //     stroke_emitter_callback(point_vertices);
+    // }
+    IMPL_emit_shape_stroke_points(point_vertices, point_size);
+}
+
 void PGraphics::process_collected_fill_vertices() {
     const int tmp_shape_mode_cache = shape_mode_cache;
     if (!shape_fill_vertex_buffer.empty()) {
@@ -1268,8 +1278,10 @@ void PGraphics::process_collected_stroke_vertices(const bool close_shape) {
             if (point_render_mode == POINT_RENDER_MODE_TRIANGULATE) {
                 std::vector<Vertex> line_vertices = convertPointsToTriangles(shape_stroke_vertex_buffer, point_size);
                 emit_shape_fill_triangles(line_vertices);
+            } else if (point_render_mode == POINT_RENDER_MODE_SHADER) {
+                emit_shape_stroke_points(shape_stroke_vertex_buffer, point_size);
             }
-            return; // NOTE rendered as points exit early
+            return; // NOTE strokes are rendered as points ... exit early
         }
 
         switch (tmp_shape_mode_cache) {

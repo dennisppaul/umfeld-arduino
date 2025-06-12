@@ -24,7 +24,7 @@ namespace umfeld {
         // NOTE that it is important to start the header immediately with `#version` to avoid
         //      issues with the shader compiler ( e.g on Windows ).
 #if defined(OPENGL_ES_3_0)
-        std::string header = R"(#version 300 es
+        inline static std::string header = R"(#version 300 es
                                 precision mediump float;
                                 precision mediump int;
         )";
@@ -32,12 +32,24 @@ namespace umfeld {
         inline static std::string header = R"(#version 330 core
         )";
 #elif defined(OPENGL_2_0)
-        std::string header = R"(#version 110
+        inline static std::string header = R"(#version 110
         )";
 #endif
         const char* vertex;
         const char* fragment;
         const char* geometry;
+
+        std::string get_vertex_source() const {
+            return get_versioned_source(vertex);
+        }
+
+        std::string get_fragment_source() const {
+            return get_versioned_source(fragment);
+        }
+
+        std::string get_fragment_geometry() const {
+            return get_versioned_source(geometry);
+        }
 
         static std::string get_versioned_source(const std::string& source) {
             if (source.empty()) {

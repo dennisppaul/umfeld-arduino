@@ -33,7 +33,9 @@
 #include "VertexBuffer.h"
 #include "PShader.h"
 #include "ShaderSourceColorTexture.h"
-#include "ShaderSourceColorTextureES.h"
+#include "ShaderSourceColorTextureLights.h"
+#include "ShaderSourceLine.h"
+#include "ShaderSourcePoint.h"
 
 using namespace umfeld;
 
@@ -44,7 +46,6 @@ PGraphicsOpenGL_3_3_core::PGraphicsOpenGL_3_3_core(const bool render_to_offscree
 void PGraphicsOpenGL_3_3_core::IMPL_background(const float a, const float b, const float c, const float d) {
     glClearColor(a, b, c, d);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    // TODO should this also flush bins?
 }
 
 void PGraphicsOpenGL_3_3_core::IMPL_bind_texture(const int bind_texture_id) {
@@ -79,6 +80,47 @@ void PGraphicsOpenGL_3_3_core::IMPL_set_texture(PImage* img) {
     //      to unbind it with `texture_unbind()` or should `endShape()` always reset to
     //      `texture_id_solid_color` with `texture_unbind()`.
     // NOTE identical <<<
+}
+
+void PGraphicsOpenGL_3_3_core::add_line_quad(const Vertex& p0, const Vertex& p1, float thickness, std::vector<Vertex>& out) {
+    // glm::vec3 dir = glm::normalize(p1 - p0);
+    glm::vec3 dir = p1.position - p0.position; // NOTE no need to noralize, the shader will do it
+
+    // The shader will use this direction to compute screen-space offset
+    glm::aligned_vec4 normal(dir, thickness);
+    // glm::aligned_vec4 color(0.5f, 0.85f, 1.0f, 1.0f); // or pass in if needed
+
+    // glm::aligned_vec4 pos0(p0.position);
+    // glm::aligned_vec4 pos1(p1.position);
+
+    // These 6 vertices form two triangles of the line quad
+    Vertex v0, v1, v2, v3;
+
+    v0.position = p0.position;
+    v1.position = p1.position;
+    v2.position = p0.position;
+    v3.position = p1.position;
+
+    v0.normal = normal;
+    v1.normal = normal;
+    normal.w  = -thickness;
+    v2.normal = normal;
+    v3.normal = normal;
+
+    v0.color = p0.color;
+    v1.color = p1.color;
+    v2.color = p0.color;
+    v3.color = p1.color;
+
+    // Add first triangle
+    out.push_back(v0);
+    out.push_back(v1);
+    out.push_back(v2);
+
+    // Add second triangle
+    out.push_back(v2);
+    out.push_back(v1);
+    out.push_back(v3);
 }
 
 /**
@@ -133,19 +175,54 @@ void PGraphicsOpenGL_3_3_core::IMPL_emit_shape_stroke_line_strip(std::vector<Ver
             triangulate_line_strip_vertex(line_strip_vertices,
                                           line_strip_closed,
                                           line_vertices);
+            shader_fill_texture->use();
+            if (shader_fill_texture != nullptr && shader_fill_texture->has_model_matrix) {
+                // NOTE not happy about this hack … but `triangulate_line_strip_vertex` already applies model matrix
+                shader_fill_texture->set_uniform(SHADER_UNIFORM_MODEL_MATRIX, glm::mat4(1.0f));
+            }
             OGL3_render_vertex_buffer(vertex_buffer, GL_TRIANGLES, line_vertices);
         }
         if (line_render_mode == STROKE_RENDER_MODE_NATIVE) {
-            OGL3_tranform_model_matrix_and_render_vertex_buffer(vertex_buffer, GL_LINE_STRIP, line_strip_vertices);
+            shader_fill_texture->use();
+            OGL3_render_vertex_buffer(vertex_buffer, GL_LINE_STRIP, line_strip_vertices);
         }
         if (line_render_mode == STROKE_RENDER_MODE_TUBE_3D) {
             const std::vector<Vertex> line_vertices = generate_tube_mesh(line_strip_vertices,
                                                                          stroke_weight / 2.0f,
                                                                          line_strip_closed,
                                                                          color_stroke);
-            OGL3_tranform_model_matrix_and_render_vertex_buffer(vertex_buffer, GL_TRIANGLES, line_vertices);
+            shader_fill_texture->use();
+            OGL3_render_vertex_buffer(vertex_buffer, GL_TRIANGLES, line_vertices);
         }
         if (line_render_mode == STROKE_RENDER_MODE_GEOMETRY_SHADER) {
+            static bool emit_warning = true;
+            if (emit_warning) {
+                emit_warning = false;
+                warning("STROKE_RENDER_MODE_GEOMETRY_SHADER is not implemented yet.");
+            }
+        }
+        if (line_render_mode == STROKE_RENDER_MODE_LINE_SHADER) {
+            // TODO this MUST be optimized! it is not efficient to update all uniforms every time
+            shader_stroke->use();
+            update_shader_matrices(shader_stroke);
+            shader_stroke->set_uniform("viewport", glm::vec4(0, 0, width, height));
+            shader_stroke->set_uniform("perspective", 1);
+            constexpr float scale_factor = 0.99f;
+            shader_stroke->set_uniform("scale", glm::vec3(scale_factor, scale_factor, scale_factor));
+
+            const float         stroke_weight_half = stroke_weight / 2.0f;
+            std::vector<Vertex> line_strip_vertices_expanded;
+            for (size_t i = 0; i + 1 < line_strip_vertices.size(); i++) {
+                Vertex p0 = line_strip_vertices[i];
+                Vertex p1 = line_strip_vertices[i + 1];
+                add_line_quad(p0, p1, stroke_weight_half, line_strip_vertices_expanded);
+            }
+            if (line_strip_closed) {
+                Vertex p0 = line_strip_vertices.back();
+                Vertex p1 = line_strip_vertices.front();
+                add_line_quad(p0, p1, stroke_weight_half, line_strip_vertices_expanded);
+            }
+            OGL3_render_vertex_buffer(vertex_buffer, GL_TRIANGLES, line_strip_vertices_expanded);
         }
     }
 
@@ -194,7 +271,54 @@ void PGraphicsOpenGL_3_3_core::IMPL_emit_shape_fill_triangles(std::vector<Vertex
         //      ```
     }
     if (render_mode == RENDER_MODE_IMMEDIATE) {
-        OGL3_tranform_model_matrix_and_render_vertex_buffer(vertex_buffer, GL_TRIANGLES, triangle_vertices);
+        shader_fill_texture->use();
+        update_shader_matrices(shader_fill_texture);
+        OGL3_render_vertex_buffer(vertex_buffer, GL_TRIANGLES, triangle_vertices);
+    }
+}
+
+void PGraphicsOpenGL_3_3_core::IMPL_emit_shape_stroke_points(std::vector<Vertex>& point_vertices, float point_size) {
+    if (render_mode == RENDER_MODE_BUFFERED) {
+    }
+    if (render_mode == RENDER_MODE_IMMEDIATE) {
+        if (point_render_mode == POINT_RENDER_MODE_SHADER) {
+            shader_point->use();
+            update_shader_matrices(shader_point);
+            // TODO this MUST be optimized! it is not efficient to update all uniforms every time
+            shader_point->set_uniform("viewport", glm::vec4(0, 0, width, height));
+            shader_point->set_uniform("perspective", 1);
+            std::vector<Vertex> point_vertices_expanded;
+
+            for (size_t i = 0; i + 1 < point_vertices.size(); i++) {
+                Vertex v0, v1, v2, v3;
+
+                v0 = point_vertices[i];
+                v1 = point_vertices[i];
+                v2 = point_vertices[i];
+                v3 = point_vertices[i];
+
+                v0.normal.x = 0;
+                v0.normal.y = 0;
+
+                v1.normal.x = point_size;
+                v1.normal.y = 0;
+
+                v2.normal.x = point_size;
+                v2.normal.y = point_size;
+
+                v3.normal.x = 0;
+                v3.normal.y = point_size;
+
+                point_vertices_expanded.push_back(v0);
+                point_vertices_expanded.push_back(v1);
+                point_vertices_expanded.push_back(v2);
+
+                point_vertices_expanded.push_back(v0);
+                point_vertices_expanded.push_back(v2);
+                point_vertices_expanded.push_back(v3);
+            }
+            OGL3_render_vertex_buffer(vertex_buffer, GL_TRIANGLES, point_vertices_expanded);
+        }
     }
 }
 
@@ -203,7 +327,9 @@ void PGraphicsOpenGL_3_3_core::debug_text(const std::string& text, const float x
     const std::vector<Vertex> triangle_vertices = debug_font.generate(text, x, y, glm::vec4(color_fill));
     push_texture_id();
     IMPL_bind_texture(debug_font.textureID);
-    OGL3_tranform_model_matrix_and_render_vertex_buffer(vertex_buffer, GL_TRIANGLES, triangle_vertices);
+    shader_fill_texture->use();
+    update_shader_matrices(shader_fill_texture);
+    OGL3_render_vertex_buffer(vertex_buffer, GL_TRIANGLES, triangle_vertices);
     pop_texture_id();
 }
 
@@ -226,7 +352,6 @@ void PGraphicsOpenGL_3_3_core::beginDraw() {
     PGraphicsOpenGL::beginDraw();
     texture_id_current = TEXTURE_NONE;
     IMPL_bind_texture(texture_id_solid_color);
-    update_shader_matrices(default_shader);
 }
 
 void PGraphicsOpenGL_3_3_core::endDraw() {
@@ -460,13 +585,19 @@ void PGraphicsOpenGL_3_3_core::init(uint32_t*  pixels,
     //     - @maybe triangle shader ( without texture )
     //     maybe remove "transform on CPU" and use vertex shader for this
 
-#ifdef OPENGL_ES_3_0
-    default_shader = loadShader(shader_source_color_texture_ES.vertex, shader_source_color_texture_ES.fragment);
-#else
-    default_shader = loadShader(shader_source_color_texture.vertex, shader_source_color_texture.fragment);
-#endif
-    if (default_shader == nullptr) {
-        error("Failed to load default shader.");
+    shader_fill_texture        = loadShader(shader_source_color_texture.get_vertex_source(), shader_source_color_texture.get_fragment_source());
+    shader_fill_texture_lights = loadShader(shader_source_color_texture_lights.get_vertex_source(), shader_source_color_texture_lights.get_fragment_source());
+    shader_stroke              = loadShader(shader_source_line.get_vertex_source(), shader_source_line.get_fragment_source());
+    shader_point               = loadShader(shader_source_point.get_vertex_source(), shader_source_point.get_fragment_source());
+
+    if (shader_fill_texture == nullptr) {
+        error("Failed to load default fill shader.");
+    }
+    if (shader_stroke == nullptr) {
+        error("Failed to load default stroke shader.");
+    }
+    if (shader_point == nullptr) {
+        error("Failed to load default point shader.");
     }
 
     this->width        = width;
@@ -605,54 +736,59 @@ void PGraphicsOpenGL_3_3_core::OGL3_create_solid_color_texture() {
     texture_id_solid_color = texture_id;
 }
 
-void PGraphicsOpenGL_3_3_core::OGL3_tranform_model_matrix_and_render_vertex_buffer(VertexBuffer&              vertex_buffer,
-                                                                                   const GLenum               primitive_mode,
-                                                                                   const std::vector<Vertex>& shape_vertices) const {
-    static bool _emit_warning_only_once = false;
-    if (primitive_mode != GL_TRIANGLES && primitive_mode != GL_LINE_STRIP) {
-        if (!_emit_warning_only_once) {
-            warning("this test is just for development purposes: only GL_TRIANGLES and GL_LINE_STRIP are supposed to be used atm.");
-            warning("( warning only once )");
-            _emit_warning_only_once = true;
-        }
-    }
-
-    if (shape_vertices.empty()) {
-        return;
-    }
-
-#ifdef VERTICES_CLIENT_SIDE_TRANSFORM
-    // NOTE depending on the number of vertices transformation are handle on the GPU
-    //      i.e all shapes *up to* quads are transformed on CPU
-    static constexpr int MAX_NUM_VERTICES_CLIENT_SIDE_TRANSFORM = 0;
-    bool                 mModelMatrixTransformOnGPU             = false;
-    std::vector<Vertex>  transformed_vertices                   = shape_vertices; // NOTE make copy
-    if (model_matrix_dirty) {
-        if (shape_vertices.size() <= MAX_NUM_VERTICES_CLIENT_SIDE_TRANSFORM) {
-            const glm::mat4 modelview = model_matrix;
-            for (auto& p: transformed_vertices) {
-                p.position = glm::vec4(modelview * p.position);
-            }
-            console("transforming model matrix on CPU for ", shape_vertices.size(), " vertices.");
-        } else {
-            mModelMatrixTransformOnGPU = true;
-        }
-    }
-    if (mModelMatrixTransformOnGPU) {
-        update_shader_matrices(current_shader);
-    }
-    OGL3_render_vertex_buffer(vertex_buffer, primitive_mode, transformed_vertices);
-#else
-#ifdef UMFELD_OGL33_RESET_MATRICES_ON_SHADER
-    if (mModelMatrixTransformOnGPU) {
-        reset_shader_matrices(current_shader);
-    }
-#endif // UMFELD_OGL33_RESET_MATRICES_ON_SHADER
-    update_shader_matrices(current_shader);
-    OGL3_render_vertex_buffer(vertex_buffer, primitive_mode, shape_vertices);
-#endif // VERTICES_CLIENT_SIDE_TRANSFORM
-    current_shader->set_uniform(SHADER_UNIFORM_MODEL_MATRIX, glm::mat4(1.0f));
-}
+// void PGraphicsOpenGL_3_3_core::OGL3_tranform_model_matrix_and_render_vertex_buffer(VertexBuffer&              vertex_buffer,
+//                                                                                    const GLenum               primitive_mode,
+//                                                                                    const std::vector<Vertex>& shape_vertices) const {
+//     static bool _emit_warning_only_once = false;
+//     if (primitive_mode != GL_TRIANGLES && primitive_mode != GL_LINE_STRIP) {
+//         if (!_emit_warning_only_once) {
+//             warning("this test is just for development purposes: only GL_TRIANGLES and GL_LINE_STRIP are supposed to be used atm.");
+//             warning("( warning only once )");
+//             _emit_warning_only_once = true;
+//         }
+//     }
+//
+//     if (shape_vertices.empty()) {
+//         return;
+//     }
+//
+// #ifdef VERTICES_CLIENT_SIDE_TRANSFORM
+//     // NOTE depending on the number of vertices transformation are handle on the GPU
+//     //      i.e all shapes *up to* quads are transformed on CPU
+//     static constexpr int MAX_NUM_VERTICES_CLIENT_SIDE_TRANSFORM = 0;
+//     bool                 mModelMatrixTransformOnGPU             = false;
+//     std::vector<Vertex>  transformed_vertices                   = shape_vertices; // NOTE make copy
+//     if (model_matrix_dirty) {
+//         if (shape_vertices.size() <= MAX_NUM_VERTICES_CLIENT_SIDE_TRANSFORM) {
+//             const glm::mat4 modelview = model_matrix;
+//             for (auto& p: transformed_vertices) {
+//                 p.position = glm::vec4(modelview * p.position);
+//             }
+//             console("transforming model matrix on CPU for ", shape_vertices.size(), " vertices.");
+//         } else {
+//             mModelMatrixTransformOnGPU = true;
+//         }
+//     }
+//     if (mModelMatrixTransformOnGPU) {
+//         update_shader_matrices(current_shader);
+//     }
+//     OGL3_render_vertex_buffer(vertex_buffer, primitive_mode, transformed_vertices);
+// #else
+// #ifdef UMFELD_OGL33_RESET_MATRICES_ON_SHADER
+//     if (mModelMatrixTransformOnGPU) {
+//         reset_shader_matrices(current_shader);
+//     }
+// #endif // UMFELD_OGL33_RESET_MATRICES_ON_SHADER
+//     // TODO check if it is necessary to update *all* shader matrices here ( i.e model, view, projection )
+//     //      `update_shader_matrices(current_shader);`
+//     shader_fill_texture->use();
+//     if (shader_fill_texture->has_model_matrix) {
+//         shader_fill_texture->set_uniform(SHADER_UNIFORM_MODEL_MATRIX, model_matrix);
+//     }
+//
+//     OGL3_render_vertex_buffer(vertex_buffer, primitive_mode, shape_vertices);
+// #endif // VERTICES_CLIENT_SIDE_TRANSFORM
+// }
 
 void PGraphicsOpenGL_3_3_core::OGL3_render_vertex_buffer(VertexBuffer& vertex_buffer, const GLenum primitive_mode, const std::vector<Vertex>& shape_vertices) {
     if (shape_vertices.empty()) {
@@ -675,6 +811,9 @@ void PGraphicsOpenGL_3_3_core::update_shader_matrices(PShader* shader) const {
     if (shader->has_projection_matrix) {
         shader->set_uniform(SHADER_UNIFORM_PROJECTION_MATRIX, projection_matrix);
     }
+    if (shader->has_texture_unit) {
+        shader->set_uniform(SHADER_UNIFORM_TEXTURE_UNIT, 0);
+    }
 }
 
 void PGraphicsOpenGL_3_3_core::reset_shader_matrices(PShader* shader) {
@@ -688,13 +827,23 @@ void PGraphicsOpenGL_3_3_core::reset_shader_matrices(PShader* shader) {
     if (shader->has_projection_matrix) {
         shader->set_uniform(SHADER_UNIFORM_PROJECTION_MATRIX, glm::mat4(1.0f));
     }
+    if (shader->has_texture_unit) {
+        shader->set_uniform(SHADER_UNIFORM_TEXTURE_UNIT, 0);
+    }
 }
 
 void PGraphicsOpenGL_3_3_core::mesh(VertexBuffer* mesh_shape) {
     if (mesh_shape == nullptr) {
         return;
     }
-    update_shader_matrices(current_shader);
+    if (custom_shader != nullptr) {
+        custom_shader->use();
+        update_shader_matrices(custom_shader);
+    } else {
+        shader_fill_texture->use();
+        update_shader_matrices(shader_fill_texture);
+    }
+    // TODO is there a way to also draw this with line shader?
     mesh_shape->draw();
 #ifdef UMFELD_OGL33_RESET_MATRICES_ON_SHADER
     reset_shader_matrices(current_shader);
@@ -702,14 +851,14 @@ void PGraphicsOpenGL_3_3_core::mesh(VertexBuffer* mesh_shape) {
 }
 
 PShader* PGraphicsOpenGL_3_3_core::loadShader(const std::string& vertex_code, const std::string& fragment_code, const std::string& geometry_code) {
-    const auto _shader = new PShader();
-    const bool result  = _shader->load(vertex_code, fragment_code, geometry_code);
+    const auto shader = new PShader();
+    const bool result = shader->load(vertex_code, fragment_code, geometry_code);
     if (!result) {
-        error("Failed to load shader: ", vertex_code, " ", fragment_code, " ", geometry_code);
-        delete _shader;
+        error("failed to load shader: ", vertex_code, " ", fragment_code, " ", geometry_code);
+        delete shader;
         return nullptr;
     }
-    return _shader;
+    return shader;
 }
 
 void PGraphicsOpenGL_3_3_core::shader(PShader* shader) {
@@ -718,14 +867,12 @@ void PGraphicsOpenGL_3_3_core::shader(PShader* shader) {
         return;
     }
     shader->use();
-    current_shader = shader;
+    update_shader_matrices(shader);
 }
 
 void PGraphicsOpenGL_3_3_core::resetShader() {
-    default_shader->use();
-    default_shader->set_uniform(SHADER_UNIFORM_TEXTURE_UNIT, 0);
-    update_shader_matrices(default_shader);
-    current_shader = default_shader;
+    custom_shader = nullptr;
+    update_all_shader_matrices();
 }
 
 bool PGraphicsOpenGL_3_3_core::read_framebuffer(std::vector<unsigned char>& pixels) {
@@ -766,24 +913,41 @@ void PGraphicsOpenGL_3_3_core::restore_fbo_state() {
     glUseProgram(previous_shader);
 }
 
+void PGraphicsOpenGL_3_3_core::update_all_shader_matrices() const {
+    if (custom_shader != nullptr) {
+        custom_shader->use();
+        update_shader_matrices(custom_shader);
+    } else {
+        shader_fill_texture->use();
+        update_shader_matrices(shader_fill_texture);
+        shader_fill_texture_lights->use();
+        update_shader_matrices(shader_fill_texture_lights);
+        shader_stroke->use();
+        update_shader_matrices(shader_stroke);
+        shader_point->use();
+        update_shader_matrices(shader_point);
+    }
+}
+
+
 void PGraphicsOpenGL_3_3_core::camera(const float eyeX, const float eyeY, const float eyeZ, const float centerX, const float centerY, const float centerZ, const float upX, const float upY, const float upZ) {
     PGraphics::camera(eyeX, eyeY, eyeZ, centerX, centerY, centerZ, upX, upY, upZ);
-    update_shader_matrices(current_shader);
+    update_all_shader_matrices();
 }
 
 void PGraphicsOpenGL_3_3_core::frustum(const float left, const float right, const float bottom, const float top, const float near, const float far) {
     PGraphics::frustum(left, right, bottom, top, near, far);
-    update_shader_matrices(current_shader);
+    update_all_shader_matrices();
 }
 
 void PGraphicsOpenGL_3_3_core::ortho(const float left, const float right, const float bottom, const float top, const float near, const float far) {
     PGraphics::ortho(left, right, bottom, top, near, far);
-    update_shader_matrices(current_shader);
+    update_all_shader_matrices();
 }
 
 void PGraphicsOpenGL_3_3_core::perspective(const float fovy, const float aspect, const float near, const float far) {
     PGraphics::perspective(fovy, aspect, near, far);
-    update_shader_matrices(current_shader);
+    update_all_shader_matrices();
 }
 
 #endif // UMFELD_PGRAPHICS_OPENGLV33_CPP

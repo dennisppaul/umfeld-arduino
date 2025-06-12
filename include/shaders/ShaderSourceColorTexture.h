@@ -23,8 +23,7 @@
 
 namespace umfeld {
     inline ShaderSource shader_source_color_texture{
-        .vertex   = R"(#version 330 core
-
+        .vertex   = R"(
                     layout(location = 0) in vec4 aPosition;
                     layout(location = 1) in vec4 aNormal;
                     layout(location = 2) in vec4 aColor;
@@ -44,8 +43,7 @@ namespace umfeld {
                         vTexCoord = aTexCoord;
                     }
         )",
-        .fragment = R"(#version 330 core
-
+        .fragment = R"(
                     in vec4 vColor;
                     in vec2 vTexCoord;
 

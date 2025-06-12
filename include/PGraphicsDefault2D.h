@@ -42,6 +42,7 @@ namespace umfeld {
 
         void IMPL_emit_shape_stroke_line_strip(std::vector<Vertex>& line_strip_vertices, bool line_strip_closed) override {}
         void IMPL_emit_shape_fill_triangles(std::vector<Vertex>& triangle_vertices) override {}
+        void IMPL_emit_shape_stroke_points(std::vector<Vertex>& point_vertices, float point_size) override {};
 
         void strokeWeight(float weight) override {}
 

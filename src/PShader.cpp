@@ -50,13 +50,15 @@ bool PShader::load(const std::string& vertex_code, const std::string& fragment_c
     return true;
 }
 
-void PShader::use() const {
+void PShader::use() {
     if (!programID) { return; }
     glUseProgram(programID);
+    in_use = true;
 }
 
 void PShader::unuse() {
     glUseProgram(0);
+    in_use = false;
 }
 
 void PShader::check_for_matrix_uniforms() {

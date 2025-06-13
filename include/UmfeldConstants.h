@@ -49,7 +49,7 @@ namespace umfeld {
     static constexpr int   DEFAULT_OUTPUT_CHANNELS       = 2;
     static constexpr bool  DEFAULT_AUDIO_RUN_IN_THREAD   = false;
     static constexpr int   DEFAULT_BYTES_PER_PIXELS      = 4;
-    static constexpr int   DEFAULT_SPHERE_RESOLUTION     = 10;
+    static constexpr int   DEFAULT_SPHERE_RESOLUTION     = 15;
     static constexpr int   AUDIO_DEVICE_FIND_BY_NAME     = -2;
     static constexpr int   AUDIO_DEVICE_NOT_FOUND        = -3;
     static constexpr int   AUDIO_UNIT_NOT_INITIALIZED    = -4;

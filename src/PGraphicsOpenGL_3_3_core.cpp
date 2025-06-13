@@ -359,6 +359,7 @@ void PGraphicsOpenGL_3_3_core::beginDraw() {
     if (render_to_offscreen) {
         store_fbo_state();
     }
+    noLights();
     resetShader();
     PGraphicsOpenGL::beginDraw();
     texture_id_current = TEXTURE_NONE;
@@ -969,32 +970,257 @@ void PGraphicsOpenGL_3_3_core::perspective(const float fovy, const float aspect,
     update_all_shader_matrices();
 }
 
+/* --- LIGHTS --- */
+
+void PGraphicsOpenGL_3_3_core::noLights() {
+    lightCount                   = 0;
+    currentLightSpecular         = glm::vec3(0.0f);
+    currentLightFalloffConstant  = 1.0f;
+    currentLightFalloffLinear    = 0.0f;
+    currentLightFalloffQuadratic = 0.0f;
+    resetShader();
+}
+
 void PGraphicsOpenGL_3_3_core::lights() {
-    shader(shader_fill_texture_lights);
+    enableLighting();
+
     // shader_fill_texture_lights->set_uniform(SHADER_UNIFORM_MODEL_MATRIX, g->model_matrix);
     // shader_fill_texture_lights->set_uniform(SHADER_UNIFORM_VIEW_MATRIX, g->view_matrix);
     // shader_fill_texture_lights->set_uniform(SHADER_UNIFORM_PROJECTION_MATRIX, g->projection_matrix);
     // shader_fill_texture_lights->set_uniform(SHADER_UNIFORM_TEXTURE_UNIT, 0);
     // shader_fill_texture_lights->set_uniform("normalMatrix", glm::mat3(glm::transpose(glm::inverse(g->view_matrix * g->model_matrix))));
     // NOTE ^^^ this is done in `IMPL_emit_shape_fill_triangles`
-    shader_fill_texture_lights->set_uniform("texMatrix", glm::mat4(1.0f));                  // or a real matrix if you’re transforming texCoords
-    shader_fill_texture_lights->set_uniform("ambient", glm::vec4(0.5f, 0.5f, 0.5f, 1.0f));  // base ambient reflectance
-    shader_fill_texture_lights->set_uniform("specular", glm::vec4(0.5f, 0.5f, 0.5f, 1.0f)); // specular highlight color
-    shader_fill_texture_lights->set_uniform("emissive", glm::vec4(0.1f, 0.1f, 0.1f, 1.0f)); // emission/self-lighting
-    shader_fill_texture_lights->set_uniform("shininess", 64.0f);                            // specular exponent
-    shader_fill_texture_lights->set_uniform("lightCount", 1);
-    shader_fill_texture_lights->set_uniform("lightPosition[0]", glm::vec4(0, 0, -2.0f * height, 1.0f));
-    shader_fill_texture_lights->set_uniform("lightNormal[0]", glm::vec3(0.0f, -1.0f, 0.0f)); // ignored for point lights
-    shader_fill_texture_lights->set_uniform("lightAmbient[0]", glm::vec3(0.05f));
-    shader_fill_texture_lights->set_uniform("lightDiffuse[0]", glm::vec3(1.0f));
-    shader_fill_texture_lights->set_uniform("lightSpecular[0]", glm::vec3(1.0f));
-    shader_fill_texture_lights->set_uniform("lightFalloff[0]", glm::vec3(1.0f, 0.0f, 0.0f)); // constant falloff
-    shader_fill_texture_lights->set_uniform("lightSpot[0]", glm::vec2(-1.0f, 0.0f));         // disables spotlight
-    checkOpenGLError("set_uniform()");
+    // shader_fill_texture_lights->set_uniform("texMatrix", glm::mat4(1.0f)); // or a real matrix if you’re transforming texCoords
+
+    ambient(0.5f, 0.5f, 0.5f);
+    specular(0.5f, 0.5f, 0.5f);
+    emissive(0.1f, 0.1f, 0.1f);
+    shininess(64.0f);
+    lightFalloff(1, 0, 0);
+    lightSpecular(0, 0, 0);
+
+    ambientLight(128 / 255.0f, 128 / 255.0f, 128 / 255.0f);
+    directionalLight(128 / 255.0f, 128 / 255.0f, 128 / 255.0f, 0, 0, 1); // TODO why is this (0, 0, 1) and not (0, 0, -1) as described in the documentation?
 }
 
-void PGraphicsOpenGL_3_3_core::noLights() {
-    resetShader();
+void PGraphicsOpenGL_3_3_core::ambientLight(const float r, const float g, const float b, const float x, const float y, const float z) {
+    enableLighting();
+    if (lightCount >= MAX_LIGHTS) {
+        return;
+    }
+
+    lightType[lightCount] = AMBIENT;
+
+    setLightPosition(lightCount, x, y, z, false);
+    setLightNormal(lightCount, 0, 0, 0);
+
+    setLightAmbient(lightCount, r, g, b);
+    setNoLightDiffuse(lightCount);
+    setNoLightSpecular(lightCount);
+    setNoLightSpot(lightCount);
+    setLightFalloff(lightCount, currentLightFalloffConstant,
+                    currentLightFalloffLinear,
+                    currentLightFalloffQuadratic);
+
+    lightCount++;
+    updateShaderLighting();
+}
+
+void PGraphicsOpenGL_3_3_core::directionalLight(const float r, const float g, const float b, const float nx, const float ny, const float nz) {
+    enableLighting();
+    if (lightCount >= MAX_LIGHTS) {
+        return;
+    }
+
+    lightType[lightCount] = DIRECTIONAL;
+
+    setLightPosition(lightCount, 0, 0, 0, true); // directional = true
+    setLightNormal(lightCount, nx, ny, nz);
+
+    setNoLightAmbient(lightCount);
+    setLightDiffuse(lightCount, r, g, b);
+    setLightSpecular(lightCount, currentLightSpecular.r,
+                     currentLightSpecular.g,
+                     currentLightSpecular.b);
+    setNoLightSpot(lightCount);
+    setNoLightFalloff(lightCount);
+
+    lightCount++;
+    updateShaderLighting();
+}
+
+void PGraphicsOpenGL_3_3_core::pointLight(const float r, const float g, const float b, const float x, const float y, const float z) {
+    enableLighting();
+    if (lightCount >= MAX_LIGHTS) {
+        return;
+    }
+
+    lightType[lightCount] = POINT;
+
+    setLightPosition(lightCount, x, y, z, false);
+    setLightNormal(lightCount, 0, 0, 0);
+
+    setNoLightAmbient(lightCount);
+    setLightDiffuse(lightCount, r, g, b);
+    setLightSpecular(lightCount,
+                     currentLightSpecular.r,
+                     currentLightSpecular.g,
+                     currentLightSpecular.b);
+    setNoLightSpot(lightCount);
+    setLightFalloff(lightCount,
+                    currentLightFalloffConstant,
+                    currentLightFalloffLinear,
+                    currentLightFalloffQuadratic);
+
+    lightCount++;
+    updateShaderLighting();
+}
+
+void PGraphicsOpenGL_3_3_core::spotLight(const float r, const float g, const float b, const float x, const float y, const float z,
+                                         const float nx, const float ny, const float nz, const float angle, const float concentration) {
+    enableLighting();
+    if (lightCount >= MAX_LIGHTS) {
+        return;
+    }
+
+    lightType[lightCount] = SPOT;
+
+    setLightPosition(lightCount, x, y, z, false);
+    setLightNormal(lightCount, nx, ny, nz);
+
+    setNoLightAmbient(lightCount);
+    setLightDiffuse(lightCount, r, g, b);
+    setLightSpecular(lightCount, currentLightSpecular.r,
+                     currentLightSpecular.g,
+                     currentLightSpecular.b);
+    setLightSpot(lightCount, angle, concentration);
+    setLightFalloff(lightCount, currentLightFalloffConstant,
+                    currentLightFalloffLinear,
+                    currentLightFalloffQuadratic);
+
+    lightCount++;
+    updateShaderLighting();
+}
+
+void PGraphicsOpenGL_3_3_core::lightFalloff(const float constant, const float linear, const float quadratic) {
+    currentLightFalloffConstant  = constant;
+    currentLightFalloffLinear    = linear;
+    currentLightFalloffQuadratic = quadratic;
+}
+
+void PGraphicsOpenGL_3_3_core::lightSpecular(const float r, const float g, const float b) {
+    currentLightSpecular = glm::vec3(r, g, b);
+}
+
+void PGraphicsOpenGL_3_3_core::ambient(const float r, const float g, const float b) {
+    if (shader_fill_texture_lights) {
+        shader_fill_texture_lights->set_uniform("ambient", glm::vec4(r, g, b, 1.0f));
+    }
+}
+
+void PGraphicsOpenGL_3_3_core::specular(const float r, const float g, const float b) {
+    if (shader_fill_texture_lights) {
+        shader_fill_texture_lights->set_uniform("specular", glm::vec4(r, g, b, 1.0f));
+    }
+}
+
+void PGraphicsOpenGL_3_3_core::emissive(const float r, const float g, const float b) {
+    if (shader_fill_texture_lights) {
+        shader_fill_texture_lights->set_uniform("emissive", glm::vec4(r, g, b, 1.0f));
+    }
+}
+
+void PGraphicsOpenGL_3_3_core::shininess(const float s) {
+    if (shader_fill_texture_lights) {
+        shader_fill_texture_lights->set_uniform("shininess", s);
+    }
+}
+
+void PGraphicsOpenGL_3_3_core::enableLighting() {
+    shader(shader_fill_texture_lights);
+}
+
+void PGraphicsOpenGL_3_3_core::setLightPosition(const int num, const float x, const float y, const float z, const bool directional) {
+    // TODO Transform position by current modelview matrix
+    //      For now, assuming world space coordinates
+    lightPositions[num] = glm::vec4(x, y, z, directional ? 0.0f : 1.0f);
+}
+
+void PGraphicsOpenGL_3_3_core::setLightNormal(const int num, const float dx, const float dy, const float dz) {
+    // NOTE normalize the direction vector
+    glm::vec3 normal(dx, dy, dz);
+    if (glm::length(normal) > 0.0f) {
+        normal = glm::normalize(normal);
+    }
+    lightNormals[num] = normal;
+}
+
+void PGraphicsOpenGL_3_3_core::setLightAmbient(const int num, const float r, const float g, const float b) {
+    lightAmbientColors[num] = glm::vec3(r, g, b);
+}
+
+void PGraphicsOpenGL_3_3_core::setNoLightAmbient(const int num) {
+    lightAmbientColors[num] = glm::vec3(0.0f);
+}
+
+void PGraphicsOpenGL_3_3_core::setLightDiffuse(const int num, const float r, const float g, const float b) {
+    lightDiffuseColors[num] = glm::vec3(r, g, b);
+}
+
+void PGraphicsOpenGL_3_3_core::setNoLightDiffuse(const int num) {
+    lightDiffuseColors[num] = glm::vec3(0.0f);
+}
+
+void PGraphicsOpenGL_3_3_core::setLightSpecular(const int num, const float r, const float g, const float b) {
+    lightSpecularColors[num] = glm::vec3(r, g, b);
+}
+
+void PGraphicsOpenGL_3_3_core::setNoLightSpecular(const int num) {
+    lightSpecularColors[num] = glm::vec3(0.0f);
+}
+
+void PGraphicsOpenGL_3_3_core::setLightFalloff(const int num, const float constant, const float linear, const float quadratic) {
+    lightFalloffCoeffs[num] = glm::vec3(constant, linear, quadratic);
+}
+
+void PGraphicsOpenGL_3_3_core::setNoLightFalloff(const int num) {
+    lightFalloffCoeffs[num] = glm::vec3(1.0f, 0.0f, 0.0f);
+}
+
+void PGraphicsOpenGL_3_3_core::setLightSpot(const int num, const float angle, const float concentration) {
+    lightSpotParams[num] = glm::vec2(std::max(0.0f, std::cos(angle)), concentration);
+}
+
+void PGraphicsOpenGL_3_3_core::setNoLightSpot(const int num) {
+    lightSpotParams[num] = glm::vec2(-1.0f, 0.0f); // -1 disables spotlight
+}
+
+void PGraphicsOpenGL_3_3_core::updateShaderLighting() const {
+    if (!shader_fill_texture_lights) {
+        return;
+    }
+
+    // TODO check if this is the best place to update the shader matrices
+    shader_fill_texture_lights->set_uniform("normalMatrix", glm::mat3(glm::transpose(glm::inverse(g->view_matrix * g->model_matrix))));
+    shader_fill_texture_lights->set_uniform("texMatrix", glm::mat4(1.0f)); // or a real matrix if you’re transforming texCoords
+
+    // update light count
+    shader_fill_texture_lights->set_uniform("lightCount", lightCount);
+
+    // update all light uniforms for the current lights
+    for (int i = 0; i < lightCount; i++) {
+        std::string indexStr = "[" + std::to_string(i) + "]";
+
+        shader_fill_texture_lights->set_uniform("lightPosition" + indexStr, lightPositions[i]);
+        shader_fill_texture_lights->set_uniform("lightNormal" + indexStr, lightNormals[i]);
+        shader_fill_texture_lights->set_uniform("lightAmbient" + indexStr, lightAmbientColors[i]);
+        shader_fill_texture_lights->set_uniform("lightDiffuse" + indexStr, lightDiffuseColors[i]);
+        shader_fill_texture_lights->set_uniform("lightSpecular" + indexStr, lightSpecularColors[i]);
+        shader_fill_texture_lights->set_uniform("lightFalloff" + indexStr, lightFalloffCoeffs[i]);
+        shader_fill_texture_lights->set_uniform("lightSpot" + indexStr, lightSpotParams[i]);
+    }
+
+    checkOpenGLError("updateShaderLighting");
 }
 
 #endif // UMFELD_PGRAPHICS_OPENGLV33_CPP

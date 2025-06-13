@@ -43,10 +43,11 @@ namespace umfeld {
         void check_for_matrix_uniforms();
 
         // TODO maybe move these to implementation
-        bool        load(const std::string& vertex_code, const std::string& fragment_code, const std::string& geometry_code = "");
-        void        use() const;
-        static void unuse();
-        GLuint      get_program_id() const { return programID; }
+        bool   load(const std::string& vertex_code, const std::string& fragment_code, const std::string& geometry_code = "");
+        void   use();
+        void   unuse();
+        GLuint get_program_id() const { return programID; }
+        bool   is_bound() const { return in_use; }
 
         bool debug_uniform_location = true;
         bool has_model_matrix       = false;
@@ -57,6 +58,7 @@ namespace umfeld {
     private:
         GLuint                                 programID;
         std::unordered_map<std::string, GLint> uniformLocations;
+        bool                                   in_use{false};
 
         static GLuint compileShader(const std::string& source, GLenum type);
         static void   checkCompileErrors(GLuint shader, GLenum type);

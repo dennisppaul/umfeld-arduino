@@ -76,6 +76,16 @@ namespace umfeld {
         void     perspective(float fovy, float aspect, float near, float far) override;
         void     lights() override;
         void     noLights() override;
+        void     ambientLight(float r, float g, float b, float x = 0, float y = 0, float z = 0) override;
+        void     directionalLight(float r, float g, float b, float nx, float ny, float nz) override;
+        void     pointLight(float r, float g, float b, float x, float y, float z) override;
+        void     spotLight(float r, float g, float b, float x, float y, float z, float nx, float ny, float nz, float angle, float concentration) override;
+        void     lightFalloff(float constant, float linear, float quadratic) override;
+        void     lightSpecular(float r, float g, float b) override;
+        void     ambient(float r, float g, float b) override;
+        void     specular(float r, float g, float b) override;
+        void     emissive(float r, float g, float b) override;
+        void     shininess(float s) override;
 
         PShader* shader_fill_texture{nullptr};
         PShader* shader_fill_texture_lights{nullptr};
@@ -104,6 +114,48 @@ namespace umfeld {
         GLint                    previously_bound_draw_FBO = 0;
         GLint                    previous_viewport[4]{};
         GLint                    previous_shader{0};
+
+        /* --- lights --- */
+
+        int                  lightCount = 0;
+        static constexpr int MAX_LIGHTS = 8; // or whatever your PGL.MAX_LIGHTS equivalent is
+
+        // Light type constants
+        static constexpr int AMBIENT     = 0;
+        static constexpr int DIRECTIONAL = 1;
+        static constexpr int POINT       = 2;
+        static constexpr int SPOT        = 3;
+
+        // Light arrays
+        int       lightType[MAX_LIGHTS]{};
+        glm::vec4 lightPositions[MAX_LIGHTS]{};
+        glm::vec3 lightNormals[MAX_LIGHTS]{};
+        glm::vec3 lightAmbientColors[MAX_LIGHTS]{};
+        glm::vec3 lightDiffuseColors[MAX_LIGHTS]{};
+        glm::vec3 lightSpecularColors[MAX_LIGHTS]{};
+        glm::vec3 lightFalloffCoeffs[MAX_LIGHTS]{};
+        glm::vec2 lightSpotParams[MAX_LIGHTS]{};
+
+        // Current light settings
+        glm::vec3 currentLightSpecular         = glm::vec3(0.0f);
+        float     currentLightFalloffConstant  = 1.0f;
+        float     currentLightFalloffLinear    = 0.0f;
+        float     currentLightFalloffQuadratic = 0.0f;
+
+        void enableLighting();
+        void setLightPosition(int num, float x, float y, float z, bool directional);
+        void setLightNormal(int num, float dx, float dy, float dz);
+        void setLightAmbient(int num, float r, float g, float b);
+        void setNoLightAmbient(int num);
+        void setLightDiffuse(int num, float r, float g, float b);
+        void setNoLightDiffuse(int num);
+        void setLightSpecular(int num, float r, float g, float b);
+        void setNoLightSpecular(int num);
+        void setLightFalloff(int num, float constant, float linear, float quadratic);
+        void setNoLightFalloff(int num);
+        void setLightSpot(int num, float angle, float concentration);
+        void setNoLightSpot(int num);
+        void updateShaderLighting() const;
 
         /* --- OpenGL 3.3 specific methods --- */
 

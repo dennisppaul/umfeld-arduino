@@ -208,8 +208,18 @@ namespace umfeld {
         virtual void perspective(float fovy, float aspect, float near, float far);
         virtual void printCamera();
         virtual void printProjection();
-        virtual void lights();
+        virtual void lights() {}
         virtual void noLights() {}
+        virtual void ambientLight(float r, float g, float b, float x, float y, float z) {}
+        virtual void directionalLight(float r, float g, float b, float nx, float ny, float nz) {}
+        virtual void pointLight(float r, float g, float b, float x, float y, float z) {}
+        virtual void spotLight(float r, float g, float b, float x, float y, float z, float nx, float ny, float nz, float angle, float concentration) {}
+        virtual void lightFalloff(float constant, float linear, float quadratic) {}
+        virtual void lightSpecular(float r, float g, float b) {}
+        virtual void ambient(float r, float g, float b) {}
+        virtual void specular(float r, float g, float b) {}
+        virtual void emissive(float r, float g, float b) {}
+        virtual void shininess(float s) {}
 
         /* --- additional --- */
 

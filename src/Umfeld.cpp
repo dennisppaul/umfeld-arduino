@@ -115,7 +115,7 @@ namespace umfeld {
     static bool set_display_size() {
         const SDL_DisplayID display_id = SDL_GetPrimaryDisplay();
         if (display_id == 0) {
-            warning(format_label("failed to get primary display"), SDL_GetError());
+            warning(format_label("failed to get primary display"), "SDL ", SDL_GetError(), " ( might be intentional )");
         } else {
             const SDL_DisplayMode* mode = SDL_GetCurrentDisplayMode(display_id);
             if (mode != nullptr) {
@@ -124,8 +124,11 @@ namespace umfeld {
                 console(format_label("display resolution"), display_width, " x ", display_height, " px");
                 return true;
             }
-            warning(umfeld::format_label("failed to get display mode"), SDL_GetError());
+            warning(umfeld::format_label("failed to get display mode"), "SDL ", SDL_GetError());
         }
+        warning(umfeld::format_label("setting display size to window size"), width, " x ", height, " px");
+        display_width  = width;
+        display_height = height;
         return false;
     }
 
@@ -221,8 +224,8 @@ SDL_AppResult SDL_AppInit(void** appstate, const int argc, char* argv[]) {
 
     /* create/check graphics subsystem */
     if (umfeld::enable_graphics) {
-        if (umfeld::renderer > umfeld::DEFAULT) {
-            umfeld::console(umfeld::format_label("setting renderer from paramter `size()`."));
+        if (umfeld::renderer > umfeld::RENDERER_DEFAULT) {
+            umfeld::console(umfeld::format_label("setting renderer from paramter `size()` ( or `umfeld::renderer` )."));
             switch (umfeld::renderer) {
                 case umfeld::RENDERER_OPENGL_2_0:
 #ifndef OPENGL_2_0
@@ -363,7 +366,12 @@ SDL_AppResult SDL_AppInit(void** appstate, const int argc, char* argv[]) {
         umfeld::console("VIDEO CAPABILITIES");
         umfeld::console(umfeld::separator());
         umfeld::set_display_size();
-        umfeld::console(umfeld::format_label("video driver"), SDL_GetCurrentVideoDriver());
+        const char* video_driver = SDL_GetCurrentVideoDriver();
+        if (video_driver == nullptr) {
+            umfeld::console(umfeld::format_label("video driver"), "SDL ", SDL_GetError(), " or is not used");
+        } else {
+            umfeld::console(umfeld::format_label("video driver"), video_driver);
+        }
         if (umfeld::width == umfeld::DISPLAY_WIDTH) {
             umfeld::width = umfeld::display_width;
         }

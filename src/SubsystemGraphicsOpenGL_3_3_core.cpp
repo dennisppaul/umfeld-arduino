@@ -104,28 +104,28 @@ namespace umfeld {
         return "";
     }
 
-   static void set_window_position(const int x, const int y) {
+    static void set_window_position(const int x, const int y) {
         if (window == nullptr) {
             return;
         }
         SDL_SetWindowPosition(window, x, y);
     }
 
-   static void get_window_position(int& x, int& y) {
+    static void get_window_position(int& x, int& y) {
         if (window == nullptr) {
             return;
         }
         SDL_GetWindowPosition(window, &x, &y);
     }
 
-   static void set_window_size(const int width, const int height) {
+    static void set_window_size(const int width, const int height) {
         if (window == nullptr) {
             return;
         }
         SDL_SetWindowSize(window, width, height);
     }
 
-   static void get_window_size(int& width, int& height) {
+    static void get_window_size(int& width, int& height) {
         if (window == nullptr) {
             return;
         }
@@ -163,10 +163,10 @@ umfeld::SubsystemGraphics* umfeld_create_subsystem_graphics_openglv33() {
     graphics->create_native_graphics = umfeld::create_native_graphics;
     graphics->set_title              = umfeld::set_title;
     graphics->get_title              = umfeld::get_title;
-    graphics->set_window_size              = umfeld::set_window_size;
-    graphics->get_window_size              = umfeld::get_window_size;
-    graphics->set_window_position              = umfeld::set_window_position;
-    graphics->get_window_position              = umfeld::get_window_position;
+    graphics->set_window_size        = umfeld::set_window_size;
+    graphics->get_window_size        = umfeld::get_window_size;
+    graphics->set_window_position    = umfeld::set_window_position;
+    graphics->get_window_position    = umfeld::get_window_position;
     graphics->get_sdl_window         = umfeld::get_sdl_window;
     graphics->get_renderer           = umfeld::get_renderer;
     graphics->get_renderer_type      = umfeld::get_renderer_type;

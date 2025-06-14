@@ -160,9 +160,10 @@ namespace umfeld {
         DISABLE_DEPTH_TEST
     };
     enum Renderer {
-        RENDERER_OPENGL_3_3_CORE = 0xB0, // core profile
-        RENDERER_OPENGL_2_0,             // fixed-function pipeline
-        RENDERER_OPENGL_ES_3_0,          // iOS + Android + RPI4b+5
+        RENDERER_DEFAULT = 0xB0,  // choose default renderer based on platform and configuration
+        RENDERER_OPENGL_3_3_CORE, // core profile
+        RENDERER_OPENGL_2_0,      // fixed-function pipeline
+        RENDERER_OPENGL_ES_3_0,   // iOS + Android + RPI4b+5
 #if defined(OPENGL_3_3_CORE)
         RENDERER_OPEN_GL = RENDERER_OPENGL_3_3_CORE, // default OpenGL renderer
 #elif defined(OPENGL_2_0)
@@ -171,6 +172,8 @@ namespace umfeld {
         RENDERER_OPEN_GL = RENDERER_OPENGL_ES_3_0, // default OpenGL renderer
 #endif
         RENDERER_SDL_2D,
+        RENDERER_TERMINAL,
+        RENDERER_TEMPLATE,
     };
     enum Exporter {
         OBJ,

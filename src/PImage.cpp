@@ -50,7 +50,7 @@ PImage::PImage(const std::string& filepath) : width(0),
                                               format(0),
                                               pixels(nullptr) {
     if (!file_exists(filepath)) {
-        error("PImage / file not found: '", filepath, "'");
+        error("file not found: '", filepath, "'");
         return;
     }
 
@@ -60,7 +60,7 @@ PImage::PImage(const std::string& filepath) : width(0),
     unsigned char* data      = stbi_load(filepath.c_str(), &_width, &_height, &_channels, 0);
     if (data) {
         if (_channels != 4 && _channels != 3) {
-            std::cerr << "Unsupported image format, defaulting to RGBA forcing 4 color channels." << std::endl;
+            error("unsupported image format, defaulting to RGBA forcing 4 color channels.");
             _channels = 4;
         }
         pixels = new uint32_t[_width * _height];
@@ -74,12 +74,12 @@ PImage::PImage(const std::string& filepath) : width(0),
         }
 
         if (_channels == 3) {
-            std::cout << "Note that RGB is converted to RGBA and number of channels is changed to 4" << std::endl;
+            console("Note that RGB is converted to RGBA and number of channels is changed to 4");
             _channels = 4;
         }
         PImage::init(pixels, _width, _height, _channels, true);
     } else {
-        std::cerr << "Failed to load image: " << filepath << std::endl;
+        error("failed to load image: ", filepath);
     }
     stbi_image_free(data);
 }
@@ -91,15 +91,14 @@ void PImage::init(uint32_t*  pixels,
                   const int  format,
                   const bool generate_mipmap) {
     if (pixels == nullptr) {
-        std::cerr << "unitialized pixel buffer" << std::endl;
-        return;
+        warning(umfeld::format_label("PImage::init()"), "pixel buffer is not initialized ( might be intentional )");
     }
     this->pixels = pixels;
     this->width  = static_cast<float>(width);
     this->height = static_cast<float>(height);
     this->format = format;
     if (format != 4) {
-        std::cerr << "unsupported image format, defaulting to RGBA forcing 4 color channels." << std::endl;
+        warning("unsupported image format, defaulting to RGBA forcing 4 color channels.");
         this->format = 4;
     }
 }
@@ -144,7 +143,7 @@ void PImage::updatePixels(PGraphics* graphics) {
 
 void PImage::updatePixels(PGraphics* graphics, const int x, const int y, const int w, const int h) {
     if (!pixels) {
-        std::cerr << "pixel array not initialized" << std::endl;
+        error("pixel array not initialized");
         return;
     }
 
@@ -179,11 +178,11 @@ void PImage::update(PGraphics*      graphics,
                     const int       offset_x,
                     const int       offset_y) {
     if (!pixel_data) {
-        std::cerr << "invalid pixel data" << std::endl;
+        error("invalid pixel data");
         return;
     }
     if (!pixels) {
-        std::cerr << "pixel array not initialized" << std::endl;
+        error("pixel array not initialized");
         return;
     }
 
@@ -193,7 +192,7 @@ void PImage::update(PGraphics*      graphics,
     if (offset_x < 0 || offset_y < 0 ||
         offset_x + width > static_cast<int>(this->width) ||
         offset_y + height > static_cast<int>(this->height)) {
-        std::cerr << "subregion is out of bounds" << std::endl;
+        error("subregion is out of bounds");
         return;
     }
 

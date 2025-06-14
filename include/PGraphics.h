@@ -28,7 +28,6 @@
 #include "PImage.h"
 #include "Vertex.h"
 #include "Triangulator.h"
-#include "UFont.h"
 
 namespace umfeld {
     class PFont;
@@ -230,7 +229,7 @@ namespace umfeld {
         virtual void        hint(uint16_t property);
         virtual void        pixelDensity(int density);
         virtual void        text_str(const std::string& text, float x, float y, float z = 0.0f); // TODO maybe make this private?
-        virtual void        debug_text(const std::string& text, float x, float y) {}             // TODO implement this in PGraphics
+        virtual void        debug_text(const std::string& text, float x, float y) {}             // TODO implement this in derived PGraphics
         void                to_screen_space(glm::vec3& model_position) const;                    // NOTE: convert from model space to screen space
         void                to_world_space(glm::vec3& model_position) const;                     // NOTE: convert from model space to works space
         void                linse(const float x1, const float y1, const float x2, const float y2) { line(x1, y1, x2, y2); }
@@ -316,7 +315,6 @@ namespace umfeld {
         glm::mat4                        temp_view_matrix{};
         glm::mat4                        temp_projection_matrix{};
         int                              render_mode{RENDER_MODE_IMMEDIATE};
-        UFont                            debug_font;
         bool                             in_camera_block{false};
         void (*triangle_emitter_callback)(std::vector<Vertex>&){nullptr};
         void (*stroke_emitter_callback)(std::vector<Vertex>&, bool){nullptr};

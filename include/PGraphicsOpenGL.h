@@ -26,6 +26,7 @@
 
 #include "UmfeldFunctionsAdditional.h"
 #include "PGraphics.h"
+#include "UFont.h"
 
 #ifndef PGRAPHICS_OPENGL_DO_NOT_CHECK_ERRORS
 #define GL_CALL(func) \
@@ -434,5 +435,8 @@ namespace umfeld {
             IMPL_bind_texture(tmp_bound_texture);
             return true;
         }
+
+    protected:
+        UFont debug_font;
     }; // class PGraphicsOpenGL
 } // namespace umfeld

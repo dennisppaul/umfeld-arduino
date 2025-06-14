@@ -6,9 +6,19 @@ message(STATUS "----------------------------------------")
 message(STATUS "UMFELD LIBRARY")
 message(STATUS "----------------------------------------")
 
+# TODO devide for either 'disable' or 'enable' options
 option(ENABLE_PORTAUDIO "Enable PortAudio output" ON)
 option(ENABLE_ANGLE "Enable ANGLE OpenGL ES emulation on macOS ( apple silicon )" OFF)
-option(DISABLE_PDF "Disable PDF expot" OFF)
+option(DISABLE_PDF "Disable PDF export ( cairo )" OFF)
+option(DISABLE_NCURSES "Disable ncurses support" OFF)
+option(DISABLE_VIDEO "Disable video ( ffmpeg ) support" OFF)
+option(DISABLE_AUDIO "Disable audio ( SDL3 + portaudio ) support" OFF)
+
+# TODO add more options
+#option(DISABLE_OPENGL "Disable OpenGL support" OFF)
+#option(DISABLE_GRAPHICS "Disable graphics support" OFF) # same as DISABLE_OPENGL?
+#option(DISABLE_FONT "Disable font rendering ( harfbuzz + freetype ) support" OFF)
+#option(DISABLE_MAIN "Disable main function" OFF)
 
 ##########################################################################################################
 ### CHECK FOR HOMEBREW                                                                                 ###
@@ -304,9 +314,26 @@ if (NOT DISABLE_GRAPHICS)
     find_package(glm REQUIRED)
     find_package(OpenGL REQUIRED)
     find_package(SDL3 CONFIG REQUIRED)
+
+    # font rendering
     find_package(harfbuzz CONFIG REQUIRED)
     pkg_check_modules(FREETYPE REQUIRED freetype2)
-    pkg_check_modules(CAIRO REQUIRED cairo)
+
+    # PDF export
+    if (NOT DISABLE_PDF)
+        message(STATUS "PDF_EXPORT    : ENABLED")
+        pkg_check_modules(CAIRO REQUIRED cairo)
+    else (NOT DISABLE_PDF)
+        message(STATUS "PDF_EXPORT    : DISABLED")
+    endif (NOT DISABLE_PDF)
+
+    # Ncurses
+    if (NOT DISABLE_NCURSES)
+        message(STATUS "NCURSES(TERM) : ENABLED")
+        find_package(Curses REQUIRED)
+    else (NOT DISABLE_NCURSES)
+        message(STATUS "NCURSES(TERM) : DISABLED")
+    endif (NOT DISABLE_NCURSES)
 
     if (APPLE)
     elseif (UNIX)
@@ -416,12 +443,19 @@ if (NOT DISABLE_GRAPHICS)
             message(STATUS "platform may not be supported ... assuming windows.")
         endif ()
     endif (NOT DISABLE_VIDEO)
-    # PDF
+
+    # PDF export
     if (NOT DISABLE_PDF)
         target_include_directories(${PROJECT_NAME} PUBLIC ${CAIRO_INCLUDE_DIRS})
         target_link_libraries(${PROJECT_NAME} PUBLIC ${CAIRO_LIBRARIES})
         target_compile_options(${PROJECT_NAME} PUBLIC ${CAIRO_CFLAGS_OTHER})
     endif (NOT DISABLE_PDF)
+
+    if (NOT DISABLE_NCURSES)
+        target_include_directories(${PROJECT_NAME} PUBLIC ${CURSES_INCLUDE_DIRS})
+        target_link_libraries(${PROJECT_NAME} PUBLIC ${CURSES_LIBRARIES})
+    endif (NOT DISABLE_NCURSES)
+
 endif (NOT DISABLE_GRAPHICS)
 
 # MIDI

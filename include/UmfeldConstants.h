@@ -174,6 +174,7 @@ namespace umfeld {
         RENDERER_SDL_2D,
         RENDERER_TERMINAL,
         RENDERER_TEMPLATE,
+        RENDERER_CUSTOM,
     };
     enum Exporter {
         OBJ,

@@ -589,6 +589,10 @@ SDL_AppResult SDL_AppIterate(void* appstate) {
         umfeld::lastFrameTime = currentFrameTime;
     }
 
+    if (umfeld::request_shutdown) {
+        return SDL_APP_SUCCESS;
+    }
+
     return SDL_APP_CONTINUE;
 }
 

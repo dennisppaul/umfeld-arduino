@@ -105,6 +105,7 @@ namespace umfeld {
     /* public variables *mainly for internal use* */
 
     inline bool                    use_esc_key_to_quit = true;
+    inline bool                    request_shutdown = false;
     inline std::vector<Subsystem*> subsystems;
     inline SubsystemGraphics*      subsystem_graphics   = nullptr;
     inline SubsystemAudio*         subsystem_audio      = nullptr;

@@ -46,9 +46,7 @@ namespace umfeld {
 
     static void event_in_update_loop(SDL_Event* event) {}
 
-    static const char* name() {
-        return "TEMPLATE";
-    }
+    static const char* name() { return "TEMPLATE"; }
 
     /* --- SubsystemGraphics --- */
 
@@ -82,13 +80,9 @@ namespace umfeld {
 
     static SDL_Window* get_sdl_window() { return nullptr; }
 
-    static void* get_renderer() {
-        return nullptr;
-    }
+    static void* get_renderer() { return nullptr; }
 
-    static int get_renderer_type() {
-        return RENDERER_TEMPLATE;
-    }
+    static int get_renderer_type() { return RENDERER_TEMPLATE; }
 
 } // namespace umfeld
 

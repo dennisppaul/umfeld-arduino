@@ -20,6 +20,7 @@
 #include <iostream>
 #include <vector>
 #include <array>
+#include <curl/curl.h>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -38,7 +39,7 @@
 
 using namespace umfeld;
 
-PGraphics::PGraphics() : PImage(0, 0, 0) {
+PGraphics::PGraphics() : PImage(0, 0) {
     PGraphics::fill(1.0f);
     PGraphics::stroke(0.0f);
     PGraphics::ellipseDetail(ELLIPSE_DETAIL_DEFAULT);
@@ -656,6 +657,8 @@ void PGraphics::circle(const float x, const float y, const float diameter) {
     ellipse(x, y, diameter, diameter);
 }
 
+/* --- load image --- */
+
 PImage* PGraphics::loadImage(const std::string& file, const bool use_relative_path) {
     const std::string abolsute_path = use_relative_path ? file : sketchPath() + file;
     if (!file_exists(abolsute_path)) {
@@ -664,6 +667,116 @@ PImage* PGraphics::loadImage(const std::string& file, const bool use_relative_pa
     }
     return new PImage(abolsute_path);
 }
+
+// const std::vector<std::string> supportedProtocols{};
+//
+// struct MemoryBuffer {
+//     std::vector<unsigned char> data;
+// };
+//
+// static size_t WriteCallback(void* contents, size_t size, size_t nmemb, void* userp) {
+//     size_t        totalSize = size * nmemb;
+//     MemoryBuffer* mem       = static_cast<MemoryBuffer*>(userp);
+//     mem->data.insert(mem->data.end(), (unsigned char*) contents, (unsigned char*) contents + totalSize);
+//     return totalSize;
+// }
+//
+// unsigned char* loadImageFromFile(const std::string& filepath, int* width, int* height, int* channels) {
+//     return stbi_load(filepath.c_str(), width, height, channels, 0);
+// }
+//
+// unsigned char* loadImageFromURL(const std::string& url, int* width, int* height, int* channels) {
+//     static std::vector<std::string> supportedProtocols;
+//
+//     // Query supported protocols only once
+//     if (supportedProtocols.empty()) {
+//         const curl_version_info_data* info = curl_version_info(CURLVERSION_NOW);
+//         if (info && info->protocols) {
+//             for (const char* const* proto = info->protocols; *proto != nullptr; ++proto) {
+//                 supportedProtocols.emplace_back(*proto);
+//             }
+//         }
+//     }
+//
+//     // Optional: skip early if protocol is unsupported
+//     auto schemeEnd = url.find("://");
+//     if (schemeEnd != std::string::npos) {
+//         std::string scheme = url.substr(0, schemeEnd);
+//         auto        found  = std::find(supportedProtocols.begin(), supportedProtocols.end(), scheme);
+//         if (found == supportedProtocols.end()) {
+//             std::cerr << "Protocol not supported by libcurl: " << scheme << "\n";
+//             return nullptr;
+//         }
+//     }
+//
+//     // Proceed with blocking download
+//     CURL* curl = curl_easy_init();
+//     if (!curl) {
+//         return nullptr;
+//     }
+//
+//     MemoryBuffer buffer;
+//
+//     curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+//     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
+//     curl_easy_setopt(curl, CURLOPT_WRITEDATA, &buffer);
+//     curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
+//
+//     CURLcode res = curl_easy_perform(curl);
+//     curl_easy_cleanup(curl);
+//
+//     if (res != CURLE_OK) {
+//         std::cerr << "CURL error: " << curl_easy_strerror(res) << "\n";
+//         return nullptr;
+//     }
+//
+//     return stbi_load_from_memory(buffer.data.data(), buffer.data.size(), width, height, channels, 0);
+// }
+//
+// unsigned char* loadImage(const std::string& location, int* width, int* height, int* channels) {
+//     // Query and cache supported protocols once
+//     static std::vector<std::string> curlProtocols;
+//     if (curlProtocols.empty()) {
+//         curl_version_info_data* info = curl_version_info(CURLVERSION_NOW);
+//         if (info && info->protocols) {
+//             for (const char* const* proto = info->protocols; *proto != nullptr; ++proto) {
+//                 curlProtocols.emplace_back(*proto);
+//             }
+//         }
+//     }
+//
+//     // Extract scheme (before ://)
+//     auto schemeEnd = location.find("://");
+//     if (schemeEnd != std::string::npos) {
+//         std::string scheme = location.substr(0, schemeEnd);
+//
+//         if (scheme == "file") {
+//             // Handle file:// specially — map to local file
+// #if defined(_WIN32)
+//             const std::string prefix = "file:///";
+//             if (location.rfind(prefix, 0) == 0) {
+//                 std::string path = location.substr(prefix.size());
+//                 std::replace(path.begin(), path.end(), '/', '\\');
+//                 return loadImageFromFile(path, width, height, channels);
+//             }
+// #else
+//             std::string path = location.substr(7); // strip file://
+//             return loadImageFromFile(path, width, height, channels);
+// #endif
+//         }
+//
+//         // Check if scheme is supported by libcurl
+//         if (std::find(curlProtocols.begin(), curlProtocols.end(), scheme) != curlProtocols.end()) {
+//             return loadImageFromURL(location, width, height, channels);
+//         } else {
+//             std::cerr << "Unsupported protocol: " << scheme << "\n";
+//             return nullptr;
+//         }
+//     }
+//
+//     // No scheme → assume it's a local path
+//     return loadImageFromFile(location, width, height, channels);
+// }
 
 PFont* PGraphics::loadFont(const std::string& file, const float size, const bool use_relative_path) {
     const std::string abolsute_path = use_relative_path ? file : sketchPath() + file;
@@ -895,7 +1008,7 @@ std::vector<Vertex> PGraphics::triangulate_faster(const std::vector<Vertex>& ver
     std::vector<std::vector<std::array<float, 2>>> polygon;
     polygon.emplace_back(); // Outer boundary
 
-    // convert Vertex to 2D format for earcut (ignore z)
+    // convert Vertex to 2D channels for earcut (ignore z)
     for (const auto& v: vertices) {
         polygon[0].push_back({v.position.x, v.position.y});
     }
@@ -957,7 +1070,7 @@ std::vector<Vertex> PGraphics::triangulate_better_quality(const std::vector<Vert
         return {};
     }
 
-    // convert to PolyPartition format
+    // convert to PolyPartition channels
     std::vector<TPPLPoly> convexPolygons;
     for (auto& poly: convertToPolyPartition(fixedPaths)) {
         std::list<TPPLPoly> convexParts;

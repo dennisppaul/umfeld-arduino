@@ -152,7 +152,7 @@ namespace umfeld {
         PImage* loadImage(const std::string& filename, bool use_relative_path) override {
             // auto* img = new PImage(filename);
             //
-            // // Create SDL texture (RGBA format)
+            // // Create SDL texture (RGBA channels)
             // SDL_Texture* texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ABGR8888, SDL_TEXTUREACCESS_STREAMING, TEXTURE_WIDTH, TEXTURE_HEIGHT);
             // if (!texture) {
             //     std::cerr << "Failed to create texture! SDL_Error: " << SDL_GetError() << std::endl;
@@ -188,7 +188,7 @@ namespace umfeld {
         void endDraw() override {}
         void mesh(VertexBuffer* mesh_shape) override { /* TODO implement */ }
 
-        void init(uint32_t* pixels, const int width, const int height, int format, bool generate_mipmap) override {
+        void init(uint32_t* pixels, const int width, const int height, bool generate_mipmap) override {
             this->width  = width;
             this->height = height;
             // framebuffer.width  = width;

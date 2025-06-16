@@ -36,13 +36,13 @@ void PFont::DEBUG_save_font_atlas(const FontData& font, const std::string& outpu
             const unsigned char val = font.atlas[y * font.atlas_width + x];
             const int           idx = (y * font.atlas_width + x) * 4;
 
-            // Store grayscale value into RGBA format (transparent text on white fond)
+            // Store grayscale value into RGBA channels (transparent text on white fond)
             atlas_rgba[idx + 0] = 255; // R
             atlas_rgba[idx + 1] = 255; // G
             atlas_rgba[idx + 2] = 255; // B
             atlas_rgba[idx + 3] = val; // A (fully opaque)
 
-            // // Store grayscale value into RGBA format (white text on black background)
+            // // Store grayscale value into RGBA channels (white text on black background)
             // atlas_rgba[idx + 0] = val; // R
             // atlas_rgba[idx + 1] = val; // G
             // atlas_rgba[idx + 2] = val; // B

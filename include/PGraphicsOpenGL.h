@@ -351,7 +351,7 @@ namespace umfeld {
 
         /* --- interface --- */
 
-        void        init(uint32_t* pixels, int width, int height, int format, bool generate_mipmap) override                                            = 0;
+        void        init(uint32_t* pixels, int width, int height, bool generate_mipmap) override                                                        = 0;
         void        upload_texture(PImage* img, const uint32_t* pixel_data, int width, int height, int offset_x, int offset_y, bool mipmapped) override = 0;
         void        download_texture(PImage* img) override                                                                                              = 0;
         std::string name() override                                                                                                                     = 0;

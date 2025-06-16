@@ -39,7 +39,7 @@
 
 using namespace umfeld;
 
-PGraphicsOpenGL_3_3_core::PGraphicsOpenGL_3_3_core(const bool render_to_offscreen) : PImage(0, 0, 0) {
+PGraphicsOpenGL_3_3_core::PGraphicsOpenGL_3_3_core(const bool render_to_offscreen) : PImage(0, 0) {
     this->render_to_offscreen = render_to_offscreen;
 }
 
@@ -146,7 +146,7 @@ void PGraphicsOpenGL_3_3_core::IMPL_emit_shape_stroke_line_strip(std::vector<Ver
 
     // NOTE this is a very central method! up until here everything should have been done in generic PGraphics.
     //      - vertices are in model space
-    //      - vertices are in line strip format ( i.e not triangulated or anything yet )
+    //      - vertices are in line strip channels ( i.e not triangulated or anything yet )
     //      - decide on rendering mode ( triangulated, native, etcetera )
     //      - this method is usually accessed from `endShape()`
 
@@ -584,9 +584,7 @@ void PGraphicsOpenGL_3_3_core::download_texture(PImage* img) {
 void PGraphicsOpenGL_3_3_core::init(uint32_t*  pixels,
                                     const int  width,
                                     const int  height,
-                                    const int  format,
                                     const bool generate_mipmap) {
-    (void) format;                         // TODO should this always be ignored? NOTE main graphics are always RGBA
     (void) generate_mipmap;                // TODO should this always be ignored?
     const int msaa_samples = antialiasing; // TODO not cool to take this from Umfeld
 

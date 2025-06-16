@@ -28,7 +28,7 @@
       PSD (composited view only, no extra channels, 8/16 bit-per-channel)
 
       GIF (*comp always reports as 4-channel)
-      HDR (radiance rgbE format)
+      HDR (radiance rgbE channels)
       PIC (Softimage PIC)
       PNM (PPM and PGM binary only)
 
@@ -66,7 +66,7 @@ RECENT REVISION HISTORY:
       2.13  (2016-12-04) experimental 16-bit API, only for PNG so far; fixes
       2.12  (2016-04-02) fix typo in 2.11 PSD fix that caused crashes
       2.11  (2016-04-02) 16-bit PNGS; enable SSE2 in non-gcc x64
-                         RGB-format JPEG; remove white matting in PSD;
+                         RGB-channels JPEG; remove white matting in PSD;
                          allocate large structures on the stack;
                          correct channel count for PNG & BMP
       2.10  (2016-01-22) avoid warning introduced in 2.09
@@ -154,7 +154,7 @@ RECENT REVISION HISTORY:
 // corrupt or invalid. The pixel data consists of *y scanlines of *x pixels,
 // with each pixel consisting of N interleaved 8-bit components; the first
 // pixel pointed to is top-left-most in the image. There is no padding between
-// image scanlines or between pixels, regardless of format. The number of
+// image scanlines or between pixels, regardless of channels. The number of
 // components N is 'desired_channels' if desired_channels is non-zero, or
 // *channels_in_file otherwise. If desired_channels is non-zero,
 // *channels_in_file has the number of components that _would_ have been
@@ -185,14 +185,14 @@ RECENT REVISION HISTORY:
 //
 //   int x,y,n,ok;
 //   ok = stbi_info(filename, &x, &y, &n);
-//   // returns ok=1 and sets x, y, n if image is a supported format,
+//   // returns ok=1 and sets x, y, n if image is a supported channels,
 //   // 0 otherwise.
 //
 // Note that stb_image pervasively uses ints in its public API for sizes,
 // including sizes of memory buffers. This is now part of the API and thus
 // hard to change without causing breakage. As a result, the various image
 // loaders all have certain limits on image size; these differ somewhat
-// by format but generally boil down to either just under 2GB or just under
+// by channels but generally boil down to either just under 2GB or just under
 // 1GB. When the decoded image would be larger than this, stb_image decoding
 // will fail.
 //
@@ -277,7 +277,7 @@ RECENT REVISION HISTORY:
 // HDR image support   (disable by defining STBI_NO_HDR)
 //
 // stb_image supports loading HDR images in general, and currently the Radiance
-// .HDR file format specifically. You can still load any file through the existing
+// .HDR file channels specifically. You can still load any file through the existing
 // interface; if you attempt to load an HDR file, it will be automatically remapped
 // to LDR, assuming gamma 2.2 and an arbitrary scale factor defaulting to 1;
 // both of these constants can be reconfigured through this interface:
@@ -506,7 +506,7 @@ STBIDEF int stbi_is_16_bit_from_file(FILE* f);
 // unpremultiplication. results are undefined if the unpremultiply overflow.
 STBIDEF void stbi_set_unpremultiply_on_load(int flag_true_if_should_unpremultiply);
 
-// indicate whether we should process iphone images back to canonical format,
+// indicate whether we should process iphone images back to canonical channels,
 // or just pass them through "as-is"
 STBIDEF void stbi_convert_iphone_png_to_rgb(int flag_true_if_should_convert);
 
@@ -1754,7 +1754,7 @@ static unsigned char* stbi__convert_format(unsigned char* data, int img_n, int r
                 STBI_ASSERT(0);
                 STBI_FREE(data);
                 STBI_FREE(good);
-                return stbi__errpuc("unsupported", "Unsupported format conversion");
+                return stbi__errpuc("unsupported", "Unsupported channels conversion");
         }
 #undef STBI__CASE
     }
@@ -1851,7 +1851,7 @@ static stbi__uint16* stbi__convert_format16(stbi__uint16* data, int img_n, int r
                 STBI_ASSERT(0);
                 STBI_FREE(data);
                 STBI_FREE(good);
-                return (stbi__uint16*) stbi__errpuc("unsupported", "Unsupported format conversion");
+                return (stbi__uint16*) stbi__errpuc("unsupported", "Unsupported channels conversion");
         }
 #undef STBI__CASE
     }
@@ -1930,7 +1930,7 @@ static stbi_uc* stbi__hdr_to_ldr(float* data, int x, int y, int comp) {
 //
 //    simple implementation
 //      - doesn't support delayed output of y-dimension
-//      - simple interface (only one output format: 8-bit interleaved RGB)
+//      - simple interface (only one output channels: 8-bit interleaved RGB)
 //      - doesn't try to recover corrupt jpegs
 //      - doesn't allow partial loading, loading multiple at once
 //      - still fast on x86 (copying globals into locals doesn't help x86)
@@ -3312,9 +3312,9 @@ static int stbi__process_frame_header(stbi__jpeg* z, int scan) {
     Lf = stbi__get16be(s);
     if (Lf < 11) return stbi__err("bad SOF len", "Corrupt JPEG"); // JPEG
     p = stbi__get8(s);
-    if (p != 8) return stbi__err("only 8-bit", "JPEG format not supported: 8-bit only"); // JPEG baseline
+    if (p != 8) return stbi__err("only 8-bit", "JPEG channels not supported: 8-bit only"); // JPEG baseline
     s->img_y = stbi__get16be(s);
-    if (s->img_y == 0) return stbi__err("no header height", "JPEG format not supported: delayed height"); // Legal, but we don't handle it--but neither does IJG
+    if (s->img_y == 0) return stbi__err("no header height", "JPEG channels not supported: delayed height"); // Legal, but we don't handle it--but neither does IJG
     s->img_x = stbi__get16be(s);
     if (s->img_x == 0) return stbi__err("0 width", "Corrupt JPEG"); // JPEG requires
     if (s->img_y > STBI_MAX_DIMENSIONS) return stbi__err("too large", "Very large image (corrupt?)");
@@ -3457,7 +3457,7 @@ static int stbi__skip_jpeg_junk_at_end(stbi__jpeg* j) {
     return STBI__MARKER_none;
 }
 
-// decode image to YCbCr format
+// decode image to YCbCr channels
 static int stbi__decode_jpeg_image(stbi__jpeg* j) {
     int m;
     for (m = 0; m < 4; m++) {
@@ -3930,7 +3930,7 @@ static stbi_uc* load_jpeg_image(stbi__jpeg* z, int* out_x, int* out_y, int* comp
     // validate req_comp
     if (req_comp < 0 || req_comp > 4) return stbi__errpuc("bad req_comp", "Internal error");
 
-    // load a jpeg image from whichever source, but leave in YCbCr format
+    // load a jpeg image from whichever source, but leave in YCbCr channels
     if (!stbi__decode_jpeg_image(z)) {
         stbi__cleanup_jpeg(z);
         return NULL;
@@ -6024,7 +6024,7 @@ static void* stbi__tga_load(stbi__context* s, int* x, int* y, int* comp, int req
         tga_comp = stbi__tga_get_comp(tga_bits_per_pixel, (tga_image_type == 3), &tga_rgb16);
 
     if (!tga_comp) // shouldn't really happen, stbi__tga_test() should have ensured basic consistency
-        return stbi__errpuc("bad format", "Can't find out TGA pixelformat");
+        return stbi__errpuc("bad channels", "Can't find out TGA pixelformat");
 
     //   tga info
     *x = tga_width;
@@ -6265,7 +6265,7 @@ static void* stbi__psd_load(stbi__context* s, int* x, int* y, int* comp, int req
     //   8: Duotone
     //   9: Lab color
     if (stbi__get16be(s) != 3)
-        return stbi__errpuc("wrong color format", "PSD is not in RGB color format");
+        return stbi__errpuc("wrong color channels", "PSD is not in RGB color channels");
 
     // Skip the Mode Data.  (It's the palette for indexed color; other info for other modes.)
     stbi__skip(s, stbi__get32be(s));
@@ -6282,7 +6282,7 @@ static void* stbi__psd_load(stbi__context* s, int* x, int* y, int* comp, int req
     //   1: RLE compressed
     compression = stbi__get16be(s);
     if (compression > 1)
-        return stbi__errpuc("bad compression", "PSD has an unknown compression format");
+        return stbi__errpuc("bad compression", "PSD has an unknown compression channels");
 
     // Check size
     if (!stbi__mad3sizes_valid(4, w, h, 0))
@@ -6401,7 +6401,7 @@ static void* stbi__psd_load(stbi__context* s, int* x, int* y, int* comp, int req
         }
     }
 
-    // convert to desired output format
+    // convert to desired output channels
     if (req_comp && req_comp != 4) {
         if (ri->bits_per_channel == 16)
             out = (stbi_uc*) stbi__convert_format16((stbi__uint16*) out, 4, req_comp, w, h);
@@ -6486,7 +6486,7 @@ static stbi_uc* stbi__pic_load_core(stbi__context* s, int width, int height, int
         stbi__pic_packet* packet;
 
         if (num_packets == sizeof(packets) / sizeof(packets[0]))
-            return stbi__errpuc("bad format", "too many packets");
+            return stbi__errpuc("bad channels", "too many packets");
 
         packet = &packets[num_packets++];
 
@@ -6498,7 +6498,7 @@ static stbi_uc* stbi__pic_load_core(stbi__context* s, int width, int height, int
         act_comp |= packet->channel;
 
         if (stbi__at_eof(s)) return stbi__errpuc("bad file", "file too short (reading packets)");
-        if (packet->size != 8) return stbi__errpuc("bad format", "packet isn't 8bpp");
+        if (packet->size != 8) return stbi__errpuc("bad channels", "packet isn't 8bpp");
     } while (chained);
 
     *comp = (act_comp & 0x10 ? 4 : 3); // has alpha channel?
@@ -6512,7 +6512,7 @@ static stbi_uc* stbi__pic_load_core(stbi__context* s, int width, int height, int
 
             switch (packet->type) {
                 default:
-                    return stbi__errpuc("bad format", "packet has bad compression type");
+                    return stbi__errpuc("bad channels", "packet has bad compression type");
 
                 case 0: { //uncompressed
                     int x;
@@ -6852,7 +6852,7 @@ static stbi_uc* stbi__process_gif_raster(stbi__context* s, stbi__gif* g) {
 }
 
 // this function is designed to support animated gifs, although stb_image doesn't support it
-// two back is the image from two frames ago, used for a very specific disposal format
+// two back is the image from two frames ago, used for a very specific disposal channels
 static stbi_uc* stbi__gif_load_next(stbi__context* s, stbi__gif* g, int* comp, int req_comp, stbi_uc* two_back) {
     int dispose;
     int first_frame;
@@ -7251,16 +7251,16 @@ static float* stbi__hdr_load(stbi__context* s, int* x, int* y, int* comp, int re
         if (strcmp(token, "FORMAT=32-bit_rle_rgbe") == 0) valid = 1;
     }
 
-    if (!valid) return stbi__errpf("unsupported format", "Unsupported HDR format");
+    if (!valid) return stbi__errpf("unsupported channels", "Unsupported HDR channels");
 
     // Parse width and height
     // can't use sscanf() if we're not using stdio!
     token = stbi__hdr_gettoken(s, buffer);
-    if (strncmp(token, "-Y ", 3)) return stbi__errpf("unsupported data layout", "Unsupported HDR format");
+    if (strncmp(token, "-Y ", 3)) return stbi__errpf("unsupported data layout", "Unsupported HDR channels");
     token += 3;
     height = (int) strtol(token, &token, 10);
     while (*token == ' ') ++token;
-    if (strncmp(token, "+X ", 3)) return stbi__errpf("unsupported data layout", "Unsupported HDR format");
+    if (strncmp(token, "+X ", 3)) return stbi__errpf("unsupported data layout", "Unsupported HDR channels");
     token += 3;
     width = (int) strtol(token, NULL, 10);
 
@@ -7925,7 +7925,7 @@ STBIDEF int stbi_is_16_bit_from_callbacks(stbi_io_callbacks const* c, void* user
               a few more leak fixes, bug in PNG handling (SpartanJ)
       1.30  (2011-06-11)
               added ability to load files via callbacks to accomidate custom input streams (Ben Wenger)
-              removed deprecated format-specific test/load functions
+              removed deprecated channels-specific test/load functions
               removed support for installable file formats (stbi_loader) -- would have been broken for IO callbacks anyway
               error cases in bmp and tga give messages and don't leak (Raymond Barbiero, grisha)
               fix inefficiency in decoding 32-bit BMP (David Woo)
@@ -7966,7 +7966,7 @@ STBIDEF int stbi_is_16_bit_from_callbacks(stbi_io_callbacks const* c, void* user
       1.11    Support installable IDCT, colorspace conversion routines
       1.10    Fixes for 64-bit (don't use "unsigned long")
               optimized upsampling by Fabian "ryg" Giesen
-      1.09    Fix format-conversion for PSD code (bad global variables!)
+      1.09    Fix channels-conversion for PSD code (bad global variables!)
       1.08    Thatcher Ulrich's PSD code integrated by Nicolas Schulz
       1.07    attempt to fix C++ warning/errors again
       1.06    attempt to fix C++ warning/errors again

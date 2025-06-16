@@ -111,14 +111,14 @@ int Movie::init_from_file(const std::string& filename, int _channels) {
     const AVRational frame_rate     = formatContext->streams[videoStreamIndex]->avg_frame_rate;
     const double     frame_duration = 1.0 / (frame_rate.num / static_cast<double>(frame_rate.den));
 
-    // Determine the pixel format and number of channels based on input file
+    // Determine the pixel channels and number of channels based on input file
     const AVPixelFormat       src_pix_fmt = videoCodecContext->pix_fmt;
     AVPixelFormat             dst_pix_fmt;
     const AVPixFmtDescriptor* desc = av_pix_fmt_desc_get(src_pix_fmt);
     if (_channels < 0) {
         _channels   = 4;
         dst_pix_fmt = AV_PIX_FMT_RGBA;
-        //        std::cout << "not looking for format. defaulting to RGBA ( 4 channels )" << std::endl;
+        //        std::cout << "not looking for channels. defaulting to RGBA ( 4 channels )" << std::endl;
     } else if (desc && desc->nb_components == 4) {
         _channels   = 4;
         dst_pix_fmt = AV_PIX_FMT_RGBA;
@@ -173,7 +173,6 @@ int Movie::init_from_file(const std::string& filename, int _channels) {
     PImage::init(reinterpret_cast<uint32_t*>(convertedFrame->data[0]),
                  videoCodecContext->width,
                  videoCodecContext->height,
-                 _channels,
                  false);
 
 #ifndef OMIT_PRINT_MOVIE_INFO
@@ -277,7 +276,7 @@ bool Movie::available() {
                     if (swr_alloc_set_opts2(
                             &swrCtx,
                             &out_ch_layout, AV_SAMPLE_FMT_FLT, audioCodecContext->sample_rate,
-                            &in_ch_layout, (AVSampleFormat) frame->format, frame->sample_rate,
+                            &in_ch_layout, static_cast<AVSampleFormat>(frame->format), frame->sample_rate,
                             0, NULL) < 0) {
                         fprintf(stderr, "Failed to allocate and configure SwrContext\n");
                         av_channel_layout_uninit(&in_ch_layout);
@@ -301,7 +300,7 @@ bool Movie::available() {
                     swrCtx = swr_alloc_set_opts(
                         NULL,
                         out_ch_layout, AV_SAMPLE_FMT_FLT, audioCodecContext->sample_rate,
-                        in_ch_layout, (AVSampleFormat) frame->format, frame->sample_rate,
+                        in_ch_layout, (AVSampleFormat) frame->channels, frame->sample_rate,
                         0, NULL);
 
                     if (!swrCtx || swr_init(swrCtx) < 0) {
@@ -316,8 +315,8 @@ bool Movie::available() {
                     swr_get_delay(swrCtx, frame->sample_rate) + frame->nb_samples,
                     frame->sample_rate, frame->sample_rate, AV_ROUND_UP);
 
-                float*   output_buffer = (float*) av_malloc(out_samples * channels * sizeof(float));
-                uint8_t* out[]         = {(uint8_t*) output_buffer};
+                auto     output_buffer = static_cast<float*>(av_malloc(out_samples * channels * sizeof(float)));
+                uint8_t* out[]         = {reinterpret_cast<uint8_t*>(output_buffer)};
 
                 int samples_converted = swr_convert(
                     swrCtx, out, out_samples,

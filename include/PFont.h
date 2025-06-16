@@ -85,7 +85,6 @@ namespace umfeld {
             // tex_id = create_font_texture(*font); // NOTE this is done in PGraphics
             width  = static_cast<float>(font->atlas_width);
             height = static_cast<float>(font->atlas_height);
-            format = 4;
             pixels = new uint32_t[static_cast<int>(width * height)];
             copy_atlas_to_rgba(*font, reinterpret_cast<unsigned char*>(pixels));
 
@@ -302,7 +301,7 @@ namespace umfeld {
                 for (int x = 0; x < font.atlas_width; x++) {
                     const unsigned char val = font.atlas[y * font.atlas_width + x];
                     const int           idx = (y * font.atlas_width + x) * 4;
-                    // Store grayscale value into RGBA format (transparent text on white fond)
+                    // Store grayscale value into RGBA channels (transparent text on white fond)
                     atlas_rgba[idx + 0] = 255; // R
                     atlas_rgba[idx + 1] = 255; // G
                     atlas_rgba[idx + 2] = 255; // B

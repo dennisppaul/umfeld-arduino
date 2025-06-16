@@ -31,13 +31,14 @@ namespace umfeld {
     class PImage {
     public:
         explicit PImage(const std::string& filepath);
-        PImage(int width, int height, int format);
+        PImage(int width, int height);
+        PImage(const unsigned char* raw_byte_data, int width, int height, uint8_t format);
         PImage();
         virtual ~PImage() = default;
 
         // virtual void bind();
         virtual void loadPixels(PGraphics* graphics);
-        virtual void init(uint32_t* pixels, int width, int height, int format, bool generate_mipmap);
+        virtual void init(uint32_t* pixels, int width, int height, bool generate_mipmap);
 
         void updatePixels(PGraphics* graphics);
         void updatePixels(PGraphics* graphics, int x, int y, int w, int h);
@@ -61,15 +62,16 @@ namespace umfeld {
             return c;
         }
 
-        float        width;
-        float        height;
-        uint8_t      format;
-        uint32_t*    pixels;
-        int          texture_id  = TEXTURE_NOT_GENERATED;
-        SDL_Texture* sdl_texture = nullptr;
+        float                    width;
+        float                    height;
+        static constexpr uint8_t channels = DEFAULT_BYTES_PER_PIXELS; // TODO might make this configurable in the future
+        uint32_t*                pixels;
+        int                      texture_id  = TEXTURE_NOT_GENERATED;
+        SDL_Texture*             sdl_texture = nullptr;
 
     protected:
-        void update_full_internal(PGraphics* graphics);
+        static uint32_t* convert_bytes_to_pixels(int width, int height, int channels, const unsigned char* data);
+        void             update_full_internal(PGraphics* graphics);
 
     public:
         static PImage convert_SDL_Surface_to_PImage(SDL_Surface* surface) {
@@ -77,13 +79,13 @@ namespace umfeld {
                 return PImage(); // Return empty image if surface is null
             }
 
-            const int     width  = surface->w;
-            const int     height = surface->h;
-            constexpr int format = SDL_PIXELFORMAT_RGBA8888; // Assuming default RGBA format
+            const int width  = surface->w;
+            const int height = surface->h;
+            // constexpr int format = 4; // TODO used to be 'SDL_PIXELFORMAT_RGBA8888;' but needs to be '4' // Assuming default RGBA channels
 
-            PImage image(width, height, format);
+            PImage image(width, height);
 
-            // Convert surface to the correct format if necessary
+            // Convert surface to the correct channels if necessary
             SDL_Surface* convertedSurface = SDL_ConvertSurface(surface, SDL_PIXELFORMAT_RGBA8888);
             if (!convertedSurface) {
                 return PImage(); // Conversion failed, return empty image
@@ -103,7 +105,7 @@ namespace umfeld {
                 return nullptr;
             }
 
-            // Create SDL surface with the correct format
+            // Create SDL surface with the correct channels
             SDL_Surface* surface = SDL_CreateSurface(image.width, image.height, SDL_PIXELFORMAT_RGBA8888);
             if (!surface) {
                 return nullptr;

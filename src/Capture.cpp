@@ -119,7 +119,7 @@ namespace umfeld {
                          const char* pixel_format) {
         register_all_devices();
 
-        // Set the input format for your platform:
+        // Set the input channels for your platform:
         const AVInputFormat* inputFormat = av_find_input_format(get_platform_inputformat());
 #ifdef _WIN32
         auto default_device_name = "video=Integrated Camera";
@@ -209,7 +209,7 @@ namespace umfeld {
         // Allocate video frame
         frame = av_frame_alloc();
 
-        // Determine the pixel format and number of channels based on input file
+        // Determine the pixel channels and number of channels based on input file
         constexpr int           default_channels_RGBA = 4;
         constexpr AVPixelFormat dst_pix_fmt           = AV_PIX_FMT_RGBA;
         const AVPixelFormat     src_pix_fmt           = codecContext->pix_fmt;
@@ -219,7 +219,7 @@ namespace umfeld {
         // if (_channels < 0) {
         //     _channels   = 4;
         //     dst_pix_fmt = AV_PIX_FMT_RGBA;
-        //     std::cout << "not looking for format. defaulting to RGBA ( 4 channels )" << std::endl;
+        //     std::cout << "not looking for channels. defaulting to RGBA ( 4 channels )" << std::endl;
         // } else if (desc && desc->nb_components == 4) {
         //     _channels   = 4;
         //     dst_pix_fmt = AV_PIX_FMT_RGBA;
@@ -259,7 +259,7 @@ namespace umfeld {
                              codecContext->width,
                              codecContext->height,
                              1);
-        // Prepare for frame conversion (if you need to scale or convert pixel format)
+        // Prepare for frame conversion (if you need to scale or convert pixel channels)
         // swsContext         = sws_getContext(codecContext->width, codecContext->height, codecContext->pix_fmt,
         //                                     codecContext->width, codecContext->height, AV_PIX_FMT_RGB24,
         //                                     SWS_BILINEAR, nullptr, nullptr, nullptr);
@@ -511,7 +511,7 @@ namespace umfeld {
         const AVInputFormat* inputFormat = av_find_input_format(get_platform_inputformat());
 
         if (!inputFormat) {
-            std::cerr << "Input format not found" << std::endl;
+            std::cerr << "Input channels not found" << std::endl;
             return devices;
         }
 

@@ -883,7 +883,7 @@ static const drmp3_L12_subband_alloc *drmp3_L12_subband_alloc_table(const drmp3_
         static const drmp3_L12_subband_alloc g_alloc_L2M1[] = { { 0, 4, 3 }, { 16, 4, 8 }, { 32, 3, 12 }, { 40, 2, 7 } };
         int sample_rate_idx = DRMP3_HDR_GET_SAMPLE_RATE(hdr);
         unsigned kbps = drmp3_hdr_bitrate_kbps(hdr) >> (int)(mode != DRMP3_MODE_MONO);
-        if (!kbps) /* free-format */
+        if (!kbps) /* free-channels */
         {
             kbps = 192;
         }

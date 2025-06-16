@@ -26,81 +26,102 @@
 
 using namespace umfeld;
 
+/**
+* @brief minimal constructor for PImage. does not initialize any data.
+*/
 PImage::PImage() : width(0),
                    height(0),
-                   format(0),
-                   pixels(nullptr) {
-    /* note that PImage is not initialized with any data in this constructor branch */
-}
+                   pixels(nullptr) {}
 
-PImage::PImage(const int width, const int height, const int format) : width(static_cast<float>(width)),
-                                                                      height(static_cast<float>(height)),
-                                                                      format(format),
-                                                                      pixels(nullptr) {
+/**
+ *
+ * @param width image width in pixels
+ * @param height image height in pixels
+ */
+PImage::PImage(const int width, const int height) : width(static_cast<float>(width)),
+                                                    height(static_cast<float>(height)),
+                                                    pixels(nullptr) {
     const int length = width * height;
     if (length <= 0) {
         return;
     }
     pixels = new uint32_t[length]{0x00000000};
-    PImage::init(pixels, width, height, format, false);
+    PImage::init(pixels, width, height, false);
+}
+
+PImage::PImage(const unsigned char* raw_byte_data, const int width, const int height, const uint8_t channels) : width(static_cast<float>(width)),
+                                                                                                                height(static_cast<float>(height)),
+                                                                                                                pixels(nullptr) {
+    if (width <= 0 || height <= 0) {
+        error("failed to create image. dimension is not valid: width=", width, ", height=", height, ". must be greater than 0");
+        return;
+    }
+    if (raw_byte_data != nullptr) {
+        int requested_channels = channels;
+        pixels                 = convert_bytes_to_pixels(this->width, this->height, channels, raw_byte_data);
+        if (requested_channels != channels) {
+            warning("unsupported image channels, defaulting to RGBA forcing 4 color channels.");
+        }
+        PImage::init(pixels, this->width, this->height, true);
+    } else {
+        error("failed to create image. raw byte data is null");
+        return;
+    }
 }
 
 PImage::PImage(const std::string& filepath) : width(0),
                                               height(0),
-                                              format(0),
                                               pixels(nullptr) {
     if (!file_exists(filepath)) {
         error("file not found: '", filepath, "'");
         return;
     }
 
-    int            _width    = 0;
-    int            _height   = 0;
-    int            _channels = 0;
-    unsigned char* data      = stbi_load(filepath.c_str(), &_width, &_height, &_channels, 0);
-    if (data) {
-        if (_channels != 4 && _channels != 3) {
-            error("unsupported image format, defaulting to RGBA forcing 4 color channels.");
-            _channels = 4;
-        }
-        pixels = new uint32_t[_width * _height];
-        for (int i = 0; i < _width * _height; ++i) {
-            const int j = i * _channels;
-            if (_channels == 4) {
-                pixels[i] = RGBA(data[j + 0], data[j + 1], data[j + 2], data[j + 3]);
-            } else if (_channels == 3) {
-                pixels[i] = RGBA(data[j + 0], data[j + 1], data[j + 2], 0xFF);
-            }
-        }
-
-        if (_channels == 3) {
-            console("Note that RGB is converted to RGBA and number of channels is changed to 4");
-            _channels = 4;
-        }
-        PImage::init(pixels, _width, _height, _channels, true);
+    int            _width            = 0;
+    int            _height           = 0;
+    int            _channels_in_file = 0;
+    unsigned char* raw_byte_data     = stbi_load(filepath.c_str(), &_width, &_height, &_channels_in_file, 0);
+    if (raw_byte_data) {
+        pixels = convert_bytes_to_pixels(_width, _height, _channels_in_file, raw_byte_data);
+        PImage::init(pixels, _width, _height, true);
     } else {
         error("failed to load image: ", filepath);
     }
-    stbi_image_free(data);
+    stbi_image_free(raw_byte_data);
 }
 
+uint32_t* PImage::convert_bytes_to_pixels(const int width, const int height, const int channels, const unsigned char* data) {
+    if (channels != 4 && channels != 3) {
+        error("unsupported image channels, defaulting to RGBA forcing 4 color channels. this might fail ...");
+    }
+    const auto pixels = new uint32_t[width * height];
+    for (int i = 0; i < width * height; ++i) {
+        const int j = i * channels;
+        if (channels == 4) {
+            pixels[i] = RGBA(data[j + 0], data[j + 1], data[j + 2], data[j + 3]);
+        } else if (channels == 3) {
+            pixels[i] = RGBA(data[j + 0], data[j + 1], data[j + 2], 0xFF);
+        }
+    }
+
+    if (channels == 3) {
+        console("RGB was converted to RGBA and number of channels is changed to 4");
+    }
+
+    return pixels;
+}
 
 void PImage::init(uint32_t*  pixels,
                   const int  width,
                   const int  height,
-                  const int  format,
                   const bool generate_mipmap) {
+    // TODO not so happy with `generate_mipmap` it is too OpenGL specific
     if (pixels == nullptr) {
         warning(umfeld::format_label("PImage::init()"), "pixel buffer is not initialized ( might be intentional )");
     }
     this->pixels = pixels;
     this->width  = static_cast<float>(width);
     this->height = static_cast<float>(height);
-    this->format = format;
-    if (format != 4) {
-        warning("unsupported image format, defaulting to RGBA forcing 4 color channels.");
-        this->format = 4;
-    }
 }
 
 static float clamp(const float x) {
@@ -108,7 +129,7 @@ static float clamp(const float x) {
 }
 
 void PImage::update(PGraphics*   graphics,
-                    const float* pixel_data,
+                    const float* pixel_data, // NOTE this is the float version of pixel data, i.e. [0.0, 1.0] range
                     const int    width,
                     const int    height,
                     const int    offset_x,

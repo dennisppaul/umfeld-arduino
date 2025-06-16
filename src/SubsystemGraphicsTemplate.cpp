@@ -29,7 +29,7 @@ namespace umfeld {
 
     static void setup_pre() {
         if (g == nullptr) { return; }
-        g->init(nullptr, width, height, 4, false);
+        g->init(nullptr, width, height, false);
     }
 
     static void setup_post() {}

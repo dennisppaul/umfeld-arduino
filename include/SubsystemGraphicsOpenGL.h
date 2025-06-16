@@ -67,8 +67,19 @@ namespace umfeld {
         SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
 
         if (antialiasing > 0) {
-            SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1); // @TODO check number of available buffers
+            // TODO querry number of available buffers and samples
+            //      code below this always returns 0 :(
+            // GLint available_buffers, available_samples;
+            // SDL_GL_GetAttribute(SDL_GL_MULTISAMPLEBUFFERS, &available_buffers);
+            // SDL_GL_GetAttribute(SDL_GL_MULTISAMPLESAMPLES, &available_samples);
+            // console(fl("antialiasing"), "enabled with ", available_buffers, " buffers and ", available_samples, " samples per pixel");
+            // antialiasing = antialiasing > available_buffers ? available_buffers : antialiasing;
+
+            SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
             SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, antialiasing);
+            console(fl("antialiasing"), antialiasing, "x");
+        } else {
+            console(fl("antialiasing"), "disabled");
         }
 
         /* window */
@@ -153,7 +164,7 @@ namespace umfeld {
         console(fl("pixel_density"), pixel_density, width != framebuffer_width ? " ( note that if graphics and framebuffer size do not align the pixel density should not be 1 )" : "");
         g->pixelDensity(pixel_density); // NOTE setting pixel density from actual configuration
 
-        g->init(nullptr, framebuffer_width, framebuffer_height, 0, false);
+        g->init(nullptr, framebuffer_width, framebuffer_height, false);
         g->width  = width;
         g->height = height;
         g->lock_init_properties(true);

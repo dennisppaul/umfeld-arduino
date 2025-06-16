@@ -506,7 +506,7 @@ namespace umfeld {
         }
 
         const auto graphics = subsystem_graphics->create_native_graphics(true);
-        graphics->init(nullptr, width, height, DEFAULT_PIXEL_FORMAT_RGBA, false);
+        graphics->init(nullptr, width, height, false);
         return graphics;
 
         // NOTE `create_native_graphics` should handle all this:

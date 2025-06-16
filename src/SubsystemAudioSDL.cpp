@@ -541,10 +541,10 @@ namespace umfeld {
                     SDL_AudioSpec dst_spec;
                     if (SDL_GetAudioStreamFormat(_device->sdl_input_stream, &src_spec, &dst_spec)) {
                         console("audio input stream info:");
-                        console("    driver side format ( physical or 'dst' )   : ", src_spec.channels, ", ", src_spec.freq, ", ", SDL_GetAudioFormatName(src_spec.format));
-                        console("    client side format ( application or 'src' ): ", dst_spec.channels, ", ", dst_spec.freq, ", ", SDL_GetAudioFormatName(dst_spec.format));
+                        console("    driver side channels ( physical or 'dst' )   : ", src_spec.channels, ", ", src_spec.freq, ", ", SDL_GetAudioFormatName(src_spec.format));
+                        console("    client side channels ( application or 'src' ): ", dst_spec.channels, ", ", dst_spec.freq, ", ", SDL_GetAudioFormatName(dst_spec.format));
                     } else {
-                        error("could not read audio stream format: ", SDL_GetError());
+                        error("could not read audio stream channels: ", SDL_GetError());
                     }
                     console("binding audio input stream to device: [", _device->logical_input_device_id, "]");
                 } else {
@@ -576,8 +576,8 @@ namespace umfeld {
                     SDL_AudioSpec dst_spec;
                     if (SDL_GetAudioStreamFormat(_device->sdl_output_stream, &src_spec, &dst_spec)) {
                         console("audio output stream info:");
-                        console("    client side format ( application or 'src' ): ", src_spec.channels, ", ", src_spec.freq, ", ", SDL_GetAudioFormatName(src_spec.format));
-                        console("    driver side format ( physical or 'dst' )   : ", dst_spec.channels, ", ", dst_spec.freq, ", ", SDL_GetAudioFormatName(dst_spec.format));
+                        console("    client side channels ( application or 'src' ): ", src_spec.channels, ", ", src_spec.freq, ", ", SDL_GetAudioFormatName(src_spec.format));
+                        console("    driver side channels ( physical or 'dst' )   : ", dst_spec.channels, ", ", dst_spec.freq, ", ", SDL_GetAudioFormatName(dst_spec.format));
                     }
                     console("binding audio input stream to device: [", _device->logical_output_device_id, "]");
                 }

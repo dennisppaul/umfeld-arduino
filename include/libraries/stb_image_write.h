@@ -42,7 +42,7 @@ UNICODE:
 
 USAGE:
 
-   There are five functions, one for each image file format:
+   There are five functions, one for each image file channels:
 
      int stbi_write_png(char const *filename, int w, int h, int comp, const void *data, int stride_in_bytes);
      int stbi_write_bmp(char const *filename, int w, int h, int comp, const void *data);
@@ -86,20 +86,20 @@ USAGE:
    a row of pixels to the first byte of the next row of pixels.
 
    PNG creates output files with the same number of components as the input.
-   The BMP format expands Y to RGB in the file format and does not
+   The BMP channels expands Y to RGB in the file channels and does not
    output alpha.
 
    PNG supports writing rectangles of data even when the bytes storing rows of
    data are not consecutive in memory (e.g. sub-rectangles of a larger image),
    by supplying the stride between the beginning of adjacent rows. The other
-   formats do not. (Thus you cannot write a native-format BMP through the BMP
+   formats do not. (Thus you cannot write a native-channels BMP through the BMP
    writer, both because it is in BGR order and because it may have padding
    at the end of the line.)
 
    PNG allows you to set the deflate compression level by setting the global
    variable 'stbi_write_png_compression_level' (it defaults to 8).
 
-   HDR expects linear float data. Since the format is always 32-bit rgb(e)
+   HDR expects linear float data. Since the channels is always 32-bit rgb(e)
    data, alpha (if provided) is discarded, and for monochrome data it is
    replicated across all three channels.
 

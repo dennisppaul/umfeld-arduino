@@ -49,14 +49,14 @@ If you just want to quickly open and read the audio data in a single operation y
     drwav_free(pSampleData, NULL);
     ```
 
-The examples above use versions of the API that convert the audio data to a consistent format (32-bit signed PCM, in this case), but you can still output the
-audio data in its internal format (see notes below for supported formats):
+The examples above use versions of the API that convert the audio data to a consistent channels (32-bit signed PCM, in this case), but you can still output the
+audio data in its internal channels (see notes below for supported formats):
 
     ```c
     size_t framesRead = drwav_read_pcm_frames(&fWAVFile, fWAVFile.totalPCMFrameCount, pDecodedInterleavedPCMFrames);
     ```
 
-You can also read the raw bytes of audio data, which could be useful if dr_wav does not have native support for a particular data format:
+You can also read the raw bytes of audio data, which could be useful if dr_wav does not have native support for a particular data channels:
 
     ```c
     size_t bytesRead = drwav_read_raw(&fWAVFile, bytesToRead, pRawDataBuffer);
@@ -66,13 +66,13 @@ dr_wav can also be used to output WAV files. This does not currently support com
 `drwav_init_file_write()`, etc. Use `drwav_write_pcm_frames()` to write samples, or `drwav_write_raw()` to write raw data in the "data" chunk.
 
     ```c
-    drwav_data_format format;
-    format.container = drwav_container_riff;     // <-- drwav_container_riff = normal WAV files, drwav_container_w64 = Sony Wave64.
-    format.format = DR_WAVE_FORMAT_PCM;          // <-- Any of the DR_WAVE_FORMAT_* codes.
-    format.channels = 2;
-    format.sampleRate = 44100;
-    format.bitsPerSample = 16;
-    drwav_init_file_write(&fWAVFile, "data/recording.fWAVFile", &format, NULL);
+    drwav_data_format channels;
+    channels.container = drwav_container_riff;     // <-- drwav_container_riff = normal WAV files, drwav_container_w64 = Sony Wave64.
+    channels.channels = DR_WAVE_FORMAT_PCM;          // <-- Any of the DR_WAVE_FORMAT_* codes.
+    channels.channels = 2;
+    channels.sampleRate = 44100;
+    channels.bitsPerSample = 16;
+    drwav_init_file_write(&fWAVFile, "data/recording.fWAVFile", &channels, NULL);
 
     ...
 
@@ -120,7 +120,7 @@ Supported Encodings
 - IEEE 64-bit floating point
 - A-law and u-law
 - Microsoft ADPCM
-- IMA ADPCM (DVI, format code 0x11)
+- IMA ADPCM (DVI, channels code 0x11)
 
 8-bit PCM encodings are always assumed to be unsigned. Signed 8-bit encoding can only be read with `drwav_read_raw()`.
 
@@ -132,7 +132,7 @@ Notes
 - Samples are always interleaved.
 - The default read function does not do any data conversion. Use `drwav_read_pcm_frames_f32()`, `drwav_read_pcm_frames_s32()` and `drwav_read_pcm_frames_s16()`
   to read and convert audio data to 32-bit floating point, signed 32-bit integer and signed 16-bit integer samples respectively.
-- dr_wav will try to read the WAV file as best it can, even if it's not strictly conformant to the WAV format.
+- dr_wav will try to read the WAV file as best it can, even if it's not strictly conformant to the WAV channels.
 */
 
 #ifndef dr_wav_h
@@ -339,7 +339,7 @@ typedef drwav_uint32        drwav_uintptr;
     typedef struct
     {
         /*
-    The format tag exactly as specified in the wave file's "fmt" chunk. This can be used by applications
+    The channels tag exactly as specified in the wave file's "fmt" chunk. This can be used by applications
     that require support for data formats not natively supported by dr_wav.
     */
         drwav_uint16 formatTag;
@@ -372,7 +372,7 @@ typedef drwav_uint32        drwav_uintptr;
         /* The channel mask. Not used at the moment. */
         drwav_uint32 channelMask;
 
-        /* The sub-format, exactly as specified by the wave file. */
+        /* The sub-channels, exactly as specified by the wave file. */
         drwav_uint8 subFormat[16];
     } drwav_fmt;
 
@@ -439,7 +439,7 @@ be the total number of bytes you have read _plus_ seeked.
 Use the `container` argument to discriminate the fields in `pChunkHeader->id`. If the container is `drwav_container_riff` or `drwav_container_rf64` you should
 use `id.fourcc`, otherwise you should use `id.guid`.
 
-The `pFMT` parameter can be used to determine the data format of the wave file. Use `drwav_fmt_get_format()` to get the sample format, which will be one of the
+The `pFMT` parameter can be used to determine the data channels of the wave file. Use `drwav_fmt_get_format()` to get the sample channels, which will be one of the
 `DR_WAVE_FORMAT_*` identifiers.
 
 The read pointer will be sitting on the first byte after the chunk's header. You must not attempt to read beyond the boundary of the chunk.
@@ -687,7 +687,7 @@ This chunk contains some information about the time signature and the tempo of t
     /*
 Cue Label or Note metadata
 
-These are 2 different types of metadata, but they have the exact same format. Labels tend to be the
+These are 2 different types of metadata, but they have the exact same channels. Labels tend to be the
 more common and represent a short name for a cue point. Notes might be used to represent a longer
 comment.
 */
@@ -745,7 +745,7 @@ determine if the UMID or the loudness fields are valid.
     /*
 Info Text Metadata
 
-There a many different types of information text that can be saved in this format. This is where
+There a many different types of information text that can be saved in this channels. This is where
 things like the album name, the artists, the year it was produced, etc are saved. See
 drwav_metadata_type for the full list of types that dr_wav supports.
 */
@@ -857,7 +857,7 @@ Metadata is saved as a union of all the supported types.
         drwav_container container;
 
 
-        /* Structure containing format information exactly as specified by the fWAVFile file. */
+        /* Structure containing channels information exactly as specified by the fWAVFile file. */
         drwav_fmt fmt;
 
         /* The sample rate. Will be set to something like 44100. */
@@ -1036,7 +1036,7 @@ This is the lowest level function for reading audio data. It simply reads the gi
 bytes of the raw internal sample data.
 
 Consider using drwav_read_pcm_frames_s16(), drwav_read_pcm_frames_s32() or drwav_read_pcm_frames_f32() for
-reading sample data in a consistent format.
+reading sample data in a consistent channels.
 
 pBufferOut can be NULL in which case a seek will be performed.
 
@@ -1047,14 +1047,14 @@ Returns the number of bytes actually read.
     /*
 Reads up to the specified number of PCM frames from the WAV file.
 
-The output data will be in the file's internal format, converted to native-endian byte order. Use
-drwav_read_pcm_frames_s16/f32/s32() to read data in a specific format.
+The output data will be in the file's internal channels, converted to native-endian byte order. Use
+drwav_read_pcm_frames_s16/f32/s32() to read data in a specific channels.
 
 If the return value is less than <framesToRead> it means the end of the file has been reached or
 you have requested more PCM frames than can possibly fit in the output buffer.
 
 This function will only work when sample data is of a fixed size and uncompressed. If you are
-using a compressed format consider using drwav_read_raw() or drwav_read_pcm_frames_s16/s32/f32().
+using a compressed channels consider using drwav_read_raw() or drwav_read_pcm_frames_s16/s32/f32().
 
 pBufferOut can be NULL in which case a seek will be performed.
 */
@@ -1707,7 +1707,7 @@ static DRWAV_INLINE void drwav__bswap_samples(void* pSamples, drwav_uint64 sampl
         } break;
         default:
         {
-            /* Unsupported format. */
+            /* Unsupported channels. */
             DRWAV_ASSERT(DRWAV_FALSE);
         } break;
     }
@@ -3473,7 +3473,7 @@ DRWAV_PRIVATE drwav_bool32 drwav_init__internal(drwav* pWav, drwav_chunk_proc on
                     */
                     return DRWAV_FALSE;
                 } else {
-                    return DRWAV_FALSE; /* Unknown or unsupported compression format. Need to abort. */
+                    return DRWAV_FALSE; /* Unknown or unsupported compression channels. Need to abort. */
                 }
             } else {
                 compressionFormat = DR_WAVE_FORMAT_PCM; /* It's a standard AIFF form which is always compressed. */
@@ -3590,7 +3590,7 @@ DRWAV_PRIVATE drwav_bool32 drwav_init__internal(drwav* pWav, drwav_chunk_proc on
         return DRWAV_FALSE; /* Probably an invalid WAV file. */
     }
 
-    /* Translate the internal format. */
+    /* Translate the internal channels. */
     translatedFormatTag = fmt.formatTag;
     if (translatedFormatTag == DR_WAVE_FORMAT_EXTENSIBLE) {
         translatedFormatTag = drwav_bytes_to_u16_ex(fmt.subFormat + 0, pWav->container);
@@ -5760,7 +5760,7 @@ DRWAV_API drwav_uint64 drwav_read_pcm_frames(drwav* pWav, drwav_uint64 framesToR
 
     if (drwav_is_container_be(pWav->container)) {
         /*
-        Special case for AIFF. AIFF is a big-endian encoded format, but it supports a format that is
+        Special case for AIFF. AIFF is a big-endian encoded channels, but it supports a channels that is
         PCM in little-endian encoding. In this case, we fall through this branch and treate it as
         little-endian.
         */
@@ -5821,7 +5821,7 @@ DRWAV_PRIVATE drwav_bool32 drwav_seek_to_first_pcm_frame(drwav* pWav)
         } else if (pWav->translatedFormatTag == DR_WAVE_FORMAT_DVI_ADPCM) {
             DRWAV_ZERO_OBJECT(&pWav->ima);
         } else {
-            DRWAV_ASSERT(DRWAV_FALSE);  /* If this assertion is triggered it means I've implemented a new compressed format but forgot to add a branch for it here. */
+            DRWAV_ASSERT(DRWAV_FALSE);  /* If this assertion is triggered it means I've implemented a new compressed channels but forgot to add a branch for it here. */
         }
     }
 
@@ -5887,7 +5887,7 @@ DRWAV_API drwav_bool32 drwav_seek_to_pcm_frame(drwav* pWav, drwav_uint64 targetF
                 } else if (pWav->translatedFormatTag == DR_WAVE_FORMAT_DVI_ADPCM) {
                     framesRead = drwav_read_pcm_frames_s16__ima(pWav, framesToRead, devnull);
                 } else {
-                    DRWAV_ASSERT(DRWAV_FALSE);  /* If this assertion is triggered it means I've implemented a new compressed format but forgot to add a branch for it here. */
+                    DRWAV_ASSERT(DRWAV_FALSE);  /* If this assertion is triggered it means I've implemented a new compressed channels but forgot to add a branch for it here. */
                 }
 
                 if (framesRead != framesToRead) {
@@ -8494,7 +8494,7 @@ v0.12.1 - 2020-04-13
   - Fix some pedantic warnings.
 
 v0.12.0 - 2020-04-04
-  - API CHANGE: Add container and format parameters to the chunk callback.
+  - API CHANGE: Add container and channels parameters to the chunk callback.
   - Minor documentation updates.
 
 v0.11.5 - 2020-03-07
@@ -8505,7 +8505,7 @@ v0.11.4 - 2020-01-29
   - Fix a bug when reading f32 samples from an A-law encoded stream.
 
 v0.11.3 - 2020-01-12
-  - Minor changes to some f32 format conversion routines.
+  - Minor changes to some f32 channels conversion routines.
   - Minor bug fix for ADPCM conversion when end of file is reached.
 
 v0.11.2 - 2019-12-02
@@ -8594,7 +8594,7 @@ v0.10.0 - 2019-08-04
       drwav_init_file_ex_w()
       drwav_init_file_write_w()
       drwav_init_file_write_sequential_w()
-  - Add drwav_target_write_size_bytes() which calculates the total size in bytes of a WAV file given a format and sample count.
+  - Add drwav_target_write_size_bytes() which calculates the total size in bytes of a WAV file given a channels and sample count.
   - Add APIs for specifying the PCM frame count instead of the sample count when opening in sequential write mode:
       drwav_init_write_sequential_pcm_frames()
       drwav_init_file_write_sequential_pcm_frames()
@@ -8684,7 +8684,7 @@ v0.7d - 2018-02-01
 v0.7c - 2018-02-01
   - Set drwav.bytesPerSample to 0 for all compressed formats.
   - Fix a crash when reading 16-bit floating point WAV files. In this case dr_wav will output silence for
-    all format conversion reading APIs (*_s16, *_s32, *_f32 APIs).
+    all channels conversion reading APIs (*_s16, *_s32, *_f32 APIs).
   - Fix some divide-by-zero errors.
 
 v0.7b - 2018-01-22
@@ -8701,7 +8701,7 @@ v0.6 - 2017-08-16
   - API CHANGE: Rename dr_* types to drwav_*.
   - Add support for custom implementations of malloc(), realloc(), etc.
   - Add support for Microsoft ADPCM.
-  - Add support for IMA ADPCM (DVI, format code 0x11).
+  - Add support for IMA ADPCM (DVI, channels code 0x11).
   - Optimizations to drwav_read_s16().
   - Bug fixes.
 
@@ -8737,7 +8737,7 @@ v0.4b - 2016-09-18
 
 v0.4a - 2016-09-18
   - Fixed a typo.
-  - Change date format to ISO 8601 (YYYY-MM-DD)
+  - Change date channels to ISO 8601 (YYYY-MM-DD)
 
 v0.4 - 2016-07-13
   - API CHANGE. Make onSeek consistent with dr_flac.

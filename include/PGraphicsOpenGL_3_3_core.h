@@ -50,7 +50,7 @@ namespace umfeld {
         void beginDraw() override;
         void endDraw() override;
 
-        void        init(uint32_t* pixels, int width, int height, int format, bool generate_mipmap) override;
+        void        init(uint32_t* pixels, int width, int height, bool generate_mipmap) override;
         std::string name() override {
 #if defined(OPENGL_ES_3_0)
             return "PGraphicsOpenGL_ES_3_0";

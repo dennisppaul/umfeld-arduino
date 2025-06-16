@@ -27,6 +27,13 @@
 #include <fstream>
 #include <sstream>
 #include <chrono>
+#include <curl/curl.h>
+#include <algorithm>
+#include <regex>
+#include <sstream>
+#include <iterator>
+#include <cctype>
+#include <iomanip>
 
 #include <SDL3/SDL.h>
 #define STB_IMAGE_WRITE_IMPLEMENTATION
@@ -245,15 +252,15 @@ namespace umfeld {
     std::string nf(const float num, const int left, const int right) {
         std::ostringstream out;
         out << std::fixed << std::setprecision(right) << num;
-        std::string numStr = out.str();                   // e.g. " 12.3" or "12.3"
+        std::string numStr = out.str(); // e.g. " 12.3" or "12.3"
 
         // find the dot (should always succeed now)
-        auto dotPos = numStr.find('.');
-        std::string integerPart = numStr.substr(0, dotPos);
-        std::string fractional  = numStr.substr(dotPos); // ".3"
+        const auto        dotPos      = numStr.find('.');
+        std::string       integerPart = numStr.substr(0, dotPos);
+        const std::string fractional  = numStr.substr(dotPos); // ".3"
 
         // pad the integer part with leading zeros
-        if ((int)integerPart.length() < left) {
+        if ((int) integerPart.length() < left) {
             integerPart.insert(0, left - integerPart.length(), '0');
         }
         return integerPart + fractional;
@@ -414,7 +421,7 @@ namespace umfeld {
 
         if (length == 0) {
             // GetModuleFileName failed
-            std::cerr << "Error retrieving path, error code: " << GetLastError() << std::endl;
+            warning("Error retrieving path, error code: " << GetLastError() << std::endl;
             return std::string();
         }
 
@@ -434,7 +441,7 @@ namespace umfeld {
             std::filesystem::path dirPath = exePath.parent_path();
             return dirPath.string() + std::string("/");
         } else {
-            std::cerr << "Error retrieving path" << std::endl;
+            warning("Error retrieving path" << std::endl;
             return std::string(); // Return an empty string in case of error
         }
     }
@@ -450,7 +457,7 @@ namespace umfeld {
             const std::filesystem::path dirPath = exePath.parent_path();
             return dirPath.string() + std::string("/");
         } else {
-            std::cerr << "Error retrieving path" << std::endl;
+            warning("Error retrieving path" << std::endl;
             return {}; // Return an empty string in case of error
         }
     }
@@ -537,15 +544,31 @@ namespace umfeld {
         return subsystem_audio->create_audio(device_info);
     }
 
-    std::string loadString(std::string& file_path) {
-        std::ifstream     file(file_path);
-        std::stringstream buffer;
-        if (file) {
-            buffer << file.rdbuf();
-        } else {
-            warning("Failed to read shader file: ", file_path);
+    std::string loadString(const std::string& file_path) {
+        const std::vector<uint8_t> bytes = loadBytes(file_path);
+        if (bytes.empty()) {
+            warning("Failed to read string from: ", file_path);
+            return {};
         }
-        return buffer.str();
+        return std::string(bytes.begin(), bytes.end());
+    }
+
+    std::vector<std::string> loadStrings(const std::string& file_path) {
+        const std::vector<uint8_t> bytes = loadBytes(file_path);
+        if (bytes.empty()) {
+            warning("Failed to read lines from: ", file_path);
+            return {};
+        }
+
+        std::vector<std::string> lines;
+        std::istringstream       stream(std::string(bytes.begin(), bytes.end()));
+        std::string              line;
+
+        while (std::getline(stream, line)) {
+            lines.push_back(line);
+        }
+
+        return lines;
     }
 
     void saveString(const std::string& file_path, const std::string& content, const bool append) {
@@ -557,19 +580,6 @@ namespace umfeld {
         }
     }
 
-    std::vector<std::string> loadString(const std::string& file_path) {
-        std::ifstream file(file_path);
-        if (!file) {
-            warning("Failed to read file: ", file_path);
-            return {};
-        }
-        std::vector<std::string> lines;
-        std::string              line;
-        while (std::getline(file, line)) {
-            lines.push_back(line);
-        }
-        return lines;
-    }
 
     bool saveStrings(const std::string& file_path, const std::vector<std::string>& lines, const bool append) {
         std::ofstream file(file_path, append ? std::ios::app : std::ios::trunc);
@@ -583,13 +593,206 @@ namespace umfeld {
         return true;
     }
 
-    std::vector<uint8_t> loadBytes(const std::string& file_path) {
+    static size_t WriteCallback(void* contents, size_t size, size_t nmemb, void* userp) {
+        const size_t totalSize = size * nmemb;
+        auto*        buffer    = static_cast<std::vector<uint8_t>*>(userp);
+        buffer->insert(buffer->end(), (uint8_t*) contents, (uint8_t*) contents + totalSize);
+        return totalSize;
+    }
+
+    static std::vector<std::string> supported_URL_protocols;
+    static bool                     print_supported_protocols = true;
+
+    static void initialize_supported_protocols() {
+        if (supported_URL_protocols.empty()) {
+            const curl_version_info_data* info = curl_version_info(CURLVERSION_NOW);
+            if (info && info->protocols) {
+                for (const char* const* proto = info->protocols; *proto != nullptr; ++proto) {
+                    supported_URL_protocols.emplace_back(*proto);
+                }
+            }
+            if (print_supported_protocols) {
+                console_n("supported curl URL protocols: ");
+                for (const auto& proto: supported_URL_protocols) {
+                    console_c(proto, " ");
+                }
+                console_c("\n");
+            }
+        }
+    }
+
+    static std::vector<uint8_t> decode_base64(const std::string& input) {
+        static const std::string base64_chars =
+            "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+        auto is_base64 = [](unsigned char c) {
+            return std::isalnum(c) || c == '+' || c == '/';
+        };
+
+        std::vector<uint8_t> output;
+        int                  val = 0, valb = -8;
+        for (unsigned char c: input) {
+            if (!is_base64(c)) {
+                break;
+            }
+            val = (val << 6) + base64_chars.find(c);
+            valb += 6;
+            if (valb >= 0) {
+                output.push_back((val >> valb) & 0xFF);
+                valb -= 8;
+            }
+        }
+        return output;
+    }
+
+    static std::string decode_percent_encoding(const std::string& input) {
+        std::ostringstream out;
+        for (size_t i = 0; i < input.length(); ++i) {
+            if (input[i] == '%' && i + 2 < input.length()) {
+                int                val;
+                std::istringstream iss(input.substr(i + 1, 2));
+                if (iss >> std::hex >> val) {
+                    out << static_cast<char>(val);
+                    i += 2;
+                }
+            } else if (input[i] == '+') {
+                out << ' ';
+            } else {
+                out << input[i];
+            }
+        }
+        return out.str();
+    }
+
+    std::vector<uint8_t> loadBytesFromURL(const std::string& url) {
+        initialize_supported_protocols();
+
+        // check if protocol is supported
+        const auto schemeEnd = url.find("://");
+        if (schemeEnd != std::string::npos) {
+            const std::string scheme = url.substr(0, schemeEnd);
+            if (std::find(supported_URL_protocols.begin(), supported_URL_protocols.end(), scheme) == supported_URL_protocols.end()) {
+                warning("Protocol not supported by libcurl: ", scheme);
+                return {};
+            }
+        }
+
+        // download via libcurl
+        CURL* curl = curl_easy_init();
+        if (!curl) {
+            return {};
+        }
+
+        std::vector<uint8_t> data;
+        curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
+        curl_easy_setopt(curl, CURLOPT_WRITEDATA, &data);
+        curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
+
+        const CURLcode res = curl_easy_perform(curl);
+        curl_easy_cleanup(curl);
+
+        if (res != CURLE_OK) {
+            warning("CURL error: ", curl_easy_strerror(res));
+            return {};
+        }
+
+        return data;
+    }
+
+    std::vector<uint8_t> loadBytesFromFile(const std::string& file_path) {
         std::ifstream file(file_path, std::ios::binary);
         if (!file) {
             warning("Failed to read file: ", file_path);
             return {};
         }
         return std::vector<uint8_t>(std::istreambuf_iterator(file), {});
+    }
+
+    static bool is_protocol_supported(const std::string& file_path) {
+        initialize_supported_protocols();
+        const auto schemeEnd = file_path.find("://");
+        if (schemeEnd != std::string::npos) {
+            const std::string scheme = file_path.substr(0, schemeEnd);
+
+            if (scheme == "file") {
+                // Handle file:// specially — map to local file
+#if defined(_WIN32)
+                const std::string prefix = "file:///";
+                if (location.rfind(prefix, 0) == 0) {
+                    std::string path = location.substr(prefix.size());
+                    std::replace(path.begin(), path.end(), '/', '\\');
+                    return loadBytesFromFile(path, width, height, channels);
+                }
+#else
+                std::string path = file_path.substr(7); // strip file://
+                return true;
+#endif
+            }
+
+            // check if scheme is supported by libcurl
+            if (std::find(supported_URL_protocols.begin(), supported_URL_protocols.end(), scheme) != supported_URL_protocols.end()) {
+                return true;
+            }
+
+            warning("Unsupported protocol: '", scheme, "' assuing local file path.");
+            return false;
+        }
+        return false;
+    }
+
+    std::vector<uint8_t> loadBytes(const std::string& file_path) {
+        initialize_supported_protocols();
+
+        // URI: check if file path is a data URI (base64 encoded)
+        if (file_path.rfind("data:", 0) == 0) {
+            const auto commaPos = file_path.find(',');
+            if (commaPos == std::string::npos) {
+                warning("Malformed data URI.");
+                return {};
+            }
+
+            const std::string meta = file_path.substr(5, commaPos - 5); // skip "data:"
+            const std::string data = file_path.substr(commaPos + 1);
+
+            if (meta.find(";base64") != std::string::npos) {
+                return decode_base64(data);
+            } else {
+                std::string decoded = decode_percent_encoding(data);
+                return std::vector<uint8_t>(decoded.begin(), decoded.end());
+            }
+        }
+
+        // URL: check if file path starts with a protocol (e.g., http://, https://, ftp://, etc.) extract scheme (before ://)
+        const auto schemeEnd = file_path.find("://");
+        if (schemeEnd != std::string::npos) {
+            const std::string scheme = file_path.substr(0, schemeEnd);
+
+            if (scheme == "file") {
+                // Handle file:// specially — map to local file
+#if defined(_WIN32)
+                const std::string prefix = "file:///";
+                if (location.rfind(prefix, 0) == 0) {
+                    std::string path = location.substr(prefix.size());
+                    std::replace(path.begin(), path.end(), '/', '\\');
+                    return loadBytesFromFile(path, width, height, channels);
+                }
+#else
+                std::string path = file_path.substr(7); // strip file://
+                return loadBytesFromFile(path);
+#endif
+            }
+
+            // check if scheme is supported by libcurl
+            if (std::find(supported_URL_protocols.begin(), supported_URL_protocols.end(), scheme) != supported_URL_protocols.end()) {
+                return loadBytesFromURL(file_path);
+            }
+
+            warning("Unsupported protocol: '", scheme, "' assuing local file path.");
+            return {};
+        }
+
+        // LOCAL: no scheme → assume it's a local path
+        return loadBytesFromFile(file_path);
     }
 
     bool saveBytes(const std::string& file_path, const std::vector<uint8_t>& data, const bool append) {
@@ -659,6 +862,21 @@ namespace umfeld {
     // }
 
     void noCursor() { SDL_HideCursor(); }
+
+    PImage* loadImage(const std::string& file, const bool use_relative_path) {
+        // if the file starts with "http://", "https://",  etcetera assume it's a URL
+        if (is_protocol_supported(file)) {
+            const std::vector<uint8_t> data = loadBytes(file);
+            return new PImage(data.data(), data.size());
+        }
+
+        const std::string absolute_path = use_relative_path ? file : sketchPath() + file;
+        if (!file_exists(absolute_path)) {
+            error("loadImage() failed! file not found: '", file, "'. the 'sketchPath()' is currently set to '", sketchPath(), "'. looking for file at: '", absolute_path, "'");
+            return nullptr;
+        }
+        return new PImage(absolute_path);
+    }
 
     void saveImage(const PImage* image, const std::string& filename) {
         if (!image->pixels || image->width <= 0 || image->height <= 0) {

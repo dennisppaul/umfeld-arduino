@@ -335,6 +335,9 @@ if (NOT DISABLE_GRAPHICS)
         message(STATUS "NCURSES(TERM) : DISABLED")
     endif (NOT DISABLE_NCURSES)
 
+    # curl
+    find_package(CURL REQUIRED)
+
     if (APPLE)
     elseif (UNIX)
     elseif (WIN32)
@@ -470,6 +473,8 @@ if (NOT DISABLE_MIDI)
         endif ()
     endforeach ()
 endif (NOT DISABLE_MIDI)
+
+target_link_libraries(${PROJECT_NAME} PRIVATE CURL::libcurl)
 
 ##########################################################################################################
 ### COMPILER FLAGS                                                                                     ###

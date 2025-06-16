@@ -49,16 +49,16 @@ PImage::PImage(const int width, const int height) : width(static_cast<float>(wid
     PImage::init(pixels, width, height, false);
 }
 
-PImage::PImage(const unsigned char* raw_byte_data, const int width, const int height, const uint8_t channels) : width(static_cast<float>(width)),
+PImage::PImage(const uint8_t* raw_byte_pixel_data, const int width, const int height, const uint8_t channels) : width(static_cast<float>(width)),
                                                                                                                 height(static_cast<float>(height)),
                                                                                                                 pixels(nullptr) {
     if (width <= 0 || height <= 0) {
         error("failed to create image. dimension is not valid: width=", width, ", height=", height, ". must be greater than 0");
         return;
     }
-    if (raw_byte_data != nullptr) {
-        int requested_channels = channels;
-        pixels                 = convert_bytes_to_pixels(this->width, this->height, channels, raw_byte_data);
+    if (raw_byte_pixel_data != nullptr) {
+        const int requested_channels = channels;
+        pixels                       = convert_bytes_to_pixels(this->width, this->height, channels, raw_byte_pixel_data);
         if (requested_channels != channels) {
             warning("unsupported image channels, defaulting to RGBA forcing 4 color channels.");
         }
@@ -69,6 +69,19 @@ PImage::PImage(const unsigned char* raw_byte_data, const int width, const int he
     }
 }
 
+PImage::PImage(const uint8_t* raw_byte_data, const uint32_t length) : width(0),
+                                                                      height(0),
+                                                                      pixels(nullptr) {
+    int      _width              = 0;
+    int      _height             = 0;
+    int      _channels           = 0;
+    uint8_t* raw_pixel_byte_data = stbi_load_from_memory(raw_byte_data, length, &_width, &_height, &_channels, 0);
+    console("creating image from raw image data: ", _width, "x", _height, " with ", _channels, " channels");
+    pixels = convert_bytes_to_pixels(_width, _height, _channels, raw_pixel_byte_data);
+    PImage::init(pixels, _width, _height, true);
+    stbi_image_free(raw_pixel_byte_data);
+}
+
 PImage::PImage(const std::string& filepath) : width(0),
                                               height(0),
                                               pixels(nullptr) {
@@ -77,20 +90,20 @@ PImage::PImage(const std::string& filepath) : width(0),
         return;
     }
 
-    int            _width            = 0;
-    int            _height           = 0;
-    int            _channels_in_file = 0;
-    unsigned char* raw_byte_data     = stbi_load(filepath.c_str(), &_width, &_height, &_channels_in_file, 0);
-    if (raw_byte_data) {
-        pixels = convert_bytes_to_pixels(_width, _height, _channels_in_file, raw_byte_data);
+    int      _width              = 0;
+    int      _height             = 0;
+    int      _channels           = 0;
+    uint8_t* raw_pixel_byte_data = stbi_load(filepath.c_str(), &_width, &_height, &_channels, 0);
+    if (raw_pixel_byte_data) {
+        pixels = convert_bytes_to_pixels(_width, _height, _channels, raw_pixel_byte_data);
         PImage::init(pixels, _width, _height, true);
     } else {
         error("failed to load image: ", filepath);
     }
-    stbi_image_free(raw_byte_data);
+    stbi_image_free(raw_pixel_byte_data);
 }
 
-uint32_t* PImage::convert_bytes_to_pixels(const int width, const int height, const int channels, const unsigned char* data) {
+uint32_t* PImage::convert_bytes_to_pixels(const int width, const int height, const int channels, const uint8_t* data) {
     if (channels != 4 && channels != 3) {
         error("unsupported image channels, defaulting to RGBA forcing 4 color channels. this might fail ...");
     }

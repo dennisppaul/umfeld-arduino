@@ -132,13 +132,6 @@ namespace umfeld {
         g->texture(img);
     }
 
-    PImage* loadImage(const std::string& filename, const bool use_relative_path) {
-        if (g == nullptr) {
-            return nullptr;
-        }
-        return g->loadImage(filename, use_relative_path);
-    }
-
     void line(const float x1, const float y1, const float x2, const float y2) {
         if (g == nullptr) { return; }
         g->line(x1, y1, x2, y2);

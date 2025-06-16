@@ -115,8 +115,10 @@ namespace umfeld {
 
     // ### Files
 
-    std::string              loadString(std::string& file_path);
-    std::vector<std::string> loadString(const std::string& file_path);
+    std::string              loadString(const std::string& file_path);
+    std::vector<std::string> loadStrings(const std::string& file_path);
+    std::vector<uint8_t>     loadBytesFromURL(const std::string& url);
+    std::vector<uint8_t>     loadBytesFromFile(const std::string& file_path);
     std::vector<uint8_t>     loadBytes(const std::string& file_path);
     std::string              selectFolder(const std::string& prompt);
     std::string              selectInput(const std::string& prompt);
@@ -134,6 +136,12 @@ namespace umfeld {
     // ## Rendering
 
     PGraphics* createGraphics(int width, int height, int renderer);
+
+    // ## Image
+
+    // ### Loading & Displaying
+
+    PImage* loadImage(const std::string& file, bool use_relative_path = true);
 
     // ## Math
 

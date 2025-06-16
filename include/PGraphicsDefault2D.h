@@ -149,23 +149,23 @@ namespace umfeld {
 
         float textWidth(const std::string& text) override { return 0; }
 
-        PImage* loadImage(const std::string& filename, bool use_relative_path) override {
-            // auto* img = new PImage(filename);
-            //
-            // // Create SDL texture (RGBA channels)
-            // SDL_Texture* texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ABGR8888, SDL_TEXTUREACCESS_STREAMING, TEXTURE_WIDTH, TEXTURE_HEIGHT);
-            // if (!texture) {
-            //     std::cerr << "Failed to create texture! SDL_Error: " << SDL_GetError() << std::endl;
-            // }
-            //
-            // // Upload pixel data to the texture
-            // SDL_UpdateTexture(texture, NULL, pixels, img->width * sizeof(uint32_t));
-            //
-            // // Draw the texture
-            // SDL_RenderTexture(renderer, texture, NULL, NULL); // Fullscreen
-            //
-            return nullptr;
-        }
+        // PImage* loadImage(const std::string& filename, bool use_relative_path) override {
+        //     // auto* img = new PImage(filename);
+        //     //
+        //     // // Create SDL texture (RGBA channels)
+        //     // SDL_Texture* texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ABGR8888, SDL_TEXTUREACCESS_STREAMING, TEXTURE_WIDTH, TEXTURE_HEIGHT);
+        //     // if (!texture) {
+        //     //     std::cerr << "Failed to create texture! SDL_Error: " << SDL_GetError() << std::endl;
+        //     // }
+        //     //
+        //     // // Upload pixel data to the texture
+        //     // SDL_UpdateTexture(texture, NULL, pixels, img->width * sizeof(uint32_t));
+        //     //
+        //     // // Draw the texture
+        //     // SDL_RenderTexture(renderer, texture, NULL, NULL); // Fullscreen
+        //     //
+        //     return nullptr;
+        // }
 
         void image(PImage* img, float x, float y, float w, float h) override {}
         void image(PImage* img, float x, float y) override {}

@@ -31,12 +31,12 @@ namespace umfeld {
     class PImage {
     public:
         explicit PImage(const std::string& filepath);
+        PImage(const uint8_t* raw_byte_data, uint32_t length);
         PImage(int width, int height);
-        PImage(const unsigned char* raw_byte_data, int width, int height, uint8_t format);
+        PImage(const unsigned char* raw_byte_pixel_data, int width, int height, uint8_t format);
         PImage();
         virtual ~PImage() = default;
 
-        // virtual void bind();
         virtual void loadPixels(PGraphics* graphics);
         virtual void init(uint32_t* pixels, int width, int height, bool generate_mipmap);
 
@@ -70,11 +70,11 @@ namespace umfeld {
         SDL_Texture*             sdl_texture = nullptr;
 
     protected:
-        static uint32_t* convert_bytes_to_pixels(int width, int height, int channels, const unsigned char* data);
-        void             update_full_internal(PGraphics* graphics);
+        void update_full_internal(PGraphics* graphics);
 
     public:
-        static PImage convert_SDL_Surface_to_PImage(SDL_Surface* surface) {
+        static uint32_t* convert_bytes_to_pixels(int width, int height, int channels, const unsigned char* data);
+        static PImage    convert_SDL_Surface_to_PImage(SDL_Surface* surface) {
             if (!surface) {
                 return PImage(); // Return empty image if surface is null
             }

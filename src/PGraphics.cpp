@@ -20,7 +20,6 @@
 #include <iostream>
 #include <vector>
 #include <array>
-#include <curl/curl.h>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -659,14 +658,14 @@ void PGraphics::circle(const float x, const float y, const float diameter) {
 
 /* --- load image --- */
 
-PImage* PGraphics::loadImage(const std::string& file, const bool use_relative_path) {
-    const std::string abolsute_path = use_relative_path ? file : sketchPath() + file;
-    if (!file_exists(abolsute_path)) {
-        error("loadImage() failed! file not found: '", file, "'. the 'sketchPath()' is currently set to '", sketchPath(), "'. looking for file at: '", abolsute_path, "'");
-        return nullptr;
-    }
-    return new PImage(abolsute_path);
-}
+// PImage* PGraphics::loadImage(const std::string& file, const bool use_relative_path) {
+//     const std::string absolute_path = use_relative_path ? file : sketchPath() + file;
+//     if (!file_exists(absolute_path)) {
+//         error("loadImage() failed! file not found: '", file, "'. the 'sketchPath()' is currently set to '", sketchPath(), "'. looking for file at: '", absolute_path, "'");
+//         return nullptr;
+//     }
+//     return new PImage(absolute_path);
+// }
 
 // const std::vector<std::string> supportedProtocols{};
 //

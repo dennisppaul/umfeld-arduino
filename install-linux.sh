@@ -38,7 +38,9 @@ sudo apt-get install -y \
   libswscale-dev \
   libavdevice-dev \
   librtmidi-dev \
-  portaudio19-dev
+  portaudio19-dev \
+  libcairo2-dev \
+  libcurl4-openssl-dev
 # instal x11 developer packages need e.g for ubuntu
 sudo apt-get install -y \
   libx11-dev \

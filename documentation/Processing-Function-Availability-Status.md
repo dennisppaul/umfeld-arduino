@@ -395,22 +395,22 @@ below is a list of all Processing functions from the official [Processing Refere
 
 ### Lights
 
-- [ ] `ambientLight()` :: Adds an ambient light
-- [ ] `directionalLight()` :: Adds a directional light
-- [ ] `lightFalloff()` :: Sets the falloff rates for point lights, spotlights, and ambient lights
-- [ ] `lightSpecular()` :: Sets the specular color for lights
+- [x] `ambientLight()` :: Adds an ambient light
+- [x] `directionalLight()` :: Adds a directional light
+- [x] `lightFalloff()` :: Sets the falloff rates for point lights, spotlights, and ambient lights
+- [x] `lightSpecular()` :: Sets the specular color for lights
 - [x] `lights()` :: Sets the default ambient light, directional light, falloff, and specular values
 - [x] `noLights()` :: Disable all lighting
 - [x] `normal()` :: Sets the current normal vector
-- [ ] `pointLight()` :: Adds a point light
-- [ ] `spotLight()` :: Adds a spotlight
+- [x] `pointLight()` :: Adds a point light
+- [x] `spotLight()` :: Adds a spotlight
 
 ### Material Properties
 
-- [ ] `ambient()` :: Sets the ambient reflectance for shapes drawn to the screen
-- [ ] `emissive()` :: Sets the emissive color of the material used for drawing shapes drawn to the screen
-- [ ] `shininess()` :: Sets the amount of gloss in the surface of shapes
-- [ ] `specular()` :: Sets the specular color of the materials used for shapes drawn to the screen, which sets the color of highlights
+- [x] `ambient()` :: Sets the ambient reflectance for shapes drawn to the screen
+- [x] `emissive()` :: Sets the emissive color of the material used for drawing shapes drawn to the screen
+- [x] `shininess()` :: Sets the amount of gloss in the surface of shapes
+- [x] `specular()` :: Sets the specular color of the materials used for shapes drawn to the screen, which sets the color of highlights
 
 ### Camera
 

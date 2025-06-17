@@ -28,6 +28,7 @@ pacman -S --noconfirm \
   mingw-w64-ucrt-x86_64-rtmidi \
   mingw-w64-ucrt-x86_64-glm \
   mingw-w64-ucrt-x86_64-portaudio \
+  curl \
   git
 
 echo "MSYS2 UCRT64 environment set up for 'umfeld'."

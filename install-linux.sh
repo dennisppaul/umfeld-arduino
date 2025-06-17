@@ -22,6 +22,7 @@ sudo apt-get install -y \
   git \
   clang \
   cmake \
+  curl \
   mesa-utils
 
 # install umfeld dependencies

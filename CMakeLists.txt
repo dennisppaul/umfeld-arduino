@@ -330,13 +330,38 @@ if (NOT DISABLE_GRAPHICS)
     # Ncurses
     if (NOT DISABLE_NCURSES)
         message(STATUS "NCURSES(TERM) : ENABLED")
-        find_package(Curses REQUIRED)
+        # find_package(Curses REQUIRED)
+        # pkg_check_modules(NCURSES REQUIRED ncurses)
+        pkg_check_modules(NCURSES_PKG ncurses)
+
+        if (NCURSES_PKG_FOUND)
+            message(STATUS "              : Using pkg-config to find ncurses")
+            set(NCURSES_INCLUDE_DIR ${NCURSES_PKG_INCLUDE_DIRS})
+            set(NCURSES_LIBRARY ${NCURSES_PKG_LIBRARIES})
+        else ()
+            message(STATUS "              : Using find_package to find ncurses")
+            find_package(Curses REQUIRED)
+            set(NCURSES_INCLUDE_DIR ${CURSES_INCLUDE_DIR})
+            set(NCURSES_LIBRARY ${CURSES_LIBRARIES})
+        endif ()
+
     else (NOT DISABLE_NCURSES)
         message(STATUS "NCURSES(TERM) : DISABLED")
     endif (NOT DISABLE_NCURSES)
 
+    # TODO check if ncurses needs extra treatment on other platforms
+    #if (UNIX)
+    #    find_package(Curses REQUIRED)
+    #    include_directories(${CURSES_INCLUDE_DIR})
+    #    target_link_libraries(${PROJECT_NAME} PUBLIC ${CURSES_LIBRARIES})
+    #endif (UNIX)
+    #if (WIN32)
+    #    target_link_libraries(${PROJECT_NAME} PUBLIC pdcurses)
+    #endif (WIN32)
+
     # curl
-    find_package(CURL REQUIRED)
+    pkg_check_modules(CURL REQUIRED libcurl)
+    #    find_package(CURL REQUIRED)
 
     if (APPLE)
     elseif (UNIX)
@@ -455,8 +480,8 @@ if (NOT DISABLE_GRAPHICS)
     endif (NOT DISABLE_PDF)
 
     if (NOT DISABLE_NCURSES)
-        target_include_directories(${PROJECT_NAME} PUBLIC ${CURSES_INCLUDE_DIRS})
-        target_link_libraries(${PROJECT_NAME} PUBLIC ${CURSES_LIBRARIES})
+        target_include_directories(${PROJECT_NAME} PRIVATE ${NCURSES_INCLUDE_DIRS})
+        target_link_libraries(${PROJECT_NAME} PRIVATE ${NCURSES_LIBRARIES})
     endif (NOT DISABLE_NCURSES)
 
 endif (NOT DISABLE_GRAPHICS)
@@ -474,7 +499,9 @@ if (NOT DISABLE_MIDI)
     endforeach ()
 endif (NOT DISABLE_MIDI)
 
-target_link_libraries(${PROJECT_NAME} PRIVATE CURL::libcurl)
+#target_link_libraries(${PROJECT_NAME} PRIVATE CURL::libcurl)
+target_include_directories(${PROJECT_NAME} PRIVATE ${CURL_INCLUDE_DIRS})
+target_link_libraries(${PROJECT_NAME} PRIVATE ${CURL_LIBRARIES})
 
 ##########################################################################################################
 ### COMPILER FLAGS                                                                                     ###
@@ -510,22 +537,6 @@ function(add_umfeld_libs)
         endif ()
     endif ()
 endfunction()
-
-
-##########################################################################################################
-### TODO                                                                                               ###
-##########################################################################################################
-
-# TODO implement curses for headless mode
-## ncurses
-#if (UNIX)
-#    find_package(Curses REQUIRED)
-#    include_directories(${CURSES_INCLUDE_DIR})
-#    target_link_libraries(${PROJECT_NAME} PUBLIC ${CURSES_LIBRARIES})
-#endif (UNIX)
-#if (WIN32)
-#    target_link_libraries(${PROJECT_NAME} PUBLIC pdcurses)
-#endif (WIN32)
 
 ##########################################################################################################
 ### TEST                                                                                               ###

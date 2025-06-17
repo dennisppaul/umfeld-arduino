@@ -13,6 +13,7 @@ sudo apt install -y \
   build-essential \
   cmake \
   git \
+  curl \
   pkg-config \
   ffmpeg \
   libharfbuzz-dev \

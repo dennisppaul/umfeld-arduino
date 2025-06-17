@@ -164,18 +164,18 @@ namespace umfeld {
         RENDERER_OPENGL_3_3_CORE, // core profile
         RENDERER_OPENGL_2_0,      // fixed-function pipeline
         RENDERER_OPENGL_ES_3_0,   // iOS + Android + RPI4b+5
-#if defined(OPENGL_3_3_CORE)
-        RENDERER_OPEN_GL = RENDERER_OPENGL_3_3_CORE, // default OpenGL renderer
-#elif defined(OPENGL_2_0)
-        RENDERER_OPEN_GL = RENDERER_OPENGL_2_0, // default OpenGL renderer
-#elif defined(OPENGL_ES_3_0)
-        RENDERER_OPEN_GL = RENDERER_OPENGL_ES_3_0, // default OpenGL renderer
-#endif
         RENDERER_SDL_2D,
         RENDERER_TERMINAL,
         RENDERER_TEMPLATE,
         RENDERER_CUSTOM,
     };
+// #if defined(OPENGL_3_3_CORE)
+//     inline Renderer RENDERER_OPEN_GL = RENDERER_OPENGL_3_3_CORE; // default OpenGL renderer
+// #elif defined(OPENGL_2_0)
+//     inline Renderer RENDERER_OPEN_GL = RENDERER_OPENGL_2_0; // default OpenGL renderer
+// #elif defined(OPENGL_ES_3_0)
+//     inline Renderer RENDERER_OPEN_GL = RENDERER_OPENGL_ES_3_0; // default OpenGL renderer
+// #endif
     enum Exporter {
         OBJ,
         PDF

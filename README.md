@@ -25,7 +25,7 @@
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/dennisppaul/umfeld/refs/heads/main/install.sh)"
 ```
 
-this script installs all required packages on macOS, Linux, or Windows ( in `MSYS2 UCRT64` ).
+this script installs all required packages on macOS, Linux, or Windows ( in `MSYS2 UCRT64`. you might need to install `curl` first for the command above to work; see system specific notes below ).
 
 ### 2. Download Umfeld + Examples
 
@@ -43,7 +43,11 @@ cmake --build build
 ./build/minimal
 ```
 
-if something goes wrong consult the detailed [DOCUMENTATION](documentation/DOCUMENTATION.md).
+if something goes wrong consult the notes below or the detailed [DOCUMENTATION](documentation/DOCUMENTATION.md).
+
+### Raspberry Pi Notes
+
+the quickest way to get started on *Raspberry Pi* is to use the [pre-configured image](http://dm-hb.de/umfeld-rpi) or see [Umfeld-on-RPI / Quickstart](documentation/Umfeld-on-RPI.md#Quickstart) for platform-specific instructions.
 
 ### Windows Notes
 
@@ -53,13 +57,13 @@ if something goes wrong consult the detailed [DOCUMENTATION](documentation/DOCUM
  
 ⚠️ Important ⚠️ when installing dependencies the console might close if `MSYS2` updates itself. this is normal! just reopen `MSYS2 UCRT64` and run the *Install Dependencies* command again.
 
-### Raspberry Pi Notes
-
-the quickest way to get started on *Raspberry Pi* is to use the [pre-configured image](http://dm-hb.de/umfeld-rpi) or see [Umfeld-on-RPI / Quickstart](documentation/Umfeld-on-RPI.md#Quickstart) for platform-specific instructions.
-
 ### Linux Notes
 
 on *some* systems, you may need to install `git` and `curl` with `sudo apt install -y git curl` before installing the dependencies.
+
+### macOS Notes
+
+you might need to install Xcode Tools with `xcode-select --install`.
 
 ## Why *Umfeld*?
 

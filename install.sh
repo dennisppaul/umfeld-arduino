@@ -2,6 +2,15 @@
 
 set -e
 
+# Check if curl is installed
+if ! command -v curl >/dev/null 2>&1; then
+    echo "ERROR: 'curl' is not installed. Please install curl and try again."
+    echo 
+    echo "on Linux           : 'sudo apt-get install curl'"
+    echo "on Windows (UCRT64): 'sudo pacman -Syu curl'"
+    exit 1
+fi
+
 BASE_URL="https://raw.githubusercontent.com/dennisppaul/umfeld/main"
 
 echo "---------------------"

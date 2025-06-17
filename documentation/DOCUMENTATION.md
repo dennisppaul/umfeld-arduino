@@ -14,7 +14,7 @@ either manually with:
 brew install cmake pkgconfig sdl3 harfbuzz freetype ffmpeg rtmidi glm dylibbundler portaudio
 ```
 
-or run installer script `./install-macOS.sh` ( i.e checking for Homebrew and running the bundler with `brew bundle` ). you might need to install XCode Tools with `xcode-select --install`.
+or run installer script `./install-macOS.sh` ( i.e checking for Homebrew and running the bundler with `brew bundle` ). you might need to install Xcode Tools with `xcode-select --install`.
 
 #### Linux
 
@@ -32,7 +32,7 @@ or install manually step by step:
 sudo apt-get update -y
 sudo apt-get upgrade -y
 sudo apt-get install git clang mesa-utils -y
-sudo apt-get install cmake libharfbuzz-dev libfreetype6-dev ffmpeg libavcodec-dev libavformat-dev libavutil-dev libswscale-dev libavdevice-dev librtmidi-dev libglm-dev portaudio19-dev -y
+sudo apt-get install cmake libharfbuzz-dev libfreetype6-dev ffmpeg libavcodec-dev libavformat-dev libavutil-dev libswscale-dev libavdevice-dev librtmidi-dev libglm-dev portaudio19-dev curl -y
 sudo apt install libx11-dev libxext-dev libxrandr-dev libxcursor-dev libxi-dev libxinerama-dev libwayland-dev libxkbcommon-dev wayland-protocols -y # need e.g for ubuntu
 # sudo apt-get install libsdl3-dev # SDL3 is currently not available
 ```
@@ -78,6 +78,7 @@ pacman -S --noconfirm \
   mingw-w64-ucrt-x86_64-rtmidi \
   mingw-w64-ucrt-x86_64-glm \
   mingw-w64-ucrt-x86_64-portaudio \
+  curl \
   git
 ```
 

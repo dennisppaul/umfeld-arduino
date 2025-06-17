@@ -42,6 +42,8 @@ sudo apt-get install -y \
 # instal x11 developer packages need e.g for ubuntu
 sudo apt-get install -y \
   libx11-dev \
+  libgl1-mesa-dev \
+  libglu1-mesa-dev \
   libxext-dev \
   libxrandr-dev \
   libxcursor-dev \

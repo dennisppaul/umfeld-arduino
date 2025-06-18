@@ -19,7 +19,6 @@
 
 #pragma once
 
-
 #include <vector>
 
 #include "Umfeld.h"
@@ -39,6 +38,11 @@ namespace umfeld {
         static constexpr int ATTRIBUTE_SIZE_COLOR        = 4;
         static constexpr int ATTRIBUTE_SIZE_TEXCOORD     = 3;
         static constexpr int ATTRIBUTE_SIZE_USERDATA     = 1;
+
+        VertexBuffer(const VertexBuffer&)            = delete;
+        VertexBuffer& operator=(const VertexBuffer&) = delete;
+        VertexBuffer(VertexBuffer&& other) noexcept;
+        VertexBuffer& operator=(VertexBuffer&& other) noexcept;
 
         VertexBuffer();
         ~VertexBuffer();
@@ -65,10 +69,9 @@ namespace umfeld {
         bool                dirty              = false;
         int                 native_opengl_shape;
 
-        void        resize_buffer();
+        static bool isContextValid();
         void        enable_vertex_attributes() const;
         static void disable_vertex_attributes();
-        void        upload();
         void        checkVAOSupport();
         bool        needs_buffer_resize(size_t current_size) const;
         bool        needs_buffer_shrink(size_t current_size) const;

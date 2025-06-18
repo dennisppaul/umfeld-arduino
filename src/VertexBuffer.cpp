@@ -17,6 +17,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <cstring>
 // ReSharper disable once CppUnusedIncludeDirective
 #include <glm/glm.hpp>
 #include <iostream>
@@ -38,6 +39,57 @@ using namespace umfeld;
 
 VertexBuffer::VertexBuffer() : native_opengl_shape(get_draw_mode(TRIANGLES)) {}
 
+// Move constructor
+VertexBuffer::VertexBuffer(VertexBuffer&& other) noexcept
+    : _vertices(std::move(other._vertices)), vbo(other.vbo), vao(other.vao), vao_supported(other.vao_supported), initial_upload(other.initial_upload), buffer_initialized(other.buffer_initialized), server_buffer_size(other.server_buffer_size), dirty(other.dirty), native_opengl_shape(other.native_opengl_shape) {
+    // Reset the moved-from object
+    other.vbo                 = 0;
+    other.vao                 = 0;
+    other.buffer_initialized  = false;
+    other.vao_supported       = false;
+    other.dirty               = false;
+    other.initial_upload      = false;
+    other.server_buffer_size  = 0;
+    other.native_opengl_shape = get_draw_mode(TRIANGLES);
+}
+
+// Move assignment operator
+VertexBuffer& VertexBuffer::operator=(VertexBuffer&& other) noexcept {
+    if (this != &other) {
+        // Clean up existing resources
+        if (vbo) {
+            const GLuint _vbo = vbo;
+            glDeleteBuffers(1, &_vbo);
+        }
+        if (vao_supported && vao) {
+            const GLuint _vao = vao;
+            glDeleteVertexArrays(1, &_vao);
+        }
+
+        // Move data from other
+        _vertices           = std::move(other._vertices);
+        vbo                 = other.vbo;
+        vao                 = other.vao;
+        buffer_initialized  = other.buffer_initialized;
+        vao_supported       = other.vao_supported;
+        dirty               = other.dirty;
+        initial_upload      = other.initial_upload;
+        server_buffer_size  = other.server_buffer_size;
+        native_opengl_shape = other.native_opengl_shape;
+
+        // Reset the moved-from object
+        other.vbo                 = 0;
+        other.vao                 = 0;
+        other.buffer_initialized  = false;
+        other.vao_supported       = false;
+        other.dirty               = false;
+        other.initial_upload      = false;
+        other.server_buffer_size  = 0;
+        other.native_opengl_shape = get_draw_mode(TRIANGLES);
+    }
+    return *this;
+}
+
 void VertexBuffer::init() {
     if (buffer_initialized) {
         return;
@@ -48,11 +100,10 @@ void VertexBuffer::init() {
     glGenBuffers(1, &_vbo);
     vbo = _vbo;
     if (vbo == 0) {
-        std::cerr << "Failed to generate VBO" << std::endl;
+        error("Failed to generate VBO");
         return;
     }
     UMFELD_VERTEX_BUFFER_CHECK_ERROR("error generting VBO");
-
 
     if (vao_supported) {
         GLuint _vao;
@@ -60,7 +111,7 @@ void VertexBuffer::init() {
         vao = _vao;
         // Add error checking
         if (vao == 0) {
-            std::cerr << "Failed to generate VAO" << std::endl;
+            error("Failed to generate VAO");
             const GLuint _vbo_ = vbo;
             glDeleteBuffers(1, &_vbo_);
             vbo = 0;
@@ -73,14 +124,33 @@ void VertexBuffer::init() {
 }
 
 VertexBuffer::~VertexBuffer() {
-    if (vbo) {
-        const GLuint _vbo = vbo;
-        glDeleteBuffers(1, &_vbo);
+    try {
+        // Check if we can make OpenGL calls
+        const GLenum error             = glGetError();
+        const bool   context_available = (error != GL_INVALID_OPERATION);
+
+        if (context_available) {
+            if (vbo) {
+                const GLuint _vbo = vbo;
+                glDeleteBuffers(1, &_vbo);
+                // Clear any potential errors from deletion
+                glGetError();
+            }
+            if (vao_supported && vao) {
+                const GLuint _vao = vao;
+                glDeleteVertexArrays(1, &_vao);
+                // Clear any potential errors from deletion
+                glGetError();
+            }
+        }
+    } catch (...) {
+        // Destructors should not throw, so catch any potential exceptions
+        // This shouldn't happen with OpenGL calls, but better safe than sorry
     }
-    if (vao_supported && vao) {
-        const GLuint _vao = vao;
-        glDeleteVertexArrays(1, &_vao);
-    }
+
+    // always reset the handles
+    vbo = 0;
+    vao = 0;
 }
 
 void VertexBuffer::checkVAOSupport() {
@@ -113,34 +183,6 @@ void VertexBuffer::clear() {
     _vertices.clear();
 }
 
-void VertexBuffer::resize_buffer() {
-    const size_t client_buffer_size_bytes = _vertices.size() * sizeof(Vertex);
-    const size_t server_buffer_size_bytes = server_buffer_size * sizeof(Vertex);
-
-    if (client_buffer_size_bytes > server_buffer_size_bytes) {
-        const size_t growSize = client_buffer_size_bytes + VBO_BUFFER_CHUNK_SIZE_BYTES;
-#ifdef UMFELD_VERTEX_BUFFER_DEBUG_OPENGL_ERRORS
-        console("Growing vertex buffer from ", server_buffer_size_bytes, " to ", growSize, " bytes");
-#endif
-        // std::cout << "Growing vertex buffer from " << server_buffer_size_bytes << " to " << growSize << " bytes" << std::endl;
-        glBindBuffer(GL_ARRAY_BUFFER, vbo); // Ensure VBO is bound
-        glBufferData(GL_ARRAY_BUFFER, growSize, _vertices.data(), GL_DYNAMIC_DRAW);
-        server_buffer_size = growSize / sizeof(Vertex);
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-    }
-    if (client_buffer_size_bytes < server_buffer_size_bytes) {
-        const size_t shrinkSize = client_buffer_size_bytes;
-#ifdef UMFELD_VERTEX_BUFFER_DEBUG_OPENGL_ERRORS
-        console("Shrinking vertex buffer from ", server_buffer_size_bytes, " to ", shrinkSize, " bytes");
-#endif
-        // std::cout << "Shrinking vertex buffer to " << client_buffer_size_bytes << " bytes" << std::endl;
-        glBindBuffer(GL_ARRAY_BUFFER, vbo); // Ensure VBO is bound
-        glBufferData(GL_ARRAY_BUFFER, shrinkSize, _vertices.data(), GL_DYNAMIC_DRAW);
-        server_buffer_size = shrinkSize / sizeof(Vertex);
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-    }
-}
-
 void VertexBuffer::set_shape(const int shape, const bool map_to_opengl_draw_mode) {
     this->native_opengl_shape = map_to_opengl_draw_mode ? get_draw_mode(shape) : shape;
 }
@@ -148,13 +190,17 @@ void VertexBuffer::set_shape(const int shape, const bool map_to_opengl_draw_mode
 void VertexBuffer::draw() {
     UMFELD_VERTEX_BUFFER_CHECK_ERROR("mesh / draw begin");
 
-    if (!buffer_initialized) { init(); }
+    if (!buffer_initialized) {
+        init();
+        if (!buffer_initialized) {
+            return; // Check init success
+        }
+    }
+
 
     UMFELD_VERTEX_BUFFER_CHECK_ERROR("mesh / init");
 
-    if (_vertices.empty()) {
-        return;
-    }
+    if (_vertices.empty()) { return; }
 
     if (dirty) {
         update();
@@ -164,62 +210,20 @@ void VertexBuffer::draw() {
     const int mode = native_opengl_shape;
 
     if (vao_supported) {
+        if (vao == 0) { return; }
         glBindVertexArray(vao);
         UMFELD_VERTEX_BUFFER_CHECK_ERROR("mesh / binding vao arrays");
-        // Check if VAO was actually created successfully
-        if (vao == 0) {
-            // Error: trying to bind invalid VAO
-            return;
-        }
         glDrawArrays(mode, 0, _vertices.size());
-        // glDrawArrays(mode, 0, _vertices.size());
         UMFELD_VERTEX_BUFFER_CHECK_ERROR("mesh / draw arrays");
         glBindVertexArray(0);
     } else {
+        if (vbo == 0) { return; }
         glBindBuffer(GL_ARRAY_BUFFER, vbo);
-        // Check if VBO was actually created successfully
-        if (vbo == 0) {
-            // Error: trying to bind invalid VBO
-            return;
-        }
         enable_vertex_attributes();
-
         glDrawArrays(mode, 0, _vertices.size());
-
         disable_vertex_attributes();
         glBindBuffer(GL_ARRAY_BUFFER, 0);
     }
-}
-
-void VertexBuffer::upload() {
-    if (_vertices.empty()) {
-        return;
-    }
-
-    if (vao_supported) {
-        glBindVertexArray(vao);
-    }
-
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
-
-    const size_t current_size   = _vertices.size();
-    const size_t required_bytes = current_size * sizeof(Vertex);
-
-    if (current_size > server_buffer_size) {
-        // NOTE buffer needs to grow - reallocate entire buffer
-        glBufferData(GL_ARRAY_BUFFER, required_bytes, _vertices.data(), GL_DYNAMIC_DRAW);
-        server_buffer_size = current_size;
-    } else {
-        // NOTE buffer is same size or smaller - use sub data upload
-        glBufferSubData(GL_ARRAY_BUFFER, 0, required_bytes, _vertices.data());
-    }
-
-    enable_vertex_attributes();
-
-    if (vao_supported) {
-        glBindVertexArray(0);
-    }
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
 void VertexBuffer::update() {
@@ -274,22 +278,25 @@ void VertexBuffer::upload_with_resize(const size_t current_size, const size_t re
     // NOTE assumes VBO is already bound
     if (current_size > server_buffer_size) {
         // grow buffer with chunking strategy
-        const size_t grow_size = required_bytes + VBO_BUFFER_CHUNK_SIZE_BYTES;
-        glBufferData(GL_ARRAY_BUFFER, grow_size, _vertices.data(), GL_DYNAMIC_DRAW);
-        server_buffer_size = grow_size / sizeof(Vertex);
+        const size_t grow_size_bytes = required_bytes + VBO_BUFFER_CHUNK_SIZE_BYTES;
+        glBufferData(GL_ARRAY_BUFFER, grow_size_bytes, _vertices.data(), GL_DYNAMIC_DRAW);
+        UMFELD_VERTEX_BUFFER_CHECK_ERROR("upload_with_resize / glBufferData grow"); // ← ADD THIS
 #ifdef UMFELD_VERTEX_BUFFER_DEBUG_OPENGL_ERRORS
-        console("upload_... / Growing vertex buffer from ", server_buffer_size * sizeof(Vertex), " to ", grow_size, " bytes");
+        console("upload_... / Growing vertex buffer from ", server_buffer_size * sizeof(Vertex), " to ", grow_size_bytes, " bytes");
 #endif
+        server_buffer_size = grow_size_bytes / sizeof(Vertex); // Convert to vertex count
     } else if (needs_buffer_shrink(current_size)) {
         // shrink buffer
         glBufferData(GL_ARRAY_BUFFER, required_bytes, _vertices.data(), GL_DYNAMIC_DRAW);
-        server_buffer_size = current_size;
+        UMFELD_VERTEX_BUFFER_CHECK_ERROR("upload_with_resize / glBufferData shrink"); // ← ADD THIS
 #ifdef UMFELD_VERTEX_BUFFER_DEBUG_OPENGL_ERRORS
         console("upload_... / Shrinking vertex buffer from ", server_buffer_size * sizeof(Vertex), " to ", required_bytes, " bytes");
 #endif
+        server_buffer_size = current_size;
     } else {
         // same size or within acceptable range - just upload data
         glBufferSubData(GL_ARRAY_BUFFER, 0, required_bytes, _vertices.data());
+        UMFELD_VERTEX_BUFFER_CHECK_ERROR("upload_with_resize / glBufferSubData"); // ← ADD THIS
     }
 }
 
@@ -305,7 +312,7 @@ bool VertexBuffer::needs_buffer_shrink(const size_t current_size) const {
 void VertexBuffer::enable_vertex_attributes() const {
     // Ensure buffer is bound before setting up attributes
     if (vbo == 0) {
-        std::cerr << "Attempting to set vertex attributes with invalid VBO" << std::endl;
+        error("Attempting to set vertex attributes with invalid VBO");
         return;
     }
 
@@ -331,4 +338,17 @@ void VertexBuffer::disable_vertex_attributes() {
     glDisableVertexAttribArray(ATTRIBUTE_LOCATION_COLOR);
     glDisableVertexAttribArray(ATTRIBUTE_LOCATION_TEXCOORD);
     glDisableVertexAttribArray(ATTRIBUTE_LOCATION_USERDATA);
+}
+
+// Check if OpenGL context is valid
+bool VertexBuffer::isContextValid() {
+    // Check if we can make basic OpenGL calls
+    GLenum error = glGetError();
+    if (error == GL_INVALID_OPERATION) {
+        return false; // No context or invalid context
+    }
+
+    // Try to get OpenGL version - this will fail if no context
+    const GLubyte* version = glGetString(GL_VERSION);
+    return version != nullptr;
 }

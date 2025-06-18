@@ -17,135 +17,170 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+// ⚠️⚠️⚠️ Work in progress! not tested and still missing a lot e.g shrinking ⚠️⚠️⚠️
+
 #pragma once
 
 #include <vector>
-#include <tuple>
-#include <cstddef>
-#include <type_traits>
-#include "UmfeldSDLOpenGL.h" // TODO move to cpp implementation
+#include <algorithm>
+#include "UmfeldSDLOpenGL.h"
 #include "Vertex.h"
 
-#include <tuple>
-#include <vector>
-#include <cstddef>
+#if defined(OPENGL_3_3_CORE) || defined(OPENGL_ES_3_0)
+#define USE_VAO 1
+#elif defined(OPENGL_2_0)
+#define USE_VAO 0
+#endif
 
-using umfeld::Vertex;
+namespace umfeld {
 
-// Helper: Get OpenGL type from C++ type
-template<typename T>
-constexpr GLenum getGLType() {
-    if constexpr (std::is_same_v<T, float>) {
-        return GL_FLOAT;
-    }
-    if constexpr (std::is_same_v<T, int>) {
-        return GL_INT;
-    }
-    return 0; // Unknown type (should not happen)
-}
-
-// Struct to define a field with metadata
-template<typename StructType, typename MemberType, MemberType StructType::* Member, size_t Index>
-struct VertexAttribute {
-    static constexpr GLenum type     = getGLType<typename MemberType::value_type>();
-    static constexpr size_t size     = sizeof(MemberType) / sizeof(float); // Number of components (e.g., vec3 -> 3)
-    static constexpr size_t offset   = offsetof(StructType, Member);       // FIXED: No dereference
-    static constexpr size_t location = Index;
-};
-
-// Macro to simplify member definition
-#define DEFINE_ATTRIBUTE(structType, memberName, index) \
-    VertexAttribute<structType, decltype(structType::memberName), &structType::memberName, index>
-
-template<typename VertexType, typename... Attributes>
-struct VertexLayout {
-    using AttributesTuple = std::tuple<Attributes...>;
-    AttributesTuple attributesTuple; // Now it holds an instance
-};
-
-// Automatically extract attributes using index sequence
-template<typename VertexType, typename... Members, size_t... Indices>
-constexpr auto makeVertexLayout(std::tuple<Members...> members, std::index_sequence<Indices...>) {
-    return VertexLayout<VertexType, DEFINE_ATTRIBUTE(VertexType, Members::value, Indices)...>{};
-}
-
-// Entry point to infer attributes
-template<typename VertexType, typename... Members>
-constexpr auto inferVertexLayout(std::tuple<Members...> members) {
-    return makeVertexLayout<VertexType>(members, std::index_sequence_for<Members...>{});
-}
-
-// // Specialization for Vertex
-// template <>
-// constexpr auto inferVertexLayout<Vertex>(std::tuple{}) {
-//  return makeVertexLayout<Vertex>(
-//      std::make_tuple(
-//          &Vertex::position,
-//          &Vertex::color,
-//          &Vertex::tex_coord
-//      ),
-//      std::index_sequence_for<decltype(Vertex::position), decltype(Vertex::color), decltype(Vertex::tex_coord)>{});
-// }
-
-// // Specialization for VertexBarycentric
-// template <>
-// constexpr auto inferVertexLayout<VertexBarycentric>(std::tuple{}) {
-//  return makeVertexLayout<VertexBarycentric>(
-//      std::make_tuple(
-//          &VertexBarycentric::position,
-//          &VertexBarycentric::color,
-//          &VertexBarycentric::barycentric
-//      ),
-//      std::index_sequence_for<decltype(VertexBarycentric::position), decltype(VertexBarycentric::color), decltype(VertexBarycentric::barycentric)>{});
-// }
-
-template<typename VertexType>
-void setupAttributes(const VertexLayout<VertexType>& layout) { // Ensure it takes a const reference
-    std::apply([](auto... attributes) {
-        ((glEnableVertexAttribArray(attributes.location),
-          glVertexAttribPointer(attributes.location, attributes.size, attributes.type, GL_FALSE,
-                                sizeof(VertexType), (void*) attributes.offset)),
-         ...);
-    },
-               layout.attributesTuple); // Use instance
-}
-
-template<typename VertexType>
-GLuint createVAO(const std::vector<VertexType>& vertices) {
-    GLuint vao, vbo;
-    glGenVertexArrays(1, &vao);
-    glBindVertexArray(vao);
-
-    glGenBuffers(1, &vbo);
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(VertexType), vertices.data(), GL_STATIC_DRAW);
-
-    // Fully automatic setup
-    setupAttributes(inferVertexLayout<VertexType>({}));
-
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindVertexArray(0);
-
-    return vao;
-}
-
-struct VertexBarycentric {
-    glm::vec3 position;
-    glm::vec3 barycentric;
-    glm::vec4 color;
-};
-
-inline GLuint test_this() {
-    // create some vertices
-    const std::vector<Vertex> vertices = {
-        {1.0f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f},
-        {1.0f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f},
-        {1.0f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f},
+    // Describes one attribute in your interleaved vertex
+    struct VertexAttribute {
+        GLuint    index;      // shader location
+        GLint     size;       // e.g. 2,3,4
+        GLenum    type;       // e.g. GL_FLOAT
+        GLboolean normalized; // GL_FALSE or GL_TRUE
+        GLsizei   stride;     // byte stride of entire vertex
+        size_t    offset;     // byte offset of this field in the vertex
     };
-    const GLuint vao = createVAO(vertices);
-    const std::vector<VertexBarycentric> vertices2 = {
-        {glm::vec3(1.0f, 1.0f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f), glm::vec4(1.0f, 0.0f, 0.0f, 1.0f)},
+
+    class VertexBufferGeneric {
+    public:
+        // attrs: list of your vertex attributes
+        // vertexByteSize: sizeof(YourVertexStruct)
+        VertexBufferGeneric(const std::vector<VertexAttribute>& attrs, const size_t vertexByteSize)
+            : attributes(attrs),
+              vertexSize(vertexByteSize),
+              vao(0),
+              vbo(0),
+              capacity(0),
+              vertexCount(0) {}
+
+        ~VertexBufferGeneric() {
+            cleanup();
+        }
+
+        // Must be called once after GL context is ready (and after your loader is init)
+        void init() {
+#if USE_VAO
+            glGenVertexArrays(1, &vao);
+            glBindVertexArray(vao);
+#endif
+            glGenBuffers(1, &vbo);
+            glBindBuffer(GL_ARRAY_BUFFER, vbo);
+            // Allocate zero bytes for now; first real allocation comes in update()
+#if USE_VAO
+            setupAttributes();
+            glBindVertexArray(0);
+#else
+            glBindBuffer(GL_ARRAY_BUFFER, 0);
+#endif
+        }
+
+        // Upload 'count' vertices from 'data'
+        // If you exceed the current capacity, the buffer is re-allocated
+        void update(const void* data, const size_t count) {
+            vertexCount          = count;
+            size_t requiredBytes = count * vertexSize;
+
+            // grow buffer if needed (double strategy)
+            if (requiredBytes > capacity) {
+                size_t newCap = std::max(requiredBytes, capacity * 2);
+                if (newCap == 0) {
+                    newCap = requiredBytes;
+                }
+                capacity = newCap;
+
+                glBindBuffer(GL_ARRAY_BUFFER, vbo);
+                // orphan old storage, allocate new
+                glBufferData(GL_ARRAY_BUFFER, capacity, nullptr, GL_DYNAMIC_DRAW);
+            }
+
+            // upload actual data
+            glBindBuffer(GL_ARRAY_BUFFER, vbo);
+            glBufferSubData(GL_ARRAY_BUFFER, 0, requiredBytes, data);
+        }
+
+        // Draws with the given primitive mode (e.g. GL_TRIANGLES)
+        void draw(const GLenum mode) const {
+#if USE_VAO
+            glBindVertexArray(vao);
+#else
+            glBindBuffer(GL_ARRAY_BUFFER, vbo);
+            setupAttributes();
+#endif
+            glDrawArrays(mode, 0, static_cast<GLsizei>(vertexCount));
+#if USE_VAO
+            glBindVertexArray(0);
+#else
+            // (optional) disable attributes if you want
+#endif
+        }
+
+        // Frees GPU resources
+        void cleanup() {
+            if (vbo) {
+                glDeleteBuffers(1, &vbo);
+                vbo = 0;
+            }
+#if USE_VAO
+            if (vao) {
+                glDeleteVertexArrays(1, &vao);
+                vao = 0;
+            }
+#endif
+        }
+
+    private:
+        void setupAttributes() const {
+            for (const auto& a: attributes) {
+                glEnableVertexAttribArray(a.index);
+                glVertexAttribPointer(
+                    a.index, a.size, a.type, a.normalized,
+                    a.stride,
+                    reinterpret_cast<const void*>(a.offset));
+            }
+        }
+
+        std::vector<VertexAttribute> attributes;
+        size_t                       vertexSize; // bytes per vertex
+        GLuint                       vao, vbo;
+        size_t                       capacity;    // current GPU‐side capacity in bytes
+        size_t                       vertexCount; // how many vertices last uploaded
     };
-    const GLuint vao2 = createVAO(vertices);
-    return vao;
-}
+
+    inline void use_case() {
+        // Define your vertex struct:
+        // struct Vertex {
+        //     glm::aligned_vec4 position;
+        //     glm::aligned_vec4 normal;
+        //     glm::aligned_vec4 color;
+        //     glm::vec3         tex_coord;
+        //     float             userdata{0};
+        // };
+
+        // Describe its layout:
+        const std::vector<VertexAttribute> attributes = {
+            {Vertex::ATTRIBUTE_LOCATION_POSITION, Vertex::ATTRIBUTE_SIZE_POSITION, GL_FLOAT, GL_FALSE, sizeof(Vertex), offsetof(Vertex, position)},
+            {Vertex::ATTRIBUTE_LOCATION_NORMAL, Vertex::ATTRIBUTE_SIZE_NORMAL, GL_FLOAT, GL_FALSE, sizeof(Vertex), offsetof(Vertex, normal)},
+            {Vertex::ATTRIBUTE_LOCATION_COLOR, Vertex::ATTRIBUTE_SIZE_COLOR, GL_FLOAT, GL_FALSE, sizeof(Vertex), offsetof(Vertex, color)},
+            {Vertex::ATTRIBUTE_LOCATION_TEXCOORD, Vertex::ATTRIBUTE_SIZE_TEXCOORD, GL_FLOAT, GL_FALSE, sizeof(Vertex), offsetof(Vertex, tex_coord)},
+            {Vertex::ATTRIBUTE_LOCATION_USERDATA, Vertex::ATTRIBUTE_SIZE_USERDATA, GL_FLOAT, GL_FALSE, sizeof(Vertex), offsetof(Vertex, userdata)},
+        };
+
+        // In your initialization (after GL loader):
+        VertexBufferGeneric vertex_buffer_default(attributes, sizeof(Vertex));
+        vertex_buffer_default.init();
+
+        // Whenever your mesh data changes (even every frame):
+        const std::vector<Vertex> vertices = {
+            Vertex(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec4(1.0f, 0.0f, 0.0f, 1.0f), glm::vec3(0.0f, 0.0f, 0.0f)),
+            Vertex(glm::vec3(1.0f, 0.0f, 0.0f), glm::vec4(0.0f, 1.0f, 0.0f, 1.0f), glm::vec3(1.0f, 0.0f, 0.0f)),
+            Vertex(glm::vec3(0.5f, 1.0f, 0.0f), glm::vec4(0.0f, 0.0f, 1.0f, 1.0f), glm::vec3(0.5f, 1.0f, 0.0f)),
+        };
+        vertex_buffer_default.update(vertices.data(), vertices.size());
+
+        // In your render loop:
+        vertex_buffer_default.draw(GL_TRIANGLES);
+    }
+} // namespace umfeld

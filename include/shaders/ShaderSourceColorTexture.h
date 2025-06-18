@@ -27,7 +27,7 @@ namespace umfeld {
                     layout(location = 0) in vec4 aPosition;
                     layout(location = 1) in vec4 aNormal;
                     layout(location = 2) in vec4 aColor;
-                    layout(location = 3) in vec2 aTexCoord;
+                    layout(location = 3) in vec3 aTexCoord;
                     layout(location = 4) in float userdata;
 
                     out vec4 vColor;
@@ -40,7 +40,7 @@ namespace umfeld {
                     void main() {
                         gl_Position = uProjection * uViewMatrix * uModelMatrix * aPosition;
                         vColor = aColor;
-                        vTexCoord = aTexCoord;
+                        vTexCoord = aTexCoord.xy;
                     }
         )",
         .fragment = R"(

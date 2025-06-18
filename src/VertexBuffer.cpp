@@ -316,28 +316,28 @@ void VertexBuffer::enable_vertex_attributes() const {
         return;
     }
 
-    glVertexAttribPointer(ATTRIBUTE_LOCATION_POSITION, ATTRIBUTE_SIZE_POSITION, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(offsetof(Vertex, position)));
-    glEnableVertexAttribArray(ATTRIBUTE_LOCATION_POSITION);
+    glVertexAttribPointer(Vertex::ATTRIBUTE_LOCATION_POSITION, Vertex::ATTRIBUTE_SIZE_POSITION, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(offsetof(Vertex, position)));
+    glEnableVertexAttribArray(Vertex::ATTRIBUTE_LOCATION_POSITION);
 
-    glVertexAttribPointer(ATTRIBUTE_LOCATION_NORMAL, ATTRIBUTE_SIZE_NORMAL, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(offsetof(Vertex, normal)));
-    glEnableVertexAttribArray(ATTRIBUTE_LOCATION_NORMAL);
+    glVertexAttribPointer(Vertex::ATTRIBUTE_LOCATION_NORMAL, Vertex::ATTRIBUTE_SIZE_NORMAL, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(offsetof(Vertex, normal)));
+    glEnableVertexAttribArray(Vertex::ATTRIBUTE_LOCATION_NORMAL);
 
-    glVertexAttribPointer(ATTRIBUTE_LOCATION_COLOR, ATTRIBUTE_SIZE_COLOR, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(offsetof(Vertex, color)));
-    glEnableVertexAttribArray(ATTRIBUTE_LOCATION_COLOR);
+    glVertexAttribPointer(Vertex::ATTRIBUTE_LOCATION_COLOR, Vertex::ATTRIBUTE_SIZE_COLOR, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(offsetof(Vertex, color)));
+    glEnableVertexAttribArray(Vertex::ATTRIBUTE_LOCATION_COLOR);
 
-    glVertexAttribPointer(ATTRIBUTE_LOCATION_TEXCOORD, ATTRIBUTE_SIZE_TEXCOORD, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(offsetof(Vertex, tex_coord)));
-    glEnableVertexAttribArray(ATTRIBUTE_LOCATION_TEXCOORD);
+    glVertexAttribPointer(Vertex::ATTRIBUTE_LOCATION_TEXCOORD, Vertex::ATTRIBUTE_SIZE_TEXCOORD, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(offsetof(Vertex, tex_coord)));
+    glEnableVertexAttribArray(Vertex::ATTRIBUTE_LOCATION_TEXCOORD);
 
-    glVertexAttribPointer(ATTRIBUTE_LOCATION_USERDATA, ATTRIBUTE_SIZE_USERDATA, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(offsetof(Vertex, userdata)));
-    glEnableVertexAttribArray(ATTRIBUTE_LOCATION_USERDATA);
+    glVertexAttribPointer(Vertex::ATTRIBUTE_LOCATION_USERDATA, Vertex::ATTRIBUTE_SIZE_USERDATA, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(offsetof(Vertex, userdata)));
+    glEnableVertexAttribArray(Vertex::ATTRIBUTE_LOCATION_USERDATA);
 }
 
 void VertexBuffer::disable_vertex_attributes() {
-    glDisableVertexAttribArray(ATTRIBUTE_LOCATION_POSITION);
-    glDisableVertexAttribArray(ATTRIBUTE_LOCATION_NORMAL);
-    glDisableVertexAttribArray(ATTRIBUTE_LOCATION_COLOR);
-    glDisableVertexAttribArray(ATTRIBUTE_LOCATION_TEXCOORD);
-    glDisableVertexAttribArray(ATTRIBUTE_LOCATION_USERDATA);
+    glDisableVertexAttribArray(Vertex::ATTRIBUTE_LOCATION_POSITION);
+    glDisableVertexAttribArray(Vertex::ATTRIBUTE_LOCATION_NORMAL);
+    glDisableVertexAttribArray(Vertex::ATTRIBUTE_LOCATION_COLOR);
+    glDisableVertexAttribArray(Vertex::ATTRIBUTE_LOCATION_TEXCOORD);
+    glDisableVertexAttribArray(Vertex::ATTRIBUTE_LOCATION_USERDATA);
 }
 
 // Check if OpenGL context is valid

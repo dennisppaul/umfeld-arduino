@@ -24,6 +24,17 @@
 
 namespace umfeld {
     struct Vertex {
+        static constexpr int ATTRIBUTE_LOCATION_POSITION = 0;
+        static constexpr int ATTRIBUTE_LOCATION_NORMAL   = 1;
+        static constexpr int ATTRIBUTE_LOCATION_COLOR    = 2;
+        static constexpr int ATTRIBUTE_LOCATION_TEXCOORD = 3;
+        static constexpr int ATTRIBUTE_LOCATION_USERDATA = 4;
+        static constexpr int ATTRIBUTE_SIZE_POSITION     = 4;
+        static constexpr int ATTRIBUTE_SIZE_NORMAL       = 4;
+        static constexpr int ATTRIBUTE_SIZE_COLOR        = 4;
+        static constexpr int ATTRIBUTE_SIZE_TEXCOORD     = 3;
+        static constexpr int ATTRIBUTE_SIZE_USERDATA     = 1;
+
         static constexpr auto DEFAULT_POSITION  = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
         static constexpr auto DEFAULT_NORMAL    = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
         static constexpr auto DEFAULT_COLOR     = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);

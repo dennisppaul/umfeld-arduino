@@ -27,18 +27,6 @@
 namespace umfeld {
     class VertexBuffer {
     public:
-        // NOTE make sure to align to locations in shader.
-        static constexpr int ATTRIBUTE_LOCATION_POSITION = 0;
-        static constexpr int ATTRIBUTE_LOCATION_NORMAL   = 1;
-        static constexpr int ATTRIBUTE_LOCATION_COLOR    = 2;
-        static constexpr int ATTRIBUTE_LOCATION_TEXCOORD = 3;
-        static constexpr int ATTRIBUTE_LOCATION_USERDATA = 4;
-        static constexpr int ATTRIBUTE_SIZE_POSITION     = 4;
-        static constexpr int ATTRIBUTE_SIZE_NORMAL       = 4;
-        static constexpr int ATTRIBUTE_SIZE_COLOR        = 4;
-        static constexpr int ATTRIBUTE_SIZE_TEXCOORD     = 3;
-        static constexpr int ATTRIBUTE_SIZE_USERDATA     = 1;
-
         VertexBuffer(const VertexBuffer&)            = delete;
         VertexBuffer& operator=(const VertexBuffer&) = delete;
         VertexBuffer(VertexBuffer&& other) noexcept;

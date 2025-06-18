@@ -37,6 +37,16 @@
 #include "ShaderSourceLine.h"
 #include "ShaderSourcePoint.h"
 
+#ifdef UMFELD_PGRAPHICS_OPENGL_3_3_CORE_ERRORS
+#define UMFELD_PGRAPHICS_OPENGL_3_3_CORE_CHECK_ERRORS(msg) \
+    do {                                                   \
+        checkOpenGLError(msg);                             \
+    } while (0)
+#else
+#define UMFELD_PGRAPHICS_OPENGL_3_3_CORE_CHECK_ERRORS(msg)
+#endif
+
+
 using namespace umfeld;
 
 PGraphicsOpenGL_3_3_core::PGraphicsOpenGL_3_3_core(const bool render_to_offscreen) : PImage(0, 0) {
@@ -650,7 +660,7 @@ void PGraphicsOpenGL_3_3_core::init(uint32_t*  pixels,
             const int samples = std::min(msaa_samples, maxSamples); // Number of MSAA samples
             console(format_label("number of used MSAA samples"), samples);
             glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, framebuffer.texture_id);
-            checkOpenGLError("glBindTexture");
+            UMFELD_PGRAPHICS_OPENGL_3_3_CORE_CHECK_ERRORS("glBindTexture");
 #ifndef OPENGL_ES_3_0
             glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE,
                                     samples,
@@ -659,12 +669,12 @@ void PGraphicsOpenGL_3_3_core::init(uint32_t*  pixels,
                                     framebuffer.height,
                                     GL_TRUE);
 #endif
-            checkOpenGLError("glTexImage2DMultisample");
+            UMFELD_PGRAPHICS_OPENGL_3_3_CORE_CHECK_ERRORS("glTexImage2DMultisample");
             glFramebufferTexture2D(GL_FRAMEBUFFER,
                                    GL_COLOR_ATTACHMENT0,
                                    GL_TEXTURE_2D_MULTISAMPLE,
                                    framebuffer.texture_id, 0);
-            checkOpenGLError("glFramebufferTexture2D");
+            UMFELD_PGRAPHICS_OPENGL_3_3_CORE_CHECK_ERRORS("glFramebufferTexture2D");
             // Create Multisampled Depth Buffer
             glGenRenderbuffers(1, &msaaDepthBuffer);
             glBindRenderbuffer(GL_RENDERBUFFER, msaaDepthBuffer);
@@ -850,6 +860,7 @@ void PGraphicsOpenGL_3_3_core::reset_shader_matrices(PShader* shader) {
 }
 
 void PGraphicsOpenGL_3_3_core::mesh(VertexBuffer* mesh_shape) {
+    UMFELD_PGRAPHICS_OPENGL_3_3_CORE_CHECK_ERRORS("mesh() begin");
     if (mesh_shape == nullptr) {
         return;
     }
@@ -858,10 +869,13 @@ void PGraphicsOpenGL_3_3_core::mesh(VertexBuffer* mesh_shape) {
         update_shader_matrices(custom_shader);
     } else {
         shader_fill_texture->use();
+        UMFELD_PGRAPHICS_OPENGL_3_3_CORE_CHECK_ERRORS("mesh() use shader");
         update_shader_matrices(shader_fill_texture);
+        UMFELD_PGRAPHICS_OPENGL_3_3_CORE_CHECK_ERRORS("mesh() update shader matrices");
     }
     // TODO is there a way to also draw this with line shader?
     mesh_shape->draw();
+    UMFELD_PGRAPHICS_OPENGL_3_3_CORE_CHECK_ERRORS("mesh() end");
 #ifdef UMFELD_OGL33_RESET_MATRICES_ON_SHADER
     reset_shader_matrices(current_shader);
 #endif
@@ -1218,7 +1232,7 @@ void PGraphicsOpenGL_3_3_core::updateShaderLighting() const {
         shader_fill_texture_lights->set_uniform("lightSpot" + indexStr, lightSpotParams[i]);
     }
 
-    checkOpenGLError("updateShaderLighting");
+    UMFELD_PGRAPHICS_OPENGL_3_3_CORE_CHECK_ERRORS("updateShaderLighting");
 }
 
 #endif // UMFELD_PGRAPHICS_OPENGLV33_CPP

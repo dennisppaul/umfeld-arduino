@@ -19,9 +19,9 @@
 
 #pragma once
 
+
 #include <vector>
 
-#include "UmfeldSDLOpenGL.h" // TODO move to cpp implementation
 #include "Umfeld.h"
 #include "Vertex.h"
 
@@ -40,6 +40,7 @@ namespace umfeld {
         static constexpr int ATTRIBUTE_SIZE_TEXCOORD     = 3;
         static constexpr int ATTRIBUTE_SIZE_USERDATA     = 1;
 
+        VertexBuffer();
         ~VertexBuffer();
 
         void                 add_vertex(const Vertex& vertex);
@@ -50,22 +51,22 @@ namespace umfeld {
         std::vector<Vertex>& vertices_data() { return _vertices; }
         void                 init();
         void                 set_shape(int shape, bool map_to_opengl_draw_mode = true);
-        int                  get_shape() const { return shape; }
+        int                  get_shape() const { return native_opengl_shape; }
 
     private:
         const int           VBO_BUFFER_CHUNK_SIZE_BYTES = 1024 * 16 * sizeof(Vertex);
         std::vector<Vertex> _vertices;
-        GLuint              vbo                = 0;
-        GLuint              vao                = 0;
+        int                 vbo                = 0;
+        int                 vao                = 0;
         bool                vao_supported      = false;
         bool                initial_upload     = false;
         bool                buffer_initialized = false;
         int                 server_buffer_size = 0;
-        int                 shape              = TRIANGLES;
         bool                dirty              = false;
+        int                 native_opengl_shape;
 
         void        resize_buffer();
-        static void enable_vertex_attributes();
+        void        enable_vertex_attributes() const;
         static void disable_vertex_attributes();
         void        upload();
         void        checkVAOSupport();

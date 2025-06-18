@@ -21,29 +21,65 @@
 #include <glm/glm.hpp>
 #include <iostream>
 
+#include "UmfeldSDLOpenGL.h"
 #include "VertexBuffer.h"
 #include "PGraphicsOpenGL.h"
 
 using namespace umfeld;
 
+#ifdef UMFELD_VERTEX_BUFFER_DEBUG_OPENGL_ERRORS
+#define UMFELD_VERTEX_BUFFER_CHECK_ERROR(msg) \
+    do {                                      \
+        checkOpenGLError(msg);                \
+    } while (0)
+#else
+#define UMFELD_VERTEX_BUFFER_CHECK_ERROR(msg)
+#endif
+
+VertexBuffer::VertexBuffer() : native_opengl_shape(get_draw_mode(TRIANGLES)) {}
+
 void VertexBuffer::init() {
     if (buffer_initialized) {
         return;
     }
+
     checkVAOSupport();
-    glGenBuffers(1, &vbo);
-    if (vao_supported) {
-        glGenVertexArrays(1, &vao);
+    GLuint _vbo;
+    glGenBuffers(1, &_vbo);
+    vbo = _vbo;
+    if (vbo == 0) {
+        std::cerr << "Failed to generate VBO" << std::endl;
+        return;
     }
+    UMFELD_VERTEX_BUFFER_CHECK_ERROR("error generting VBO");
+
+
+    if (vao_supported) {
+        GLuint _vao;
+        glGenVertexArrays(1, &_vao);
+        vao = _vao;
+        // Add error checking
+        if (vao == 0) {
+            std::cerr << "Failed to generate VAO" << std::endl;
+            const GLuint _vbo_ = vbo;
+            glDeleteBuffers(1, &_vbo_);
+            vbo = 0;
+            return;
+        }
+        UMFELD_VERTEX_BUFFER_CHECK_ERROR("error generting VAO");
+    }
+
     buffer_initialized = true;
 }
 
 VertexBuffer::~VertexBuffer() {
     if (vbo) {
-        glDeleteBuffers(1, &vbo);
+        const GLuint _vbo = vbo;
+        glDeleteBuffers(1, &_vbo);
     }
     if (vao_supported && vao) {
-        glDeleteVertexArrays(1, &vao);
+        const GLuint _vao = vao;
+        glDeleteVertexArrays(1, &_vao);
     }
 }
 
@@ -83,6 +119,9 @@ void VertexBuffer::resize_buffer() {
 
     if (client_buffer_size_bytes > server_buffer_size_bytes) {
         const size_t growSize = client_buffer_size_bytes + VBO_BUFFER_CHUNK_SIZE_BYTES;
+#ifdef UMFELD_VERTEX_BUFFER_DEBUG_OPENGL_ERRORS
+        console("Growing vertex buffer from ", server_buffer_size_bytes, " to ", growSize, " bytes");
+#endif
         // std::cout << "Growing vertex buffer from " << server_buffer_size_bytes << " to " << growSize << " bytes" << std::endl;
         glBindBuffer(GL_ARRAY_BUFFER, vbo); // Ensure VBO is bound
         glBufferData(GL_ARRAY_BUFFER, growSize, _vertices.data(), GL_DYNAMIC_DRAW);
@@ -91,6 +130,9 @@ void VertexBuffer::resize_buffer() {
     }
     if (client_buffer_size_bytes < server_buffer_size_bytes) {
         const size_t shrinkSize = client_buffer_size_bytes;
+#ifdef UMFELD_VERTEX_BUFFER_DEBUG_OPENGL_ERRORS
+        console("Shrinking vertex buffer from ", server_buffer_size_bytes, " to ", shrinkSize, " bytes");
+#endif
         // std::cout << "Shrinking vertex buffer to " << client_buffer_size_bytes << " bytes" << std::endl;
         glBindBuffer(GL_ARRAY_BUFFER, vbo); // Ensure VBO is bound
         glBufferData(GL_ARRAY_BUFFER, shrinkSize, _vertices.data(), GL_DYNAMIC_DRAW);
@@ -100,30 +142,46 @@ void VertexBuffer::resize_buffer() {
 }
 
 void VertexBuffer::set_shape(const int shape, const bool map_to_opengl_draw_mode) {
-    this->shape = map_to_opengl_draw_mode ? get_draw_mode(shape) : shape;
-    ;
+    this->native_opengl_shape = map_to_opengl_draw_mode ? get_draw_mode(shape) : shape;
 }
 
 void VertexBuffer::draw() {
+    UMFELD_VERTEX_BUFFER_CHECK_ERROR("mesh / draw begin");
+
     if (!buffer_initialized) { init(); }
+
+    UMFELD_VERTEX_BUFFER_CHECK_ERROR("mesh / init");
 
     if (_vertices.empty()) {
         return;
     }
 
     if (dirty) {
-        dirty = false;
         update();
+        UMFELD_VERTEX_BUFFER_CHECK_ERROR("mesh / update");
     }
 
-    const int mode = shape;
+    const int mode = native_opengl_shape;
 
     if (vao_supported) {
         glBindVertexArray(vao);
+        UMFELD_VERTEX_BUFFER_CHECK_ERROR("mesh / binding vao arrays");
+        // Check if VAO was actually created successfully
+        if (vao == 0) {
+            // Error: trying to bind invalid VAO
+            return;
+        }
         glDrawArrays(mode, 0, _vertices.size());
+        // glDrawArrays(mode, 0, _vertices.size());
+        UMFELD_VERTEX_BUFFER_CHECK_ERROR("mesh / draw arrays");
         glBindVertexArray(0);
     } else {
         glBindBuffer(GL_ARRAY_BUFFER, vbo);
+        // Check if VBO was actually created successfully
+        if (vbo == 0) {
+            // Error: trying to bind invalid VBO
+            return;
+        }
         enable_vertex_attributes();
 
         glDrawArrays(mode, 0, _vertices.size());
@@ -167,7 +225,12 @@ void VertexBuffer::upload() {
 void VertexBuffer::update() {
     if (!buffer_initialized) {
         init();
+        if (!buffer_initialized) {
+            return;
+        }
     }
+
+    dirty = false;
 
     if (_vertices.empty()) {
         return;
@@ -177,9 +240,15 @@ void VertexBuffer::update() {
     const size_t required_bytes = current_size * sizeof(Vertex);
 
     // Bind once for the entire operation
-    if (vao_supported) {
+    if (vao_supported && vao != 0) {
         glBindVertexArray(vao);
     }
+
+    if (vbo == 0) {
+        error("Invalid VBO in update()");
+        return;
+    }
+
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
 
     // Handle initial upload or buffer resizing
@@ -195,24 +264,31 @@ void VertexBuffer::update() {
     }
 
     // Unbind once at the end
-    if (vao_supported) {
+    if (vao_supported && vao != 0) {
         glBindVertexArray(0);
     }
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
 void VertexBuffer::upload_with_resize(const size_t current_size, const size_t required_bytes) {
+    // NOTE assumes VBO is already bound
     if (current_size > server_buffer_size) {
-        // Grow buffer with chunking strategy
+        // grow buffer with chunking strategy
         const size_t grow_size = required_bytes + VBO_BUFFER_CHUNK_SIZE_BYTES;
         glBufferData(GL_ARRAY_BUFFER, grow_size, _vertices.data(), GL_DYNAMIC_DRAW);
         server_buffer_size = grow_size / sizeof(Vertex);
+#ifdef UMFELD_VERTEX_BUFFER_DEBUG_OPENGL_ERRORS
+        console("upload_... / Growing vertex buffer from ", server_buffer_size * sizeof(Vertex), " to ", grow_size, " bytes");
+#endif
     } else if (needs_buffer_shrink(current_size)) {
-        // Shrink buffer
+        // shrink buffer
         glBufferData(GL_ARRAY_BUFFER, required_bytes, _vertices.data(), GL_DYNAMIC_DRAW);
         server_buffer_size = current_size;
+#ifdef UMFELD_VERTEX_BUFFER_DEBUG_OPENGL_ERRORS
+        console("upload_... / Shrinking vertex buffer from ", server_buffer_size * sizeof(Vertex), " to ", required_bytes, " bytes");
+#endif
     } else {
-        // Same size or within acceptable range - just upload data
+        // same size or within acceptable range - just upload data
         glBufferSubData(GL_ARRAY_BUFFER, 0, required_bytes, _vertices.data());
     }
 }
@@ -226,15 +302,25 @@ bool VertexBuffer::needs_buffer_shrink(const size_t current_size) const {
     return current_size + shrink_threshold < server_buffer_size;
 }
 
-void VertexBuffer::enable_vertex_attributes() {
+void VertexBuffer::enable_vertex_attributes() const {
+    // Ensure buffer is bound before setting up attributes
+    if (vbo == 0) {
+        std::cerr << "Attempting to set vertex attributes with invalid VBO" << std::endl;
+        return;
+    }
+
     glVertexAttribPointer(ATTRIBUTE_LOCATION_POSITION, ATTRIBUTE_SIZE_POSITION, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(offsetof(Vertex, position)));
     glEnableVertexAttribArray(ATTRIBUTE_LOCATION_POSITION);
+
     glVertexAttribPointer(ATTRIBUTE_LOCATION_NORMAL, ATTRIBUTE_SIZE_NORMAL, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(offsetof(Vertex, normal)));
     glEnableVertexAttribArray(ATTRIBUTE_LOCATION_NORMAL);
+
     glVertexAttribPointer(ATTRIBUTE_LOCATION_COLOR, ATTRIBUTE_SIZE_COLOR, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(offsetof(Vertex, color)));
     glEnableVertexAttribArray(ATTRIBUTE_LOCATION_COLOR);
+
     glVertexAttribPointer(ATTRIBUTE_LOCATION_TEXCOORD, ATTRIBUTE_SIZE_TEXCOORD, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(offsetof(Vertex, tex_coord)));
     glEnableVertexAttribArray(ATTRIBUTE_LOCATION_TEXCOORD);
+
     glVertexAttribPointer(ATTRIBUTE_LOCATION_USERDATA, ATTRIBUTE_SIZE_USERDATA, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(offsetof(Vertex, userdata)));
     glEnableVertexAttribArray(ATTRIBUTE_LOCATION_USERDATA);
 }

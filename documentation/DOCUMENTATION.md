@@ -11,7 +11,7 @@ in order to compile and run applications install the following packages with [Ho
 either manually with:
 
 ```sh
-brew install cmake pkgconfig sdl3 harfbuzz freetype ffmpeg rtmidi glm dylibbundler portaudio
+brew install cmake pkgconfig sdl3 harfbuzz freetype ffmpeg rtmidi glm dylibbundler portaudio cairo
 ```
 
 or run installer script `./install-macOS.sh` ( i.e checking for Homebrew and running the bundler with `brew bundle` ). you might need to install Xcode Tools with `xcode-select --install`.
@@ -31,10 +31,40 @@ or install manually step by step:
 ```sh
 sudo apt-get update -y
 sudo apt-get upgrade -y
-sudo apt-get install git clang mesa-utils -y
-sudo apt-get install cmake libharfbuzz-dev libfreetype6-dev ffmpeg libavcodec-dev libavformat-dev libavutil-dev libswscale-dev libavdevice-dev librtmidi-dev libglm-dev portaudio19-dev curl -y
-sudo apt install libx11-dev libxext-dev libxrandr-dev libxcursor-dev libxi-dev libxinerama-dev libwayland-dev libxkbcommon-dev wayland-protocols -y # need e.g for ubuntu
-# sudo apt-get install libsdl3-dev # SDL3 is currently not available
+sudo apt-get install -y \
+  git \
+  clang \
+  cmake \
+  curl \
+  mesa-utils
+sudo apt-get install -y \
+  pkg-config \
+  ffmpeg \
+  libharfbuzz-dev \
+  libfreetype6-dev \
+  libavcodec-dev \
+  libavformat-dev \
+  libavutil-dev \
+  libswscale-dev \
+  libavdevice-dev \
+  librtmidi-dev \
+  libglm-dev \
+  portaudio19-dev \
+  libcairo2-dev \
+  libcurl4-openssl-dev
+sudo apt-get install -y \
+  libx11-dev \
+  libgl1-mesa-dev \
+  libglu1-mesa-dev \
+  libxext-dev \
+  libxrandr-dev \
+  libxcursor-dev \
+  libxi-dev \
+  libxinerama-dev \
+  libwayland-dev \
+  libxkbcommon-dev \
+  wayland-protocols
+# sudo apt-get install libsdl3-dev # currently # ⚠️ WARNING ⚠️ as of (2025-06-18) SDL is not available via apt and must be built from source ( see `install-linux-apt.sh` or below )
 ```
 
 alternatively, run the homebrew installer script `./install-linux.sh` to install packages with [Linuxbrew](https://docs.brew.sh/Homebrew-on-Linux) ( linux version of Homebrew, currently not supported on Raspberry Pi OS and a bit more experimental than `apt` ).
@@ -50,8 +80,18 @@ note, currently SDL3 is not available via `apt` and needs to be build from sourc
 ```sh
 git clone https://github.com/libsdl-org/SDL.git
 cd SDL
-cmake -S . -B build
+cmake -S . -B build \
+  -DSDL_KMSDRM=ON \
+  -DSDL_OPENGL=ON \
+  -DSDL_OPENGLES=ON \
+  -DSDL_ALSA=ON \
+  -DSDL_PULSEAUDIO=ON \
+  -DSDL_PIPEWIRE=ON \
+  -DSDL_JACK=ON \
+  -DSDL_UNIX_CONSOLE_BUILD=$USE_CONSOLE_BUILD \
+  -DCMAKE_BUILD_TYPE=Release
 cmake --build build
+sudo cmake --install build --prefix /usr/local
 ```
 
 #### Windows
@@ -65,6 +105,7 @@ pacman -Syu --noconfirm
 pacman -Syu --noconfirm # Repeat after first upgrade to ensure core tools are also updated
 pacman -S --noconfirm \
   git \
+  curl \
   mingw-w64-ucrt-x86_64-toolchain \
   mingw-w64-ucrt-x86_64-cmake \
   mingw-w64-ucrt-x86_64-pkg-config \
@@ -78,8 +119,9 @@ pacman -S --noconfirm \
   mingw-w64-ucrt-x86_64-rtmidi \
   mingw-w64-ucrt-x86_64-glm \
   mingw-w64-ucrt-x86_64-portaudio \
-  curl \
-  git
+  mingw-w64-ucrt-x86_64-curl \
+  mingw-w64-ucrt-x86_64-cairo \
+  mingw-w64-ucrt-x86_64-cairomm
 ```
 
 the setup is exclusively for the `MSYS2 UCRT64` branch ( and not for `MSYS2 MINGW64` etcetera ). also it uses `ninja` as a build system instead of `make` ( which is the default on linux + macOS ).

@@ -28,20 +28,26 @@ sudo apt-get install -y \
 # install umfeld dependencies
 echo "--- installing dependencies"
 sudo apt-get install -y \
+  git \
+  clang \
+  cmake \
+  curl \
+  mesa-utils
+sudo apt-get install -y \
+  pkg-config \
+  ffmpeg \
   libharfbuzz-dev \
   libfreetype6-dev \
-  libglm-dev \
-  ffmpeg \
   libavcodec-dev \
   libavformat-dev \
   libavutil-dev \
   libswscale-dev \
   libavdevice-dev \
   librtmidi-dev \
+  libglm-dev \
   portaudio19-dev \
   libcairo2-dev \
   libcurl4-openssl-dev
-# instal x11 developer packages need e.g for ubuntu
 sudo apt-get install -y \
   libx11-dev \
   libgl1-mesa-dev \
@@ -54,7 +60,7 @@ sudo apt-get install -y \
   libwayland-dev \
   libxkbcommon-dev \
   wayland-protocols
-#sudo apt install libsdl3-dev # currently (2025-05-22) not available
+# sudo apt-get install libsdl3-dev # currently (2025-05-22) not available
 
 # install SDL3 from source into system
 echo "--- installing SDL3 from source..."
@@ -65,7 +71,13 @@ cd "$TMP_DIR"
 git clone --depth=1 https://github.com/libsdl-org/SDL.git
 cd SDL
 
-cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DSDL_WAYLAND=ON -DSDL_X11=ON -DSDL_OPENGL=ON
+cmake -S . -B build \
+  -DSDL_KMSDRM=ON \
+  -DSDL_OPENGL=ON \
+  -DSDL_OPENGLES=ON \
+  -DSDL_WAYLAND=ON \
+  -DSDL_X11=ON \
+  -DCMAKE_BUILD_TYPE=Release
 cmake --build build -j
 sudo cmake --install build
 

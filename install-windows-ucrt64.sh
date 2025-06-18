@@ -15,6 +15,7 @@ pacman -Syu --noconfirm
 echo "Installing build dependencies and required libraries..."
 pacman -S --noconfirm \
   git \
+  curl \
   mingw-w64-ucrt-x86_64-toolchain \
   mingw-w64-ucrt-x86_64-cmake \
   mingw-w64-ucrt-x86_64-pkg-config \
@@ -28,7 +29,8 @@ pacman -S --noconfirm \
   mingw-w64-ucrt-x86_64-rtmidi \
   mingw-w64-ucrt-x86_64-glm \
   mingw-w64-ucrt-x86_64-portaudio \
-  curl \
-  git
+  mingw-w64-ucrt-x86_64-curl \
+  mingw-w64-ucrt-x86_64-cairo \
+  mingw-w64-ucrt-x86_64-cairomm
 
 echo "MSYS2 UCRT64 environment set up for 'umfeld'."

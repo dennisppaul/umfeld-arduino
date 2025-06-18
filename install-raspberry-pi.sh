@@ -9,10 +9,10 @@ sudo apt-get upgrade -y
 
 echo "+++ installing packages       +++"
 
-sudo apt install -y \
+sudo apt-get install -y \
   build-essential \
-  cmake \
   git \
+  cmake \
   curl \
   pkg-config \
   ffmpeg \
@@ -26,13 +26,17 @@ sudo apt install -y \
   librtmidi-dev \
   libglm-dev \
   portaudio19-dev \
+  libcairo2-dev \
+  libcurl4-openssl-dev
+sudo apt-get install -y \
+  libx11-dev \
   libegl1-mesa-dev \
   libgles2-mesa-dev
-#sudo apt install libsdl3-dev # currently (2025-05-22) not available
+#sudo apt-get install libsdl3-dev # currently (2025-05-22) not available
 
 echo "+++ building SDL3 from source +++"
 
-sudo apt install -y \
+sudo apt-get install -y \
   libdrm-dev \
   libgbm-dev \
   libudev-dev \
@@ -62,7 +66,6 @@ cmake -S . -B build \
   -DSDL_JACK=ON \
   -DSDL_UNIX_CONSOLE_BUILD=$USE_CONSOLE_BUILD \
   -DCMAKE_BUILD_TYPE=Release
-
 cmake --build build
 sudo cmake --install build --prefix /usr/local
 

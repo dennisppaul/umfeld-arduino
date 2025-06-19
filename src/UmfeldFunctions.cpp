@@ -719,12 +719,12 @@ namespace umfeld {
 #if defined(_WIN32)
                 const std::string prefix = "file:///";
                 if (file_path.rfind(prefix, 0) == 0) {
-                    std::string path = file_path.substr(prefix.size());
-                    std::replace(path.begin(), path.end(), '/', '\\');
+                    // std::string path = file_path.substr(prefix.size());
+                    // std::replace(path.begin(), path.end(), '/', '\\');
                     return true;
                 }
 #else
-                std::string path = file_path.substr(7); // strip file://
+                // std::string path = file_path.substr(7); // strip file://
                 return true;
 #endif
             }

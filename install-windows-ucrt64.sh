@@ -23,6 +23,7 @@ pacman -S --noconfirm \
   mingw-w64-ucrt-x86_64-mesa
 echo "--- installing umfeld dependencies"
 pacman -S --noconfirm \
+  mingw-w64-ucrt-x86_64-pkgconf \
   mingw-w64-ucrt-x86_64-ffmpeg \
   mingw-w64-ucrt-x86_64-harfbuzz \
   mingw-w64-ucrt-x86_64-freetype \

@@ -19,13 +19,21 @@
 
 ## Quickstart
 
+### 0. Prepare
+
+- on Windows install [MSYS2](https://www.msys2.org/) and open `MSYS2 UCRT64` console
+- on Linux open a console and run `sudo apt install -y git curl` 
+- on macOS 
+
 ### 1. Install Dependencies
 
 ```sh
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/dennisppaul/umfeld/refs/heads/main/install.sh)"
 ```
 
-this script installs all required packages on macOS, Linux, or Windows MSYS2 UCRT64 ( in `MSYS2 UCRT64`. you might need to install `curl` first for the command above to work; see system specific notes below ).
+this script installs all required packages on macOS, Linux ( including Raspberry PI OS ), or Windows ( MSYS2 UCRT64 ).
+
+⚠️⚠️⚠️ IMPORTANT ⚠️⚠️⚠️ on Windows ( MSYS2 UCRT64 ) the console might close when running the script above. this is expected behavior ( and part of the self-update process ). just run the script once again and it should be fine ...
 
 ### 2. Download Umfeld + Examples
 
@@ -45,25 +53,7 @@ cmake --build build
 
 if something goes wrong consult the notes below or the detailed [DOCUMENTATION](documentation/DOCUMENTATION.md).
 
-### Raspberry Pi Notes
-
-the quickest way to get started on *Raspberry Pi* is to use the [pre-configured image](http://dm-hb.de/umfeld-rpi) or see [Umfeld-on-RPI / Quickstart](documentation/Umfeld-on-RPI.md#Quickstart) for platform-specific instructions.
-
-### Windows Notes
-
-- install [MSYS2](https://www.msys2.org/)
-- run all commands from the `MSYS2 UCRT64` console
-- install `git`, `bash` and `curl` with `pacman -S git bash curl`
- 
-⚠️ Important ⚠️ when installing dependencies the console might close if `MSYS2` updates itself. this is normal! just reopen `MSYS2 UCRT64` and run the *Install Dependencies* command again.
-
-### Linux Notes
-
-on *some* systems, you may need to install `git` and `curl` with `sudo apt install -y git curl` before installing the dependencies.
-
-### macOS Notes
-
-you might need to install Xcode Tools with `xcode-select --install`.
+another quick way to get started on *Raspberry Pi* is to use the [pre-configured ISO image](http://dm-hb.de/umfeld-rpi) ( see [Umfeld on RPI / Quickstart](documentation/Umfeld-on-RPI.md#Quickstart) ).
 
 ## Why *Umfeld*?
 
@@ -141,3 +131,4 @@ and as mentioned before of course [Processing.org](https://processing.org)
 - [Additional Umfeld Functions](Additional-Umfeld-Functions.md) :: list of functions added to *Umfeld* that are not part of *Processing.org*
 - [Umfeld in CLion](documentation/Umfeld-in-CLion.md) :: instructions on how to run an *Umfeld* application as a *CMake* project in *CLion*
 - [Umfeld in Visual Studio Code](documentation/Umfeld-in-Visual-Studio-Code.md) :: instructions on how to run an *Umfeld* application as a *CMake* project in *isual Studio Code*
+- [Umfeld on RPI](documentation/Umfeld-on-RPI.md) for platform-specific instructions

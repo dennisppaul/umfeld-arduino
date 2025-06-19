@@ -23,13 +23,12 @@ pacman -S --noconfirm \
   mingw-w64-ucrt-x86_64-mesa
 echo "--- installing umfeld dependencies"
 pacman -S --noconfirm \
-  mingw-w64-ucrt-x86_64-pkg-config \
   mingw-w64-ucrt-x86_64-ffmpeg \
   mingw-w64-ucrt-x86_64-harfbuzz \
   mingw-w64-ucrt-x86_64-freetype \
   mingw-w64-ucrt-x86_64-rtmidi \
   mingw-w64-ucrt-x86_64-glm \
-  mingw-w64-ucrt-x86_64-portaudio \
+  mingw-w64-ucrt-x86_64-portaudio pkgconf \
   mingw-w64-ucrt-x86_64-cairo \
   mingw-w64-ucrt-x86_64-cairomm\
   mingw-w64-ucrt-x86_64-curl

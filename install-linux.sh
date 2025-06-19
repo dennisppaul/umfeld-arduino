@@ -11,47 +11,20 @@ KEEP_SUDO_ALIVE_PID="$!"
 # trap exit to clean up background sudo keeper
 trap 'kill "$KEEP_SUDO_ALIVE_PID"' EXIT
 
-# update and upgrade system packages
 echo "--- updating apt"
 sudo apt-get update -y
 sudo apt-get upgrade -y
 
-# install basic build tools and graphics utilities
-echo "--- installing build tools"
+echo "--- installing dependencies (Linux)"
 sudo apt-get install -y \
   git \
   clang \
   cmake \
   curl \
-  mesa-utils
-
-# install umfeld dependencies
-echo "--- installing dependencies"
-sudo apt-get install -y \
-  git \
-  clang \
-  cmake \
-  curl \
-  mesa-utils
-sudo apt-get install -y \
-  pkg-config \
-  ffmpeg \
-  libharfbuzz-dev \
-  libfreetype6-dev \
-  libavcodec-dev \
-  libavformat-dev \
-  libavutil-dev \
-  libswscale-dev \
-  libavdevice-dev \
-  librtmidi-dev \
-  libglm-dev \
-  portaudio19-dev \
-  libcairo2-dev \
-  libcurl4-openssl-dev
-sudo apt-get install -y \
   libx11-dev \
   libgl1-mesa-dev \
   libglu1-mesa-dev \
+  mesa-utils \
   libxext-dev \
   libxrandr-dev \
   libxcursor-dev \
@@ -60,10 +33,26 @@ sudo apt-get install -y \
   libwayland-dev \
   libxkbcommon-dev \
   wayland-protocols
-# sudo apt-get install libsdl3-dev # currently (2025-05-22) not available
+echo "--- installing umfeld dependencies"
+sudo apt-get install -y \
+  pkg-config \
+  ffmpeg \
+  libavcodec-dev \
+  libavformat-dev \
+  libavutil-dev \
+  libswscale-dev \
+  libavdevice-dev \
+  libharfbuzz-dev \
+  libfreetype6-dev \
+  librtmidi-dev \
+  libglm-dev \
+  portaudio19-dev \
+  libcairo2-dev \
+  libcurl4-openssl-dev
+# sudo apt-get install libsdl3-dev # currently (2025-06-19) not available
 
 # install SDL3 from source into system
-echo "--- installing SDL3 from source..."
+echo "--- building SDL3 from source..."
 
 TMP_DIR=$(mktemp -d)
 cd "$TMP_DIR"
@@ -81,10 +70,12 @@ cmake -S . -B build \
 cmake --build build -j
 sudo cmake --install build
 
-# clean up
+echo "--- testing SDL3 pkg-config:"
+pkg-config --libs --cflags sdl3
+
 cd ~
 rm -rf "$TMP_DIR"
-
 echo "--- installed SDL3 successfully"
 
-echo "--- installed dependencies successfully"
+echo "--- Linux environment set up for 'umfeld'."
+echo

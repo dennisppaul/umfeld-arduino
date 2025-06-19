@@ -2,7 +2,7 @@
 
 ![umfeld-logotype-3D](assets/umfeld-logotype-3D.png)
 
-*Umfeld* is a C++ environment for audio and graphics based applications. it is inspired by [Processing.org](https://processing.org) and similar environments.
+*Umfeld* is a C++ environment for audio- and graphics-based applications. it is inspired by [Processing.org](https://processing.org) and similar environments.
 
 ⚠️ *Umfeld* is a *Work in Progress* (WIP) ⚠️ please always keep this in mind. if you find a bug, an issue, something missing, have an idea for improvements or a feature request, please use GitHub’s [Issue Tracking System](https://github.com/dennisppaul/umfeld/issues).
 
@@ -33,7 +33,7 @@
 
 this script installs all required packages on macOS, Linux ( including Raspberry PI OS ), or Windows ( MSYS2 UCRT64 ).
 
-⚠️⚠️⚠️ IMPORTANT ⚠️⚠️⚠️ on Windows ( MSYS2 UCRT64 ) the console might close when running the script above. this is expected behavior ( and part of the self-update process ). just run the script once again and it should be fine ...
+⚠️ IMPORTANT ⚠️ On Windows ( MSYS2 UCRT64 ) the console might close when running the script above. this is expected behavior ( and part of the self-updating process ). just run the script once again and it should be fine ...
 
 ### 2. Download Umfeld + Examples
 
@@ -130,5 +130,7 @@ and as mentioned before of course [Processing.org](https://processing.org)
 - [Processing Function Availability Status](documentation/Processing-Function-Availability-Status.md) :: list of functions that are part of *Processing.org* and available in *Umfeld*
 - [Additional Umfeld Functions](Additional-Umfeld-Functions.md) :: list of functions added to *Umfeld* that are not part of *Processing.org*
 - [Umfeld in CLion](documentation/Umfeld-in-CLion.md) :: instructions on how to run an *Umfeld* application as a *CMake* project in *CLion*
-- [Umfeld in Visual Studio Code](documentation/Umfeld-in-Visual-Studio-Code.md) :: instructions on how to run an *Umfeld* application as a *CMake* project in *isual Studio Code*
+- [Umfeld in Visual Studio Code](documentation/Umfeld-in-Visual-Studio-Code.md) :: instructions on how to run an *Umfeld* application as a *CMake* project in *Visual Studio Code*
 - [Umfeld on RPI](documentation/Umfeld-on-RPI.md) for platform-specific instructions
+- [Umfeld Examples](https://github.com/dennisppaul/umfeld-examples)
+- [Umfeld Libraries](https://github.com/dennisppaul/umfeld-libraries)

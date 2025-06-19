@@ -25,7 +25,7 @@
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/dennisppaul/umfeld/refs/heads/main/install.sh)"
 ```
 
-this script installs all required packages on macOS, Linux, or Windows ( in `MSYS2 UCRT64`. you might need to install `curl` first for the command above to work; see system specific notes below ).
+this script installs all required packages on macOS, Linux, or Windows MSYS2 UCRT64 ( in `MSYS2 UCRT64`. you might need to install `curl` first for the command above to work; see system specific notes below ).
 
 ### 2. Download Umfeld + Examples
 
@@ -51,9 +51,9 @@ the quickest way to get started on *Raspberry Pi* is to use the [pre-configured 
 
 ### Windows Notes
 
-- install [MSYS2](https://www.msys2.org/) first
+- install [MSYS2](https://www.msys2.org/)
 - run all commands from the `MSYS2 UCRT64` console
-- if needed, install `git`, `bash` and `curl` with `pacman -S git bash curl`
+- install `git`, `bash` and `curl` with `pacman -S git bash curl`
  
 ⚠️ Important ⚠️ when installing dependencies the console might close if `MSYS2` updates itself. this is normal! just reopen `MSYS2 UCRT64` and run the *Install Dependencies* command again.
 

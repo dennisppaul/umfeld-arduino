@@ -277,27 +277,30 @@ void VertexBuffer::update() {
 void VertexBuffer::upload_with_resize(const size_t current_size, const size_t required_bytes) {
     // NOTE assumes VBO is already bound
     if (current_size > server_buffer_size) {
-        // grow buffer with chunking strategy
+        // grow buffer
         const size_t grow_size_bytes = required_bytes + VBO_BUFFER_CHUNK_SIZE_BYTES;
+        const size_t new_capacity = grow_size_bytes / sizeof(Vertex);
+        _vertices.reserve(new_capacity);
         glBufferData(GL_ARRAY_BUFFER, grow_size_bytes, _vertices.data(), GL_DYNAMIC_DRAW);
-        UMFELD_VERTEX_BUFFER_CHECK_ERROR("upload_with_resize / glBufferData grow"); // ← ADD THIS
 #ifdef UMFELD_VERTEX_BUFFER_DEBUG_OPENGL_ERRORS
-        console("upload_... / Growing vertex buffer from ", server_buffer_size * sizeof(Vertex), " to ", grow_size_bytes, " bytes");
+        console("Growing vertex buffer from ", server_buffer_size * sizeof(Vertex), " to ", grow_size_bytes, " bytes");
 #endif
-        server_buffer_size = grow_size_bytes / sizeof(Vertex); // Convert to vertex count
+        server_buffer_size = grow_size_bytes / sizeof(Vertex);
     } else if (needs_buffer_shrink(current_size)) {
         // shrink buffer
-        glBufferData(GL_ARRAY_BUFFER, required_bytes, _vertices.data(), GL_DYNAMIC_DRAW);
-        UMFELD_VERTEX_BUFFER_CHECK_ERROR("upload_with_resize / glBufferData shrink"); // ← ADD THIS
+        const size_t shrink_size_bytes = required_bytes + VBO_BUFFER_CHUNK_SIZE_BYTES;
+        const size_t new_capacity = shrink_size_bytes / sizeof(Vertex);
+        _vertices.reserve(new_capacity);
+        glBufferData(GL_ARRAY_BUFFER, shrink_size_bytes, _vertices.data(), GL_DYNAMIC_DRAW);
 #ifdef UMFELD_VERTEX_BUFFER_DEBUG_OPENGL_ERRORS
-        console("upload_... / Shrinking vertex buffer from ", server_buffer_size * sizeof(Vertex), " to ", required_bytes, " bytes");
+        console("Shrinking vertex buffer from ", server_buffer_size * sizeof(Vertex), " to ", shrink_size_bytes, " bytes");
 #endif
-        server_buffer_size = current_size;
+        server_buffer_size = shrink_size_bytes / sizeof(Vertex);
     } else {
-        // same size or within acceptable range - just upload data
+        // same size or within acceptable range — just upload data
         glBufferSubData(GL_ARRAY_BUFFER, 0, required_bytes, _vertices.data());
-        UMFELD_VERTEX_BUFFER_CHECK_ERROR("upload_with_resize / glBufferSubData"); // ← ADD THIS
     }
+    UMFELD_VERTEX_BUFFER_CHECK_ERROR("upload_with_resize / glBufferSubData or glBufferData");
 }
 
 bool VertexBuffer::needs_buffer_resize(const size_t current_size) const {

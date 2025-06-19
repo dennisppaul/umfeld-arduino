@@ -105,3 +105,5 @@
             emitted_warning_##__COUNTER__ = true;          \
         }                                                  \
     } while (0)
+
+/* --- */

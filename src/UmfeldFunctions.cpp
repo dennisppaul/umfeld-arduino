@@ -718,10 +718,10 @@ namespace umfeld {
                 // Handle file:// specially — map to local file
 #if defined(_WIN32)
                 const std::string prefix = "file:///";
-                if (location.rfind(prefix, 0) == 0) {
-                    std::string path = location.substr(prefix.size());
+                if (file_path.rfind(prefix, 0) == 0) {
+                    std::string path = file_path.substr(prefix.size());
                     std::replace(path.begin(), path.end(), '/', '\\');
-                    return loadBytesFromFile(path, width, height, channels);
+                    return true;
                 }
 #else
                 std::string path = file_path.substr(7); // strip file://
@@ -771,10 +771,10 @@ namespace umfeld {
                 // Handle file:// specially — map to local file
 #if defined(_WIN32)
                 const std::string prefix = "file:///";
-                if (location.rfind(prefix, 0) == 0) {
-                    std::string path = location.substr(prefix.size());
+                if (file_path.rfind(prefix, 0) == 0) {
+                    std::string path = file_path.substr(prefix.size());
                     std::replace(path.begin(), path.end(), '/', '\\');
-                    return loadBytesFromFile(path, width, height, channels);
+                    return loadBytesFromFile(path);
                 }
 #else
                 std::string path = file_path.substr(7); // strip file://

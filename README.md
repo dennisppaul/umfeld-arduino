@@ -100,19 +100,25 @@ some relevant *Umfeld* repositories are:
 
 ## Credits
 
-this project relies on the following packages:
+this project relies on the following projects:
 
-- [CMake](https://cmake.org/) `@version(macOS, 3.31.6)`
+### Handled by Package managers
+
+- [CMake](https://cmake.org/) `@version(macOS, 4.0.3)`
 - [pkg-config](https://www.freedesktop.org/wiki/Software/pkg-config/) `@version(macOS, 2.4.3)`
-- [SDL3](https://www.libsdl.org) `@version(macOS, 3.2.8)`
-- [HarfBuzz](https://github.com/harfbuzz/harfbuzz) `@version(macOS, 11.0.0)`
+- [SDL3](https://www.libsdl.org) `@version(macOS, 3.2.16)`
+- [HarfBuzz](https://github.com/harfbuzz/harfbuzz) `@version(macOS, 11.2.1)`
 - [Freetype](https://www.freetype.org/) `@version(macOS, 2.13.3)`
 - [ffmpeg](https://ffmpeg.org) `@version(macOS, 7.1.1)`
 - [rtmidi](https://github.com/thestk/rtmidi) `@version(macOS, 6.0.0)`
 - [glm](https://glm.g-truc.net/) `@version(macOS, 1.0.1)`
-- [glad](https://github.com/Dav1dde/glad) `@version(2.0.8)` ( included as source files )
 - [dylibbundler](https://github.com/auriamg/macdylibbundler) ( only required for bundling standalone macOS applications. it can also be installed via homebrew with `brew install dylibbundler` ) `@version(macOS, 1.0.5)`
 - [PortAudio](https://www.portaudio.com) ( can be used as a replacement for SDL-based audio. in contrast to SDL it can output audio to multiple channels. it can also be installed via homebrew with `brew install portaudio` ) `@version(macOS, 19.7.0)`
+- [cairo](https://www.cairographics.org) `@version(macOS, 1.18.4)`
+- [curl](https://curl.se) `@version(macOS, 8.14.1)`
+
+### Included as Source
+
 - [oscpack](http://www.rossbencina.com/code/oscpack) ( included as source files )
 - [dr_libs](https://github.com/mackron/dr_libs) ( included as source files )
 - [SimplexNoise](https://github.com/SRombauts/SimplexNoise) ( included as source files )
@@ -122,6 +128,7 @@ this project relies on the following packages:
 - [PolyPartition](https://github.com/ivanfratric/polypartition) ( included as source files )
 - [earcut.hpp](https://github.com/mapbox/earcut.hpp) ( included as source files )
 - [libtess2](https://github.com/memononen/libtess2) ( included as source files )
+- [glad](https://github.com/Dav1dde/glad) `@version(2.0.8)` ( included as source files )
 
 ( `@version(macOS, X.X.X)` states the platform and version number of the library with which *Umfeld* has been tested on macOS. other versions might work as well but are not guaranteed to. )
 

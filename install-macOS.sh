@@ -26,7 +26,7 @@ check_brew() {
 }
 
 install_brew() {
-    NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
     if [ $? -eq 0 ]; then
         echo " OK"
     else

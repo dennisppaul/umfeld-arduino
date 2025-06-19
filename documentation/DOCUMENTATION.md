@@ -23,7 +23,7 @@ on linux install the required packages with [APT](https://en.wikipedia.org/wiki/
 either run the install script:
 
 ```sh
-./install-linux-apt.sh
+./install-linux.sh
 ```
 
 or install manually step by step:
@@ -36,26 +36,10 @@ sudo apt-get install -y \
   clang \
   cmake \
   curl \
-  mesa-utils
-sudo apt-get install -y \
-  pkg-config \
-  ffmpeg \
-  libharfbuzz-dev \
-  libfreetype6-dev \
-  libavcodec-dev \
-  libavformat-dev \
-  libavutil-dev \
-  libswscale-dev \
-  libavdevice-dev \
-  librtmidi-dev \
-  libglm-dev \
-  portaudio19-dev \
-  libcairo2-dev \
-  libcurl4-openssl-dev
-sudo apt-get install -y \
   libx11-dev \
   libgl1-mesa-dev \
   libglu1-mesa-dev \
+  mesa-utils \
   libxext-dev \
   libxrandr-dev \
   libxcursor-dev \
@@ -63,7 +47,21 @@ sudo apt-get install -y \
   libxinerama-dev \
   libwayland-dev \
   libxkbcommon-dev \
-  wayland-protocols
+  wayland-protocols \
+  pkg-config \
+  ffmpeg \
+  libavcodec-dev \
+  libavformat-dev \
+  libavutil-dev \
+  libswscale-dev \
+  libavdevice-dev \
+  libharfbuzz-dev \
+  libfreetype6-dev \
+  librtmidi-dev \
+  libglm-dev \
+  portaudio19-dev \
+  libcairo2-dev \
+  libcurl4-openssl-dev
 # sudo apt-get install libsdl3-dev # currently # ⚠️ WARNING ⚠️ as of (2025-06-18) SDL is not available via apt and must be built from source ( see `install-linux-apt.sh` or below )
 ```
 

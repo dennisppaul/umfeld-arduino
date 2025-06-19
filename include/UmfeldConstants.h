@@ -169,13 +169,13 @@ namespace umfeld {
         RENDERER_TEMPLATE,
         RENDERER_CUSTOM,
     };
-// #if defined(OPENGL_3_3_CORE)
-//     inline Renderer RENDERER_OPEN_GL = RENDERER_OPENGL_3_3_CORE; // default OpenGL renderer
-// #elif defined(OPENGL_2_0)
-//     inline Renderer RENDERER_OPEN_GL = RENDERER_OPENGL_2_0; // default OpenGL renderer
-// #elif defined(OPENGL_ES_3_0)
-//     inline Renderer RENDERER_OPEN_GL = RENDERER_OPENGL_ES_3_0; // default OpenGL renderer
-// #endif
+#if defined(OPENGL_3_3_CORE)
+    inline Renderer RENDERER_OPEN_GL = RENDERER_OPENGL_3_3_CORE; // default OpenGL renderer
+#elif defined(OPENGL_2_0)
+    inline Renderer RENDERER_OPEN_GL = RENDERER_OPENGL_2_0; // default OpenGL renderer
+#elif defined(OPENGL_ES_3_0)
+    inline Renderer RENDERER_OPEN_GL = RENDERER_OPENGL_ES_3_0; // default OpenGL renderer
+#endif
     enum Exporter {
         OBJ,
         PDF

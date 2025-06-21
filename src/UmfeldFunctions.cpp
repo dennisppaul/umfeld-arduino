@@ -792,7 +792,8 @@ namespace umfeld {
         }
 
         // LOCAL: no scheme → assume it's a local path
-        return loadBytesFromFile(file_path);
+        const std::string absolute_path = resolveDataPath(file_path);
+        return loadBytesFromFile(absolute_path);
     }
 
     bool saveBytes(const std::string& file_path, const std::vector<uint8_t>& data, const bool append) {

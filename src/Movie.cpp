@@ -54,9 +54,10 @@ Movie::Movie(const std::string& filename, const int channels) {
 
 int Movie::init_from_file(const std::string& filename, int _channels) {
     // Open the input file
+    const std::string absolute_path = resolveDataPath(filename);
     formatContext = avformat_alloc_context();
-    if (avformat_open_input(&formatContext, filename.c_str(), nullptr, nullptr) != 0) {
-        std::cerr << "+++ Movie: ERROR: Could not open file: " << filename.c_str() << std::endl;
+    if (avformat_open_input(&formatContext, absolute_path.c_str(), nullptr, nullptr) != 0) {
+        error("+++ Movie: ERROR: Could not open file: ", filename);
         return -1;
     }
 

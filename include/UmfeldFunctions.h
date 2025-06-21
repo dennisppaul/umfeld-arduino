@@ -141,7 +141,7 @@ namespace umfeld {
 
     // ### Loading & Displaying
 
-    PImage* loadImage(const std::string& file, bool use_relative_path = true);
+    PImage* loadImage(const std::string& file);
 
     // ## Math
 
@@ -304,5 +304,6 @@ namespace umfeld {
     // ( part of original processing but not in the Reference )
 
     std::string sketchPath();
+    std::string resolveDataPath(const std::string& path);
 
 } // namespace umfeld

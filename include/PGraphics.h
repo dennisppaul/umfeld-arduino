@@ -183,7 +183,7 @@ namespace umfeld {
         virtual float    textAscent();
         virtual float    textDescent();
         virtual void     textLeading(float leading);
-        virtual PFont*   loadFont(const std::string& file, float size, bool use_relative_path = true);
+        virtual PFont*   loadFont(const std::string& file, float size);
         virtual void     box(float width, float height, float depth);
         virtual void     box(const float size) { box(size, size, size); }
         virtual void     sphere(float width, float height, float depth);

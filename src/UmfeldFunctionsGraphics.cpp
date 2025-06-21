@@ -227,12 +227,12 @@ namespace umfeld {
         g->vertex(x, y, z, u, v);
     }
 
-    PFont* loadFont(const std::string& file, const float size, const bool use_relative_path) {
+    PFont* loadFont(const std::string& file, const float size) {
         if (g == nullptr) {
             error("`loadFont` is only available after `settings()` has finished");
             return nullptr;
         }
-        return g->loadFont(file, size, use_relative_path);
+        return g->loadFont(file, size);
     }
 
     void textFont(PFont* font) {

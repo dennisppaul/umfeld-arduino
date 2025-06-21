@@ -28,6 +28,7 @@
 #include "tiny_obj_loader.h"
 
 #include "Umfeld.h"
+#include "UmfeldFunctions.h"
 #include "audio/AudioFileReader.h"
 #include "audio/Sampler.h"
 
@@ -379,16 +380,16 @@ namespace umfeld {
     }
 
     std::vector<Vertex> loadOBJ(const std::string& file, const bool material) {
-        const std::string abolsute_path = sketchPath() + file;
-        if (!file_exists(abolsute_path)) {
-            error("loadOBJ() failed! file not found: '", file, "'. the 'sketchPath()' is currently set to '", sketchPath(), "'. looking for file at: '", abolsute_path, "'");
+        const std::string absolute_path = resolveDataPath(file);
+        if (!file_exists(absolute_path)) {
+            error("loadOBJ() failed! file not found: '", file, "'. the 'sketchPath()' is currently set to '", sketchPath(), "'. looking for file at: '", absolute_path, "'");
             return {};
         }
-        return material ? loadOBJ_with_material(abolsute_path) : loadOBJ_no_material(abolsute_path);
+        return material ? loadOBJ_with_material(absolute_path) : loadOBJ_no_material(absolute_path);
     }
 
     Sampler* loadSample(const std::string& file) {
-        const std::string absolute_path = sketchPath() + file;
+        const std::string absolute_path = resolveDataPath(file);
         if (!file_exists(absolute_path)) {
             error("loadSample() failed! file not found: '", file, "'. the 'sketchPath()' is currently set to '", sketchPath(), "'. looking for file at: '", absolute_path, "'");
             return nullptr;

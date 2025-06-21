@@ -525,10 +525,10 @@ function(add_umfeld_libs)
     # pffft SIMD detection
     # TODO maybe make this more platform specific?
     if (CMAKE_SYSTEM_PROCESSOR MATCHES "arm" OR CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64")
-        message(STATUS "ARM/NEON detected")
+        message(STATUS "PROCESSOR     : ARM/NEON")
         add_compile_definitions(PFFFT_SIMD_DISABLE) # pffft enables NEON by default
     elseif (CMAKE_SYSTEM_PROCESSOR MATCHES "x86" OR CMAKE_SYSTEM_PROCESSOR MATCHES "amd64" OR CMAKE_SYSTEM_PROCESSOR MATCHES "i686")
-        message(STATUS "x86/SSE detected")
+        message(STATUS "PROCESSOR     : x86/SSE detected")
         add_compile_definitions(PFFFT_SIMD_ENABLE)
         if (MSVC)
             add_compile_options(/arch:SSE2)
@@ -536,6 +536,29 @@ function(add_umfeld_libs)
             add_compile_options(-msse2 -mfpmath=sse)
         endif ()
     endif ()
+
+    # copy data folder resources
+
+    get_target_property(SKETCH_SOURCE_DIR ${PROJECT_NAME} SOURCE_DIR)
+    set(DATA_DIR_SRC "${SKETCH_SOURCE_DIR}/data")
+    set(DATA_DIR_DST "${CMAKE_CURRENT_BINARY_DIR}/data")
+
+    if (EXISTS "${DATA_DIR_SRC}")
+        message(STATUS "'data' FOLDER : found 'data' folder, copying to build directory from")
+        message(STATUS "                '${DATA_DIR_SRC}' to")
+        message(STATUS "                '${DATA_DIR_DST}'.")
+        add_custom_command(
+                TARGET ${PROJECT_NAME} POST_BUILD
+                COMMAND ${CMAKE_COMMAND} -E copy_directory
+                "${DATA_DIR_SRC}" "${DATA_DIR_DST}"
+                COMMENT "Copying data folder to output directory"
+                COMMAND ${CMAKE_COMMAND} -E echo "--- copied data folder to build directory."
+        )
+    else ()
+        message(STATUS "'data' FOLDER : not found")
+    endif ()
+
+    message(STATUS "----------------------------------------")
 endfunction()
 
 ##########################################################################################################
@@ -593,5 +616,3 @@ endif ()
 ##########################################################################################################
 ### END OF SCRIPT                                                                                      ###
 ##########################################################################################################
-
-message(STATUS "----------------------------------------")

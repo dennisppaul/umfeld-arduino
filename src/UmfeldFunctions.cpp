@@ -601,7 +601,7 @@ namespace umfeld {
     }
 
     static std::vector<std::string> supported_URL_protocols;
-    static bool                     print_supported_protocols = true;
+    static bool                     print_supported_protocols = false;
 
     static void initialize_supported_protocols() {
         if (supported_URL_protocols.empty()) {
@@ -863,14 +863,25 @@ namespace umfeld {
 
     void noCursor() { SDL_HideCursor(); }
 
-    PImage* loadImage(const std::string& file, const bool use_relative_path) {
+    std::string resolveDataPath(const std::string& path) {
+        std::filesystem::path p(path);
+
+        if (p.is_absolute()) {
+            return path;
+        }
+
+        // treat as relative to "data" directory next to executable
+        return sketchPath() + (std::filesystem::path("data") / p).string();
+    }
+
+    PImage* loadImage(const std::string& file) {
         // if the file starts with "http://", "https://",  etcetera assume it's a URL
         if (is_protocol_supported(file)) {
             const std::vector<uint8_t> data = loadBytes(file);
             return new PImage(data.data(), data.size());
         }
 
-        const std::string absolute_path = use_relative_path ? file : sketchPath() + file;
+        const std::string absolute_path = resolveDataPath(file);
         if (!file_exists(absolute_path)) {
             error("loadImage() failed! file not found: '", file, "'. the 'sketchPath()' is currently set to '", sketchPath(), "'. looking for file at: '", absolute_path, "'");
             return nullptr;

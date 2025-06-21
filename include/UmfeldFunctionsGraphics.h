@@ -70,7 +70,7 @@ namespace umfeld {
     void     strokeCap(int cap);
     void     vertex(float x, float y, float z = 0.0);
     void     vertex(float x, float y, float z, float u, float v);
-    PFont*   loadFont(const std::string& file, float size, bool use_relative_path = true);
+    PFont*   loadFont(const std::string& file, float size);
     void     textFont(PFont* font);
     void     textSize(float size);
     void     text(const std::string& text, float x, float y, float z = 0.0f);

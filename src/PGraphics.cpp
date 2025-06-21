@@ -777,13 +777,13 @@ void PGraphics::circle(const float x, const float y, const float diameter) {
 //     return loadImageFromFile(location, width, height, channels);
 // }
 
-PFont* PGraphics::loadFont(const std::string& file, const float size, const bool use_relative_path) {
-    const std::string abolsute_path = use_relative_path ? file : sketchPath() + file;
-    if (!file_exists(abolsute_path)) {
-        error("loadFont() failed! file not found: '", file, "'. the 'sketchPath()' is currently set to '", sketchPath(), "'. looking for file at: '", abolsute_path, "'");
+PFont* PGraphics::loadFont(const std::string& file, const float size) {
+    const std::string absolute_path = resolveDataPath(file);
+    if (!file_exists(absolute_path)) {
+        error("loadFont() failed! file not found: '", file, "'. the 'sketchPath()' is currently set to '", sketchPath(), "'. looking for file at: '", absolute_path, "'");
         return nullptr;
     }
-    return new PFont(abolsute_path, size);
+    return new PFont(absolute_path, size);
 }
 
 void PGraphics::textFont(PFont* font) {

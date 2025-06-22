@@ -1,5 +1,6 @@
+
 /*
-* Umfeld
+ * Umfeld
  *
  * This file is part of the *Umfeld* library (https://github.com/dennisppaul/umfeld).
  * Copyright (c) 2025 Dennis P Paul.
@@ -28,14 +29,22 @@ namespace umfeld {
 
     // TODO add `fast_sqrt`
 
-    struct FFTContext {
-        int fft_size = 0;
-        float sample_rate = 0;
-        std::vector<float> window;
-        std::unique_ptr<float[]> input_aligned;
-        std::unique_ptr<float[]> output_aligned;
-        PFFFT_Setup *setup = nullptr;
-    };
+inline void aligned_free_wrapper(void* ptr) {
+#ifdef _WIN32
+    _aligned_free(ptr);
+#else
+    free(ptr);
+#endif
+}
+
+struct FFTContext {
+    std::unique_ptr<float, void(*)(void*)> input_aligned  = { nullptr, aligned_free_wrapper };
+    std::unique_ptr<float, void(*)(void*)> output_aligned = { nullptr, aligned_free_wrapper };
+    std::vector<float> window;
+    int fft_size = 0;
+    float sample_rate = 0.f;
+    PFFFT_Setup* setup = nullptr;
+};
 
     static FFTContext ctx;
 
@@ -65,8 +74,18 @@ namespace umfeld {
         ctx.fft_size = fft_size;
         ctx.sample_rate = sample_rate;
         ctx.window = fft_make_hann_window(fft_size);
-        ctx.input_aligned.reset(static_cast<float *>(aligned_alloc(16, sizeof(float) * fft_size)));
-        ctx.output_aligned.reset(static_cast<float *>(aligned_alloc(16, sizeof(float) * fft_size)));
+
+#ifdef _WIN32
+    void* in_ptr  = _aligned_malloc(sizeof(float) * fft_size, 16);
+    void* out_ptr = _aligned_malloc(sizeof(float) * fft_size, 16);
+#else
+    void* in_ptr  = aligned_alloc(16, sizeof(float) * fft_size);
+    void* out_ptr = aligned_alloc(16, sizeof(float) * fft_size);
+#endif
+
+ctx.input_aligned  = std::unique_ptr<float, void(*)(void*)>(static_cast<float*>(in_ptr), aligned_free_wrapper);
+ctx.output_aligned = std::unique_ptr<float, void(*)(void*)>(static_cast<float*>(out_ptr), aligned_free_wrapper);
+
         ctx.setup = pffft_new_setup(fft_size, PFFFT_REAL);
     }
 
@@ -102,7 +121,7 @@ namespace umfeld {
 
         // Apply window to input
         for (int i = 0; i < N; ++i) {
-            ctx.input_aligned[i] = input[i] * ctx.window[i];
+            ctx.input_aligned.get()[i] = input[i] * ctx.window[i];
         }
 
         // Perform FFT
@@ -159,7 +178,7 @@ namespace umfeld {
 
         // Apply window to input
         for (int i = 0; i < N; ++i) {
-            ctx.input_aligned[i] = input[i] * ctx.window[i];
+            ctx.input_aligned.get()[i] = input[i] * ctx.window[i];
         }
 
         // Perform FFT
@@ -211,7 +230,7 @@ namespace umfeld {
 
         // Apply window to input
         for (int i = 0; i < N; ++i) {
-            ctx.input_aligned[i] = input[i] * ctx.window[i];
+            ctx.input_aligned.get()[i] = input[i] * ctx.window[i];
         }
 
         // Perform FFT

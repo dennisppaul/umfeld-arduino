@@ -19,33 +19,27 @@
 
 ## Quickstart
 
-### 0. Prepare
+### 1. Prepare
 
 - on *Windows ( MSYS2 UCRT64 )* install [MSYS2](https://www.msys2.org/) and open `MSYS2 UCRT64` console
 - on *Linux* open a console and run `sudo apt install -y git curl` 
 - on *macOS* no preparation needed
 
-### 1. Install Dependencies
+### 2. Install Dependencies + Download Umfeld
 
 open a console and run the following script:
 
 ```sh
-/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/dennisppaul/umfeld/refs/heads/main/installation/install-dependencies.sh)"
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/dennisppaul/umfeld/refs/heads/main/install.sh)"
 ```
 
-this script installs all required packages on *macOS*, *Linux* ( including *Raspberry PI OS* ), or *Windows ( MSYS2 UCRT64 )*.
+this script installs all required packages ( on *macOS*, *Linux* ( including *Raspberry PI OS* ), or *Windows ( MSYS2 UCRT64 )* ) and downloads umfeld with examples and external libraries into the current directory.
 
 ⚠️ IMPORTANT ⚠️ On *Windows ( MSYS2 UCRT64 )* the console might close when running the script above. this is expected behavior ( and part of the self-updating process ). just run the script once again and it should be fine ...
 
-### 2. Download Umfeld + Examples
-
-```sh
-git clone https://github.com/dennisppaul/umfeld
-git clone https://github.com/dennisppaul/umfeld-examples
-git clone --recurse-submodules https://github.com/dennisppaul/umfeld-libraries.git
-```
-
 ### 3. Build + run an example
+
+to run an example ( e.g `minimal` ) navigate to the folder and run the cmake build commands:
 
 ```sh
 cd umfeld-examples/Basics/minimal
@@ -57,12 +51,6 @@ cmake --build build
 if something goes wrong consult the notes below or the detailed [DOCUMENTATION](documentation/DOCUMENTATION.md).
 
 another quick way to get started on *Raspberry Pi* is to use the [pre-configured ISO image](http://dm-hb.de/umfeld-rpi) ( see [Umfeld on RPI / Quickstart](documentation/Umfeld-on-RPI.md#Quickstart) ).
-
-as substitute for Step 1 + 2 the following compound script can be executed to handle dependencies and umfeld in one go:
-
-```sh
-/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/dennisppaul/umfeld/refs/heads/main/install.sh)"
-```
 
 ## Why *Umfeld*?
 

@@ -132,10 +132,9 @@ the setup is exclusively for the `MSYS2 UCRT64` branch ( and not for `MSYS2 MING
 clone the *Umfeld* repository ( with submodules ) and optionally some other *Umfeld* repositories from GitHub into the desired folder ( e.g `~/Documents/dev` ):
 
 ```sh
-git clone --recurse-submodules https://github.com/dennisppaul/umfeld
-git clone --recurse-submodules https://github.com/dennisppaul/umfeld-libraries
-git clone --recurse-submodules https://github.com/dennisppaul/umfeld-examples
-cd umfeld
+git clone https://github.com/dennisppaul/umfeld
+git clone https://github.com/dennisppaul/umfeld-examples
+git clone --recurse-submodules https://github.com/dennisppaul/umfeld-libraries.git # clone with submodules
 ```
 
 ## Building Applications with *Umfeld*
@@ -145,7 +144,8 @@ example applications can be found in the dedicated repository [umfeld-examples](
 ```
 .
 ├── umfeld
-└── umfeld-examples
+├── umfeld-examples
+└── umfeld-libraries
 ```
 
 to run example `umfeld-simple` do the following:

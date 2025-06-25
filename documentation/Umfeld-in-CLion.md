@@ -27,7 +27,7 @@ if MSYS2 has been installed correctly and the *Quickstart* guide has been follow
 ## Opening a Project
 
 1. select `File > Open…` from the menu 
-2. navigate to the folder ( or any parent folder ) that contains an *Umfeld* CMake script ( i.e `CMakeLists.txt` ) ( e.g `$PATH_TO_UMFELD$/umfeld-examples` or `$PATH_TO_UMFELD$/umfeld-examples/Basics/minimal` etcetera )
+2. navigate to the folder ( or any parent folder ) that contains an *Umfeld* CMake script ( i.e `CMakeLists.txt` ) ( e.g `$PATH_TO_UMFELD/umfeld-examples` or `$PATH_TO_UMFELD/umfeld-examples/Basics/minimal` etcetera )
 3. in the `Open Project Wizard` just press `OK`, optionally tick the `Reload CMake project on …`
 4. *CLion* now opens all related resources ( if the CMake script is configured correctly )
 5. find the CMake script `CMakeLists.txt` of the project in the `Project` view ( e.g `CMD+1` on macOS )

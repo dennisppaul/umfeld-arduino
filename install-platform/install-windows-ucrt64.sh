@@ -19,7 +19,7 @@ pacman -S --noconfirm \
   git \
   mingw-w64-ucrt-x86_64-cmake \
   mingw-w64-ucrt-x86_64-ninja \
-  curl \
+  mingw-w64-ucrt-x86_64-curl \
   mingw-w64-ucrt-x86_64-mesa
 echo "--- installing umfeld dependencies"
 pacman -S --noconfirm \
@@ -31,8 +31,8 @@ pacman -S --noconfirm \
   mingw-w64-ucrt-x86_64-glm \
   mingw-w64-ucrt-x86_64-portaudio pkgconf \
   mingw-w64-ucrt-x86_64-cairo \
-  mingw-w64-ucrt-x86_64-cairomm\
-  mingw-w64-ucrt-x86_64-curl
+  mingw-w64-ucrt-x86_64-cairomm \
+  mingw-w64-ucrt-x86_64-ncurses
 echo "--- installing SDL3"
 pacman -S --noconfirm \
   mingw-w64-ucrt-x86_64-sdl3 \

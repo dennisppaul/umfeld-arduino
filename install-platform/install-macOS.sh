@@ -67,6 +67,5 @@ echo "+++ installing packages"
 brew update
 curl -sS -fsSL "$BUNDLE_URL" -o Brewfile
 brew bundle --file=Brewfile
-rm Brewfile
 
 echo "+++ setup complete. please restart your terminal or run 'source ~/.zshrc' to apply environment changes."

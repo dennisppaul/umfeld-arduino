@@ -61,7 +61,9 @@ sudo apt-get install -y \
   libglm-dev \
   portaudio19-dev \
   libcairo2-dev \
-  libcurl4-openssl-dev
+  libcurl4-openssl-dev \
+  libncurses5-dev \
+  libncursesw5-dev
 # sudo apt-get install libsdl3-dev # currently # ⚠️ WARNING ⚠️ as of (2025-06-18) SDL is not available via apt and must be built from source ( see `install-linux-apt.sh` or below )
 ```
 
@@ -119,7 +121,8 @@ pacman -S --noconfirm \
   mingw-w64-ucrt-x86_64-portaudio \
   mingw-w64-ucrt-x86_64-curl \
   mingw-w64-ucrt-x86_64-cairo \
-  mingw-w64-ucrt-x86_64-cairomm
+  mingw-w64-ucrt-x86_64-cairomm \
+  mingw-w64-ucrt-x86_64-ncurses
 ```
 
 the setup is exclusively for the `MSYS2 UCRT64` branch ( and not for `MSYS2 MINGW64` etcetera ). also it uses `ninja` as a build system instead of `make` ( which is the default on linux + macOS ).

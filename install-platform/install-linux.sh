@@ -48,7 +48,9 @@ sudo apt-get install -y \
   libglm-dev \
   portaudio19-dev \
   libcairo2-dev \
-  libcurl4-openssl-dev
+  libcurl4-openssl-dev \
+  libncurses5-dev \
+  libncursesw5-dev
 # sudo apt-get install libsdl3-dev # currently (2025-06-19) not available
 
 # install SDL3 from source into system

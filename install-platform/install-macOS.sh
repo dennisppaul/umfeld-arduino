@@ -2,7 +2,7 @@
 
 set -e
 
-BUNDLE_URL="https://raw.githubusercontent.com/dennisppaul/umfeld/refs/heads/main/Brewfile"
+BUNDLE_URL="https://raw.githubusercontent.com/dennisppaul/umfeld/refs/heads/main/install-platform/Brewfile"
 
 check_brew() {
     if command -v brew >/dev/null 2>&1; then

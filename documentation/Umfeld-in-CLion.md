@@ -12,10 +12,13 @@ if MSYS2 has been installed correctly and the *Quickstart* guide has been follow
 
 1. in `Settings… > Build, Execution, Deployment › Toolchains`
 2. select `MinGW` toolchain
-3. *CLion* comes with its own toolset but we need to change it to `UCRT64` installed with MSYS2 
+3. *CLion* comes with its own toolset but we need to change it to `UCRT64` installed with MSYS2
 4. find the `Toolset:` field
-5. point the toolset to `UCRT64` installed with MSYS2 ( e.g default location might be `C:\msys64\ucrt64` )
+5. point the toolset to `UCRT64` installed with MSYS2 ( default location is `C:\msys64\ucrt64` )
 6. a green check symbol and the version number should appear
+7. find the `CMake:` field
+8. point it to the `cmake` installed by `UCRT64` ( default location is `C:\msys64\ucrt64\bin\cmake.exe` )
+9. note, you may ignore the version warning
 
 ## Linux
 

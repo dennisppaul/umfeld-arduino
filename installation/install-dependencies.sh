@@ -11,7 +11,7 @@ if ! command -v curl >/dev/null 2>&1; then
     exit 1
 fi
 
-BASE_URL="https://raw.githubusercontent.com/dennisppaul/umfeld/main/install-platform"
+BASE_URL="https://raw.githubusercontent.com/dennisppaul/umfeld/main/installation"
 
 echo "---------------------"
 echo -n "+++ platform: "

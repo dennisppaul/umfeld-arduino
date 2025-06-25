@@ -1,3 +1,5 @@
+# Umfeld
+
 ![umfeld-logotype-3D](assets/umfeld-logotype-3D-round.png)
 
 *Umfeld* is a C++ environment for audio- and graphics-based applications. it is inspired by [Processing.org](https://processing.org) and similar environments.
@@ -28,7 +30,7 @@
 open a console and run the following script:
 
 ```sh
-/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/dennisppaul/umfeld/refs/heads/main/install-dependencies.sh)"
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/dennisppaul/umfeld/refs/heads/main/installation/install-dependencies.sh)"
 ```
 
 this script installs all required packages on *macOS*, *Linux* ( including *Raspberry PI OS* ), or *Windows ( MSYS2 UCRT64 )*.

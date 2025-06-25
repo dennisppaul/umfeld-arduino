@@ -2,7 +2,7 @@
 
 set -e
 
-BUNDLE_URL="https://raw.githubusercontent.com/dennisppaul/umfeld/refs/heads/main/install-platform/Brewfile"
+BUNDLE_URL="https://raw.githubusercontent.com/dennisppaul/umfeld/refs/heads/main/installation/Brewfile"
 
 check_brew() {
     if command -v brew >/dev/null 2>&1; then
@@ -65,7 +65,8 @@ check_brew
 
 echo "+++ installing packages"
 brew update
-curl -sS -fsSL "$BUNDLE_URL" -o Brewfile
-brew bundle --file=Brewfile
+curl -sS -fsSL "$BUNDLE_URL" -o Brewfile.tmp
+brew bundle --file=Brewfile.tmp
+rm Brewfile.tmp
 
 echo "+++ setup complete. please restart your terminal or run 'source ~/.zshrc' to apply environment changes."

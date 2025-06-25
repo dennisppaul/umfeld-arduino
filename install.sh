@@ -2,7 +2,7 @@
 
 set -e
 
-BASE_URL="https://raw.githubusercontent.com/dennisppaul/umfeld/main"
+BASE_URL="https://raw.githubusercontent.com/dennisppaul/umfeld/main/installation"
 
 echo "---------------------"
 echo "+++ installing dependencies"

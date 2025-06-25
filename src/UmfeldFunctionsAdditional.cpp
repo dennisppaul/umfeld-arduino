@@ -398,7 +398,7 @@ namespace umfeld {
         unsigned int channels;
         unsigned int sample_rate;
         drwav_uint64 length;
-        float*       sample_buffer = AudioFileReader::load(file, channels, sample_rate, length);
+        float*       sample_buffer = AudioFileReader::load(absolute_path, channels, sample_rate, length);
         console("loading sample: ");
         console("channels   : ", channels);
         console("audio_sample_rate: ", sample_rate);
@@ -414,7 +414,7 @@ namespace umfeld {
             sample_buffer = single_buffer;
         }
         const auto sampler = new Sampler(sample_rate);
-        sampler->set_buffer(sample_buffer, length, false);
+        sampler->set_buffer(sample_buffer, static_cast<int32_t>(length), false);
         return sampler;
     }
 } // namespace umfeld

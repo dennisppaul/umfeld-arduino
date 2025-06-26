@@ -35,4 +35,8 @@ if MSYS2 has been installed correctly and the *Quickstart* guide has been follow
 7. right-click on `CMakeLists.txt` and select `Load CMake Project` ( or `Reload CMake Project` if CLion already found the script automatically )
 8. build and execute project by selecting `Run > Run 'my_project_name'` from the menu or by simply pressing the play button in the toolbar
 
+## Updating Umfeld from GitHub in CLion
+
+to keep *Umfeld* up to date, pull the latest version from GitHub before starting to work. either *right-click* on the *Umfeld* folders ( i.e `umfeld`, `umfeld-examples` and `umfeld-libraries` ) in *Project* view from the *Tool Windows* group ( `CMD+1` or folder icon ) and select `Git > Pull… > Pull` or select from the menu `Git > Pull… > Pull`.
+
 [^1]: JetBrains is the company behind [CLion](https://www.jetbrains.com/de-de/clion/). this is what *they* say about the IDE: "**CLion** is a powerful and versatile IDE for C and C++ development on Linux, macOS and Windows. It supports modern C++ features, embedded systems, remote and collaborative work, and integrates with various tools and frameworks." we mention and promote this IDE, despite the fact that it is not an open source product. JetBrains offers a free license for non-commerical use as well as an academic license. 

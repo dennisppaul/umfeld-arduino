@@ -298,6 +298,9 @@ namespace umfeld {
     // ## Structure
 
     void exit();
+    void noLoop();
+    void redraw();
+
     void setLocation(int x, int y);
     void setTitle(const std::string& title);
 

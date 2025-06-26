@@ -76,6 +76,6 @@ git clone "${UMFELD_CLONE_ARGS[@]}" https://github.com/dennisppaul/umfeld
 git clone "${EXAMPLES_CLONE_ARGS[@]}" https://github.com/dennisppaul/umfeld-examples
 git clone "${LIBRARIES_CLONE_ARGS[@]}" https://github.com/dennisppaul/umfeld-libraries.git
 
-echo "---------------------"
+echo "-------------------------------"
 echo "+++ download complete"
-echo "---------------------"
+echo "-------------------------------"

@@ -46,11 +46,13 @@ namespace umfeld {
     static bool                              handle_subsystem_libraries_cleanup  = false;
     static bool                              handle_subsystem_hid_events_cleanup = false;
     static bool                              _app_is_running                     = true;
+    static bool                              _app_no_loop                        = false;
+    static bool                              _app_force_redraw                   = false;
     static std::vector<SDL_Event>            event_cache;
 
-    void exit() {
-        _app_is_running = false; // NOTE layzily implemented it here and not in `UmfeldFunctionsGraphics.cpp`
-    }
+    void exit() { _app_is_running = false; }
+    void noLoop() { _app_no_loop = true; }
+    void redraw() { _app_force_redraw = true; }
 
     bool is_initialized() {
         return initialized;
@@ -551,42 +553,43 @@ static void handle_draw() {
 }
 
 SDL_AppResult SDL_AppIterate(void* appstate) {
-    const high_resolution_clock::time_point currentFrameTime = high_resolution_clock::now();
-    const auto                              frameDuration    = duration_cast<duration<double>>(currentFrameTime - umfeld::lastFrameTime);
-    const double                            frame_duration   = frameDuration.count();
-
+    // NOTE always process events even if noLoop() is active
     for (const umfeld::Subsystem* subsystem: umfeld::subsystems) {
-        if (subsystem != nullptr) {
-            if (subsystem->event_in_update_loop != nullptr) {
-                for (auto e: umfeld::event_cache) {
-                    subsystem->event_in_update_loop(&e);
-                }
+        if (subsystem != nullptr && subsystem->event_in_update_loop != nullptr) {
+            for (auto& e: umfeld::event_cache) {
+                subsystem->event_in_update_loop(&e);
             }
         }
     }
     umfeld::event_cache.clear();
 
-    for (const umfeld::Subsystem* subsystem: umfeld::subsystems) {
-        if (subsystem != nullptr) {
-            if (subsystem->update_loop != nullptr) {
+    // NOTE only update and draw if looping or first frame after noLoop()
+    if (!umfeld::_app_no_loop || umfeld::frameCount == 0 || umfeld::_app_force_redraw) {
+
+        const high_resolution_clock::time_point currentFrameTime = high_resolution_clock::now();
+        const auto                              frameDuration    = duration_cast<duration<double>>(currentFrameTime - umfeld::lastFrameTime);
+        const double                            frame_duration   = frameDuration.count();
+
+        for (const umfeld::Subsystem* subsystem: umfeld::subsystems) {
+            if (subsystem != nullptr && subsystem->update_loop != nullptr) {
                 subsystem->update_loop();
             }
         }
-    }
 
-    update();
+        update();
 
-    if (frame_duration >= umfeld::target_frame_duration) {
-        handle_draw();
+        if (frame_duration >= umfeld::target_frame_duration) {
+            handle_draw();
 
-        if (frame_duration == 0) {
-            umfeld::frameRate = 1;
-        } else {
-            umfeld::frameRate = static_cast<float>(1.0 / frame_duration);
+            if (frame_duration == 0) {
+                umfeld::frameRate = 1;
+            } else {
+                umfeld::frameRate = static_cast<float>(1.0 / frame_duration);
+            }
+
+            umfeld::frameCount++;
+            umfeld::lastFrameTime = currentFrameTime;
         }
-
-        umfeld::frameCount++;
-        umfeld::lastFrameTime = currentFrameTime;
     }
 
     if (umfeld::request_shutdown) {

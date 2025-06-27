@@ -2,12 +2,23 @@
 
 set -e
 
+AUTO_YES=false
+TARGET_DIR="$(pwd)"
 TAG=""
 DEPTH=""
 
 # parse optional arguments
 while [[ $# -gt 0 ]]; do
     case "$1" in
+        -y|--yes)
+            AUTO_YES=true
+            shift
+            ;;
+        --install-dir)
+            TARGET_DIR="$2"
+            AUTO_YES=true
+            shift 2
+            ;;
         --tag)
             TAG="$2"
             shift 2
@@ -18,14 +29,43 @@ while [[ $# -gt 0 ]]; do
             ;;
         *)
             echo "Unknown option: $1"
-            echo "Usage: $0 [--tag <tag-name>] [--depth <depth>]"
+            echo "Usage: $0 [--tag <tag-name>] [--depth <depth>] [--install-dir <path>] [--yes|-y]"
             exit 1
             ;;
     esac
 done
 
+if [ "$AUTO_YES" = false ]; then
+    echo "Do you want to install into the current folder: $TARGET_DIR ? [Y/n]"
+    read -r confirm
+    confirm=${confirm,,}  # to lowercase
+    if [[ "$confirm" =~ ^(n|no)$ ]]; then
+        if [[ $BASH_VERSINFO -ge 4 && ${BASH_VERSINFO[1]} -ge 4 ]]; then
+            read -erp "Enter a different installation path: " custom_path
+        else
+            read -rp "Enter a different installation path: " custom_path
+        fi
+        if [ -n "$custom_path" ]; then
+            TARGET_DIR="$custom_path"
+        fi
+    fi
+fi
+
+# abort if the target directory already exists and is not empty
+if [ -d "$TARGET_DIR/umfeld" ] && [ "$(ls -A "$TARGET_DIR/umfeld")" ]; then
+    echo "Warning: '$TARGET_DIR/umfeld' already exists and is not empty. Aborting."
+    exit 1
+fi
+
+if [ ! -d "$TARGET_DIR" ]; then
+    echo "Creating directory: $TARGET_DIR"
+    mkdir -p "$TARGET_DIR" || { echo "Failed to create directory: $TARGET_DIR"; exit 1; }
+fi
+
+cd "$TARGET_DIR" || { echo "Failed to change directory to $TARGET_DIR"; exit 1; }
+
 echo "-------------------------------"
-echo "+++ cloning umfeld repositories"
+echo "--- cloning umfeld repositories"
 echo "-------------------------------"
 
 # check if git is installed
@@ -77,5 +117,5 @@ git clone "${EXAMPLES_CLONE_ARGS[@]}" https://github.com/dennisppaul/umfeld-exam
 git clone "${LIBRARIES_CLONE_ARGS[@]}" https://github.com/dennisppaul/umfeld-libraries.git
 
 echo "-------------------------------"
-echo "+++ download complete"
+echo "--- download complete"
 echo "-------------------------------"

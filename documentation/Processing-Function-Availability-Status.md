@@ -469,7 +469,7 @@ below is a list of all Processing functions from the official [Processing Refere
 - [ ] `loop()` :: Causes Processing to continuously execute the code within `draw()`
 - `/* */ (multiline comment)` :: Explanatory notes embedded within the code
 - `new` :: Creates a "new" object
-- [ ] `noLoop()` :: Stops Processing from continuously executing the code within `draw()`
+- [x] `noLoop()` :: Stops Processing from continuously executing the code within `draw()`
 - `null` :: Special value used to signify the target is not a valid data element @note(replace with `nullptr`)
 - [ ] `() (parentheses)` :: Grouping and containing expressions and parameters
 - [x] `popStyle()` :: Saves the current style settings and `popStyle()` restores the prior settings
@@ -478,7 +478,7 @@ below is a list of all Processing functions from the official [Processing Refere
 - `public` :: Keyword used to provide other classes access the fields and methods within a class
 - [x] `pushStyle()` :: Saves the current style settings and `popStyle()` restores the prior settings
 - [ ] `push()` :: The  `push()`  function saves the current drawing style settings and transformations, while  `pop()`  restores these settings
-- [ ] `redraw()` :: Executes the code within `draw()` one time
+- [x] `redraw()` :: Executes the code within `draw()` one time
 - `return` :: Keyword used to indicate the value to return from a function
 - `; (semicolon)` :: A statement terminator which separates elements of the program
 - [x] `setLocation()` :: The `setLocation()` function defines the position of the Processing sketch in relation to the upper-left corner of the computer screen

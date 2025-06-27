@@ -60,13 +60,13 @@ EOF
     fi
 }
 
-echo -n "+++ checking for homebrew: "
+echo -n "--- checking for homebrew: "
 check_brew
 
-echo "+++ installing packages"
+echo "--- installing packages"
 brew update
 curl -sS -fsSL "$BUNDLE_URL" -o Brewfile.tmp
 brew bundle --file=Brewfile.tmp
 rm Brewfile.tmp
 
-echo "+++ setup complete. please restart your terminal or run 'source ~/.zshrc' to apply environment changes."
+echo "--- setup complete. please restart your terminal or run 'source ~/.zshrc' to apply environment changes."

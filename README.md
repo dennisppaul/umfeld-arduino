@@ -25,7 +25,7 @@
 
 ### 2. Install Dependencies + Download Umfeld
 
-open a console and run the following script:
+open a console, navigate to desired installation folder and run the following script:
 
 ```sh
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/dennisppaul/umfeld/refs/heads/main/install.sh)"

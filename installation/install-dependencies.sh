@@ -14,7 +14,7 @@ fi
 BASE_URL="https://raw.githubusercontent.com/dennisppaul/umfeld/main/installation"
 
 echo "---------------------"
-echo -n "+++ platform: "
+echo -n "--- platform: "
 
 case "$(uname -s)" in
     Darwin)

@@ -19,25 +19,25 @@
 
 ### 1. Prepare
 
-- on *Windows ( MSYS2 UCRT64 )* install [MSYS2](https://www.msys2.org/) and open `MSYS2 UCRT64` console
-- on *Linux* open a console and run `sudo apt install -y git curl` 
-- on *macOS* no preparation needed
+- on *Windows ( MSYS2 UCRT64 )*: install [MSYS2](https://www.msys2.org/) and open the `MSYS2 UCRT64` console  
+- on *Linux*: open a console and run `sudo apt install -y git curl`  
+- on *macOS*: no preparation needed
 
-### 2. Install Dependencies + Download Umfeld
+### 2. Install Dependencies + Download *Umfeld*
 
-open a console, navigate to desired installation folder and run the following script:
+open a console, navigate to the desired installation folder, and run the following script:
 
 ```sh
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/dennisppaul/umfeld/refs/heads/main/install.sh)"
 ```
 
-this script installs all required packages ( on *macOS*, *Linux* ( including *Raspberry PI OS* ), or *Windows ( MSYS2 UCRT64 )* ) and downloads umfeld with examples and external libraries into the current directory.
+this script installs all required packages ( on *macOS*, *Linux* ( including *Raspberry Pi OS* ), and *Windows ( MSYS2 UCRT64 )* ) and downloads *Umfeld* with examples and external libraries into the current directory.
 
-⚠️ IMPORTANT ⚠️ On *Windows ( MSYS2 UCRT64 )* the console might close when running the script above. this is expected behavior ( and part of the self-updating process ). just run the script once again and it should be fine ...
+⚠️ IMPORTANT ⚠️ on *Windows ( MSYS2 UCRT64 )*, the console might close when running the script above. this is expected behavior ( part of the self-updating process ). just run the script again. it should work fine the second time.
 
-### 3. Build + run an example
+### 3. Build + Run an Example
 
-to run an example ( e.g `minimal` ) navigate to the folder and run the cmake build commands:
+to run an example ( e.g. `minimal` ), navigate to the folder and run the CMake build commands:
 
 ```sh
 cd umfeld-examples/Basics/minimal
@@ -46,9 +46,9 @@ cmake --build build
 ./build/minimal
 ```
 
-if something goes wrong consult the notes below or the detailed [DOCUMENTATION](documentation/DOCUMENTATION.md).
+if something goes wrong, consult the notes below or the detailed [DOCUMENTATION](documentation/DOCUMENTATION.md).
 
-another quick way to get started on *Raspberry Pi* is to use the [pre-configured ISO image](http://dm-hb.de/umfeld-rpi) ( see [Umfeld on RPI / Quickstart](documentation/Umfeld-on-RPI.md#Quickstart) ).
+another quick way to get started on the *Raspberry Pi* is to use the [pre-configured ISO image](http://dm-hb.de/umfeld-rpi) ( see [Umfeld on RPI / Quickstart](documentation/Umfeld-on-RPI.md#Quickstart) ).
 
 ## Why *Umfeld*?
 

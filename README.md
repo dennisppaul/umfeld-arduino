@@ -2,17 +2,17 @@
 
 *Umfeld* is a C++ environment for audio- and graphics-based applications. it is inspired by [Processing.org](https://processing.org) and similar environments.
 
-⚠️ *Umfeld* is a *Work in Progress* (WIP) ⚠️ please always keep this in mind. if you find a bug, an issue, something missing, have an idea for improvements or a feature request, please use GitHub’s [Issue Tracking System](https://github.com/dennisppaul/umfeld/issues).
+⚠️ *Umfeld* is a *Work in Progress* (WIP) ⚠️ please keep this in mind. if you find a bug, issue, or something missing, or have an idea for improvements or a feature request, please use GitHub’s [Issue Tracking System](https://github.com/dennisppaul/umfeld/issues).
 
 ## Features
 
 - processing-style API in C/C++
 - simple structure ( e.g `setup()` and `draw()` )
-- shape-based drawing (e.g `line()`, `ellipse()`, `beginShape()`…)
-- cross-platform ( macOS, Linux, Raspberry Pi, Windows and potentially iOS, Android, WebGL etcetera )
-- simple application structure `.cpp` file + `CMakeLists.txt`
-- based on CMake build system
-- native access to *real* APIs e.g OpenGL, FFmpeg, PortAudio, and others
+- shape-based drawing ( e.g `line()`, `ellipse()`, `beginShape()`… )
+- cross-platform ( macOS, Linux, Raspberry Pi, Windows — potentially iOS, Android, WebGL )
+- simple application structure: one `.cpp` file + `CMakeLists.txt`
+- CMake-based build system
+- native access to APIs like OpenGL, FFmpeg, PortAudio, and others
 - small, portable builds
 
 ## Quickstart
@@ -46,13 +46,11 @@ cmake --build build
 ./build/minimal
 ```
 
+if everything works fine look into [Developing-Applications](Developing-Applications.md).
+
 > tip: if something goes wrong, consult the notes below or the detailed [DOCUMENTATION](documentation/DOCUMENTATION.md).
 
 > tip: another quick way to get started on the *Raspberry Pi* is to use the [pre-configured ISO image](http://dm-hb.de/umfeld-rpi) ( see [Umfeld on RPI / Quickstart](documentation/Umfeld-on-RPI.md#Quickstart) ).
-
-### 4. Next Steps
-
-if everything works fine look into [Developing-Applications](Developing-Applications.md).
 
 ## Why *Umfeld*?
 
@@ -60,7 +58,7 @@ well, *Umfeld* is actually imitating [Processing.org](https://processing.org) qu
 
 this project aims to supply a framework that allows writing applications that more or less look like original [Processing.org](https://processing.org) sketches.
 
-*Umfeld* may also function as a statement on what is good and valuable about the [Processing.org](https://processing.org) *idiom* while at the same time suggesting disconnecting it from one specific group, application or project … maybe a bit like markdown in that sense.
+*Umfeld* may also function as a statement on what is good and valuable about the [Processing.org](https://processing.org) *idiom* while at the same time disconnecting it from one specific group, application or project … maybe a bit like markdown in that sense.
 
 *Umfeld* is yet another programming environment for designers, makers, and artists. so why does it exist? and why not use [Processing.org](https://processing.org), [OpenFrameworks](https://openframeworks.cc), [Cinder](https://libcinder.org) or any of the other frameworks out there?
 
@@ -82,9 +80,9 @@ see [DOCUMENTATION](documentation/DOCUMENTATION.md) for usage information and [e
 
 ## Credits
 
-this project relies on the following projects:
+this project relies on the following libraries and packages:
 
-### Handled by Package managers
+### Handled by Package Managers
 
 - [CMake](https://cmake.org/) `@version(macOS, 4.0.3)`
 - [pkg-config](https://www.freedesktop.org/wiki/Software/pkg-config/) `@version(macOS, 2.4.3)`
@@ -100,7 +98,7 @@ this project relies on the following projects:
 - [curl](https://curl.se) `@version(macOS, 8.14.1)`
 - [ncurses](https://invisible-island.net/ncurses) `@version(macOS, 6.5)`
 
-note, version numbers are only updated sporadically.
+( version numbers reflect the setup on macOS and are only updated sporadically )
 
 ### Included as Source
 
@@ -127,6 +125,7 @@ and as mentioned before of course [Processing.org](https://processing.org)
 - [Known-Issues](Known-Issues.md)
 - [Processing-Function-Availability-Status](Processing-Function-Availability-Status.md) :: list of functions that are part of *Processing.org* and available in *Umfeld*
 - [ROADMAP](ROADMAP.md)
+- [Setting-up-Homebrew-on-macOS](Setting-up-Homebrew-on-macOS.md) 
 - [Tested-Setups](Tested-Setups.md)
 - [Umfeld-CMake-Options](Umfeld-CMake-Options.md)
 - [Umfeld-in-CLion](Umfeld-in-CLion.md) :: instructions on how to run an *Umfeld* application as a *CMake* project in *CLion*
@@ -137,6 +136,12 @@ and as mentioned before of course [Processing.org](https://processing.org)
 ## Umfeld Repositories
 
 - [Umfeld](https://github.com/dennisppaul/umfeld) :: this repository, containing the *Umfeld* library
-- [Umfeld Examples](https://github.com/dennisppaul/umfeld-examples) :: a repository containing all the examples
+- [Umfeld Examples](https://github.com/dennisppaul/umfeld-examples) :: a repository containing all the examples. note, that the examples assume that `umfeld` and `umfeld-examples` are located in the same folder.
+    ```
+    .
+    ├── umfeld
+    ├── umfeld-examples
+    └── umfeld-libraries
+    ```
 - [Umfeld Libraries](https://github.com/dennisppaul/umfeld-libraries) :: a repository containing some libraries ( e.g Dear ImGui ) to extend *Umfeld*
 - [Umfeld Arduino](https://github.com/dennisppaul/umfeld-arduino) :: an ( experimental ) *board definition* to run *Umfeld* applications from Arduino IDE or `arduino-cli`

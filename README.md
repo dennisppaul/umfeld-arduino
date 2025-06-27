@@ -19,9 +19,9 @@
 
 ### 1. Prepare
 
-- on *Windows ( MSYS2 UCRT64 )*: install [MSYS2](https://www.msys2.org/) and open the `MSYS2 UCRT64` console  
-- on *Linux*: open a console and run `sudo apt install -y git curl`  
 - on *macOS*: no preparation needed
+- on *Linux*: open a console and run `sudo apt install -y git curl`  
+- on *Windows ( MSYS2 UCRT64 )*: install [MSYS2](https://www.msys2.org/) and open the `MSYS2 UCRT64` console
 
 ### 2. Install Dependencies + Download *Umfeld*
 
@@ -37,7 +37,7 @@ this script installs all required packages ( on *macOS*, *Linux* ( including *Ra
 
 ### 3. Build + Run an Example
 
-to run an example ( e.g. `minimal` ), navigate to the folder and run the CMake build commands:
+run an example ( e.g. `minimal` ) to see if *Umfeld* works. navigate to the folder and run the CMake build commands:
 
 ```sh
 cd umfeld-examples/Basics/minimal
@@ -46,9 +46,13 @@ cmake --build build
 ./build/minimal
 ```
 
-if something goes wrong, consult the notes below or the detailed [DOCUMENTATION](documentation/DOCUMENTATION.md).
+> tip: if something goes wrong, consult the notes below or the detailed [DOCUMENTATION](documentation/DOCUMENTATION.md).
 
-another quick way to get started on the *Raspberry Pi* is to use the [pre-configured ISO image](http://dm-hb.de/umfeld-rpi) ( see [Umfeld on RPI / Quickstart](documentation/Umfeld-on-RPI.md#Quickstart) ).
+> tip: another quick way to get started on the *Raspberry Pi* is to use the [pre-configured ISO image](http://dm-hb.de/umfeld-rpi) ( see [Umfeld on RPI / Quickstart](documentation/Umfeld-on-RPI.md#Quickstart) ).
+
+### 4. Next Steps
+
+if everything works fine look into [Developing-Applications](Developing-Applications.md).
 
 ## Why *Umfeld*?
 
@@ -75,13 +79,6 @@ and finally, although C and especially C++ is known for its horrific errors, con
 PS note the character of this project is that features will be added as they are needed. it might partly replicate but not fully emulate the original [Processing.org](https://processing.org) environment.
 
 see [DOCUMENTATION](documentation/DOCUMENTATION.md) for usage information and [examples](https://github.com/dennisppaul/umfeld-examples) for applications.
-
-some relevant *Umfeld* repositories are:
-
-- [Umfeld](https://github.com/dennisppaul/umfeld) :: this repository, containing the *Umfeld* library
-- [Umfeld Example](https://github.com/dennisppaul/umfeld-examples) :: a repository containing all the examples
-- [Umfeld Libraries](https://github.com/dennisppaul/umfeld-libraries) :: a repository containing some libraries ( e.g Dear ImGui ) to extend *Umfeld*
-- [Umfeld Arduino](https://github.com/dennisppaul/umfeld-arduino) :: an ( experimental ) *board definition* to run *Umfeld* applications from Arduino IDE or `arduino-cli`
 
 ## Credits
 
@@ -124,11 +121,22 @@ and as mentioned before of course [Processing.org](https://processing.org)
 
 ## Documents
 
-- [DOCUMENTATION](documentation/DOCUMENTATION.md) :: detailed documentation on how to build from source, caveats, application structure etcetera
-- [Processing Function Availability Status](documentation/Processing-Function-Availability-Status.md) :: list of functions that are part of *Processing.org* and available in *Umfeld*
-- [Additional Umfeld Functions](Additional-Umfeld-Functions.md) :: list of functions added to *Umfeld* that are not part of *Processing.org*
-- [Umfeld in CLion](documentation/Umfeld-in-CLion.md) :: instructions on how to run an *Umfeld* application as a *CMake* project in *CLion*
-- [Umfeld in Visual Studio Code](documentation/Umfeld-in-Visual-Studio-Code.md) :: instructions on how to run an *Umfeld* application as a *CMake* project in *Visual Studio Code*
-- [Umfeld on RPI](documentation/Umfeld-on-RPI.md) for platform-specific instructions
-- [Umfeld Examples](https://github.com/dennisppaul/umfeld-examples)
-- [Umfeld Libraries](https://github.com/dennisppaul/umfeld-libraries)
+- [Additional-Umfeld-Functions](Additional-Umfeld-Functions.md) :: list of functions added to *Umfeld* that are not part of *Processing.org*
+- [Developing-Applications](Developing-Applications.md)
+- [DOCUMENTATION](DOCUMENTATION.md) :: detailed documentation on how to build from source, caveats, application structure etcetera
+- [Known-Issues](Known-Issues.md)
+- [Processing-Function-Availability-Status](Processing-Function-Availability-Status.md) :: list of functions that are part of *Processing.org* and available in *Umfeld*
+- [ROADMAP](ROADMAP.md)
+- [Tested-Setups](Tested-Setups.md)
+- [Umfeld-CMake-Options](Umfeld-CMake-Options.md)
+- [Umfeld-in-CLion](Umfeld-in-CLion.md) :: instructions on how to run an *Umfeld* application as a *CMake* project in *CLion*
+- [Umfeld-in-Visual-Studio-Code](Umfeld-in-Visual-Studio-Code.md) :: instructions on how to run an *Umfeld* application as a *CMake* project in *Visual Studio Code*
+- [Umfeld-on-RPI](Umfeld-on-RPI.md) for platform-specific instructions
+- [RELEASE_NOTES](RELEASE_NOTES.md)
+
+## Umfeld Repositories
+
+- [Umfeld](https://github.com/dennisppaul/umfeld) :: this repository, containing the *Umfeld* library
+- [Umfeld Examples](https://github.com/dennisppaul/umfeld-examples) :: a repository containing all the examples
+- [Umfeld Libraries](https://github.com/dennisppaul/umfeld-libraries) :: a repository containing some libraries ( e.g Dear ImGui ) to extend *Umfeld*
+- [Umfeld Arduino](https://github.com/dennisppaul/umfeld-arduino) :: an ( experimental ) *board definition* to run *Umfeld* applications from Arduino IDE or `arduino-cli`

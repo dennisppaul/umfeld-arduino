@@ -13,11 +13,7 @@ echo "-------------------------------"
 echo "-------------------------------"
 echo "--- installing umfeld"
 echo "-------------------------------"
-# NOTE this command will clone the latest version of the umfeld repositories with full commit history
-# /bin/bash -c "$(curl -fsSL ${BASE_URL}/install-umfeld.sh)"
-# NOTE this command will install a specific version with shallow history ( only works with v2.2.0 and later ).
-#      if the repositories were cloned with the `--depth` flag, the full commit history can be retrieved later using `git fetch --unshallow`.
-/bin/bash -c "$(curl -fsSL ${BASE_URL}/install-umfeld.sh)" -- --tag $UMFELD_VERSION --depth 1
+/bin/bash -c "$(curl -fsSL ${BASE_URL}/install-umfeld.sh)"
 
 echo "-------------------------------"
 echo "--- installation complete"

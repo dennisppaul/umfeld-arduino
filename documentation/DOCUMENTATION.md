@@ -6,24 +6,40 @@
 
 #### macOS
 
-in order to compile and run applications install the following packages with [Homebrew](https://brew.sh):
-
-either manually with:
-
-```sh
-brew install cmake pkgconfig sdl3 harfbuzz freetype ffmpeg rtmidi glm dylibbundler portaudio cairo
-```
-
-or run installer script `./install-macOS.sh` ( i.e checking for Homebrew and running the bundler with `brew bundle` ). you might need to install Xcode Tools with `xcode-select --install`.
-
-#### Linux
-
-on linux install the required packages with [APT](https://en.wikipedia.org/wiki/APT_(software)) ( for Raspberry Pi OS, see detailed instructions below ).
+install the required packages with [Homebrew](https://brew.sh).
 
 either run the install script:
 
 ```sh
-./install-linux.sh
+./installation/install-macOS.sh
+```
+
+or install manually step by step:
+
+```sh
+brew update
+brew install \
+  cmake \
+  pkgconfig \
+  sdl3 \
+  harfbuzz \
+  freetype \
+  ffmpeg \
+  rtmidi \
+  glm \
+  dylibbundler \
+  portaudio \
+  cairo
+```
+
+#### Linux
+
+install the required packages with [APT](https://en.wikipedia.org/wiki/APT_(software)) ( for Raspberry Pi OS, see detailed instructions below ).
+
+either run the install script:
+
+```sh
+./installation/install-linux.sh
 ```
 
 or install manually step by step:
@@ -62,24 +78,82 @@ sudo apt-get install -y \
   portaudio19-dev \
   libcairo2-dev \
   libcurl4-openssl-dev \
-  libncurses5-dev \
-  libncursesw5-dev
-# sudo apt-get install libsdl3-dev # currently # ⚠️ WARNING ⚠️ as of (2025-06-18) SDL is not available via apt and must be built from source ( see `install-linux-apt.sh` or below )
+  libncurses-dev
+# sudo apt-get install libsdl3-dev # currently (2025-06-27) not available
 ```
 
-alternatively, run the homebrew installer script `./install-linux.sh` to install packages with [Linuxbrew](https://docs.brew.sh/Homebrew-on-Linux) ( linux version of Homebrew, currently not supported on Raspberry Pi OS and a bit more experimental than `apt` ).
+##### Build SDL3 from source
 
-##### Raspberry Pi OS (RPI)
+⚠️ WARNING ⚠️ as of (2025-06-27) SDL3 is not available via apt and must be built from source ( see `install-linux.sh` or below )
+
+```sh
+git clone --depth=1 https://github.com/libsdl-org/SDL.git
+cd SDL
+cmake -S . -B build \
+  -DSDL_KMSDRM=ON \
+  -DSDL_OPENGL=ON \
+  -DSDL_OPENGLES=ON \
+  -DSDL_WAYLAND=ON \
+  -DSDL_X11=ON \
+  -DCMAKE_BUILD_TYPE=Release
+cmake --build build -j
+sudo cmake --install build
+```
+
+#### Raspberry Pi OS (RPI)
 
 *Umfeld* can run on Raspberry Pi ( e.g RPI 4 Model B and RPI 5 ). see [Umfeld-on-RPI](Umfeld-on-RPI.md) for detailed information.
+
+open a terminal and either run the install script:
+
+```sh
+./installation/install-raspberry-pi.sh
+```
+
+or install manually step by step:
+
+```sh
+sudo apt-get update -y
+sudo apt-get upgrade -y
+sudo apt-get install -y \
+  build-essential \
+  git \
+  cmake \
+  curl \
+  libx11-dev \
+  libegl1-mesa-dev \
+  libgles2-mesa-dev \
+  pkg-config \
+  ffmpeg \
+  libavcodec-dev \
+  libavformat-dev \
+  libavutil-dev \
+  libswscale-dev \
+  libavdevice-dev \
+  libharfbuzz-dev \
+  libfreetype6-dev \
+  librtmidi-dev \
+  libglm-dev \
+  portaudio19-dev \
+  libcairo2-dev \
+  libcurl4-openssl-dev \
+  libncurses-dev
+```
 
 ##### Build SDL from source
 
 note, currently SDL3 is not available via `apt` and needs to be build from source. the following steps should work without modification:
 
 ```sh
-git clone https://github.com/libsdl-org/SDL.git
+sudo apt-get install -y \
+  libdrm-dev \
+  libgbm-dev \
+  libudev-dev \
+  libegl-dev \
+  libgl-dev
+git clone --depth=1 https://github.com/libsdl-org/SDL.git
 cd SDL
+USE_CONSOLE_BUILD=OFF # if running headless (no X11/Wayland) set to 'USE_CONSOLE_BUILD=ON'
 cmake -S . -B build \
   -DSDL_KMSDRM=ON \
   -DSDL_OPENGL=ON \
@@ -98,38 +172,53 @@ sudo cmake --install build --prefix /usr/local
 
 - install [MSYS2](https://www.msys2.org/)
 - open `MSYS2 UCRT64`
-- in `MSYS2 UCRT64` install the following modules with `pacman`:
+
+either run the install script:
+
+```sh
+./installation/install-windows-ucrt64.sh
+```
+
+or install manually step by step:
 
 ```sh
 pacman -Syu --noconfirm
 pacman -Syu --noconfirm # Repeat after first upgrade to ensure core tools are also updated
 pacman -S --noconfirm \
-  git \
-  curl \
   mingw-w64-ucrt-x86_64-toolchain \
+  git \
   mingw-w64-ucrt-x86_64-cmake \
-  mingw-w64-ucrt-x86_64-pkg-config \
   mingw-w64-ucrt-x86_64-ninja \
+  mingw-w64-ucrt-x86_64-curl \
   mingw-w64-ucrt-x86_64-mesa \
-  mingw-w64-ucrt-x86_64-ftgl \
-  mingw-w64-ucrt-x86_64-sdl3 \
-  mingw-w64-ucrt-x86_64-sdl3-image \
-  mingw-w64-ucrt-x86_64-sdl3-ttf \
+  mingw-w64-ucrt-x86_64-pkgconf \
   mingw-w64-ucrt-x86_64-ffmpeg \
+  mingw-w64-ucrt-x86_64-harfbuzz \
+  mingw-w64-ucrt-x86_64-freetype \
   mingw-w64-ucrt-x86_64-rtmidi \
   mingw-w64-ucrt-x86_64-glm \
-  mingw-w64-ucrt-x86_64-portaudio \
-  mingw-w64-ucrt-x86_64-curl \
+  mingw-w64-ucrt-x86_64-portaudio pkgconf \
   mingw-w64-ucrt-x86_64-cairo \
   mingw-w64-ucrt-x86_64-cairomm \
-  mingw-w64-ucrt-x86_64-ncurses
+  mingw-w64-ucrt-x86_64-ncurses \
+  mingw-w64-ucrt-x86_64-sdl3 \
+  mingw-w64-ucrt-x86_64-sdl3-image \
+  mingw-w64-ucrt-x86_64-sdl3-ttf
 ```
 
-the setup is exclusively for the `MSYS2 UCRT64` branch ( and not for `MSYS2 MINGW64` etcetera ). also it uses `ninja` as a build system instead of `make` ( which is the default on linux + macOS ).
+the setup is exclusively for the `MSYS2 UCRT64` branch ( and not for `MSYS2 MINGW64` etcetera ). also it uses `ninja` as a build system instead of `make` ( which is the default on Linux + macOS ).
 
 ### Cloning *Umfeld* Repositories
 
-clone the *Umfeld* repository ( with submodules ) and optionally some other *Umfeld* repositories from GitHub into the desired folder ( e.g `~/Documents/dev` ):
+clone the *Umfeld* repositories from GitHub into a desired folder ( e.g `~/Documents/dev` ):
+
+either run the install script:
+
+```sh
+./installation/install-macOS.sh
+```
+
+or clone manually step by step:
 
 ```sh
 git clone https://github.com/dennisppaul/umfeld
@@ -137,31 +226,9 @@ git clone https://github.com/dennisppaul/umfeld-examples
 git clone --recurse-submodules https://github.com/dennisppaul/umfeld-libraries.git # clone with submodules
 ```
 
-## Building Applications with *Umfeld*
+## Building *Umfeld* Example Applications
 
-example applications can be found in the dedicated repository [umfeld-examples](https://github.com/dennisppaul/umfeld-examples). first, make sure that both repositories are cloned into the same location, next to each other ( the examples assume umfeld library to be next to the examples folder. this can be changed in the `CMakeLists.txt` of each example )
-
-```
-.
-├── umfeld
-├── umfeld-examples
-└── umfeld-libraries
-```
-
-to run example `umfeld-simple` do the following:
-
-```sh
-cd ./umfeld-examples/Basics/minimal/
-cmake -B build .         # prepare build system
-cmake --build build      # build application
-./build/minimal          # run application 
-```
-
-if changes are made to `minimal.cpp` ( or any other file in that folder ) it is enough to just run:
-
-```sh
-cmake --build build ; ./build/minimal
-```
+see [Developing-Applications](Developing-Applications.md) 
 
 ## Known Differences
 
@@ -173,14 +240,11 @@ Java and C++ are similar in some aspects, but are very different in many others.
 
 ## Known Issues
 
-- a LOT of functions + methods + strategies are not yet implemented (the goal is to implement these on demand).
-- color system is fixed to range from `0.0 ... 1.0` and only works with RGB(A) and uses RGBA internally always
-- tested on macOS(15.5) + Raspberry Pi OS + Windows (10+11) + Ubuntu (20.04+22.04). although theoretically the external libraries as well as the build system should be cross-platform ( i.e macOS, Windows and any UNIX-like system ) it may, however, require
-  some tweaking.
+see [Known-Issues](Known-Issues.md)
 
 ### Setting up Homebrew on macOS
 
-on some *clean* homebrew installations on macOS the environment variable `$LIBRARY_PATH` is not set or at least does not include the homebrew libraries. if so you may need to add the line `export LIBRARY_PATH=$LIBRARY_PATH:/usr/local/lib` ( for intel-based machines ) or `export LIBRARY_PATH=$LIBRARY_PATH:/opt/homebrew/lib` ( *apple-silicon*-based machines ) to your profile e.g in `~/.zshrc` in *zsh* shell. note, that other shell environments use other profile files and mechanisms e.g *bash* uses `~/.bashrc`. find out which shell you are using by typing `echo $0`.
+on some *clean* homebrew installations on *macOS* the environment variable `$LIBRARY_PATH` is not set or at least does not include the homebrew libraries. if so you may need to add the line `export LIBRARY_PATH=$LIBRARY_PATH:/usr/local/lib` ( for intel-based machines ) or `export LIBRARY_PATH=$LIBRARY_PATH:/opt/homebrew/lib` ( *apple-silicon*-based machines ) to your profile e.g in `~/.zshrc` in *zsh* shell. note, that other shell environments use other profile files and mechanisms e.g *bash* uses `~/.bashrc`. find out which shell you are using by typing `echo $0`.
 
 if you have NO idea what this all means, either run the *Quickstart* installer script or you might just try running the following lines for *zsh* in the terminal:
 
@@ -218,12 +282,13 @@ examples and library examples assume that all repositories are located on the sa
 
 ```
 umfeld-example-app
+├── application.cpp
 ├── CMakeLists.txt
-├── image.png
-└── umfeld-example-app.cpp
+└── data
+    └── umfeld.png
 ```
 
-the directory `umfeld-example-app` should contain all source, header and resources ( e.g images, fonts and moview ) files.
+the directory `umfeld-example-app` should contain all source, and header files as well as all resources ( e.g images, fonts and movies ) in a `data` folder.
 
 in this example `umfeld-example-app.cpp` is the main source file containing the *entry points* used by *Umfeld*:
 
@@ -242,7 +307,7 @@ in order to compile the application a CMake script `CMakeLists.txt` must be supp
 ```cmake
 cmake_minimum_required(VERSION 3.12)
 
-project(umfeld-example-app)                                      # set application name
+project(umfeld-example-app)                                    # set application name
 set(UMFELD_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../../../umfeld") # set path to umfeld library
 
 # --------- no need to change anything below this line ------------

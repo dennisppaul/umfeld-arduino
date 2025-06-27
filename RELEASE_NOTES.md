@@ -9,7 +9,7 @@
 - window location and window title can now be set by application
 - `loadBytes()`, `loadStrings()`, and `loadImage()` now support loading from local files as well as URLs and URIs (with base64 + percent + html encoding)
 - added `data` folder concept. folder will be automatically copied upon building
-- `load...` functions now look for files in `data` folder @breakingchange
+- `load...` functions now look for files in `data` folder #breakingchange
 - fixed vertex buffer on Windows and Linux
 - added dedicated point and line shaders
 - added a CLI-based renderer ( WIP )

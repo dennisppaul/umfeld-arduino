@@ -6,7 +6,7 @@ On the Raspberry Pi OS desktop, it uses X11 for window management, but it can al
 
 ## Quickstart
 
-A ready-to-use Raspberry Pi OS (64-bit) ( *Debian Bookworm* ) image with *Umfeld* and all dependencies pre-installed is available at:
+A ready-to-use Raspberry Pi OS ( and Raspberry Pi OS Lite ) (64-bit) ( *Debian Bookworm* ) image with *Umfeld* and all dependencies pre-installed is available at:
 
 **Download:** http://dm-hb.de/umfeld-rpi or http://dm-hb.de/umfeld-rpi-lite ( no GUI )
 
@@ -18,7 +18,7 @@ You can install the image using tools such as the [Raspberry Pi Imager](https://
 - Username: `umfeld`  
 - Password: `umfeld123`
 
-this image is based on Raspberry Pi OS (64-bit) based on *Debian Bookworm* (Release date: 2025-05-13, Image size: 1152 MB) and has been tested on the **Raspberry Pi 4 Model B** and **Raspberry Pi 400**.
+both images are based on Raspberry Pi OS (64-bit) *Debian Bookworm* ( v12, release date: 2025-05-13, Image size: 1152MB for desktop version and 423MB for lite version ). they have been tested on the **Raspberry Pi 4 Model B** and **Raspberry Pi 400**.
 
 ## Limitations and Issues
 
@@ -32,19 +32,17 @@ void settings(){
 }
 ```
 
-this step by step guide has been tested on a *Raspberry Pi 4 Model B* and *Raspberry Pi 400* with Raspberry Pi OS (64-bit), *Debian Bookworm* ( Released: 2025-05-13, Size: 1152MB ) installed.
+## Preparing the Build Environment on Raspberry Pi OS
 
-## Preparing the Build Environment on Raspberry Pi OS (with desktop)
-
-This guide helps set up a Raspberry Pi (running *Raspberry Pi OS with desktop*) for compiling and running SDL3-based applications with direct rendering (KMSDRM).
+this guide helps set up a Raspberry Pi ( running *Raspberry Pi OS* ) for compiling and running SDL3-based applications with direct rendering ( KMSDRM ).
 
 ### 1. System Update and Base Development Packages
 
 update package list and upgrade installed packages:
 
 ```sh
-sudo apt update -y
-sudo apt upgrade -y
+sudo apt-get update
+sudo apt-get -y upgrade
 ```
 
 ### 2. Dependencies
@@ -52,7 +50,7 @@ sudo apt upgrade -y
 these packages are needed for media, audio, and graphics support in *Umfeld* applications:
 
 ```sh
-sudo apt-get install -y \
+sudo apt-get -y install \
   build-essential \
   git \
   cmake \
@@ -73,20 +71,21 @@ sudo apt-get install -y \
   libglm-dev \
   portaudio19-dev \
   libcairo2-dev \
-  libcurl4-openssl-dev
+  libcurl4-openssl-dev \
+  libncurses-dev
 #sudo apt install libsdl3-dev # currently (2025-05-22) not available
 ```
 
 **Note:** `gcc`, `git`, and `pkg-config` are typically pre-installed on Raspberry Pi OS with desktop, but are included above for completeness.
 
-SDL3 is not yet available in the official Raspberry Pi OS repositories  ( e.g via `apt install libsdl3-dev` ). It must be built from source.
+SDL3 is not yet available in the official Raspberry Pi OS repositories  ( e.g via `apt-get install libsdl3-dev` ). it must be built from source.
 
 ### 3. Building and Installing SDL3 from Source
 
 these additional packages are required for building SDL3 with KMSDRM (direct rendering) support:
 
 ```sh
-sudo apt install -y \
+sudo apt-get install -y \
   libdrm-dev \
   libgbm-dev \
   libudev-dev \
@@ -97,8 +96,15 @@ sudo apt install -y \
 now build and install SDL3 from source:
 
 ```sh
-git clone https://github.com/libsdl-org/SDL.git
+sudo apt-get install -y \
+  libdrm-dev \
+  libgbm-dev \
+  libudev-dev \
+  libegl-dev \
+  libgl-dev
+git clone --depth=1 https://github.com/libsdl-org/SDL.git
 cd SDL
+USE_CONSOLE_BUILD=OFF # if running headless (no X11/Wayland) set to 'USE_CONSOLE_BUILD=ON'
 cmake -S . -B build \
   -DSDL_KMSDRM=ON \
   -DSDL_OPENGL=ON \
@@ -107,9 +113,9 @@ cmake -S . -B build \
   -DSDL_PULSEAUDIO=ON \
   -DSDL_PIPEWIRE=ON \
   -DSDL_JACK=ON \
-  -DSDL_UNIX_CONSOLE_BUILD=OFF
-  -DCMAKE_BUILD_TYPE=Release 
-cmake --build build # Avoid using -j$(nproc) or `--parallel` for now, it may overwhelm the RPi
+  -DSDL_UNIX_CONSOLE_BUILD=$USE_CONSOLE_BUILD \
+  -DCMAKE_BUILD_TYPE=Release
+cmake --build build
 sudo cmake --install build --prefix /usr/local
 ```
 
@@ -132,6 +138,7 @@ first clone [umfeld](https://github.com/dennisppaul/umfeld) and the [umfeld-exam
 ```sh
 git clone https://github.com/dennisppaul/umfeld
 git clone https://github.com/dennisppaul/umfeld-examples
+git clone --recurse-submodules https://github.com/dennisppaul/umfeld-libraries.git # clone with submodules
 ```
 
 now enter the example directory, to build and run an example e.g a basic minimal example:
@@ -145,10 +152,10 @@ cmake --build build # `--parallel` might be too much for the RPI
 
 note, the first time might take a bit on a small machine. note, examples can not be run from `ssh` sessions ( without *X11 forwarding* ).
 
-## Running Applications Outside Windowing System
+## Running Applications Outside the Windowing System
 
-- to switch to a console (TTY) press `CTRL+ALT+F3` ( or any `+F[3–6]` )
-- run application ( e.g `./build/minimal` )
+- to leave the windowing system to a console (TTY) press `CTRL+ALT+F3` ( or any `+F[3–6]` )
+- run application from console e.g: `./build/minimal` ( make sure the application was built with OpenGL ES 3.0 )
 - to return to the desktop press `CTRL+ALT+F1` or `CTRL+ALT+F2`.
 
 ## X11 Forwarding

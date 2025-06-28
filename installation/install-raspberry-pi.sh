@@ -3,11 +3,11 @@
 set -e
 
 echo "--- updating apt"
-sudo apt-get update -y
-sudo apt-get upgrade -y
+sudo apt-get update
+sudo apt-get -y upgrade
 
 echo "--- installing dependencies (RaspberryPi)"
-sudo apt-get install -y \
+sudo apt-get -y install \
   build-essential \
   git \
   cmake \
@@ -16,7 +16,7 @@ sudo apt-get install -y \
   libegl1-mesa-dev \
   libgles2-mesa-dev
 echo "--- installing umfeld dependencies"
-sudo apt-get install -y \
+sudo apt-get -y install \
   pkg-config \
   ffmpeg \
   libavcodec-dev \
@@ -36,7 +36,7 @@ sudo apt-get install -y \
 
 echo "--- building SDL3 from source"
 
-sudo apt-get install -y \
+sudo apt-get -y install \
   libdrm-dev \
   libgbm-dev \
   libudev-dev \

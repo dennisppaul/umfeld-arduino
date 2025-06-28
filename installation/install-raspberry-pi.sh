@@ -4,7 +4,8 @@ set -e
 
 echo "--- updating apt"
 sudo apt-get update
-sudo apt-get -y upgrade
+# sudo apt-get -y upgrade # simple upgrade broke in recent versions
+sudo apt-get dist-upgrade -y
 
 echo "--- installing dependencies (RaspberryPi)"
 sudo apt-get -y install \

@@ -42,7 +42,7 @@ update package list and upgrade installed packages:
 
 ```sh
 sudo apt-get update
-sudo apt-get -y upgrade
+sudo apt-get dist-upgrade -y
 ```
 
 ### 2. Dependencies

@@ -12,11 +12,11 @@ KEEP_SUDO_ALIVE_PID="$!"
 trap 'kill "$KEEP_SUDO_ALIVE_PID"' EXIT
 
 echo "--- updating apt"
-sudo apt-get update -y
-sudo apt-get upgrade -y
+sudo apt-get update
+sudo apt-get -y upgrade
 
 echo "--- installing dependencies (Linux)"
-sudo apt-get install -y \
+sudo apt-get -y install \
   git \
   clang \
   cmake \
@@ -34,7 +34,7 @@ sudo apt-get install -y \
   libxkbcommon-dev \
   wayland-protocols
 echo "--- installing umfeld dependencies"
-sudo apt-get install -y \
+sudo apt-get -y install \
   pkg-config \
   ffmpeg \
   libavcodec-dev \

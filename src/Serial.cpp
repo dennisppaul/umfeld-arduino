@@ -34,6 +34,8 @@
 #include <termios.h>
 #include <unistd.h>
 #include <sys/ioctl.h>
+#else
+#error "operating system not defined. must be either SYSTEM_MACOS, SYSTEM_UNIX or SYSTEM_WINDOWS"
 #endif
 
 #if !defined(SYSTEM_WINDOWS)

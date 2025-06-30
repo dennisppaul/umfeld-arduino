@@ -270,8 +270,17 @@ endif ()
 message(STATUS "GLAD_DIR      : ${GLAD_DIR}")
 
 # add GLAD as library
-file(GLOB GLAD_SRC "${GLAD_DIR}/src/*.c")
+file(GLOB GLAD_SRC "${GLAD_DIR}/../*.c")
 add_library(glad STATIC ${GLAD_SRC})
+if (OPENGL_3_3_CORE)
+    target_compile_definitions(glad PRIVATE OPENGL_3_3_CORE)
+elseif (OPENGL_2_0)
+    target_compile_definitions(glad PRIVATE OPENGL_2_0)
+elseif (OPENGL_ES_3_0)
+    target_compile_definitions(glad PRIVATE OPENGL_ES_3_0)
+else ()
+    message(WARNING "OPENGL_VERSION not defined. for GLAD to work it must be either OPENGL_2_0, OPENGL_ES_3_0 or OPENGL_3_3_CORE.")
+endif ()
 target_include_directories(glad PUBLIC "${GLAD_DIR}/include")
 
 ##########################################################################################################

@@ -37,7 +37,7 @@ static_assert(std::is_same_v<GLfloat, float>,
 
 using namespace umfeld;
 
-PGraphicsOpenGL_2_0::PGraphicsOpenGL_2_0(const bool render_to_offscreen) : PImage(0, 0, 0) {
+PGraphicsOpenGL_2_0::PGraphicsOpenGL_2_0(const bool render_to_offscreen) : PImage(0, 0) {
     this->render_to_offscreen = render_to_offscreen;
 }
 
@@ -355,7 +355,7 @@ void PGraphicsOpenGL_2_0::point(const float x, const float y, const float z) {
 // }
 
 void PGraphicsOpenGL_2_0::textFont(PFont* font) {
-     current_font = font;
+    current_font = font;
 }
 
 void PGraphicsOpenGL_2_0::textSize(const float size) {
@@ -586,7 +586,6 @@ void PGraphicsOpenGL_2_0::scale(const float x, const float y, const float z) {
 void PGraphicsOpenGL_2_0::init(uint32_t* pixels,
                                const int width,
                                const int height,
-                               int       format,
                                bool      generate_mipmap) {
     this->width        = width;
     this->height       = height;

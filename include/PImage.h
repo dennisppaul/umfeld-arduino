@@ -33,7 +33,7 @@ namespace umfeld {
         explicit PImage(const std::string& filepath);
         PImage(const uint8_t* raw_byte_data, uint32_t length);
         PImage(int width, int height);
-        PImage(const unsigned char* raw_byte_pixel_data, int width, int height, uint8_t format);
+        PImage(const unsigned char* raw_byte_pixel_data, int width, int height, uint8_t channels);
         PImage();
         virtual ~PImage() = default;
 

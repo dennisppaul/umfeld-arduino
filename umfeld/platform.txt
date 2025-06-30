@@ -7,7 +7,7 @@
 ###################################################################################################
 
 name=Umfeld
-version=0.0.1
+version=2.2.1
 
 ###################################################################################################
 #
@@ -17,13 +17,35 @@ version=0.0.1
 
 recipe.hooks.prebuild.01.pattern=echo "Umfeld: " {build.flags.board}
 #recipe.hooks.prebuild.02.pattern=sh "{runtime.platform.path}/extras/check-for-tools.sh"
+# try to retreive system information with env variable e.g: `compiler.c.flags=-DVAR_FROM_ENVIRONMENT="{ENV_VAR_NAME}"`
 
-# TODO this should be configured according for each system … maybe with a script?
+# research: set environment variables from with `platform.txt`
+# a. Preprocess information into environment variables before calling arduino-cli compile:
+# ```sh
+# #!/bin/bash
+# 
+# MYINFO=$(./retrieve-info.sh)
+# export MYINFO
+# 
+# arduino-cli compile --build-path ./build ...
+# ```
+# platform.txt: `compiler.cpp.flags=-DINFO_FROM_SCRIPT="{MYINFO}"`
+#
+# b. OR: Write your info to a known file and read that via a custom wrapper:
+# ```sh
+# #!/bin/sh
+# echo "#define MYINFO \"$VALUE\"" > generated_info.h
+# ```
+# platform.txt: `compiler.cpp.extra_flags=-include{build.path}/generated_info.h`
+
+
+# TODO this should be configured according for each system … maybe with a script? see above ^^^
 compiler.path.macosx            = /usr/bin/
 compiler.path.linux             = /usr/bin/
-compiler.umf_define             = -DUMF_ENV={build.flags.board}
+compiler.umf_define             = -DUMF_ENV={build.flags.board} -DOPENGL_3_3_CORE -DSYSTEM_MACOS
+# TODO this is now fixed to macOS and OpenGL 3.3 core
 
-compiler.umfeld_flags=-I{runtime.platform.path}/cores/sdl3 -I{runtime.platform.path}/cores/sdl3/umfeld/include -I{runtime.platform.path}/cores/sdl3/umfeld/include/libraries -I{runtime.platform.path}/cores/sdl3/umfeld/include/libraries/dr_libs -I{runtime.platform.path}/cores/sdl3/umfeld/include/libraries/ip -I{runtime.platform.path}/cores/sdl3/umfeld/include/libraries/osc -I{runtime.platform.path}/cores/sdl3/umfeld/include/shaders -DDISABLE_VIDEO -DENABLE_PORTAUDIO
+compiler.umfeld_flags=-I{runtime.platform.path}/cores/sdl3 -I{runtime.platform.path}/cores/sdl3/umfeld/include -I{runtime.platform.path}/cores/sdl3/umfeld/include/libraries -I{runtime.platform.path}/cores/sdl3/umfeld/include/libraries/clipper2 -I{runtime.platform.path}/cores/sdl3/umfeld/include/libraries/dr_libs -I{runtime.platform.path}/cores/sdl3/umfeld/include/libraries/ip -I{runtime.platform.path}/cores/sdl3/umfeld/include/libraries/libtess2 -I{runtime.platform.path}/cores/sdl3/umfeld/include/libraries/osc -I{runtime.platform.path}/cores/sdl3/umfeld/include/libraries/pffft -I{runtime.platform.path}/cores/sdl3/umfeld/include/shaders -I{runtime.platform.path}/cores/sdl3/umfeld/external/glad_opengl_33/include -I{runtime.platform.path}/cores/sdl3/umfeld/external/glad_opengl_33/src -DDISABLE_VIDEO -DENABLE_PORTAUDIO 
 compiler.umfeld_libs.macosx   = -L/opt/homebrew/lib -framework OpenGL -lGLEW -lharfbuzz -lfreetype -lportaudio -lcurl
 compiler.umfeld_libs.linux    = -L/usr/lib -L/usr/local/lib -lGL -lGLEW -lharfbuzz -lfreetype -lportaudio -lcurl
 # TODO remove reference to curl … it is not setup properly and should be replaced by leightweight HTTP library

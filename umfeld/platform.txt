@@ -37,7 +37,6 @@ recipe.hooks.prebuild.01.pattern=echo "Umfeld: " {build.flags.board}
 # echo "#define MYINFO \"$VALUE\"" > generated_info.h
 # ```
 # platform.txt: `compiler.cpp.extra_flags=-include{build.path}/generated_info.h`
-
 # TODO this should be configured according for each system … maybe with a script? see above ^^^
 
 ###################################################################################################
@@ -49,6 +48,7 @@ recipe.hooks.prebuild.01.pattern=echo "Umfeld: " {build.flags.board}
 compiler.path.macosx  = /usr/bin/
 compiler.path.linux   = /usr/bin/
 compiler.path.windows = C:\\msys64\\ucrt64\\bin\
+
 ###################################################################################################
 #
 # DEFINES (MACROS)
@@ -89,20 +89,15 @@ compiler.SDL3_libs.windows    = -LC:/msys64/ucrt64/lib -lSDL3
 #
 ###################################################################################################
 
+
 compiler.umfeld_flags = -I{runtime.platform.path}/cores/sdl3 -I{runtime.platform.path}/cores/sdl3/umfeld/include -I{runtime.platform.path}/cores/sdl3/umfeld/include/libraries -I{runtime.platform.path}/cores/sdl3/umfeld/include/libraries/clipper2 -I{runtime.platform.path}/cores/sdl3/umfeld/include/libraries/dr_libs -I{runtime.platform.path}/cores/sdl3/umfeld/include/libraries/ip -I{runtime.platform.path}/cores/sdl3/umfeld/include/libraries/libtess2 -I{runtime.platform.path}/cores/sdl3/umfeld/include/libraries/osc -I{runtime.platform.path}/cores/sdl3/umfeld/include/libraries/pffft -I{runtime.platform.path}/cores/sdl3/umfeld/include/shaders -I{runtime.platform.path}/cores/sdl3/umfeld/external/ -DDISABLE_VIDEO -DENABLE_PORTAUDIO
 
-# compiler.umfeld_flags=-I{runtime.platform.path}/cores/sdl3 -I{runtime.platform.path}/cores/sdl3/umfeld/include -I{runtime.platform.path}/cores/sdl3/umfeld/include/libraries -I{runtime.platform.path}/cores/sdl3/umfeld/include/libraries/clipper2 -I{runtime.platform.path}/cores/sdl3/umfeld/include/libraries/dr_libs -I{runtime.platform.path}/cores/sdl3/umfeld/include/libraries/ip -I{runtime.platform.path}/cores/sdl3/umfeld/include/libraries/libtess2 -I{runtime.platform.path}/cores/sdl3/umfeld/include/libraries/osc -I{runtime.platform.path}/cores/sdl3/umfeld/include/libraries/pffft -I{runtime.platform.path}/cores/sdl3/umfeld/include/shaders -I{runtime.platform.path}/cores/sdl3/umfeld/external/ -DDISABLE_VIDEO -DENABLE_PORTAUDIO 
-# Library paths - check both Intel (/usr/local) and Apple Silicon (/opt/homebrew) locations
-# compiler.umfeld_libs.macosx   = -L/opt/homebrew/lib -L/usr/local/lib -framework OpenGL -lGLEW -lharfbuzz -lfreetype -lportaudio -lcurl
-# compiler.umfeld_libs.linux    = -L/usr/lib -L/usr/local/lib -lGL -lGLEW -lharfbuzz -lfreetype -lportaudio -lcurl
-# TODO remove reference to curl … it is not setup properly and should be replaced by leightweight HTTP library
+###################################################################################################
+#
+# SDL3 UMFELD FLAGS
+#
+###################################################################################################
 
-# TODO improve
-# 1. add windows paths
-# 2. introduce `umfeld_libs_includes`
-# 3. separate general path e.g `/opt/homebrew/include` from actual library e.g `rtmidi`
-
-# SDL3 and include paths - check both homebrew locations (linker will find the right one)
 compiler.SDL3_cflags.macosx     = -I/opt/homebrew/include/ -I/usr/local/include/ -I/opt/homebrew/include/SDL3 -I/usr/local/include/SDL3 -I/opt/homebrew/include/rtmidi/ -I/usr/local/include/rtmidi/ -I/opt/homebrew/include/freetype2/ -I/usr/local/include/freetype2/ -D_THREAD_SAFE -DGLM_ENABLE_EXPERIMENTAL -DSDL_MAIN_USE_CALLBACKS
 compiler.SDL3_cflags.linux      = -I/usr/include/ -I/usr/include/SDL3 -I/usr/include/rtmidi/ -I/usr/include/freetype2/ -D_THREAD_SAFE -DGLM_ENABLE_EXPERIMENTAL -DSDL_MAIN_USE_CALLBACKS
 compiler.SDL3_cflags.windows    = # TODO add windows paths
@@ -111,18 +106,35 @@ compiler.SDL3_libs.macosx       = -L/opt/homebrew/lib -L/usr/local/lib -lSDL3
 compiler.SDL3_libs.linux        = -L/usr/lib -lSDL3
 compiler.SDL3_libs.windows      = # TODO add windows paths
 
+###################################################################################################
+#
+# C COMPILER
+#
+###################################################################################################
+
 compiler.c.cmd                  = gcc
 compiler.c.std                  = c17
+
 compiler.c.flags.macosx         = -c -Wall -std={compiler.c.std} {compiler.umf_define}
 compiler.c.flags.linux          = -c -g -MMD -Wall -flto -std={compiler.c.std} {compiler.umf_define}
-compiler.c.flags.windows        =
+compiler.c.flags.windows        = -c -g3 -Wall -std={compiler.c.std} {compiler.umf_define}
+
 recipe.c.o.pattern="{compiler.path}{compiler.c.cmd}" {compiler.c.flags} {includes} {compiler.SDL3_cflags} {compiler.umfeld_flags} "{source_file}" -o "{object_file}"
 
-compiler.cpp.cmd=g++
-compiler.cpp.std=c++17
+###################################################################################################
+#
+# C++ COMPILER
+#
+###################################################################################################
+
+compiler.cpp.cmd                = g++
+compiler.cpp.std                = c++17
+
 compiler.cpp.flags.macosx       = -c -Wall -std={compiler.cpp.std} -pthread {compiler.umf_define}
 compiler.cpp.flags.linux        = -c -g -MMD -Wall -flto -std={compiler.cpp.std} -Wno-long-long -pthread {compiler.umf_define}
-compiler.cpp.flags.windows      =
+compiler.cpp.flags.windows      = -c -g3 -Wall -std={compiler.cpp.std} -Wno-long-long -pthread {compiler.umf_define}
+                                                               # TODO maybe switch to -mthreads
+
 recipe.cpp.o.pattern="{compiler.path}{compiler.cpp.cmd}" {compiler.cpp.flags} {includes} {compiler.SDL3_cflags} {compiler.umfeld_flags} "{source_file}" -o "{object_file}"
 
 ###################################################################################################

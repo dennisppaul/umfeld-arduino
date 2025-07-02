@@ -19,16 +19,6 @@ UMFELD.menu.upload_method.sdlexec.upload.options=
 UMFELD.menu.board.GENERIC=GENERIC
 UMFELD.menu.board.GENERIC.build.flags.board=0x00
 
-UMFELD.menu.OSC.disable=Disable OSC
-UMFELD.menu.OSC.disable.build.flags.OSC=
-UMFELD.menu.OSC.enable=Enable OSC
-UMFELD.menu.OSC.enable.build.flags.OSC=-DUMF_SDL_USE_OSC
-
-UMFELD.menu.DISPLAY.enable=Enable Display
-UMFELD.menu.DISPLAY.enable.build.flags.DISPLAY=-DUMF_SDL_HAS_DISPLAY
-UMFELD.menu.DISPLAY.disable=Disable Display
-UMFELD.menu.DISPLAY.disable.build.flags.DISPLAY=
-
 UMFELD.menu.OPENGL_VERSION.3_3_core=OpenGL 3.3 Core
 UMFELD.menu.OPENGL_VERSION.3_3_core.build.flags.opengl=-DOPENGL_3_3_CORE -I{runtime.platform.path}/cores/sdl3/umfeld/external/glad_opengl_33/include
 UMFELD.menu.OPENGL_VERSION.2_0=OpenGL 2.0

@@ -38,28 +38,35 @@ recipe.hooks.prebuild.01.pattern=echo "Umfeld: " {build.flags.board}
 # ```
 # platform.txt: `compiler.cpp.extra_flags=-include{build.path}/generated_info.h`
 
-
 # TODO this should be configured according for each system … maybe with a script? see above ^^^
 compiler.path.macosx            = /usr/bin/
 compiler.path.linux             = /usr/bin/
-compiler.umf_define             = -DUMF_ENV={build.flags.board} -DOPENGL_3_3_CORE -DSYSTEM_MACOS
+compiler.umf_define             = -DUMF_ENV={build.flags.board} {build.flags.opengl} -DSYSTEM_MACOS
 # TODO this is now fixed to macOS and OpenGL 3.3 core
 
-compiler.umfeld_flags=-I{runtime.platform.path}/cores/sdl3 -I{runtime.platform.path}/cores/sdl3/umfeld/include -I{runtime.platform.path}/cores/sdl3/umfeld/include/libraries -I{runtime.platform.path}/cores/sdl3/umfeld/include/libraries/clipper2 -I{runtime.platform.path}/cores/sdl3/umfeld/include/libraries/dr_libs -I{runtime.platform.path}/cores/sdl3/umfeld/include/libraries/ip -I{runtime.platform.path}/cores/sdl3/umfeld/include/libraries/libtess2 -I{runtime.platform.path}/cores/sdl3/umfeld/include/libraries/osc -I{runtime.platform.path}/cores/sdl3/umfeld/include/libraries/pffft -I{runtime.platform.path}/cores/sdl3/umfeld/include/shaders -I{runtime.platform.path}/cores/sdl3/umfeld/external/glad_opengl_33/include -I{runtime.platform.path}/cores/sdl3/umfeld/external/ -DDISABLE_VIDEO -DENABLE_PORTAUDIO 
-compiler.umfeld_libs.macosx   = -L/opt/homebrew/lib -framework OpenGL -lGLEW -lharfbuzz -lfreetype -lportaudio -lcurl
+# Glad include paths for different OpenGL versions
+compiler.glad.include.3_3_core = -I{runtime.platform.path}/cores/sdl3/umfeld/external/glad_opengl_33/include
+compiler.glad.include.2_0      = -I{runtime.platform.path}/cores/sdl3/umfeld/external/glad_opengl_20/include
+compiler.glad.include.es_3_0   = -I{runtime.platform.path}/cores/sdl3/umfeld/external/glad_opengles_30/include
+
+compiler.umfeld_flags=-I{runtime.platform.path}/cores/sdl3 -I{runtime.platform.path}/cores/sdl3/umfeld/include -I{runtime.platform.path}/cores/sdl3/umfeld/include/libraries -I{runtime.platform.path}/cores/sdl3/umfeld/include/libraries/clipper2 -I{runtime.platform.path}/cores/sdl3/umfeld/include/libraries/dr_libs -I{runtime.platform.path}/cores/sdl3/umfeld/include/libraries/ip -I{runtime.platform.path}/cores/sdl3/umfeld/include/libraries/libtess2 -I{runtime.platform.path}/cores/sdl3/umfeld/include/libraries/osc -I{runtime.platform.path}/cores/sdl3/umfeld/include/libraries/pffft -I{runtime.platform.path}/cores/sdl3/umfeld/include/shaders -I{runtime.platform.path}/cores/sdl3/umfeld/external/ -DDISABLE_VIDEO -DENABLE_PORTAUDIO 
+
+# Library paths - check both Intel (/usr/local) and Apple Silicon (/opt/homebrew) locations
+compiler.umfeld_libs.macosx   = -L/opt/homebrew/lib -L/usr/local/lib -framework OpenGL -lGLEW -lharfbuzz -lfreetype -lportaudio -lcurl
 compiler.umfeld_libs.linux    = -L/usr/lib -L/usr/local/lib -lGL -lGLEW -lharfbuzz -lfreetype -lportaudio -lcurl
-# TODO remove reference to curl … it is not setup properly and should be replaced by leightweight HTTP library
+# TODO remove reference to curl … it is not setup properly and should be replaced by leightweight HTTP library
 
 # TODO improve
 # 1. add windows paths
 # 2. introduce `umfeld_libs_includes`
 # 3. separate general path e.g `/opt/homebrew/include` from actual library e.g `rtmidi`
 
-compiler.SDL3_cflags.macosx     = -I/opt/homebrew/include/ -I/opt/homebrew/include/SDL3 -I/opt/homebrew/include/rtmidi/ -I/opt/homebrew/include/freetype2/ -D_THREAD_SAFE -DGLM_ENABLE_EXPERIMENTAL -DSDL_MAIN_USE_CALLBACKS
+# SDL3 and include paths - check both homebrew locations (linker will find the right one)
+compiler.SDL3_cflags.macosx     = -I/opt/homebrew/include/ -I/usr/local/include/ -I/opt/homebrew/include/SDL3 -I/usr/local/include/SDL3 -I/opt/homebrew/include/rtmidi/ -I/usr/local/include/rtmidi/ -I/opt/homebrew/include/freetype2/ -I/usr/local/include/freetype2/ -D_THREAD_SAFE -DGLM_ENABLE_EXPERIMENTAL -DSDL_MAIN_USE_CALLBACKS
 compiler.SDL3_cflags.linux      = -I/usr/include/ -I/usr/include/SDL3 -I/usr/include/rtmidi/ -I/usr/include/freetype2/ -D_THREAD_SAFE -DGLM_ENABLE_EXPERIMENTAL -DSDL_MAIN_USE_CALLBACKS
 compiler.SDL3_cflags.windows    = # TODO add windows paths
 
-compiler.SDL3_libs.macosx       = -L/opt/homebrew/lib -lSDL3
+compiler.SDL3_libs.macosx       = -L/opt/homebrew/lib -L/usr/local/lib -lSDL3
 compiler.SDL3_libs.linux        = -L/usr/lib -lSDL3
 compiler.SDL3_libs.windows      = # TODO add windows paths
 
@@ -72,9 +79,9 @@ recipe.c.o.pattern="{compiler.path}{compiler.c.cmd}" {compiler.c.flags} {include
 
 compiler.cpp.cmd=g++
 compiler.cpp.std=c++17
-compiler.cpp.flags.macosx= -c -Wall -std={compiler.cpp.std} -pthread {compiler.umf_define}
-compiler.cpp.flags.linux=  -c -g -MMD -Wall -flto -std={compiler.cpp.std} -Wno-long-long -pthread {compiler.umf_define}
-compiler.cpp.flags.windows=
+compiler.cpp.flags.macosx       = -c -Wall -std={compiler.cpp.std} -pthread {compiler.umf_define}
+compiler.cpp.flags.linux        = -c -g -MMD -Wall -flto -std={compiler.cpp.std} -Wno-long-long -pthread {compiler.umf_define}
+compiler.cpp.flags.windows      =
 recipe.cpp.o.pattern="{compiler.path}{compiler.cpp.cmd}" {compiler.cpp.flags} {includes} {compiler.SDL3_cflags} {compiler.umfeld_flags} "{source_file}" -o "{object_file}"
 
 ###################################################################################################

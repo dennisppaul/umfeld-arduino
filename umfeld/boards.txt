@@ -5,7 +5,8 @@ UMFELD.build.board=UMFELD
 UMFELD.build.core=sdl3
 
 menu.upload_method=Upload method
-menu.board=Klangstrom Board
+menu.board=Board
+menu.OPENGL_VERSION=OpenGL Version
 menu.OSC=Enable OSC
 menu.DISPLAY=Enable Display
 
@@ -27,3 +28,10 @@ UMFELD.menu.DISPLAY.enable=Enable Display
 UMFELD.menu.DISPLAY.enable.build.flags.DISPLAY=-DUMF_SDL_HAS_DISPLAY
 UMFELD.menu.DISPLAY.disable=Disable Display
 UMFELD.menu.DISPLAY.disable.build.flags.DISPLAY=
+
+UMFELD.menu.OPENGL_VERSION.3_3_core=OpenGL 3.3 Core
+UMFELD.menu.OPENGL_VERSION.3_3_core.build.flags.opengl=-DOPENGL_3_3_CORE -I{runtime.platform.path}/cores/sdl3/umfeld/external/glad_opengl_33/include
+UMFELD.menu.OPENGL_VERSION.2_0=OpenGL 2.0
+UMFELD.menu.OPENGL_VERSION.2_0.build.flags.opengl=-DOPENGL_2_0 -I{runtime.platform.path}/cores/sdl3/umfeld/external/glad_opengl_20/include
+UMFELD.menu.OPENGL_VERSION.es_3_0=OpenGL ES 3.0
+UMFELD.menu.OPENGL_VERSION.es_3_0.build.flags.opengl=-DOPENGL_ES_3_0 -I{runtime.platform.path}/cores/sdl3/umfeld/external/glad_opengles_30/include

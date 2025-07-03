@@ -38,7 +38,7 @@ done
 if [ "$AUTO_YES" = false ]; then
     echo "Do you want to install into the current folder: $TARGET_DIR ? [Y/n]"
     read -r confirm
-    confirm=${confirm,,}  # to lowercase
+    confirm=$(printf "%s" "$confirm" | tr '[:upper:]' '[:lower:]')
     if [[ "$confirm" =~ ^(n|no)$ ]]; then
         if [[ $BASH_VERSINFO -ge 4 && ${BASH_VERSINFO[1]} -ge 4 ]]; then
             read -erp "Enter a different installation path: " custom_path

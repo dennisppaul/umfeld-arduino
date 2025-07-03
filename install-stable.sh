@@ -3,7 +3,7 @@
 set -e
 
 BASE_URL="https://raw.githubusercontent.com/dennisppaul/umfeld/main/installation"
-UMFELD_VERSION="v2.2.0"
+UMFELD_VERSION="v2.2.1"
 
 echo "-------------------------------"
 echo "--- installing dependencies"

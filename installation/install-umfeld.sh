@@ -40,7 +40,10 @@ if [ "$AUTO_YES" = false ]; then
     read -r confirm
     confirm=$(printf "%s" "$confirm" | tr '[:upper:]' '[:lower:]')
     if [[ "$confirm" =~ ^(n|no)$ ]]; then
-        if [[ $BASH_VERSINFO -ge 4 && ${BASH_VERSINFO[1]} -ge 4 ]]; then
+        BASH_VERSION_MAJOR=$(echo "$BASH_VERSION" | cut -d. -f1)
+        BASH_VERSION_MINOR=$(echo "$BASH_VERSION" | cut -d. -f2)
+
+        if [ "$BASH_VERSION_MAJOR" -gt 4 ] || { [ "$BASH_VERSION_MAJOR" -eq 4 ] && [ "$BASH_VERSION_MINOR" -ge 4 ]; }; then
             read -erp "Enter a different installation path: " custom_path
         else
             read -rp "Enter a different installation path: " custom_path

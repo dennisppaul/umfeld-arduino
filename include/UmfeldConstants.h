@@ -148,6 +148,11 @@ namespace umfeld {
         DODGE,            // not implemented
         BURN              // not implemented
     };
+    enum TextureFilter {
+        NEAREST = 0xC0, // nearest neighbor
+        LINEAR,         // bilinear
+        MIPMAP   // mipmap with bilinear
+    };
     enum RenderMode {
         RENDER_MODE_IMMEDIATE = 0x90, // tries to render immediately, but may buffer vertices
         RENDER_MODE_BUFFERED,         // buffers vertices and renders them at the end of the frame

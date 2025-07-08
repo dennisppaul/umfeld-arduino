@@ -243,6 +243,7 @@ namespace umfeld {
         void                set_render_mode(const int render_mode) { this->render_mode = render_mode; }
         virtual std::string name() { return "PGraphics"; }
         float               get_stroke_weight() const { return stroke_weight; }
+        virtual void        texture_filter(TextureFilter filter) {}
 
         template<typename T>
         void text(const T& value, const float x, const float y, const float z = 0.0f) {

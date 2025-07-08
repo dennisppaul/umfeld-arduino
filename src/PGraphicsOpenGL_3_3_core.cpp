@@ -77,6 +77,7 @@ void PGraphicsOpenGL_3_3_core::IMPL_set_texture(PImage* img) {
     }
 
     // TODO move this to own method and share with `texture()`
+    // TODO make MIPMAP optional
     if (img->texture_id == TEXTURE_NOT_GENERATED) {
         OGL_generate_and_upload_image_as_texture(img, true);
         if (img->texture_id == TEXTURE_NOT_GENERATED) {
@@ -1233,6 +1234,26 @@ void PGraphicsOpenGL_3_3_core::updateShaderLighting() const {
     }
 
     UMFELD_PGRAPHICS_OPENGL_3_3_CORE_CHECK_ERRORS("updateShaderLighting");
+}
+
+void PGraphicsOpenGL_3_3_core::texture_filter(const TextureFilter filter) {
+    switch (filter) {
+        case NEAREST:
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+            break;
+        case LINEAR:
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+            break;
+        case MIPMAP:
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+            break;
+        default:
+            error("Unknown texture filter type");
+            break;
+    }
 }
 
 #endif // UMFELD_PGRAPHICS_OPENGLV33_CPP

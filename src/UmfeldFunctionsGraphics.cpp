@@ -495,4 +495,10 @@ namespace umfeld {
         if (g == nullptr) { return; }
         g->debug_text(text, x, y);
     }
+
+    void texture_filter(TextureFilter filter) {
+        if (g == nullptr) { return;}
+        g->texture_filter(filter);
+    }
+
 } // namespace umfeld

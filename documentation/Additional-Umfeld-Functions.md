@@ -22,14 +22,20 @@ below is a list of functions that have been added to *Umfeld* and are not availa
 ## Audio
 
 - `audio` :: initialize a default or custom audio device ( accessible through `a` ), supports various overloads:
-  - by channel count, sample rate, buffer size
-  - by device name ( input/output )
-  - by `AudioUnitInfo` struct
+    - by channel count, sample rate, buffer size
+    - by device name ( input/output )
+    - by `AudioUnitInfo` struct
 - `createAudio` :: creates and returns a new audio device with the given configuration
 - `audio_start` :: start an audio device ( or the default one if none is specified )
 - `audio_stop` :: stop an audio device ( or the default one if none is specified )
 - `is_initialized` :: checks if the audio system is initialized
-- `loadSample` :: loads a sample from a WAV or MP3 file 
+- `loadSample` :: loads a sample from a WAV or MP3 file
+
+## Image
+
+### Textures
+
+- `texture_filter` :: sets the texture filter mode for the current texture ( `NEAREST`, `LINEAR` or `MIPMAP` )
 
 ## Shape
 
@@ -45,7 +51,7 @@ below is a list of functions that have been added to *Umfeld* and are not availa
 
 ## Color
 
-- `color_pack` :: packs RGBA float values ( 0...1 ) into a single 32-bit integer `uint32_t` 
+- `color_pack` :: packs RGBA float values ( 0...1 ) into a single 32-bit integer `uint32_t`
 - `color_unpack` :: unpacks a 32-bit integer `uint32_t` ( e.g `0xFF0000FF` ) into RGBA float values ( 0...1 )
 
 ## Files + Directories

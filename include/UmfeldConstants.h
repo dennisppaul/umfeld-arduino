@@ -27,7 +27,7 @@
 namespace umfeld {
     static constexpr int   VERSION_MAJOR                 = 2; // SemVer: increase when introducing breaking changes
     static constexpr int   VERSION_MINOR                 = 2; // SemVer: increase when introducing new features
-    static constexpr int   VERSION_PATCH                 = 0; // SemVer: increase when introducing bug fixes
+    static constexpr int   VERSION_PATCH                 = 2; // SemVer: increase when introducing bug fixes
     static constexpr int   DEFAULT                       = -1;
     static constexpr int   NOT_INITIALIZED               = -1;
     static constexpr auto  DEFAULT_WINDOW_TITLE          = "Umfeld";
@@ -151,7 +151,13 @@ namespace umfeld {
     enum TextureFilter {
         NEAREST = 0xC0, // nearest neighbor
         LINEAR,         // bilinear
-        MIPMAP   // mipmap with bilinear
+        MIPMAP          // mipmap with bilinear
+    };
+    enum TextureWrap {
+        REPEAT = 0xD0,   // repeat texture
+        CLAMP_TO_EDGE,   // clamp to edge
+        CLAMP_TO_BORDER, // clamp to border (requires OpenGL 3.2+)
+        MIRRORED_REPEAT  // mirrored repeat
     };
     enum RenderMode {
         RENDER_MODE_IMMEDIATE = 0x90, // tries to render immediately, but may buffer vertices

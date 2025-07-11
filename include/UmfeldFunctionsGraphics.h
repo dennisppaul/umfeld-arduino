@@ -119,9 +119,12 @@ namespace umfeld {
     void     printProjection();
     void     lights();
     void     noLights();
+
     /* --- additional --- */
+
     void debug_text(const std::string& text, float x, float y);
     void texture_filter(TextureFilter filter);
+    void texture_wrap(TextureWrap wrap);
 
     template<typename T>
     typename std::enable_if<std::is_arithmetic<T>::value || std::is_same<T, char>::value, void>::type

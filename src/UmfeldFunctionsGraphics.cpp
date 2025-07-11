@@ -501,4 +501,9 @@ namespace umfeld {
         g->texture_filter(filter);
     }
 
+    void texture_wrap(TextureWrap wrap) {
+        if (g == nullptr) { return;}
+        g->texture_wrap(wrap);
+    }
+
 } // namespace umfeld

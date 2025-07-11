@@ -1256,4 +1256,35 @@ void PGraphicsOpenGL_3_3_core::texture_filter(const TextureFilter filter) {
     }
 }
 
+void PGraphicsOpenGL_3_3_core::texture_wrap(const TextureWrap wrap) {
+    switch (wrap) {
+        case REPEAT:
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+            break;
+        case CLAMP_TO_EDGE:
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+            break;
+        case MIRRORED_REPEAT:
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
+            break;
+        case CLAMP_TO_BORDER:
+#ifndef OPENGL_ES_3_0
+            // NOTE this is not supported in OpenGL ES 3.0
+            {
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+                const float borderColor[] = {color_stroke.r, color_stroke.g, color_stroke.b, color_stroke.a};
+                glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
+            }
+#endif
+            break;
+        default:
+            error("Unknown texture wrap type");
+            break;
+    }
+}
+
 #endif // UMFELD_PGRAPHICS_OPENGLV33_CPP

@@ -64,6 +64,7 @@ namespace umfeld {
         void hint(uint16_t property) override;
         void debug_text(const std::string& text, float x, float y) override; // TODO move to PGraphics ( use glBeginShape() )
         void texture_filter(TextureFilter filter) override;
+        void texture_wrap(TextureWrap wrap) override;
 
         /* --- standard drawing functions --- */
 

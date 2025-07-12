@@ -124,7 +124,6 @@ and as mentioned before of course [Processing.org](https://processing.org)
 - [DOCUMENTATION](DOCUMENTATION.md) :: detailed documentation on how to build from source, caveats, application structure etcetera
 - [Known-Issues](Known-Issues.md)
 - [Processing-Function-Availability-Status](Processing-Function-Availability-Status.md) :: list of functions that are part of *Processing.org* and available in *Umfeld*
-- [ROADMAP](ROADMAP.md)
 - [Setting-up-Homebrew-on-macOS](Setting-up-Homebrew-on-macOS.md) 
 - [Tested-Setups](Tested-Setups.md)
 - [Umfeld-CMake-Options](Umfeld-CMake-Options.md)

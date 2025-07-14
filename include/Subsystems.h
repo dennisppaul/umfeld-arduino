@@ -81,7 +81,7 @@ namespace umfeld {
     *     }
     */
     inline SubsystemAudio* (*create_subsystem_audio)()       = nullptr;
-    inline SubsystemGraphics* (*create_subsystem_graphics)() = nullptr;
+    inline SubsystemGraphics* (*create_subsystem_graphics)() = nullptr; // TODO this is redundant with `subsystem_graphics` in `Umfeld.h`, maybe remove this?
 
     class LibraryListener {
     public:

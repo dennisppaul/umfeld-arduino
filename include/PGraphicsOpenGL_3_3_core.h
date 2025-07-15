@@ -44,13 +44,15 @@ namespace umfeld {
         void bind_fbo() override;
         void finish_fbo() override {}
 
-        void upload_texture(PImage* img, const uint32_t* pixel_data, int width, int height, int offset_x, int offset_y, bool mipmapped) override;
+        void upload_texture(PImage* img, const uint32_t* pixel_data, int width, int height, int offset_x, int offset_y) override;
         void download_texture(PImage* img) override;
+        void upload_colorbuffer(uint32_t* pixels) override;
+        void download_colorbuffer(uint32_t* pixels) override;
 
         void beginDraw() override;
         void endDraw() override;
 
-        void        init(uint32_t* pixels, int width, int height, bool generate_mipmap) override;
+        void        init(uint32_t* pixels, int width, int height) override;
         std::string name() override {
 #if defined(OPENGL_ES_3_0)
             return "PGraphicsOpenGL_ES_3_0";

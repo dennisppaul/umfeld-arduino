@@ -35,10 +35,10 @@ namespace umfeld {
         PImage(int width, int height);
         PImage(const unsigned char* raw_byte_pixel_data, int width, int height, uint8_t channels);
         PImage();
-        virtual ~PImage() = default;
+        virtual ~PImage();
 
         virtual void loadPixels(PGraphics* graphics);
-        virtual void init(uint32_t* pixels, int width, int height, bool generate_mipmap);
+        virtual void init(uint32_t* pixels, int width, int height);
 
         void updatePixels(PGraphics* graphics);
         void updatePixels(PGraphics* graphics, int x, int y, int w, int h);
@@ -62,14 +62,20 @@ namespace umfeld {
             return c;
         }
 
+        void set_auto_generate_mipmap(const bool generate_mipmap) { auto_generate_mipmap = generate_mipmap; }
+        bool get_auto_generate_mipmap() const { return auto_generate_mipmap; }
+
         float                    width;
         float                    height;
         static constexpr uint8_t channels = DEFAULT_BYTES_PER_PIXELS; // TODO might make this configurable in the future
         uint32_t*                pixels;
         int                      texture_id  = TEXTURE_NOT_GENERATED;
-        SDL_Texture*             sdl_texture = nullptr;
+        SDL_Texture*             sdl_texture = nullptr; // TODO is this still neeeded or used?
 
     protected:
+        bool auto_generate_mipmap  = false;
+        bool clean_up_pixel_buffer = false;
+
         void update_full_internal(PGraphics* graphics);
 
     public:

@@ -448,7 +448,7 @@ void PGraphicsOpenGL_2_0::image(PImage* img, const float x, const float y, float
 
     // TODO move this to own method and share with `texture()`
     if (img->texture_id == TEXTURE_NOT_GENERATED) {
-        OGL_generate_and_upload_image_as_texture(img, true);
+        OGL_generate_and_upload_image_as_texture(img);
         if (img->texture_id == TEXTURE_NOT_GENERATED) {
             error("image cannot create texture.");
             return;
@@ -497,7 +497,7 @@ void PGraphicsOpenGL_2_0::texture(PImage* img) {
 
     // TODO move this to own method and share with `image()`
     if (img->texture_id == TEXTURE_NOT_GENERATED) {
-        OGL_generate_and_upload_image_as_texture(img, true);
+        OGL_generate_and_upload_image_as_texture(img);
         if (img->texture_id == TEXTURE_NOT_GENERATED) {
             error("image cannot create texture.");
             return;
@@ -585,8 +585,7 @@ void PGraphicsOpenGL_2_0::scale(const float x, const float y, const float z) {
 
 void PGraphicsOpenGL_2_0::init(uint32_t* pixels,
                                const int width,
-                               const int height,
-                               bool      generate_mipmap) {
+                               const int height) {
     this->width        = width;
     this->height       = height;
     framebuffer.width  = width;
@@ -603,11 +602,11 @@ void PGraphicsOpenGL_2_0::init(uint32_t* pixels,
         glBindTexture(GL_TEXTURE_2D, framebuffer.texture_id);
         glTexImage2D(GL_TEXTURE_2D,
                      0,
-                     GL_RGBA,
+                     UMFELD_DEFAULT_INTERNAL_PIXEL_FORMAT,
                      framebuffer.width,
                      framebuffer.height,
                      0,
-                     GL_RGBA,
+                     UMFELD_DEFAULT_EXTERNAL_PIXEL_FORMAT,
                      GL_UNSIGNED_BYTE,
                      nullptr);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -650,7 +649,7 @@ void PGraphicsOpenGL_2_0::hint(const uint16_t property) {
     }
 }
 
-void PGraphicsOpenGL_2_0::upload_texture(PImage* img, const uint32_t* pixel_data, int width, int height, int offset_x, int offset_y, bool mipmapped) {
+void PGraphicsOpenGL_2_0::upload_texture(PImage* img, const uint32_t* pixel_data, int width, int height, int offset_x, int offset_y) {
     error("`upload_texture` not implemented ( might be called from `PImage`, `Capture` ,or `Movie` )");
 }
 
@@ -819,7 +818,7 @@ void PGraphicsOpenGL_2_0::IMPL_set_texture(PImage* img) {
 
     // TODO move this to own method and share with `texture()`
     if (img->texture_id == TEXTURE_NOT_GENERATED) {
-        OGL_generate_and_upload_image_as_texture(img, true);
+        OGL_generate_and_upload_image_as_texture(img);
         if (img->texture_id == TEXTURE_NOT_GENERATED) {
             error("image cannot create texture.");
             return;

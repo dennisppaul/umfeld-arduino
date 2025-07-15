@@ -189,11 +189,11 @@ below is a list of all Processing functions from the official [Processing Refere
 - [ ] `copy()` :: Copies the entire image
 - [ ] `filter()` :: Converts the image to grayscale or black and white
 - [ ] `get()` :: Reads the color of any pixel or grabs a rectangle of pixels
-- [ ] `loadPixels()` :: Loads the pixel data for the display window into the `pixels[]` array
+- [x] `loadPixels()` :: Loads the pixel data for the display window into the `pixels[]` array
 - [ ] `mask()` :: Masks part of an image with another image as an alpha channel
-- [ ] `pixels[]` :: Array containing the values for all the pixels in the display window
+- [x] `pixels[]` :: Array containing the values for all the pixels in the display window
 - [ ] `set()` :: Writes a color to any pixel or writes an image into another
-- [ ] `updatePixels()` :: Updates the display window with the data in the `pixels[]` array
+- [x] `updatePixels()` :: Updates the display window with the data in the `pixels[]` array
 
 ### Loading & Displaying
 
@@ -530,7 +530,7 @@ below is a list of all Processing functions from the official [Processing Refere
 
 - [ ] `cursor()` :: Sets the cursor to a predefined symbol, an image, or makes it visible if already hidden
 - [ ] `delay()` :: The `delay()` function causes the program to halt for a specified time
-- [ ] `displayDensity()` :: Returns "2" if the screen is high-density and "1" if not
+- [x] `displayDensity()` :: Returns "2" if the screen is high-density and "1" if not
 - [ ] `displayHeight` :: Variable that stores the height of the computer screen
 - [ ] `displayWidth` :: Variable that stores the width of the computer screen
 - [ ] `focused` :: Confirms if a Processing program is "focused"

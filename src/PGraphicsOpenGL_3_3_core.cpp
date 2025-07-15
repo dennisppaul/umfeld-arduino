@@ -77,11 +77,10 @@ void PGraphicsOpenGL_3_3_core::IMPL_set_texture(PImage* img) {
     }
 
     // TODO move this to own method and share with `texture()`
-    // TODO make MIPMAP optional
     if (img->texture_id == TEXTURE_NOT_GENERATED) {
-        OGL_generate_and_upload_image_as_texture(img, true);
+        OGL_generate_and_upload_image_as_texture(img);
         if (img->texture_id == TEXTURE_NOT_GENERATED) {
-            error("image cannot create texture.");
+            error_in_function("image cannot create texture.");
             return;
         }
     }
@@ -188,7 +187,7 @@ void PGraphicsOpenGL_3_3_core::IMPL_emit_shape_stroke_line_strip(std::vector<Ver
                                           line_strip_closed,
                                           line_vertices);
             if (custom_shader != nullptr) {
-                UMFELD_EMIT_WARNING("strokes with render mode 'STROKE_RENDER_MODE_TRIANGULATE_2D' are not supported with custom shaders");
+                UMFELD_EMIT_WARNING_ONCE("strokes with render mode 'STROKE_RENDER_MODE_TRIANGULATE_2D' are not supported with custom shaders");
             }
             // NOTE not happy about this hack … but `triangulate_line_strip_vertex` already applies model matrix
             shader_fill_texture->use();
@@ -289,7 +288,7 @@ void PGraphicsOpenGL_3_3_core::IMPL_emit_shape_fill_triangles(std::vector<Vertex
             update_shader_matrices(custom_shader);
             // TODO this is very hack-ish ...
             if (custom_shader == shader_fill_texture_lights) {
-                shader_fill_texture_lights->set_uniform("normalMatrix", glm::mat3(glm::transpose(glm::inverse(g->view_matrix * g->model_matrix))));
+                shader_fill_texture_lights->set_uniform("normalMatrix", glm::mat3(glm::transpose(glm::inverse(view_matrix * model_matrix))));
             }
         } else {
             shader_fill_texture->use();
@@ -515,39 +514,40 @@ void PGraphicsOpenGL_3_3_core::upload_texture(PImage*         img,
                                               const int       width,
                                               const int       height,
                                               const int       offset_x,
-                                              const int       offset_y,
-                                              const bool      mipmapped) {
+                                              const int       offset_y) {
     if (img == nullptr) {
+        error_in_function("image is nullptr.");
         return;
     }
 
     if (pixel_data == nullptr) {
+        error_in_function("pixel data is nullptr");
         return;
     }
 
-    if (img->texture_id < TEXTURE_VALID_ID) {
-        OGL_generate_and_upload_image_as_texture(img, mipmapped); // NOTE texture binding and unbinding is handled here properly
-        console("PGraphics / `upload_texture` texture has not been initialized yet … trying to initialize");
-        if (img->texture_id < TEXTURE_VALID_ID) {
-            error("PGraphics / `upload_texture` failed to create texture");
-            return;
-        }
-        console("texture is now initialized.");
-        if (offset_x > 0 || offset_y > 0) {
-            console("PGraphics / `upload_texture` offset was ignored");
-        }
-        return; // NOTE this should be fine, as the texture is now initialized
-    }
-
-    // Check if the provided width, height, and offsets are within the valid range
+    // check if the provided width, height, and offsets are within the valid range
     if (width <= 0 || height <= 0) {
-        error("PGraphics / `upload_texture` invalid width or height");
+        error_in_function("invalid width or height");
         return;
     }
 
     if (offset_x < 0 || offset_y < 0 || offset_x + width > img->width || offset_y + height > img->height) {
-        error("PGraphics / `upload_texture` parameters exceed image dimensions");
+        error_in_function("parameters exceed image dimensions");
         return;
+    }
+
+    if (img->texture_id < TEXTURE_VALID_ID) {
+        OGL_generate_and_upload_image_as_texture(img); // NOTE texture binding and unbinding is handled here properly
+        console(__func__, ": texture has not been initialized yet … trying to initialize");
+        if (img->texture_id < TEXTURE_VALID_ID) {
+            error_in_function("failed to create texture");
+            return;
+        }
+        console("texture is now initialized.");
+        if (offset_x > 0 || offset_y > 0) {
+            console(__func__, ": offset was ignored (WIP)");
+        }
+        return; // NOTE this should be fine, as the texture is now initialized
     }
 
     const int tmp_bound_texture = texture_id_current;
@@ -557,21 +557,28 @@ void PGraphicsOpenGL_3_3_core::upload_texture(PImage*         img,
     glTexSubImage2D(GL_TEXTURE_2D,
                     0, offset_x, offset_y,
                     width, height,
-                    UMFELD_DEFAULT_INTERNAL_PIXEL_FORMAT,
+                    UMFELD_DEFAULT_EXTERNAL_PIXEL_FORMAT,
                     UMFELD_DEFAULT_TEXTURE_PIXEL_TYPE,
                     pixel_data);
+
+    if (img->get_auto_generate_mipmap()) {
+        glGenerateMipmap(GL_TEXTURE_2D); // NOTE this works on macOS … but might not work on all platforms
+    }
 
     IMPL_bind_texture(tmp_bound_texture);
 }
 
 void PGraphicsOpenGL_3_3_core::download_texture(PImage* img) {
     if (img == nullptr) {
+        error_in_function("image is nullptr");
         return;
     }
     if (img->pixels == nullptr) {
+        error_in_function("pixel data is nullptr");
         return;
     }
     if (img->texture_id < TEXTURE_VALID_ID) {
+        error_in_function("texture has not been initialized yet");
         return;
     }
 
@@ -579,7 +586,7 @@ void PGraphicsOpenGL_3_3_core::download_texture(PImage* img) {
     const int tmp_bound_texture = texture_id_current;
     IMPL_bind_texture(img->texture_id);
     glGetTexImage(GL_TEXTURE_2D, 0,
-                  UMFELD_DEFAULT_INTERNAL_PIXEL_FORMAT,
+                  UMFELD_DEFAULT_EXTERNAL_PIXEL_FORMAT,
                   UMFELD_DEFAULT_TEXTURE_PIXEL_TYPE,
                   img->pixels);
     IMPL_bind_texture(tmp_bound_texture);
@@ -592,11 +599,9 @@ void PGraphicsOpenGL_3_3_core::download_texture(PImage* img) {
 #endif
 }
 
-void PGraphicsOpenGL_3_3_core::init(uint32_t*  pixels,
-                                    const int  width,
-                                    const int  height,
-                                    const bool generate_mipmap) {
-    (void) generate_mipmap;                // TODO should this always be ignored?
+void PGraphicsOpenGL_3_3_core::init(uint32_t* pixels,
+                                    const int width,
+                                    const int height) {
     const int msaa_samples = antialiasing; // TODO not cool to take this from Umfeld
 
     // TODO create shader system with `get_versioned_source(string)` for:
@@ -612,18 +617,18 @@ void PGraphicsOpenGL_3_3_core::init(uint32_t*  pixels,
     shader_point               = loadShader(shader_source_point.get_vertex_source(), shader_source_point.get_fragment_source());
 
     if (shader_fill_texture == nullptr) {
-        error("Failed to load default fill shader.");
+        error_in_function("failed to load default fill shader.");
     }
     if (shader_fill_texture_lights == nullptr) {
-        error("Failed to load default light shader.");
+        error_in_function("failed to load default light shader.");
     }
     if (shader_stroke == nullptr) {
-        error("Failed to load default stroke shader.");
+        error_in_function("failed to load default stroke shader.");
     } else {
         set_stroke_render_mode(STROKE_RENDER_MODE_LINE_SHADER);
     }
     if (shader_point == nullptr) {
-        error("Failed to load default point shader.");
+        error_in_function("failed to load default point shader.");
     } else {
         set_point_render_mode(POINT_RENDER_MODE_SHADER);
     }
@@ -697,7 +702,7 @@ void PGraphicsOpenGL_3_3_core::init(uint32_t*  pixels,
                          framebuffer.width,
                          framebuffer.height,
                          0,
-                         UMFELD_DEFAULT_INTERNAL_PIXEL_FORMAT,
+                         UMFELD_DEFAULT_EXTERNAL_PIXEL_FORMAT,
                          UMFELD_DEFAULT_TEXTURE_PIXEL_TYPE,
                          nullptr);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -715,7 +720,7 @@ void PGraphicsOpenGL_3_3_core::init(uint32_t*  pixels,
         }
 
         if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-            error("ERROR Framebuffer is not complete!");
+            error_in_function("framebuffer is not complete!");
         }
 
         glViewport(0, 0, framebuffer.width, framebuffer.height);
@@ -729,6 +734,23 @@ void PGraphicsOpenGL_3_3_core::init(uint32_t*  pixels,
             glBindTexture(GL_TEXTURE_2D, 0); // NOTE no need to use `IMPL_bind_texture()`
         }
         texture_id = framebuffer.texture_id; // TODO maybe get rid of one of the texture_id variables
+    } else {
+        GLuint _buffer_texture_id;
+        glGenTextures(1, &_buffer_texture_id);
+        glBindTexture(GL_TEXTURE_2D, _buffer_texture_id);
+        glTexImage2D(GL_TEXTURE_2D, 0,
+                     UMFELD_DEFAULT_INTERNAL_PIXEL_FORMAT,
+                     width, height,
+                     0,
+                     UMFELD_DEFAULT_EXTERNAL_PIXEL_FORMAT,
+                     UMFELD_DEFAULT_TEXTURE_PIXEL_TYPE,
+                     nullptr);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        console("creating buffer texture: ", _buffer_texture_id, " with size ", width, "×", height);
+        texture_id = _buffer_texture_id;
     }
 
     // static_assert(sizeof(Vertex) == 64, "Vertex struct must be 64 bytes"); // NOTE check this on other systems
@@ -742,9 +764,9 @@ void PGraphicsOpenGL_3_3_core::init(uint32_t*  pixels,
 /* additional */
 
 void PGraphicsOpenGL_3_3_core::OGL3_create_solid_color_texture() {
-    GLuint texture_id;
-    glGenTextures(1, &texture_id);
-    glBindTexture(GL_TEXTURE_2D, texture_id); // NOTE no need to use `IMPL_bind_texture()`
+    GLuint _texture_id;
+    glGenTextures(1, &_texture_id);
+    glBindTexture(GL_TEXTURE_2D, _texture_id); // NOTE no need to use `IMPL_bind_texture()`
 
     constexpr unsigned char whitePixel[4] = {255, 255, 255, 255}; // RGBA: White
     glTexImage2D(GL_TEXTURE_2D,
@@ -752,8 +774,8 @@ void PGraphicsOpenGL_3_3_core::OGL3_create_solid_color_texture() {
                  UMFELD_DEFAULT_INTERNAL_PIXEL_FORMAT,
                  1, 1,
                  0,
-                 UMFELD_DEFAULT_INTERNAL_PIXEL_FORMAT,
-                 GL_UNSIGNED_BYTE,
+                 UMFELD_DEFAULT_EXTERNAL_PIXEL_FORMAT,
+                 UMFELD_DEFAULT_TEXTURE_PIXEL_TYPE,
                  whitePixel);
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -761,7 +783,7 @@ void PGraphicsOpenGL_3_3_core::OGL3_create_solid_color_texture() {
 
     glBindTexture(GL_TEXTURE_2D, 0); // NOTE no need to use `IMPL_bind_texture()`
 
-    texture_id_solid_color = texture_id;
+    texture_id_solid_color = _texture_id;
 }
 
 // void PGraphicsOpenGL_3_3_core::OGL3_tranform_model_matrix_and_render_vertex_buffer(VertexBuffer&              vertex_buffer,
@@ -886,7 +908,7 @@ PShader* PGraphicsOpenGL_3_3_core::loadShader(const std::string& vertex_code, co
     const auto shader = new PShader();
     const bool result = shader->load(vertex_code, fragment_code, geometry_code);
     if (!result) {
-        error("failed to load shader: ", vertex_code, " ", fragment_code, " ", geometry_code);
+        error_in_function("failed to load shader: \n\n", vertex_code, "\n\n", fragment_code, "\n\n", geometry_code);
         delete shader;
         return nullptr;
     }
@@ -1214,7 +1236,7 @@ void PGraphicsOpenGL_3_3_core::updateShaderLighting() const {
     }
 
     // TODO check if this is the best place to update the shader matrices
-    shader_fill_texture_lights->set_uniform("normalMatrix", glm::mat3(glm::transpose(glm::inverse(g->view_matrix * g->model_matrix))));
+    shader_fill_texture_lights->set_uniform("normalMatrix", glm::mat3(glm::transpose(glm::inverse(view_matrix * model_matrix))));
     shader_fill_texture_lights->set_uniform("texMatrix", glm::mat4(1.0f)); // or a real matrix if you’re transforming texCoords
 
     // update light count
@@ -1251,7 +1273,7 @@ void PGraphicsOpenGL_3_3_core::texture_filter(const TextureFilter filter) {
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
             break;
         default:
-            error("Unknown texture filter type");
+            error_in_function("unknown texture filter type");
             break;
     }
 }
@@ -1282,8 +1304,140 @@ void PGraphicsOpenGL_3_3_core::texture_wrap(const TextureWrap wrap) {
 #endif
             break;
         default:
-            error("Unknown texture wrap type");
+            error_in_function("unknown texture wrap type");
             break;
+    }
+}
+
+void PGraphicsOpenGL_3_3_core::upload_colorbuffer(uint32_t* pixels) {
+    if (pixels == nullptr) {
+        error_in_function("pixels pointer is null, cannot upload color buffer.");
+        return;
+    }
+    if (render_to_offscreen) {
+        if (!framebuffer.msaa) {
+            glBindTexture(GL_TEXTURE_2D, framebuffer.texture_id);
+            glPixelStorei(GL_UNPACK_ALIGNMENT, 4); // assumes tightly packed RGBA8
+            glTexSubImage2D(GL_TEXTURE_2D,
+                            0,
+                            0, 0,
+                            framebuffer.width,
+                            framebuffer.height,
+                            UMFELD_DEFAULT_EXTERNAL_PIXEL_FORMAT,
+                            UMFELD_DEFAULT_TEXTURE_PIXEL_TYPE,
+                            pixels);
+        } else {
+            UMFELD_EMIT_WARNING_ONCE("cannot directly upload pixel data to multisample FBO texture.");
+        }
+    } else {
+        push_texture_id();
+        IMPL_bind_texture(texture_id);
+        glTexSubImage2D(GL_TEXTURE_2D,
+                        0,
+                        0, 0,
+                        width, height,
+                        UMFELD_DEFAULT_EXTERNAL_PIXEL_FORMAT,
+                        UMFELD_DEFAULT_TEXTURE_PIXEL_TYPE,
+                        pixels);
+        shader_fill_texture->use();
+        update_shader_matrices(shader_fill_texture);
+        std::vector<Vertex> fullscreen_quad;
+        glm::vec4           color(1.0f, 1.0f, 1.0f, 1.0f); // white color
+        const int           width  = this->framebuffer.width;
+        const int           height = this->framebuffer.height;
+        fullscreen_quad.emplace_back(0, 0, 0,
+                                     color.r, color.g, color.b, color.a,
+                                     0, 0);
+        fullscreen_quad.emplace_back(width, 0, 0,
+                                     color.r, color.g, color.b, color.a,
+                                     1, 0);
+        fullscreen_quad.emplace_back(width, height, 0,
+                                     color.r, color.g, color.b, color.a,
+                                     1, 1);
+        fullscreen_quad.emplace_back(0, 0, 0,
+                                     color.r, color.g, color.b, color.a,
+                                     0, 0);
+        fullscreen_quad.emplace_back(width, height, 0,
+                                     color.r, color.g, color.b, color.a,
+                                     1, 1);
+        fullscreen_quad.emplace_back(0, height, 0,
+                                     color.r, color.g, color.b, color.a,
+                                     0, 1);
+        OGL3_render_vertex_buffer(vertex_buffer, GL_TRIANGLES, fullscreen_quad);
+        pop_texture_id();
+    }
+}
+
+void PGraphicsOpenGL_3_3_core::download_colorbuffer(uint32_t* pixels) {
+    if (pixels == nullptr) {
+        error_in_function("pixels pointer is null, cannot download color buffer.");
+        return;
+    }
+    if (render_to_offscreen) {
+        store_fbo_state();
+        bind_fbo();
+        if (framebuffer.msaa) {
+            // Step 1: Create intermediate non-MSAA FBO + texture
+            GLuint tempFBO, tempTex;
+            glGenFramebuffers(1, &tempFBO);
+            glGenTextures(1, &tempTex);
+
+            glBindTexture(GL_TEXTURE_2D, tempTex);
+            glTexImage2D(GL_TEXTURE_2D, 0,
+                         UMFELD_DEFAULT_INTERNAL_PIXEL_FORMAT,
+                         framebuffer.width,
+                         framebuffer.height,
+                         0, UMFELD_DEFAULT_EXTERNAL_PIXEL_FORMAT,
+                         UMFELD_DEFAULT_TEXTURE_PIXEL_TYPE,
+                         nullptr);
+
+            glBindFramebuffer(GL_FRAMEBUFFER, tempFBO);
+            glFramebufferTexture2D(GL_FRAMEBUFFER,
+                                   GL_COLOR_ATTACHMENT0,
+                                   GL_TEXTURE_2D,
+                                   tempTex,
+                                   0);
+
+            // Step 2: Blit from MSAA FBO to non-MSAA FBO
+            glBindFramebuffer(GL_READ_FRAMEBUFFER, framebuffer.id);
+            glBindFramebuffer(GL_DRAW_FRAMEBUFFER, tempFBO);
+            glBlitFramebuffer(0, 0, framebuffer.width, framebuffer.height,
+                              0, 0, framebuffer.width, framebuffer.height,
+                              GL_COLOR_BUFFER_BIT,
+                              GL_NEAREST);
+
+            // Step 3: Read pixels from the tempFBO
+            glBindFramebuffer(GL_FRAMEBUFFER, tempFBO);
+            glPixelStorei(GL_PACK_ALIGNMENT, 4); // assuming tight RGBA8 layout
+            glReadPixels(0, 0,
+                         framebuffer.width,
+                         framebuffer.height,
+                         UMFELD_DEFAULT_EXTERNAL_PIXEL_FORMAT,
+                         UMFELD_DEFAULT_TEXTURE_PIXEL_TYPE,
+                         pixels);
+
+            // Cleanup
+            glDeleteTextures(1, &tempTex);
+            glDeleteFramebuffers(1, &tempFBO);
+        } else {
+            // Direct read from FBO
+            glBindFramebuffer(GL_FRAMEBUFFER, framebuffer.id);
+            glPixelStorei(GL_PACK_ALIGNMENT, 4);
+            glReadPixels(0, 0,
+                         framebuffer.width,
+                         framebuffer.height,
+                         UMFELD_DEFAULT_EXTERNAL_PIXEL_FORMAT,
+                         UMFELD_DEFAULT_TEXTURE_PIXEL_TYPE,
+                         pixels);
+        }
+        restore_fbo_state();
+    } else {
+        std::vector<unsigned char> rgba_bytes(width * height * 4);
+        if (g->read_framebuffer(rgba_bytes)) {
+            std::memcpy(pixels, rgba_bytes.data(), rgba_bytes.size() / 4 * sizeof(uint32_t));
+        } else {
+            error_in_function("failed to read pixels");
+        }
     }
 }
 

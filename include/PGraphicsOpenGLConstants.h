@@ -23,5 +23,6 @@
 
 namespace umfeld {
     static constexpr GLint UMFELD_DEFAULT_TEXTURE_PIXEL_TYPE    = GL_UNSIGNED_BYTE;
-    static constexpr GLint UMFELD_DEFAULT_INTERNAL_PIXEL_FORMAT = GL_RGBA;
+    static constexpr GLint UMFELD_DEFAULT_INTERNAL_PIXEL_FORMAT = GL_RGBA8;
+    static constexpr GLint UMFELD_DEFAULT_EXTERNAL_PIXEL_FORMAT = GL_RGBA;
 } // namespace umfeld

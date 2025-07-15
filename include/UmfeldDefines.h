@@ -68,8 +68,11 @@
 
 /* --- TOOLS --- */
 
+#ifndef RGBA255
+#define RGBA255(r, g, b, a) (((uint32_t) (a) << 24) | ((uint32_t) (b) << 16) | ((uint32_t) (g) << 8) | ((uint32_t) (r)))
+#endif
 #ifndef RGBA
-#define RGBA(r, g, b, a) (((uint32_t) (a) << 24) | ((uint32_t) (b) << 16) | ((uint32_t) (g) << 8) | ((uint32_t) (r)))
+#define RGBA(r, g, b, a) (((uint32_t) (a * 255.0f) << 24) | ((uint32_t) (b * 255.0f) << 16) | ((uint32_t) (g * 255.0f) << 8) | ((uint32_t) (r * 255.0f)))
 #endif
 #ifndef HSBA
 #define HSBA(h, s, b, a) ({                         \
@@ -97,7 +100,7 @@
 
 #define TIME_FUNCTION_MS(fn) time_function_ms([&]() { fn; })
 
-#define UMFELD_EMIT_WARNING(fmt, ...)                      \
+#define UMFELD_EMIT_WARNING_ONCE(fmt, ...)                 \
     do {                                                   \
         static bool emitted_warning_##__COUNTER__ = false; \
         if (!emitted_warning_##__COUNTER__) {              \

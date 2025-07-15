@@ -260,7 +260,7 @@ namespace umfeld {
         const std::string fractional  = numStr.substr(dotPos); // ".3"
 
         // pad the integer part with leading zeros
-        if ((int) integerPart.length() < left) {
+        if (static_cast<int>(integerPart.length()) < left) {
             integerPart.insert(0, left - integerPart.length(), '0');
         }
         return integerPart + fractional;
@@ -331,12 +331,27 @@ namespace umfeld {
         return out.str();
     }
 
-    static unsigned int fRandomSeed = static_cast<unsigned int>(std::time(nullptr));
-    static std::mt19937 gen(fRandomSeed); // Create a Mersenne Twister pseudo-random number generator with the specified seed
+    // static unsigned int fRandomSeed = static_cast<unsigned int>(std::chrono::high_resolution_clock::now().time_since_epoch().count());
+    // static std::mt19937 gen(fRandomSeed); // Create a Mersenne Twister pseudo-random number generator with the specified seed
+
+    static uint32_t seed = static_cast<unsigned int>(std::chrono::high_resolution_clock::now().time_since_epoch().count());
 
     void randomSeed(const unsigned int seed) {
-        fRandomSeed = seed; // Update seed
-        gen.seed(seed);     // Re-seed the generator
+        umfeld::seed = seed;
+    }
+
+    static float fastRandom01() {
+        seed = 1664525 * seed + 1013904223;                          // LCG parameters
+        return (seed & 0x00FFFFFF) / static_cast<float>(0x01000000); // keep only lower 24 bits for better float resolution
+    }
+
+    static float xorshiftRandom01() {
+        uint32_t x = seed;
+        x ^= x << 13;
+        x ^= x >> 17;
+        x ^= x << 5;
+        seed = x;
+        return (x & 0x00FFFFFF) / static_cast<float>(0x01000000);
     }
 
     float random(const float max) {
@@ -344,13 +359,30 @@ namespace umfeld {
     }
 
     float random(const float min, const float max) {
-        std::uniform_real_distribution distribution(min, max);
-        return distribution(gen);
+        return min + (max - min) * fastRandom01(); // Use fastRandom01 for speed, but less uniform distribution
+        // return min + (max - min) * xorshiftRandom01(); // Use xorshift for better distribution
     }
 
-    float randomGaussian() {
-        static std::normal_distribution distribution(0.0f, 1.0f);
-        return distribution(gen);
+    float randomGaussian() { // Box-Muller
+        static bool  hasSpare = false;
+        static float spare;
+
+        if (hasSpare) {
+            hasSpare = false;
+            return spare;
+        }
+
+        float u, v, s;
+        do {
+            u = fastRandom01() * 2.0f - 1.0f; // in [-1, 1)
+            v = fastRandom01() * 2.0f - 1.0f;
+            s = u * u + v * v;
+        } while (s >= 1.0f || s == 0.0f);
+
+        s        = std::sqrt(-2.0f * std::log(s) / s);
+        spare    = v * s;
+        hasSpare = true;
+        return u * s;
     }
 
     void size(const int width, const int height, const int renderer) {
@@ -362,13 +394,6 @@ namespace umfeld {
         umfeld::width           = width;
         umfeld::height          = height;
         umfeld::renderer        = renderer;
-    }
-
-    void add_audio_device(int id, int sample_rate) {
-        if (is_initialized()) {
-            warning("`audio()` must be called before or within `settings()`.");
-            return;
-        }
     }
 
     std::string nf(const int num, const int digits) {
@@ -513,7 +538,7 @@ namespace umfeld {
         }
 
         const auto graphics = subsystem_graphics->create_native_graphics(true);
-        graphics->init(nullptr, width, height, false);
+        graphics->init(nullptr, width, height);
         return graphics;
 
         // NOTE `create_native_graphics` should handle all this:
@@ -593,10 +618,10 @@ namespace umfeld {
         return true;
     }
 
-    static size_t WriteCallback(void* contents, size_t size, size_t nmemb, void* userp) {
+    static size_t WriteCallback(void* contents, const size_t size, const size_t nmemb, void* userp) {
         const size_t totalSize = size * nmemb;
         auto*        buffer    = static_cast<std::vector<uint8_t>*>(userp);
-        buffer->insert(buffer->end(), (uint8_t*) contents, (uint8_t*) contents + totalSize);
+        buffer->insert(buffer->end(), static_cast<uint8_t*>(contents), static_cast<uint8_t*>(contents) + totalSize);
         return totalSize;
     }
 
@@ -624,7 +649,7 @@ namespace umfeld {
     static std::vector<uint8_t> decode_base64(const std::string& input) {
         static const std::string base64_chars =
             "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-        auto is_base64 = [](unsigned char c) {
+        auto is_base64 = [](const unsigned char c) {
             return std::isalnum(c) || c == '+' || c == '/';
         };
 

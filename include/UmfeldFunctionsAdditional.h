@@ -184,6 +184,10 @@ namespace umfeld {
 #endif
     }
 
+#define error_in_function(...)   error("'", __func__, "' :: ", __VA_ARGS__)
+#define warning_in_function(...) warning("'", __func__, "' :: ", __VA_ARGS__)
+#define console_in_function(...) console("'", __func__, "' :: ", __VA_ARGS__)
+
     inline std::string format_label(const std::string& label, const size_t width = DEFAULT_CONSOLE_LABEL_WIDTH) {
         if (label.length() >= width) {
             return label + " : "; // Ensure spacing even if label is too long

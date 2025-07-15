@@ -57,6 +57,10 @@ void PGraphics::endDraw() {
 
 void PGraphics::hint(const uint16_t property) {}
 
+int PGraphics::displayDensity() {
+    return pixel_density;
+}
+
 void PGraphics::pixelDensity(const int density) {
     static bool emitted_warning = false;
     if (!emitted_warning && init_properties_locked) {

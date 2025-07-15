@@ -439,9 +439,23 @@ SDL_AppResult SDL_AppInit(void** appstate, const int argc, char* argv[]) {
 
     // NOTE feed back subsystem values to the global variables. values are updated before `setup()` is called
     if (umfeld::g != nullptr && umfeld::enable_graphics) {
+        // NOTE update global variable
         umfeld::width  = umfeld::g->width;
         umfeld::height = umfeld::g->height;
+        if (umfeld::g->displayDensity() > 1) {
+            // NOTE create two pixel buffers if display density is greater than 1 ( e.g retina display )
+            //      g->pixels -> physical size ( w * d * h * d )
+            //      pixels    -> logical size ( w * h )
+            umfeld::g->pixels = new uint32_t[umfeld::g->width * umfeld::g->displayDensity() * umfeld::g->height * umfeld::g->displayDensity()];
+            umfeld::pixels    = new uint32_t[umfeld::g->width * umfeld::g->height];
+        } else {
+            // NOTE create single pixel buffer and share it
+            umfeld::g->pixels = new uint32_t[umfeld::g->width * umfeld::g->height];
+            umfeld::pixels    = umfeld::g->pixels;
+        }
+        // NOTE umfeld now owns the pixel buffer and takes care of deleting it
     }
+
     if (umfeld::a != nullptr && umfeld::enable_audio) {
         // NOTE copy values back to global variables after initialization … a bit hackish but well.
         umfeld::audio_input_device_id    = umfeld::a->input_device_id;
@@ -635,6 +649,17 @@ void SDL_AppQuit(void* appstate, SDL_AppResult result) {
             delete umfeld::subsystem_hid_events;
         }
         umfeld::subsystem_hid_events = nullptr;
+    }
+    if (umfeld::pixels != nullptr) {
+        delete[] umfeld::pixels;
+        umfeld::pixels = nullptr;
+        if (umfeld::g->displayDensity() > 1) {
+            // NOTE delete the pixel buffer if it was created with a display density
+            delete[] umfeld::g->pixels;
+            umfeld::g->pixels = nullptr;
+        } else {
+            umfeld::g->pixels = nullptr;
+        }
     }
 
     umfeld::subsystems.clear();

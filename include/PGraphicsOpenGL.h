@@ -351,41 +351,47 @@ namespace umfeld {
 
         /* --- interface --- */
 
-        void        init(uint32_t* pixels, int width, int height, bool generate_mipmap) override                                                        = 0;
-        void        upload_texture(PImage* img, const uint32_t* pixel_data, int width, int height, int offset_x, int offset_y, bool mipmapped) override = 0;
-        void        download_texture(PImage* img) override                                                                                              = 0;
-        std::string name() override                                                                                                                     = 0;
+        void        init(uint32_t* pixels, int width, int height) override                                                              = 0;
+        void        upload_texture(PImage* img, const uint32_t* pixel_data, int width, int height, int offset_x, int offset_y) override = 0;
+        void        download_texture(PImage* img) override                                                                              = 0;
+        std::string name() override                                                                                                     = 0;
 
         /* --- additional methods --- */
 
-        bool OGL_read_framebuffer(const FrameBufferObject& framebuffer, std::vector<unsigned char>& pixels) {
+        static bool OGL_read_framebuffer(const FrameBufferObject& framebuffer, std::vector<unsigned char>& pixels) {
             const int _width  = framebuffer.width;
             const int _height = framebuffer.height;
             pixels.resize(_width * _height * DEFAULT_BYTES_PER_PIXELS);
             glPixelStorei(GL_PACK_ALIGNMENT, 4);
             glReadPixels(0, 0, _width, _height,
-                         UMFELD_DEFAULT_INTERNAL_PIXEL_FORMAT,
+                         UMFELD_DEFAULT_EXTERNAL_PIXEL_FORMAT,
                          UMFELD_DEFAULT_TEXTURE_PIXEL_TYPE,
                          pixels.data());
             return true;
         }
 
-        bool OGL_generate_and_upload_image_as_texture(PImage* image, const bool generate_texture_mipmapped) {
+        bool OGL_generate_and_upload_image_as_texture(PImage* image) {
             if (image == nullptr) {
-                error("Failed to upload texture because image nullptr.");
+                error_in_function("image is nullptr");
                 return false;
             }
 
             if (image->pixels == nullptr) {
-                error("Failed to upload texture because pixels are null. make sure pixel array exists.");
+                error_in_function("pixel data is nullptr");
                 return false;
             }
 
+            if (width <= 0 || height <= 0) {
+                error_in_function("invalid width or height");
+                return false;
+            }
+
+            // generate texture ID
             GLuint mTextureID;
             glGenTextures(1, &mTextureID);
 
             if (mTextureID == 0) {
-                error("Failed to generate texture ID");
+                error_in_function("texture ID generation failed");
                 return false;
             }
 
@@ -393,8 +399,8 @@ namespace umfeld {
             const int tmp_bound_texture = texture_id_current;
             IMPL_bind_texture(image->texture_id);
 
-            // Set texture parameters
-            if (generate_texture_mipmapped) {
+            // set texture parameters
+            if (image->get_auto_generate_mipmap()) {
                 texture_wrap(CLAMP_TO_EDGE);
                 texture_filter(MIPMAP);
             } else {
@@ -402,7 +408,7 @@ namespace umfeld {
                 texture_filter(LINEAR);
             }
 
-            // Load image data
+            // load image data
             glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
             glTexImage2D(GL_TEXTURE_2D,
                          0,
@@ -410,21 +416,11 @@ namespace umfeld {
                          static_cast<GLint>(image->width),
                          static_cast<GLint>(image->height),
                          0,
-                         UMFELD_DEFAULT_INTERNAL_PIXEL_FORMAT,
+                         UMFELD_DEFAULT_EXTERNAL_PIXEL_FORMAT,
                          UMFELD_DEFAULT_TEXTURE_PIXEL_TYPE,
                          image->pixels);
 
-            // TODO this does not work … need to test differently for OpenGL 2.0
-            // if (generate_texture_mipmapped) {
-            //     if (has_fbo_extension) {
-            // glGenerateMipmap(GL_TEXTURE_2D);
-            //     } else {
-            //         // fallback for OpenGL 2.0
-            //         glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_TRUE); // must be BEFORE glTexImage2D
-            //     }
-            // }
-
-            if (generate_texture_mipmapped) {
+            if (image->get_auto_generate_mipmap()) {
                 glGenerateMipmap(GL_TEXTURE_2D); // NOTE this works on macOS … but might not work on all platforms
             }
 

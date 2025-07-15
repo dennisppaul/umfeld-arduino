@@ -496,14 +496,101 @@ namespace umfeld {
         g->debug_text(text, x, y);
     }
 
-    void texture_filter(TextureFilter filter) {
-        if (g == nullptr) { return;}
+    void texture_filter(const TextureFilter filter) {
+        if (g == nullptr) { return; }
         g->texture_filter(filter);
     }
 
-    void texture_wrap(TextureWrap wrap) {
-        if (g == nullptr) { return;}
+    void texture_wrap(const TextureWrap wrap) {
+        if (g == nullptr) { return; }
         g->texture_wrap(wrap);
     }
 
+    void loadPixels(const bool update_logical_buffer) {
+        if (g == nullptr) {
+            return;
+        }
+
+        if (g->pixels == nullptr || pixels == nullptr) {
+            error_in_function("pixels is null, cannot load pixels.");
+            return;
+        }
+
+        g->download_colorbuffer(g->pixels);
+
+        const int d = g->displayDensity();
+        if (!update_logical_buffer || d <= 1) {
+            return;
+        }
+
+        // TODO downsample g->pixels to pixels
+        // pixels;    // logical size (w*h)
+        // g->pixels; // physical size (w*d*h*d)
+
+        const int phys_w = width * d;
+        const int phys_h = height * d;
+
+        for (int y = 0; y < height; ++y) {
+            for (int x = 0; x < width; ++x) {
+                uint32_t r = 0, g_ = 0, b = 0, a = 0;
+
+                for (int dy = 0; dy < d; ++dy) {
+                    for (int dx = 0; dx < d; ++dx) {
+                        const int      px    = x * d + dx;
+                        const int      py    = y * d + dy;
+                        const uint32_t color = g->pixels[py * phys_w + px];
+
+                        r += (color >> 16) & 0xFF;
+                        g_ += (color >> 8) & 0xFF;
+                        b += (color) & 0xFF;
+                        a += (color >> 24) & 0xFF;
+                    }
+                }
+
+                const int area = d * d;
+                r /= area;
+                g_ /= area;
+                b /= area;
+                a /= area;
+
+                pixels[y * static_cast<int>(width) + x] = (a << 24) | (r << 16) | (g_ << 8) | b;
+            }
+        }
+    }
+
+    void updatePixels(const bool update_logical_buffer) {
+        if (g == nullptr) {
+            return;
+        }
+
+        if (g->pixels == nullptr || pixels == nullptr) {
+            error_in_function("pixels is null, cannot load pixels.");
+            return;
+        }
+
+        const int d = g->displayDensity();
+        if (update_logical_buffer && d > 1) {
+            // TODO upscale pixels to g->pixels
+            // pixels;    // logical size (w*h)
+            // g->pixels; // physical size (w*d*h*d)
+            const int phys_w = width * d;
+            const int phys_h = height * d;
+
+            for (int y = 0; y < height; ++y) {
+                for (int x = 0; x < width; ++x) {
+                    const uint32_t color = pixels[y * static_cast<int>(width) + x];
+
+                    for (int dy = 0; dy < d; ++dy) {
+                        for (int dx = 0; dx < d; ++dx) {
+                            const int px                = x * d + dx;
+                            const int py                = y * d + dy;
+                            g->pixels[py * phys_w + px] = color;
+                        }
+                    }
+                }
+            }
+        }
+
+        g->upload_colorbuffer(g->pixels);
+    }
 } // namespace umfeld

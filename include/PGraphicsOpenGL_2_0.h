@@ -43,7 +43,7 @@ namespace umfeld {
         void bind_fbo() override;
         void finish_fbo() override;
 
-        void upload_texture(PImage* img, const uint32_t* pixel_data, int width, int height, int offset_x, int offset_y, bool mipmapped) override;
+        void upload_texture(PImage* img, const uint32_t* pixel_data, int width, int height, int offset_x, int offset_y) override;
         void download_texture(PImage* img) override;
 
         void beginDraw() override;
@@ -52,7 +52,7 @@ namespace umfeld {
         void reset_mvp_matrices() override;
         void restore_mvp_matrices() override;
 
-        void        init(uint32_t* pixels, int width, int height, bool generate_mipmap) override;
+        void        init(uint32_t* pixels, int width, int height) override;
         std::string name() override { return "PGraphicsOpenGL_2_0"; }
 
         /* --- standard drawing functions --- */

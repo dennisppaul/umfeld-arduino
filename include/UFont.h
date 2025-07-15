@@ -64,7 +64,7 @@ namespace umfeld {
                          UMFELD_DEFAULT_INTERNAL_PIXEL_FORMAT,
                          FONT_ATLAS_WIDTH,
                          FONT_ATLAS_HEIGHT, 0,
-                         UMFELD_DEFAULT_INTERNAL_PIXEL_FORMAT,
+                         UMFELD_DEFAULT_EXTERNAL_PIXEL_FORMAT,
                          UMFELD_DEFAULT_TEXTURE_PIXEL_TYPE,
                          pixelData);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);

@@ -173,8 +173,7 @@ int Movie::init_from_file(const std::string& filename, int _channels) {
 
     PImage::init(reinterpret_cast<uint32_t*>(convertedFrame->data[0]),
                  videoCodecContext->width,
-                 videoCodecContext->height,
-                 false);
+                 videoCodecContext->height);
 
 #ifndef OMIT_PRINT_MOVIE_INFO
     std::cout << "+++ Movie: dimensions    : " << videoCodecContext->width << ", " << videoCodecContext->height << std::endl;

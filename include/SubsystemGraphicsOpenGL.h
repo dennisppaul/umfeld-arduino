@@ -164,7 +164,8 @@ namespace umfeld {
         console(fl("pixel_density"), pixel_density, width != framebuffer_width ? " ( note that if graphics and framebuffer size do not align the pixel density should not be 1 )" : "");
         g->pixelDensity(pixel_density); // NOTE setting pixel density from actual configuration
 
-        g->init(nullptr, framebuffer_width, framebuffer_height, false);
+        g->set_auto_generate_mipmap(false);
+        g->init(nullptr, framebuffer_width, framebuffer_height);
         g->width  = width;
         g->height = height;
         g->lock_init_properties(true);

@@ -86,6 +86,7 @@ namespace umfeld {
 
     /* --- graphics --- */
     inline PGraphics* g              = nullptr;
+    inline uint32_t*  pixels         = nullptr;
     inline float      width          = DEFAULT_WINDOW_WIDTH;
     inline float      height         = DEFAULT_WINDOW_HEIGHT;
     inline int        frameCount     = 0;
@@ -105,7 +106,7 @@ namespace umfeld {
     /* public variables *mainly for internal use* */
 
     inline bool                    use_esc_key_to_quit = true;
-    inline bool                    request_shutdown = false;
+    inline bool                    request_shutdown    = false;
     inline std::vector<Subsystem*> subsystems;
     inline SubsystemGraphics*      subsystem_graphics   = nullptr;
     inline SubsystemAudio*         subsystem_audio      = nullptr;

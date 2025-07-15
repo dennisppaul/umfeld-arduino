@@ -86,6 +86,7 @@ namespace umfeld {
             width  = static_cast<float>(font->atlas_width);
             height = static_cast<float>(font->atlas_height);
             pixels = new uint32_t[static_cast<int>(width * height)];
+            set_auto_generate_mipmap(true); // NOTE set mipmap generation to true by default
             copy_atlas_to_rgba(*font, reinterpret_cast<unsigned char*>(pixels));
 
             console(format_label("PFont"), "atlas created");

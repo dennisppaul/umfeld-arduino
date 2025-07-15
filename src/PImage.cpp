@@ -45,8 +45,9 @@ PImage::PImage(const int width, const int height) : width(static_cast<float>(wid
     if (length <= 0) {
         return;
     }
-    pixels = new uint32_t[length]{0x00000000};
-    PImage::init(pixels, width, height, false);
+    pixels                = new uint32_t[length]{0x00000000};
+    clean_up_pixel_buffer = true;
+    PImage::init(pixels, width, height);
 }
 
 PImage::PImage(const uint8_t* raw_byte_pixel_data, const int width, const int height, const uint8_t channels) : width(static_cast<float>(width)),
@@ -62,7 +63,7 @@ PImage::PImage(const uint8_t* raw_byte_pixel_data, const int width, const int he
         if (requested_channels != channels) {
             warning("unsupported image channels, defaulting to RGBA forcing 4 color channels.");
         }
-        PImage::init(pixels, this->width, this->height, true);
+        PImage::init(pixels, this->width, this->height);
     } else {
         error("failed to create image. raw byte data is null");
         return;
@@ -78,7 +79,7 @@ PImage::PImage(const uint8_t* raw_byte_data, const uint32_t length) : width(0),
     uint8_t* raw_pixel_byte_data = stbi_load_from_memory(raw_byte_data, length, &_width, &_height, &_channels, 0);
     console("creating image from raw image data: ", _width, "x", _height, " with ", _channels, " channels");
     pixels = convert_bytes_to_pixels(_width, _height, _channels, raw_pixel_byte_data);
-    PImage::init(pixels, _width, _height, true);
+    PImage::init(pixels, _width, _height);
     stbi_image_free(raw_pixel_byte_data);
 }
 
@@ -96,11 +97,23 @@ PImage::PImage(const std::string& filepath) : width(0),
     uint8_t* raw_pixel_byte_data = stbi_load(filepath.c_str(), &_width, &_height, &_channels, 0);
     if (raw_pixel_byte_data) {
         pixels = convert_bytes_to_pixels(_width, _height, _channels, raw_pixel_byte_data);
-        PImage::init(pixels, _width, _height, true);
+        PImage::init(pixels, _width, _height);
     } else {
         error("failed to load image: ", filepath);
     }
     stbi_image_free(raw_pixel_byte_data);
+}
+
+PImage::~PImage() {
+    if (pixels != nullptr && clean_up_pixel_buffer) {
+        delete[] pixels;
+        pixels = nullptr;
+    }
+    if (sdl_texture != nullptr) {
+        SDL_DestroyTexture(sdl_texture);
+        sdl_texture = nullptr;
+    }
+    texture_id = TEXTURE_NOT_GENERATED; // reset texture ID
 }
 
 uint32_t* PImage::convert_bytes_to_pixels(const int width, const int height, const int channels, const uint8_t* data) {
@@ -111,24 +124,22 @@ uint32_t* PImage::convert_bytes_to_pixels(const int width, const int height, con
     for (int i = 0; i < width * height; ++i) {
         const int j = i * channels;
         if (channels == 4) {
-            pixels[i] = RGBA(data[j + 0], data[j + 1], data[j + 2], data[j + 3]);
+            pixels[i] = RGBA255(data[j + 0], data[j + 1], data[j + 2], data[j + 3]);
         } else if (channels == 3) {
-            pixels[i] = RGBA(data[j + 0], data[j + 1], data[j + 2], 0xFF);
+            pixels[i] = RGBA255(data[j + 0], data[j + 1], data[j + 2], 0xFF);
         }
     }
 
-    if (channels == 3) {
-        console("RGB was converted to RGBA and number of channels is changed to 4");
-    }
+    // if (channels == 3) {
+    //     UMFELD_EMIT_WARNING_ONCE("RGB was converted to RGBA and number of channels is changed to 4");
+    // }
 
     return pixels;
 }
 
-void PImage::init(uint32_t*  pixels,
-                  const int  width,
-                  const int  height,
-                  const bool generate_mipmap) {
-    // TODO not so happy with `generate_mipmap` it is too OpenGL specific
+void PImage::init(uint32_t* pixels,
+                  const int width,
+                  const int height) {
     if (pixels == nullptr) {
         warning(umfeld::format_label("PImage::init()"), "pixel buffer is not initialized ( might be intentional )");
     }
@@ -152,10 +163,10 @@ void PImage::update(PGraphics*   graphics,
     uint32_t  mPixels[length];
     for (int i = 0; i < width * height; ++i) {
         const int j = i * 4;
-        mPixels[i]  = RGBA(clamp(pixel_data[j + 0]) * 255,
-                           clamp(pixel_data[j + 1]) * 255,
-                           clamp(pixel_data[j + 2]) * 255,
-                           clamp(pixel_data[j + 3]) * 255);
+        mPixels[i]  = RGBA(clamp(pixel_data[j + 0]),
+                           clamp(pixel_data[j + 1]),
+                           clamp(pixel_data[j + 2]),
+                           clamp(pixel_data[j + 3]));
     }
     update(graphics, mPixels, width, height, offset_x, offset_y);
 }
@@ -164,7 +175,7 @@ void PImage::update_full_internal(PGraphics* graphics) {
     graphics->upload_texture(this,
                              pixels,
                              static_cast<int>(width), static_cast<int>(height),
-                             0, 0, true);
+                             0, 0);
 }
 
 void PImage::update(PGraphics* graphics, const uint32_t* pixel_data) {
@@ -195,9 +206,6 @@ void PImage::updatePixels(PGraphics* graphics, const int x, const int y, const i
     delete[] mPixels;
 }
 
-/**
- * @deprecated this should not use OpenGL directly
- */
 void PImage::loadPixels(PGraphics* graphics) {
     if (graphics == nullptr) {
         return;
@@ -238,5 +246,5 @@ void PImage::update(PGraphics*      graphics,
         }
     }
 
-    graphics->upload_texture(this, pixel_data, width, height, offset_x, offset_y, true);
+    graphics->upload_texture(this, pixel_data, width, height, offset_x, offset_y);
 }

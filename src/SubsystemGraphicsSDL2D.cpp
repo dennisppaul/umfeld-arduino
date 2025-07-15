@@ -29,7 +29,7 @@ namespace umfeld {
     static void setup_pre() {
         int w = 0, h = 0;
         SDL_GetRenderOutputSize(sdl_renderer, &w, &h);
-        umfeld::g->init(nullptr, w, h, false);
+        umfeld::g->init(nullptr, w, h);
     }
 
     static void setup_post() { printf("Setup Post\n"); }

@@ -188,7 +188,7 @@ namespace umfeld {
         void endDraw() override {}
         void mesh(VertexBuffer* mesh_shape) override { /* TODO implement */ }
 
-        void init(uint32_t* pixels, const int width, const int height, bool generate_mipmap) override {
+        void init(uint32_t* pixels, const int width, const int height) override {
             this->width  = width;
             this->height = height;
             // framebuffer.width  = width;

@@ -119,6 +119,8 @@ namespace umfeld {
     void     printProjection();
     void     lights();
     void     noLights();
+    void     loadPixels(bool update_logical_buffer = true);
+    void     updatePixels(bool update_logical_buffer = true);
 
     /* --- additional --- */
 

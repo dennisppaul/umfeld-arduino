@@ -219,14 +219,16 @@ namespace umfeld {
         virtual void emissive(float r, float g, float b) {}
         virtual void shininess(float s) {}
 
+        void         loadPixels() { download_texture(this); }
+        void         updatePixels() { update_full_internal(this); }
+        virtual void pixelDensity(int density);
+        virtual int  displayDensity();
+
         /* --- additional --- */
 
         virtual void        mesh(VertexBuffer* mesh_shape) {}
-        virtual void        upload_texture(PImage* img, const uint32_t* pixel_data, int width, int height, int offset_x, int offset_y, bool mipmapped) {}
-        virtual void        download_texture(PImage* img) {}
         virtual void        lock_init_properties(const bool lock_properties) { init_properties_locked = lock_properties; }
         virtual void        hint(uint16_t property);
-        virtual void        pixelDensity(int density);
         virtual void        text_str(const std::string& text, float x, float y, float z = 0.0f); // TODO maybe make this private?
         virtual void        debug_text(const std::string& text, float x, float y) {}             // TODO implement this in derived PGraphics
         void                to_screen_space(glm::vec3& model_position) const;                    // NOTE: convert from model space to screen space
@@ -245,6 +247,11 @@ namespace umfeld {
         float               get_stroke_weight() const { return stroke_weight; }
         virtual void        texture_filter(TextureFilter filter) {}
         virtual void        texture_wrap(TextureWrap wrap) {}
+
+        virtual void upload_texture(PImage* img, const uint32_t* pixel_data, int width, int height, int offset_x, int offset_y) {}
+        virtual void download_texture(PImage* img) {}
+        virtual void upload_colorbuffer(uint32_t* pixels) {}
+        virtual void download_colorbuffer(uint32_t* pixels) {}
 
         template<typename T>
         void text(const T& value, const float x, const float y, const float z = 0.0f) {

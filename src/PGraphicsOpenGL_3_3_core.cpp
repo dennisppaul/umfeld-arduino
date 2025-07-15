@@ -61,6 +61,7 @@ void PGraphicsOpenGL_3_3_core::IMPL_background(const float a, const float b, con
 void PGraphicsOpenGL_3_3_core::IMPL_bind_texture(const int bind_texture_id) {
     if (bind_texture_id != texture_id_current) {
         texture_id_current = bind_texture_id;
+        glActiveTexture(GL_TEXTURE0 + DEFAULT_ACTIVE_TEXTURE_UNIT);
         glBindTexture(GL_TEXTURE_2D, texture_id_current); // NOTE this should be the only glBindTexture ( except for initializations )
     }
 }
@@ -665,7 +666,7 @@ void PGraphicsOpenGL_3_3_core::init(uint32_t* pixels,
             GLuint    msaaDepthBuffer;
             const int samples = std::min(msaa_samples, maxSamples); // Number of MSAA samples
             console(format_label("number of used MSAA samples"), samples);
-            glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, framebuffer.texture_id);
+            glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, framebuffer.texture_id); // NOTE no need to use `IMPL_bind_texture()`
             UMFELD_PGRAPHICS_OPENGL_3_3_CORE_CHECK_ERRORS("glBindTexture");
 #ifndef OPENGL_ES_3_0
             glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE,
@@ -737,7 +738,7 @@ void PGraphicsOpenGL_3_3_core::init(uint32_t* pixels,
     } else {
         GLuint _buffer_texture_id;
         glGenTextures(1, &_buffer_texture_id);
-        glBindTexture(GL_TEXTURE_2D, _buffer_texture_id);
+        glBindTexture(GL_TEXTURE_2D, _buffer_texture_id); // NOTE no need to use `IMPL_bind_texture()`
         glTexImage2D(GL_TEXTURE_2D, 0,
                      UMFELD_DEFAULT_INTERNAL_PIXEL_FORMAT,
                      width, height,
@@ -749,7 +750,6 @@ void PGraphicsOpenGL_3_3_core::init(uint32_t* pixels,
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        console("creating buffer texture: ", _buffer_texture_id, " with size ", width, "×", height);
         texture_id = _buffer_texture_id;
     }
 
@@ -862,7 +862,7 @@ void PGraphicsOpenGL_3_3_core::update_shader_matrices(PShader* shader) const {
         shader->set_uniform(SHADER_UNIFORM_PROJECTION_MATRIX, projection_matrix);
     }
     if (shader->has_texture_unit) {
-        shader->set_uniform(SHADER_UNIFORM_TEXTURE_UNIT, 0);
+        shader->set_uniform(SHADER_UNIFORM_TEXTURE_UNIT, DEFAULT_ACTIVE_TEXTURE_UNIT);
     }
 }
 
@@ -931,41 +931,58 @@ void PGraphicsOpenGL_3_3_core::resetShader() {
 }
 
 bool PGraphicsOpenGL_3_3_core::read_framebuffer(std::vector<unsigned char>& pixels) {
-    store_fbo_state();
-    if (framebuffer.msaa) {
-        // NOTE this is a bit tricky. when the offscreen FBO is a multisample FBO ( MSAA ) we need to resolve it first
-        //      i.e blit it into the color buffer of the default framebuffer. otherwise we can just read from the
-        //      offscreen FBO.
-        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-        glBindFramebuffer(GL_READ_FRAMEBUFFER, framebuffer.id);
-        glBlitFramebuffer(0, 0, framebuffer.width, framebuffer.height,
-                          0, 0, framebuffer.width, framebuffer.height,
-                          GL_COLOR_BUFFER_BIT, GL_LINEAR);
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    if (render_to_offscreen) {
+        store_fbo_state();
+        if (framebuffer.msaa) {
+            // NOTE this is a bit tricky. when the offscreen FBO is a multisample FBO ( MSAA ) we need to resolve it first
+            //      i.e blit it into the color buffer of the default framebuffer. otherwise we can just read from the
+            //      offscreen FBO.
+            glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+            glBindFramebuffer(GL_READ_FRAMEBUFFER, framebuffer.id);
+            glBlitFramebuffer(0, 0, framebuffer.width, framebuffer.height,
+                              0, 0, framebuffer.width, framebuffer.height,
+                              GL_COLOR_BUFFER_BIT, GL_LINEAR);
+            glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        } else {
+            glBindFramebuffer(GL_FRAMEBUFFER, framebuffer.id); // non-MSAA FBO or default
+        }
+        const bool success = OGL_read_framebuffer(framebuffer, pixels);
+        restore_fbo_state();
+        return success;
     } else {
-        glBindFramebuffer(GL_FRAMEBUFFER, framebuffer.id); // non-MSAA FBO or default
+        const bool success = OGL_read_framebuffer(framebuffer, pixels);
+        return success;
     }
-    const bool success = OGL_read_framebuffer(framebuffer, pixels);
-    restore_fbo_state();
-    return success;
 }
 
 void PGraphicsOpenGL_3_3_core::store_fbo_state() {
-    glGetIntegerv(GL_CURRENT_PROGRAM, &previous_shader);
-    glGetIntegerv(GL_VIEWPORT, previous_viewport);
-    glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING, &previously_bound_read_FBO);
-    glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &previously_bound_draw_FBO);
+    if (render_to_offscreen) {
+        glGetIntegerv(GL_CURRENT_PROGRAM, &previous_shader);
+        glGetIntegerv(GL_VIEWPORT, previous_viewport);
+        glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING, &previously_bound_read_FBO);
+        glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &previously_bound_draw_FBO);
+    } else {
+        UMFELD_EMIT_WARNING_ONCE("store_fbo_state() requires render_to_offscreen to be true. ");
+    }
 }
 
 void PGraphicsOpenGL_3_3_core::bind_fbo() {
-    glBindFramebuffer(GL_FRAMEBUFFER, framebuffer.id);
+    if (render_to_offscreen) {
+        glBindFramebuffer(GL_FRAMEBUFFER, framebuffer.id);
+    } else {
+        UMFELD_EMIT_WARNING_ONCE("bind_fbo() requires render_to_offscreen to be true. ");
+    }
 }
 
 void PGraphicsOpenGL_3_3_core::restore_fbo_state() {
-    glBindFramebuffer(GL_READ_FRAMEBUFFER, previously_bound_read_FBO);
-    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, previously_bound_draw_FBO);
-    glViewport(previous_viewport[0], previous_viewport[1], previous_viewport[2], previous_viewport[3]);
-    glUseProgram(previous_shader);
+    if (render_to_offscreen) {
+        glBindFramebuffer(GL_READ_FRAMEBUFFER, previously_bound_read_FBO);
+        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, previously_bound_draw_FBO);
+        glViewport(previous_viewport[0], previous_viewport[1], previous_viewport[2], previous_viewport[3]);
+        glUseProgram(previous_shader);
+    } else {
+        UMFELD_EMIT_WARNING_ONCE("restore_fbo_state() requires render_to_offscreen to be true. ");
+    }
 }
 
 void PGraphicsOpenGL_3_3_core::update_all_shader_matrices() const {
@@ -1314,9 +1331,12 @@ void PGraphicsOpenGL_3_3_core::upload_colorbuffer(uint32_t* pixels) {
         error_in_function("pixels pointer is null, cannot upload color buffer.");
         return;
     }
+
     if (render_to_offscreen) {
         if (!framebuffer.msaa) {
-            glBindTexture(GL_TEXTURE_2D, framebuffer.texture_id);
+            flip_pixel_buffer(pixels);
+            push_texture_id();
+            IMPL_bind_texture(framebuffer.texture_id);
             glPixelStorei(GL_UNPACK_ALIGNMENT, 4); // assumes tightly packed RGBA8
             glTexSubImage2D(GL_TEXTURE_2D,
                             0,
@@ -1326,8 +1346,70 @@ void PGraphicsOpenGL_3_3_core::upload_colorbuffer(uint32_t* pixels) {
                             UMFELD_DEFAULT_EXTERNAL_PIXEL_FORMAT,
                             UMFELD_DEFAULT_TEXTURE_PIXEL_TYPE,
                             pixels);
+            pop_texture_id();
         } else {
-            UMFELD_EMIT_WARNING_ONCE("cannot directly upload pixel data to multisample FBO texture.");
+            // TODO this is more a proof of concept and NEEDS to be improved
+            // upload pixels to intermediate non-MSAA texture
+            GLuint tempTexture;
+            glGenTextures(1, &tempTexture);
+            glBindTexture(GL_TEXTURE_2D, tempTexture);
+            glTexImage2D(GL_TEXTURE_2D, 0,
+                         UMFELD_DEFAULT_INTERNAL_PIXEL_FORMAT,
+                         framebuffer.width, framebuffer.height, 0,
+                         UMFELD_DEFAULT_EXTERNAL_PIXEL_FORMAT,
+                         UMFELD_DEFAULT_TEXTURE_PIXEL_TYPE,
+                         pixels);
+
+            // setup texture parameters
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+            // bind MSAA framebuffer
+            store_fbo_state();
+            bind_fbo(); // binds `framebuffer.id` (your MSAA FBO)
+            glViewport(0, 0, framebuffer.width, framebuffer.height);
+
+            // draw fullscreen quad using shader_fill_texture
+            shader_fill_texture->use();
+            update_shader_matrices(shader_fill_texture);
+
+            push_texture_id();
+            IMPL_bind_texture(tempTexture);
+
+            // draw quad
+            std::vector<Vertex> fullscreen_quad;
+            constexpr glm::vec4 color(1.0f, 1.0f, 1.0f, 1.0f); // white color
+            // const int           width  = this->framebuffer.width;
+            // const int           height = this->framebuffer.height;
+            const int width  = this->width;
+            const int height = this->height;
+            // TODO there is room for optimization below this line ...
+            fullscreen_quad.emplace_back(0, 0, 0,
+                                         color.r, color.g, color.b, color.a,
+                                         0, 0);
+            fullscreen_quad.emplace_back(width, 0, 0,
+                                         color.r, color.g, color.b, color.a,
+                                         1, 0);
+            fullscreen_quad.emplace_back(width, height, 0,
+                                         color.r, color.g, color.b, color.a,
+                                         1, 1);
+            fullscreen_quad.emplace_back(0, 0, 0,
+                                         color.r, color.g, color.b, color.a,
+                                         0, 0);
+            fullscreen_quad.emplace_back(width, height, 0,
+                                         color.r, color.g, color.b, color.a,
+                                         1, 1);
+            fullscreen_quad.emplace_back(0, height, 0,
+                                         color.r, color.g, color.b, color.a,
+                                         0, 1);
+            OGL3_render_vertex_buffer(vertex_buffer, GL_TRIANGLES, fullscreen_quad);
+
+            // cleanup
+            pop_texture_id();
+            restore_fbo_state();
+            glDeleteTextures(1, &tempTexture);
         }
     } else {
         push_texture_id();
@@ -1335,16 +1417,22 @@ void PGraphicsOpenGL_3_3_core::upload_colorbuffer(uint32_t* pixels) {
         glTexSubImage2D(GL_TEXTURE_2D,
                         0,
                         0, 0,
-                        width, height,
+                        this->framebuffer.width,
+                        this->framebuffer.height,
+                        // width,
+                        // height,
                         UMFELD_DEFAULT_EXTERNAL_PIXEL_FORMAT,
                         UMFELD_DEFAULT_TEXTURE_PIXEL_TYPE,
                         pixels);
         shader_fill_texture->use();
         update_shader_matrices(shader_fill_texture);
         std::vector<Vertex> fullscreen_quad;
-        glm::vec4           color(1.0f, 1.0f, 1.0f, 1.0f); // white color
-        const int           width  = this->framebuffer.width;
-        const int           height = this->framebuffer.height;
+        constexpr glm::vec4 color(1.0f, 1.0f, 1.0f, 1.0f); // white color
+        // const int           width  = this->framebuffer.width;
+        // const int           height = this->framebuffer.height;
+        const int width  = this->width;
+        const int height = this->height;
+        // TODO there is room for optimization below this line ...
         fullscreen_quad.emplace_back(0, 0, 0,
                                      color.r, color.g, color.b, color.a,
                                      0, 0);
@@ -1382,7 +1470,9 @@ void PGraphicsOpenGL_3_3_core::download_colorbuffer(uint32_t* pixels) {
             glGenFramebuffers(1, &tempFBO);
             glGenTextures(1, &tempTex);
 
-            glBindTexture(GL_TEXTURE_2D, tempTex);
+            push_texture_id();
+            IMPL_bind_texture(tempTex);
+
             glTexImage2D(GL_TEXTURE_2D, 0,
                          UMFELD_DEFAULT_INTERNAL_PIXEL_FORMAT,
                          framebuffer.width,
@@ -1419,6 +1509,8 @@ void PGraphicsOpenGL_3_3_core::download_colorbuffer(uint32_t* pixels) {
             // Cleanup
             glDeleteTextures(1, &tempTex);
             glDeleteFramebuffers(1, &tempFBO);
+
+            pop_texture_id();
         } else {
             // Direct read from FBO
             glBindFramebuffer(GL_FRAMEBUFFER, framebuffer.id);
@@ -1432,13 +1524,30 @@ void PGraphicsOpenGL_3_3_core::download_colorbuffer(uint32_t* pixels) {
         }
         restore_fbo_state();
     } else {
-        std::vector<unsigned char> rgba_bytes(width * height * 4);
-        if (g->read_framebuffer(rgba_bytes)) {
-            std::memcpy(pixels, rgba_bytes.data(), rgba_bytes.size() / 4 * sizeof(uint32_t));
-        } else {
-            error_in_function("failed to read pixels");
-        }
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        glPixelStorei(GL_PACK_ALIGNMENT, 4);
+        glReadPixels(0, 0, framebuffer.width, framebuffer.height,
+                     UMFELD_DEFAULT_EXTERNAL_PIXEL_FORMAT,
+                     UMFELD_DEFAULT_TEXTURE_PIXEL_TYPE,
+                     pixels);
     }
+
+    flip_pixel_buffer(pixels);
+}
+
+void PGraphicsOpenGL_3_3_core::flip_pixel_buffer(uint32_t* pixels) {
+    const int  d      = displayDensity();
+    const int  phys_w = width * d;
+    const int  phys_h = height * d;
+    const auto tmp    = new uint32_t[phys_w * phys_h];
+    std::memcpy(tmp, pixels, phys_w * phys_h * sizeof(uint32_t));
+    for (int y = 0; y < phys_h; ++y) {
+        const int flipped_y = phys_h - 1 - y;
+        std::memcpy(&pixels[y * phys_w],
+                    &tmp[flipped_y * phys_w],
+                    phys_w * sizeof(uint32_t));
+    }
+    delete[] tmp;
 }
 
 #endif // UMFELD_PGRAPHICS_OPENGLV33_CPP

@@ -118,6 +118,7 @@ namespace umfeld {
         GLint                    previously_bound_draw_FBO = 0;
         GLint                    previous_viewport[4]{};
         GLint                    previous_shader{0};
+        int                      DEFAULT_ACTIVE_TEXTURE_UNIT = 0; // NOTE OpenGL ES 3.0 does not support multiple texture units
 
         /* --- lights --- */
 
@@ -170,5 +171,6 @@ namespace umfeld {
         void        update_shader_matrices(PShader* shader) const;
         static void reset_shader_matrices(PShader* shader);
         static void add_line_quad(const Vertex& p0, const Vertex& p1, float thickness, std::vector<Vertex>& out);
+        void        flip_pixel_buffer(uint32_t* pixels);
     };
 } // namespace umfeld

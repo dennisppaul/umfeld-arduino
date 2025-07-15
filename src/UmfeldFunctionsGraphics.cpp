@@ -507,9 +507,7 @@ namespace umfeld {
     }
 
     void loadPixels(const bool update_logical_buffer) {
-        if (g == nullptr) {
-            return;
-        }
+        if (g == nullptr) { return; }
 
         if (g->pixels == nullptr || pixels == nullptr) {
             error_in_function("pixels is null, cannot load pixels.");
@@ -518,42 +516,68 @@ namespace umfeld {
 
         g->download_colorbuffer(g->pixels);
 
-        const int d = g->displayDensity();
+        const int d      = g->displayDensity();
+        const int phys_w = width * d;
+
         if (!update_logical_buffer || d <= 1) {
             return;
         }
 
-        // TODO downsample g->pixels to pixels
-        // pixels;    // logical size (w*h)
-        // g->pixels; // physical size (w*d*h*d)
+        // NOTE down-scale pixels from physical to logical size
+        //      `g->pixels` ( physical size (w*d*h*d) ) to `pixels` ( logical size (w*h) )
 
-        const int phys_w = width * d;
-        const int phys_h = height * d;
+        const int width_i  = static_cast<int>(width);
+        const int height_i = static_cast<int>(height);
 
-        for (int y = 0; y < height; ++y) {
-            for (int x = 0; x < width; ++x) {
-                uint32_t r = 0, g_ = 0, b = 0, a = 0;
+        if (update_logical_buffer) {
+            if (d == 2) {
+                for (int y = 0; y < height_i; ++y) {
+                    for (int x = 0; x < width_i; ++x) {
+                        const uint32_t* p  = &g->pixels[(y * 2) * phys_w + x * 2];
+                        const uint32_t  c0 = p[0];
+                        const uint32_t  c1 = p[1];
+                        const uint32_t  c2 = p[phys_w];
+                        const uint32_t  c3 = p[phys_w + 1];
 
-                for (int dy = 0; dy < d; ++dy) {
-                    for (int dx = 0; dx < d; ++dx) {
-                        const int      px    = x * d + dx;
-                        const int      py    = y * d + dy;
-                        const uint32_t color = g->pixels[py * phys_w + px];
-
-                        r += (color >> 16) & 0xFF;
-                        g_ += (color >> 8) & 0xFF;
-                        b += (color) & 0xFF;
-                        a += (color >> 24) & 0xFF;
+                        const uint32_t r = ((c0 >> 16) & 0xFF) + ((c1 >> 16) & 0xFF) +
+                                           ((c2 >> 16) & 0xFF) + ((c3 >> 16) & 0xFF);
+                        const uint32_t g_ = ((c0 >> 8) & 0xFF) + ((c1 >> 8) & 0xFF) +
+                                            ((c2 >> 8) & 0xFF) + ((c3 >> 8) & 0xFF);
+                        const uint32_t b = (c0 & 0xFF) + (c1 & 0xFF) +
+                                           (c2 & 0xFF) + (c3 & 0xFF);
+                        const uint32_t a = ((c0 >> 24) & 0xFF) + ((c1 >> 24) & 0xFF) +
+                                           ((c2 >> 24) & 0xFF) + ((c3 >> 24) & 0xFF);
+                        pixels[y * width_i + x] = ((a / 4) << 24) | ((r / 4) << 16) | ((g_ / 4) << 8) | (b / 4);
                     }
                 }
+            } else if (d > 2) {
+                for (int y = 0; y < height_i; ++y) {
+                    for (int x = 0; x < width_i; ++x) {
+                        uint32_t r = 0, g_ = 0, b = 0, a = 0;
 
-                const int area = d * d;
-                r /= area;
-                g_ /= area;
-                b /= area;
-                a /= area;
+                        const int base_y = y * d;
+                        const int base_x = x * d;
 
-                pixels[y * static_cast<int>(width) + x] = (a << 24) | (r << 16) | (g_ << 8) | b;
+                        for (int dy = 0; dy < d; ++dy) {
+                            const uint32_t* row = &g->pixels[(base_y + dy) * phys_w];
+                            for (int dx = 0; dx < d; ++dx) {
+                                const uint32_t color = row[base_x + dx];
+                                r += (color >> 16) & 0xFF;
+                                g_ += (color >> 8) & 0xFF;
+                                b += (color >> 0) & 0xFF;
+                                a += (color >> 24) & 0xFF;
+                            }
+                        }
+
+                        const int area = d * d;
+                        r /= area;
+                        g_ /= area;
+                        b /= area;
+                        a /= area;
+
+                        pixels[y * width_i + x] = (a << 24) | (r << 16) | (g_ << 8) | b;
+                    }
+                }
             }
         }
     }
@@ -568,23 +592,39 @@ namespace umfeld {
             return;
         }
 
-        const int d = g->displayDensity();
-        if (update_logical_buffer && d > 1) {
-            // TODO upscale pixels to g->pixels
-            // pixels;    // logical size (w*h)
-            // g->pixels; // physical size (w*d*h*d)
-            const int phys_w = width * d;
-            const int phys_h = height * d;
+        // NOTE up-scale pixels from logical to physical size
+        //      `pixels` ( logical size (w*h) ) to `g->pixels` ( physical size (w*d*h*d) )
 
-            for (int y = 0; y < height; ++y) {
-                for (int x = 0; x < width; ++x) {
-                    const uint32_t color = pixels[y * static_cast<int>(width) + x];
+        const int d      = g->displayDensity();
+        const int phys_w = width * d;
 
+        if (update_logical_buffer) {
+            if (d == 2) {
+                const int width_i = static_cast<int>(width);
+                for (int y = 0; y < height; ++y) {
+                    const uint32_t* src_row   = &pixels[y * width_i];
+                    uint32_t*       dest_row0 = &g->pixels[(y * 2 + 0) * phys_w];
+                    uint32_t*       dest_row1 = &g->pixels[(y * 2 + 1) * phys_w];
+                    for (int x = 0; x < width; ++x) {
+                        const uint32_t c = src_row[x];
+                        const int      i = x * 2;
+                        dest_row0[i + 0] = c;
+                        dest_row0[i + 1] = c;
+                        dest_row1[i + 0] = c;
+                        dest_row1[i + 1] = c;
+                    }
+                }
+            } else if (d > 2) {
+                const int width_i = static_cast<int>(width);
+                for (int y = 0; y < height; ++y) {
+                    const uint32_t* src_row = &pixels[y * width_i];
                     for (int dy = 0; dy < d; ++dy) {
-                        for (int dx = 0; dx < d; ++dx) {
-                            const int px                = x * d + dx;
-                            const int py                = y * d + dy;
-                            g->pixels[py * phys_w + px] = color;
+                        uint32_t* dest_row = &g->pixels[(y * d + dy) * phys_w];
+                        for (int x = 0; x < width; ++x) {
+                            const uint32_t c = src_row[x];
+                            for (int dx = 0; dx < d; ++dx) {
+                                dest_row[x * d + dx] = c;
+                            }
                         }
                     }
                 }

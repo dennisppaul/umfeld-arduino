@@ -1337,7 +1337,7 @@ void PGraphicsOpenGL_3_3_core::upload_colorbuffer(uint32_t* pixels) {
             flip_pixel_buffer(pixels);
             push_texture_id();
             IMPL_bind_texture(framebuffer.texture_id);
-            glPixelStorei(GL_UNPACK_ALIGNMENT, 4); // assumes tightly packed RGBA8
+            glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
             glTexSubImage2D(GL_TEXTURE_2D,
                             0,
                             0, 0,
@@ -1348,7 +1348,8 @@ void PGraphicsOpenGL_3_3_core::upload_colorbuffer(uint32_t* pixels) {
                             pixels);
             pop_texture_id();
         } else {
-            // TODO this is more a proof of concept and NEEDS to be improved
+            // TODO there is room for optimization below this line ...
+            //      i.e do not create a texture every time and maybe create a dedicated texture for intermediate MSAA rendering
             // upload pixels to intermediate non-MSAA texture
             GLuint tempTexture;
             glGenTextures(1, &tempTexture);
@@ -1368,7 +1369,7 @@ void PGraphicsOpenGL_3_3_core::upload_colorbuffer(uint32_t* pixels) {
 
             // bind MSAA framebuffer
             store_fbo_state();
-            bind_fbo(); // binds `framebuffer.id` (your MSAA FBO)
+            bind_fbo();
             glViewport(0, 0, framebuffer.width, framebuffer.height);
 
             // draw fullscreen quad using shader_fill_texture
@@ -1378,14 +1379,13 @@ void PGraphicsOpenGL_3_3_core::upload_colorbuffer(uint32_t* pixels) {
             push_texture_id();
             IMPL_bind_texture(tempTexture);
 
-            // draw quad
+            // draw fullscreen quad
             std::vector<Vertex> fullscreen_quad;
-            constexpr glm::vec4 color(1.0f, 1.0f, 1.0f, 1.0f); // white color
-            // const int           width  = this->framebuffer.width;
-            // const int           height = this->framebuffer.height;
+            constexpr glm::vec4 color(1.0f, 1.0f, 1.0f, 1.0f);
             const int width  = this->width;
             const int height = this->height;
             // TODO there is room for optimization below this line ...
+            //      i.e do not create a new vector every time and maybe create a dedicated vertex buffer for fullscreen quads
             fullscreen_quad.emplace_back(0, 0, 0,
                                          color.r, color.g, color.b, color.a,
                                          0, 0);
@@ -1427,12 +1427,11 @@ void PGraphicsOpenGL_3_3_core::upload_colorbuffer(uint32_t* pixels) {
         shader_fill_texture->use();
         update_shader_matrices(shader_fill_texture);
         std::vector<Vertex> fullscreen_quad;
-        constexpr glm::vec4 color(1.0f, 1.0f, 1.0f, 1.0f); // white color
-        // const int           width  = this->framebuffer.width;
-        // const int           height = this->framebuffer.height;
+        constexpr glm::vec4 color(1.0f, 1.0f, 1.0f, 1.0f);
         const int width  = this->width;
         const int height = this->height;
         // TODO there is room for optimization below this line ...
+        //      i.e do not create a new vector every time and maybe create a dedicated vertex buffer for fullscreen quads
         fullscreen_quad.emplace_back(0, 0, 0,
                                      color.r, color.g, color.b, color.a,
                                      0, 0);
@@ -1465,6 +1464,8 @@ void PGraphicsOpenGL_3_3_core::download_colorbuffer(uint32_t* pixels) {
         store_fbo_state();
         bind_fbo();
         if (framebuffer.msaa) {
+            // TODO there is room for optimization below this line ...
+            //      i.e do not use a temporary FBO if possible but rather create it once on first call to `download_colorbuffer`
             // Step 1: Create intermediate non-MSAA FBO + texture
             GLuint tempFBO, tempTex;
             glGenFramebuffers(1, &tempFBO);

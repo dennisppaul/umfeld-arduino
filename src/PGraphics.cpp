@@ -936,11 +936,12 @@ void PGraphics::rect(const float x, const float y, const float width, const floa
         glm::vec3{p2.x, p1.y, 0},
         glm::vec3{p2.x, p2.y, 0},
         glm::vec3{p1.x, p2.y, 0}};
+    constexpr bool                                flipped_y       = false;
     constexpr std::array<glm::vec2, NUM_VERTICES> rect_tex_coords = {
-        glm::vec2{0, 0},
-        glm::vec2{1, 0},
-        glm::vec2{1, 1},
-        glm::vec2{0, 1}};
+        glm::vec2{0, flipped_y ? 1 : 0},
+        glm::vec2{1, flipped_y ? 1 : 0},
+        glm::vec2{1, flipped_y ? 0 : 1},
+        glm::vec2{0, flipped_y ? 0 : 1}};
 
     beginShape(QUADS);
     for (int i = 0; i < rect_vertices.size(); ++i) {

@@ -131,7 +131,7 @@ uint32_t* PImage::convert_bytes_to_pixels(const int width, const int height, con
     }
 
     // if (channels == 3) {
-    //     UMFELD_EMIT_WARNING_ONCE("RGB was converted to RGBA and number of channels is changed to 4");
+    //     warning_in_function_once("RGB was converted to RGBA and number of channels is changed to 4");
     // }
 
     return pixels;

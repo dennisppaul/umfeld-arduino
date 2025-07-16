@@ -195,6 +195,13 @@ namespace umfeld {
         CW, // Clockwise
         CCW // Counter-Clockwise
     };
+    enum Random {
+        FAST = 0xE0,  // Linear Congruential Generator (LCG) a fast normalized random float generator using 24-bit resolution for best for speed, but less uniform distribution
+        XOR_SHIFT_32, // Xorshift32 (Marsaglia) a Xorshift32-based normalized float generator with 24-bit precision variant for better distribution
+        PCG,          // Permuted Congruential Generator (PCG) good quality, fast, small state. Designed by Melissa O’Neill. Very popular and widely recommended for general-purpose PRNG.
+        WYRAND        // WyRand very fast (among the fastest non-cryptographic PRNGs). good statistical quality (passes PractRand up to 32 TB).
+    };
+
     const std::string SHADER_UNIFORM_MODEL_MATRIX      = "uModelMatrix";
     const std::string SHADER_UNIFORM_VIEW_MATRIX       = "uViewMatrix";
     const std::string SHADER_UNIFORM_PROJECTION_MATRIX = "uProjection";

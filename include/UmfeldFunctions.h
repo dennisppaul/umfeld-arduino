@@ -135,7 +135,7 @@ namespace umfeld {
 
     // ## Rendering
 
-    PGraphics* createGraphics(int width, int height, int renderer);
+    PGraphics* createGraphics(int width, int height, int renderer=DEFAULT);
 
     // ## Image
 

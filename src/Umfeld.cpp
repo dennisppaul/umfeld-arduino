@@ -227,7 +227,7 @@ SDL_AppResult SDL_AppInit(void** appstate, const int argc, char* argv[]) {
     /* create/check graphics subsystem */
     if (umfeld::enable_graphics) {
         if (umfeld::renderer > umfeld::RENDERER_DEFAULT) {
-            umfeld::console(umfeld::format_label("setting renderer from paramter `size()` ( or `umfeld::renderer` )."));
+            umfeld::console("setting renderer from paramter `size()` ( or `umfeld::renderer` ).");
             switch (umfeld::renderer) {
                 case umfeld::RENDERER_OPENGL_2_0:
 #ifndef OPENGL_2_0
@@ -251,11 +251,11 @@ SDL_AppResult SDL_AppInit(void** appstate, const int argc, char* argv[]) {
         }
         if (umfeld::subsystem_graphics == nullptr) {
             if (umfeld::create_subsystem_graphics != nullptr) {
-                umfeld::console(umfeld::format_label("creating graphics subsystem with callback."));
+                umfeld::console("creating graphics subsystem with callback.");
                 umfeld::subsystem_graphics                = umfeld::create_subsystem_graphics();
                 umfeld::handle_subsystem_graphics_cleanup = true;
             } else {
-                umfeld::console(umfeld::format_label("no graphics subsystem provided, using default."));
+                umfeld::console("no graphics subsystem provided, using default.");
 #if defined(OPENGL_3_3_CORE)
                 umfeld::subsystem_graphics = umfeld_create_subsystem_graphics_openglv33();
 #elif defined(OPENGL_2_0)
@@ -268,10 +268,10 @@ SDL_AppResult SDL_AppInit(void** appstate, const int argc, char* argv[]) {
                 umfeld::handle_subsystem_graphics_cleanup = true;
             }
             if (umfeld::subsystem_graphics == nullptr) {
-                umfeld::console(umfeld::format_label("did not create graphics subsystem."));
+                umfeld::console("did not create graphics subsystem.");
             }
         } else {
-            umfeld::console(umfeld::format_label("client provided graphics subsystem ( including `size()` )."));
+            umfeld::console("client provided graphics subsystem ( including `size()` ).");
         }
         if (umfeld::subsystem_graphics != nullptr) {
             umfeld::subsystems.push_back(umfeld::subsystem_graphics);
@@ -285,29 +285,29 @@ SDL_AppResult SDL_AppInit(void** appstate, const int argc, char* argv[]) {
             }
         }
     } else {
-        umfeld::console(umfeld::format_label("graphics disabled."));
+        umfeld::console("graphics disabled.");
     }
 
     /* create/check audio subsystem */
     if (umfeld::enable_audio) {
         if (umfeld::subsystem_audio == nullptr) {
             if (umfeld::create_subsystem_audio != nullptr) {
-                umfeld::console(umfeld::format_label("creating audio subsystem via callback."));
+                umfeld::console("creating audio subsystem via callback.");
                 umfeld::subsystem_audio                = umfeld::create_subsystem_audio();
                 umfeld::handle_subsystem_audio_cleanup = true;
             } else {
-                umfeld::console(umfeld::format_label("no audio subsystem provided, using default ( PortAudio )."));
+                umfeld::console("no audio subsystem provided, using default ( PortAudio ).");
                 // umfeld::subsystem_audio                = umfeld_create_subsystem_audio_sdl();
                 umfeld::subsystem_audio                = umfeld_create_subsystem_audio_portaudio();
                 umfeld::handle_subsystem_audio_cleanup = true;
             }
             if (umfeld::subsystem_audio == nullptr) {
-                umfeld::console(umfeld::format_label("did not create audio subsystem."));
+                umfeld::console("did not create audio subsystem.");
             }
         } else {
-            umfeld::console(umfeld::format_label("client provided audio subsystem."));
+            umfeld::console("client provided audio subsystem.");
         }
-        umfeld::console(umfeld::format_label("adding audio subsystem."));
+        umfeld::console("adding audio subsystem.");
         umfeld::subsystems.push_back(umfeld::subsystem_audio);
         if (umfeld::subsystem_audio->name != nullptr) {
             umfeld::console(umfeld::format_label("created subsystem audio"), umfeld::subsystem_audio->name());
@@ -324,12 +324,12 @@ SDL_AppResult SDL_AppInit(void** appstate, const int argc, char* argv[]) {
             umfeld::subsystem_libraries                = umfeld_create_subsystem_libraries();
             umfeld::handle_subsystem_libraries_cleanup = true;
         } else {
-            umfeld::console(umfeld::format_label("client provided library subsystem."));
+            umfeld::console("client provided library subsystem.");
         }
         umfeld::console(umfeld::format_label("created subsystem libraries"), umfeld::subsystem_libraries->name());
         umfeld::subsystems.push_back(umfeld::subsystem_libraries);
     } else {
-        umfeld::console(umfeld::format_label("libraries disabled."));
+        umfeld::console("libraries disabled.");
     }
 
     /* create/check events subsystem */
@@ -338,12 +338,12 @@ SDL_AppResult SDL_AppInit(void** appstate, const int argc, char* argv[]) {
             umfeld::subsystem_hid_events                = umfeld_create_subsystem_hid();
             umfeld::handle_subsystem_hid_events_cleanup = true;
         } else {
-            umfeld::console(umfeld::format_label("client provided HID events subsystem."));
+            umfeld::console("client provided HID events subsystem.");
         }
         umfeld::console(umfeld::format_label("created subsystem HID events"), umfeld::subsystem_hid_events->name());
         umfeld::subsystems.push_back(umfeld::subsystem_hid_events);
     } else {
-        umfeld::console(umfeld::format_label("HID events disabled."));
+        umfeld::console("HID events disabled.");
     }
 
     /* 2. initialize SDL */

@@ -188,7 +188,7 @@ void PGraphicsOpenGL_3_3_core::IMPL_emit_shape_stroke_line_strip(std::vector<Ver
                                           line_strip_closed,
                                           line_vertices);
             if (custom_shader != nullptr) {
-                UMFELD_EMIT_WARNING_ONCE("strokes with render mode 'STROKE_RENDER_MODE_TRIANGULATE_2D' are not supported with custom shaders");
+                warning_in_function_once("strokes with render mode 'STROKE_RENDER_MODE_TRIANGULATE_2D' are not supported with custom shaders");
             }
             // NOTE not happy about this hack … but `triangulate_line_strip_vertex` already applies model matrix
             shader_fill_texture->use();
@@ -641,14 +641,9 @@ void PGraphicsOpenGL_3_3_core::init(uint32_t* pixels,
     framebuffer.msaa   = render_to_offscreen && msaa_samples > 0;
 
     if (render_to_offscreen) {
-        console("creating offscreen buffer.");
-        console("framebuffer: ", framebuffer.width, "×", framebuffer.height);
-
         glGenFramebuffers(1, &framebuffer.id);
         glBindFramebuffer(GL_FRAMEBUFFER, framebuffer.id);
         glGenTextures(1, &framebuffer.texture_id);
-
-        console("creating framebuffer texture: ", framebuffer.texture_id);
 
 #ifdef OPENGL_ES_3_0
         if (framebuffer.msaa) {
@@ -695,7 +690,6 @@ void PGraphicsOpenGL_3_3_core::init(uint32_t* pixels,
                                       GL_RENDERBUFFER,
                                       msaaDepthBuffer);
         } else {
-            console("using standard framebuffer object");
             glBindTexture(GL_TEXTURE_2D, framebuffer.texture_id); // NOTE no need to use `IMPL_bind_texture()`
             glTexImage2D(GL_TEXTURE_2D,
                          0,
@@ -754,7 +748,7 @@ void PGraphicsOpenGL_3_3_core::init(uint32_t* pixels,
     }
 
     // static_assert(sizeof(Vertex) == 64, "Vertex struct must be 64 bytes"); // NOTE check this on other systems
-    console(format_label("'Vertex' struct size"), sizeof(Vertex), " bytes");
+    // console(format_label("'Vertex' struct size"), sizeof(Vertex), " bytes");
 
     OGL3_create_solid_color_texture();
     texture_id_current = TEXTURE_NONE;
@@ -962,7 +956,7 @@ void PGraphicsOpenGL_3_3_core::store_fbo_state() {
         glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING, &previously_bound_read_FBO);
         glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &previously_bound_draw_FBO);
     } else {
-        UMFELD_EMIT_WARNING_ONCE("store_fbo_state() requires render_to_offscreen to be true. ");
+        warning_in_function_once("store_fbo_state() requires render_to_offscreen to be true.");
     }
 }
 
@@ -970,7 +964,7 @@ void PGraphicsOpenGL_3_3_core::bind_fbo() {
     if (render_to_offscreen) {
         glBindFramebuffer(GL_FRAMEBUFFER, framebuffer.id);
     } else {
-        UMFELD_EMIT_WARNING_ONCE("bind_fbo() requires render_to_offscreen to be true. ");
+        warning_in_function_once("bind_fbo() requires render_to_offscreen to be true.");
     }
 }
 
@@ -981,7 +975,7 @@ void PGraphicsOpenGL_3_3_core::restore_fbo_state() {
         glViewport(previous_viewport[0], previous_viewport[1], previous_viewport[2], previous_viewport[3]);
         glUseProgram(previous_shader);
     } else {
-        UMFELD_EMIT_WARNING_ONCE("restore_fbo_state() requires render_to_offscreen to be true. ");
+        warning_in_function_once("restore_fbo_state() requires render_to_offscreen to be true.");
     }
 }
 

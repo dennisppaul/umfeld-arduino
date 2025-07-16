@@ -331,13 +331,24 @@ namespace umfeld {
         return out.str();
     }
 
-    // static unsigned int fRandomSeed = static_cast<unsigned int>(std::chrono::high_resolution_clock::now().time_since_epoch().count());
-    // static std::mt19937 gen(fRandomSeed); // Create a Mersenne Twister pseudo-random number generator with the specified seed
-
     static uint32_t seed = static_cast<unsigned int>(std::chrono::high_resolution_clock::now().time_since_epoch().count());
 
     void randomSeed(const unsigned int seed) {
         umfeld::seed = seed;
+    }
+
+    uint64_t wyrand_state = 0xa5a5a5a5a5a5a5a5ULL;
+
+    static uint64_t wyrand() {
+        wyrand_state += 0xa0761d6478bd642f;
+        uint64_t result = wyrand_state;
+        result ^= result >> 32;
+        result *= 0xe7037ed1a0b428db;
+        return result;
+    }
+
+    static float wyrand01() {
+        return (wyrand() >> 40) / static_cast<float>(1ULL << 24); // top 24 bits
     }
 
     static float fastRandom01() {
@@ -358,9 +369,43 @@ namespace umfeld {
         return random(0.0f, max);
     }
 
+    static uint64_t pcg_state = 0x853c49e6748fea9bULL;
+
+    uint32_t pcg32() {
+        uint64_t oldstate   = pcg_state;
+        pcg_state           = oldstate * 6364136223846793005ULL + 1;
+        uint32_t xorshifted = static_cast<uint32_t>(((oldstate >> 18u) ^ oldstate) >> 27u);
+        uint32_t rot        = oldstate >> 59u;
+        return (xorshifted >> rot) | (xorshifted << ((-rot) & 31));
+    }
+
+    float pcgRandom01() {
+        return (pcg32() & 0x00FFFFFF) / static_cast<float>(0x01000000);
+    }
+
+    static float normalized_random() {
+        // if (get_random_mode() == FAST) {
+        //     return fastRandom01();
+        // }
+        const Random mode = get_random_mode();
+        console(__func__, " mode: ", mode);
+        switch (mode) {
+            case FAST:
+                return fastRandom01();
+            case XOR_SHIFT_32:
+                return xorshiftRandom01();
+            case PCG:
+                return pcgRandom01();
+            case WYRAND:
+                return wyrand01();
+            default:
+                return fastRandom01();
+        }
+    }
+
     float random(const float min, const float max) {
-        return min + (max - min) * fastRandom01(); // Use fastRandom01 for speed, but less uniform distribution
-        // return min + (max - min) * xorshiftRandom01(); // Use xorshift for better distribution
+        const float range = max - min;
+        return min + range * normalized_random();
     }
 
     float randomGaussian() { // Box-Muller
@@ -532,9 +577,13 @@ namespace umfeld {
         return str.substr(first, last - first + 1);
     }
 
-    PGraphics* createGraphics(const int width, const int height, int renderer = DEFAULT) {
+    PGraphics* createGraphics(const int width, const int height, int renderer) {
         if (subsystem_graphics == nullptr) {
             return nullptr;
+        }
+
+        if (renderer != DEFAULT) {
+            warning_in_function_once("other renderers are not supported yet");
         }
 
         const auto graphics = subsystem_graphics->create_native_graphics(true);

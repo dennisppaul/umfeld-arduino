@@ -187,6 +187,17 @@ namespace umfeld {
 #define error_in_function(...)   error("'", __func__, "' :: ", __VA_ARGS__)
 #define warning_in_function(...) warning("'", __func__, "' :: ", __VA_ARGS__)
 #define console_in_function(...) console("'", __func__, "' :: ", __VA_ARGS__)
+#define _warning_in_function_once(counter, ...)           \
+    do {                                                  \
+        static bool _once_flag_##counter = false;         \
+        if (!_once_flag_##counter) {                      \
+            warning("'", __func__, "' :: ", __VA_ARGS__); \
+            _once_flag_##counter = true;                  \
+        }                                                 \
+    } while (0)
+#define warning_in_function_once(...) \
+    _warning_in_function_once(__COUNTER__, __VA_ARGS__)
+
 
     inline std::string format_label(const std::string& label, const size_t width = DEFAULT_CONSOLE_LABEL_WIDTH) {
         if (label.length() >= width) {
@@ -198,4 +209,12 @@ namespace umfeld {
     inline std::string separator(const bool equal_sign = true, const std::size_t length = DEFAULT_CONSOLE_WIDTH) {
         return std::string(length, equal_sign ? '=' : '-');
     }
+
+    inline Random& _random_mode() {
+        static Random mode = FAST;
+        return mode;
+    }
+    inline void   set_random_mode(Random mode) { _random_mode() = mode; }
+    inline Random get_random_mode() { return _random_mode(); }
+
 } // namespace umfeld

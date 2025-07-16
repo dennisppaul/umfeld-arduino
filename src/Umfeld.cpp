@@ -59,10 +59,10 @@ namespace umfeld {
     }
 
     void setTitle(const std::string& title) {
-        window_title = title; // NOTE update global variable
+        // window_title = title; // NOTE update global variable
         if (subsystem_graphics) {
             if (subsystem_graphics->set_title) {
-                subsystem_graphics->set_title(window_title);
+                subsystem_graphics->set_title(title);
             }
         }
     }
@@ -71,11 +71,11 @@ namespace umfeld {
         if (subsystem_graphics) {
             if (subsystem_graphics->get_title) {
                 const std::string title = subsystem_graphics->get_title();
-                window_title            = title; // NOTE update global variable
+                // window_title            = title; // NOTE update global variable
                 return title;
             }
         }
-        return window_title;
+        return DEFAULT_WINDOW_TITLE;
     }
 
     void setLocation(const int x, const int y) {
@@ -281,7 +281,7 @@ SDL_AppResult SDL_AppInit(void** appstate, const int argc, char* argv[]) {
                 umfeld::console(umfeld::format_label("created subsystem graphics"), "( no name specified )");
             }
             if (umfeld::subsystem_graphics->set_title) {
-                umfeld::subsystem_graphics->set_title(umfeld::window_title);
+                umfeld::subsystem_graphics->set_title(umfeld::DEFAULT_WINDOW_TITLE);
             }
         }
     } else {
@@ -424,6 +424,8 @@ SDL_AppResult SDL_AppInit(void** appstate, const int argc, char* argv[]) {
             }
         }
     }
+
+    umfeld::console(umfeld::format_label("'Vertex' struct size"), sizeof(umfeld::Vertex), " bytes");
 
     umfeld::initialized = true;
 

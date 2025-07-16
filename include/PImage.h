@@ -67,10 +67,11 @@ namespace umfeld {
 
         float                    width;
         float                    height;
-        static constexpr uint8_t channels = DEFAULT_BYTES_PER_PIXELS; // TODO might make this configurable in the future
         uint32_t*                pixels;
-        int                      texture_id  = TEXTURE_NOT_GENERATED;
-        SDL_Texture*             sdl_texture = nullptr; // TODO is this still neeeded or used?
+        static constexpr uint8_t channels         = DEFAULT_BYTES_PER_PIXELS; // TODO might make this configurable in the future
+        bool                     flip_y_texcoords = false;
+        int                      texture_id       = TEXTURE_NOT_GENERATED;
+        SDL_Texture*             sdl_texture      = nullptr; // TODO is this still neeeded or used?
 
     protected:
         bool auto_generate_mipmap  = false;

@@ -43,7 +43,7 @@ namespace umfeld {
     struct SubsystemGraphics : Subsystem {
         PGraphics* (*create_native_graphics)(bool render_to_offscreen);
         void (*post)(); // TODO maybe remove this, as there is also a `draw_post()` method
-        void (*set_title)(std::string& title);
+        void (*set_title)(const std::string& title);
         std::string (*get_title)();
         void (*set_window_position)(int x, int y);
         void (*get_window_position)(int& x, int& y);

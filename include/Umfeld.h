@@ -52,7 +52,7 @@ namespace umfeld {
     inline bool        vsync                   = false;
     inline bool        render_to_buffer        = true;
     inline int         save_image_jpeg_quailty = 100;
-    inline std::string window_title            = DEFAULT_WINDOW_TITLE;
+    // inline std::string window_title            = DEFAULT_WINDOW_TITLE;
 
     /* --- libraries + events --- */
     inline bool enable_libraries = true;

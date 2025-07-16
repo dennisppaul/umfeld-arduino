@@ -89,7 +89,7 @@ namespace umfeld {
     }
 
     // ReSharper disable once CppParameterMayBeConstPtrOrRef
-    static void set_title(std::string& title) {
+    static void set_title(const std::string& title) {
         if (window) {
             SDL_SetWindowTitle(window, title.c_str());
         }

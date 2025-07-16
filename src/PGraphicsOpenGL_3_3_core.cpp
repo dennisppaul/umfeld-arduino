@@ -747,8 +747,7 @@ void PGraphicsOpenGL_3_3_core::init(uint32_t* pixels,
         texture_id = _buffer_texture_id;
     }
 
-    // static_assert(sizeof(Vertex) == 64, "Vertex struct must be 64 bytes"); // NOTE check this on other systems
-    // console(format_label("'Vertex' struct size"), sizeof(Vertex), " bytes");
+    // static_assert(sizeof(Vertex) == 64, "Vertex struct must be 64 bytes"); // TODO check this on other systems
 
     OGL3_create_solid_color_texture();
     texture_id_current = TEXTURE_NONE;
@@ -1376,8 +1375,8 @@ void PGraphicsOpenGL_3_3_core::upload_colorbuffer(uint32_t* pixels) {
             // draw fullscreen quad
             std::vector<Vertex> fullscreen_quad;
             constexpr glm::vec4 color(1.0f, 1.0f, 1.0f, 1.0f);
-            const int width  = this->width;
-            const int height = this->height;
+            const int           width  = this->width;
+            const int           height = this->height;
             // TODO there is room for optimization below this line ...
             //      i.e do not create a new vector every time and maybe create a dedicated vertex buffer for fullscreen quads
             fullscreen_quad.emplace_back(0, 0, 0,
@@ -1422,8 +1421,8 @@ void PGraphicsOpenGL_3_3_core::upload_colorbuffer(uint32_t* pixels) {
         update_shader_matrices(shader_fill_texture);
         std::vector<Vertex> fullscreen_quad;
         constexpr glm::vec4 color(1.0f, 1.0f, 1.0f, 1.0f);
-        const int width  = this->width;
-        const int height = this->height;
+        const int           width  = this->width;
+        const int           height = this->height;
         // TODO there is room for optimization below this line ...
         //      i.e do not create a new vector every time and maybe create a dedicated vertex buffer for fullscreen quads
         fullscreen_quad.emplace_back(0, 0, 0,
@@ -1526,15 +1525,16 @@ void PGraphicsOpenGL_3_3_core::download_colorbuffer(uint32_t* pixels) {
                      UMFELD_DEFAULT_TEXTURE_PIXEL_TYPE,
                      pixels);
     }
-
     flip_pixel_buffer(pixels);
 }
 
 void PGraphicsOpenGL_3_3_core::flip_pixel_buffer(uint32_t* pixels) {
-    const int  d      = displayDensity();
-    const int  phys_w = width * d;
-    const int  phys_h = height * d;
-    const auto tmp    = new uint32_t[phys_w * phys_h];
+    const int d      = displayDensity();
+    const int phys_w = width * d;
+    const int phys_h = height * d;
+// #define MORE_COMPATIBLE_FLIP_PIXEL_BUFFER
+#ifdef MORE_COMPATIBLE_FLIP_PIXEL_BUFFER
+    const auto tmp = new uint32_t[phys_w * phys_h];
     std::memcpy(tmp, pixels, phys_w * phys_h * sizeof(uint32_t));
     for (int y = 0; y < phys_h; ++y) {
         const int flipped_y = phys_h - 1 - y;
@@ -1543,6 +1543,18 @@ void PGraphicsOpenGL_3_3_core::flip_pixel_buffer(uint32_t* pixels) {
                     phys_w * sizeof(uint32_t));
     }
     delete[] tmp;
+#else  // MORE_COMPATIBLE_FLIP_PIXEL_BUFFER
+    const size_t sz  = phys_w * sizeof(uint32_t);
+    const auto   tmp = static_cast<uint32_t*>(alloca(sz)); // stack alloc for one row
+    for (int y = 0; y < phys_h / 2; ++y) {
+        uint32_t* row_top = pixels + y * phys_w;
+        uint32_t* row_bot = pixels + (phys_h - 1 - y) * phys_w;
+
+        memcpy(tmp, row_top, sz);
+        memcpy(row_top, row_bot, sz);
+        memcpy(row_bot, tmp, sz);
+    }
+#endif // MORE_COMPATIBLE_FLIP_PIXEL_BUFFER
 }
 
 #endif // UMFELD_PGRAPHICS_OPENGLV33_CPP

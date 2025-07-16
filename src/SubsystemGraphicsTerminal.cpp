@@ -124,7 +124,7 @@ namespace umfeld {
 
     static void post() {}
 
-    static void set_title(std::string& title) {}
+    static void set_title(const std::string& title) {}
 
     static std::string get_title() { return ""; }
 

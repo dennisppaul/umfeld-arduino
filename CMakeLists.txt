@@ -124,14 +124,20 @@ target_include_directories(umfeld-lib PUBLIC
 )
 
 ##########################################################################################################
-### EN/DISABLE LIBRARIES                                                                               ###
+### GLOBAL VARIABLES + EN/DISABLE LIBRARIES                                                            ###
 ##########################################################################################################
 
 if (NOT TARGET umfeld-lib-interface)
     add_library(umfeld-lib-interface INTERFACE) # this enables `glm::aligned_vec*` types
 endif ()
 
-target_compile_definitions(${PROJECT_NAME} PUBLIC GLM_ENABLE_EXPERIMENTAL)
+# application name
+
+if (NOT DEFINED UMFELD_APP_NAME)
+    set(UMFELD_APP_NAME "${CMAKE_PROJECT_NAME}")
+endif ()
+target_compile_definitions(${PROJECT_NAME} PUBLIC UMFELD_APP_NAME=\"${UMFELD_APP_NAME}\")
+message(STATUS "APP NAME      : ${UMFELD_APP_NAME}")
 
 if (NOT DISABLE_MAIN)
     target_compile_definitions(${PROJECT_NAME} PUBLIC SDL_MAIN_USE_CALLBACKS)
@@ -454,6 +460,9 @@ if (NOT DISABLE_GRAPHICS OR NOT DISABLE_AUDIO)
 endif (NOT DISABLE_GRAPHICS OR NOT DISABLE_AUDIO)
 
 if (NOT DISABLE_GRAPHICS)
+    # GLM
+    target_compile_definitions(${PROJECT_NAME} PUBLIC GLM_ENABLE_EXPERIMENTAL)
+    target_compile_definitions(umfeld-lib-interface INTERFACE GLM_ENABLE_EXPERIMENTAL)
     # OpenGL + GLAD + GLM
     target_link_libraries(${PROJECT_NAME} PUBLIC ${OPENGL_LIBRARIES})
     target_include_directories(${PROJECT_NAME} PUBLIC ${OPENGL_INCLUDE_DIRS})

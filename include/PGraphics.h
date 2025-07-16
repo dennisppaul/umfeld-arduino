@@ -143,6 +143,7 @@ namespace umfeld {
         virtual void point(float x, float y, float z = 0.0f);
         virtual void quad(float x1, float y1, float z1, float x2, float y2, float z2, float x3, float y3, float z3, float x4, float y4, float z4);
         virtual void rect(float x, float y, float width, float height);
+        virtual void rect(float x, float y, float width, float height, bool flip_y_texcoords);
         virtual void square(const float x, const float y, const float extent) { rect(x, y, extent, extent); }
         virtual void triangle(float x1, float y1, float z1, float x2, float y2, float z2, float x3, float y3, float z3);
 

@@ -39,6 +39,7 @@
 using namespace umfeld;
 
 PGraphics::PGraphics() : PImage(0, 0) {
+    flip_y_texcoords = true;
     PGraphics::fill(1.0f);
     PGraphics::stroke(0.0f);
     PGraphics::ellipseDetail(ELLIPSE_DETAIL_DEFAULT);
@@ -647,7 +648,7 @@ void PGraphics::image(PImage* img, const float x, const float y, float w, float 
     noStroke();
     push_texture_id();
     texture(img);
-    rect(x, y, w, h);
+    rect(x, y, w, h, img->flip_y_texcoords);
     pop_texture_id();
     color_stroke.active = _stroke_active;
 }
@@ -898,7 +899,7 @@ void PGraphics::quad(const float x1, const float y1, const float z1, const float
     endShape();
 }
 
-void PGraphics::rect(const float x, const float y, const float width, const float height) {
+void PGraphics::rect(const float x, const float y, const float width, const float height, const bool flip_y_texcoords) {
     if (!color_stroke.active && !color_fill.active) {
         return;
     }
@@ -925,10 +926,6 @@ void PGraphics::rect(const float x, const float y, const float width, const floa
             break;
     }
 
-    // // define colors once (avoiding redundant glm::vec4 conversions)
-    // const glm::vec4 fill_color   = as_vec4(color_fill);
-    // const glm::vec4 stroke_color = as_vec4(color_stroke);
-
     // define rectangle vertices (shared for fill and stroke)
     static constexpr uint8_t                  NUM_VERTICES  = 4;
     const std::array<glm::vec3, NUM_VERTICES> rect_vertices = {
@@ -936,18 +933,21 @@ void PGraphics::rect(const float x, const float y, const float width, const floa
         glm::vec3{p2.x, p1.y, 0},
         glm::vec3{p2.x, p2.y, 0},
         glm::vec3{p1.x, p2.y, 0}};
-    constexpr bool                                flipped_y       = false;
-    constexpr std::array<glm::vec2, NUM_VERTICES> rect_tex_coords = {
-        glm::vec2{0, flipped_y ? 1 : 0},
-        glm::vec2{1, flipped_y ? 1 : 0},
-        glm::vec2{1, flipped_y ? 0 : 1},
-        glm::vec2{0, flipped_y ? 0 : 1}};
+    const std::array<glm::vec2, NUM_VERTICES> rect_tex_coords = {
+        glm::vec2{0, flip_y_texcoords ? 1 : 0},
+        glm::vec2{1, flip_y_texcoords ? 1 : 0},
+        glm::vec2{1, flip_y_texcoords ? 0 : 1},
+        glm::vec2{0, flip_y_texcoords ? 0 : 1}};
 
     beginShape(QUADS);
     for (int i = 0; i < rect_vertices.size(); ++i) {
         vertex_vec(rect_vertices[i], rect_tex_coords[i]);
     }
     endShape();
+}
+
+void PGraphics::rect(const float x, const float y, const float width, const float height) {
+    rect(x, y, width, height, false);
 }
 
 void PGraphics::box(const float width, const float height, const float depth) {

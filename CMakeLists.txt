@@ -22,6 +22,10 @@ option(DISABLE_AUDIO "Disable audio ( SDL3 + portaudio ) support" OFF)
 
 # TODO IMPORTANT! make package finding more reliable see `2025-07-17--Umfeld-Improve-Package-Finding.md`
 
+##########################################################################################################
+### PROPAGATE VERSION                                                                                  ###
+##########################################################################################################
+
 configure_file(
         "${CMAKE_CURRENT_SOURCE_DIR}/include/UmfeldVersion.h.in"
         "${CMAKE_CURRENT_SOURCE_DIR}/include/UmfeldVersion.h"

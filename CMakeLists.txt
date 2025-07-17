@@ -2,6 +2,9 @@ cmake_minimum_required(VERSION 3.20)
 
 project(umfeld-lib)
 
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
 message(STATUS "----------------------------------------")
 message(STATUS "UMFELD LIBRARY")
 message(STATUS "----------------------------------------")
@@ -35,6 +38,25 @@ if (APPLE)
         message(WARNING "HOMEBREW not found.")
     endif ()
 endif (APPLE)
+
+##########################################################################################################
+### CHECK FOR MACPORTS                                                                                 ###
+##########################################################################################################
+if (APPLE AND EXISTS "/opt/local/bin/port")
+    message(STATUS "MACPORTS found, setting paths.")
+    # 1. Add MacPorts library path to link_directories
+    link_directories("/opt/local/lib")
+
+    # 2. Set environment variable so pkg-config can find MacPorts libraries
+    set(ENV{PKG_CONFIG_PATH} "/opt/local/lib/pkgconfig:$ENV{PKG_CONFIG_PATH}")
+
+    # Note: Add MacPorts header file path
+    include_directories("/opt/local/include")
+else()
+    if (APPLE AND NOT BREW_FOUND)
+        message(WARNING "Neither HOMEBREW nor MACPORTS found. Build may fail.")
+    endif()
+endif()
 
 ##########################################################################################################
 ### SUPPLEMENT LIBRARY SEARCH PATH                                                                     ###
@@ -475,10 +497,10 @@ if (NOT DISABLE_GRAPHICS)
     target_include_directories(${PROJECT_NAME} PUBLIC ${FREETYPE_INCLUDE_DIRS})
     # FFMPEG
     if (NOT DISABLE_VIDEO)
-        target_include_directories(${PROJECT_NAME} PUBLIC ${FFMPEG_INCLUDE_DIRS})
-        target_link_libraries(${PROJECT_NAME} PUBLIC ${FFMPEG_LIBRARIES})
+        target_include_directories(umfeld-lib PUBLIC ${FFMPEG_INCLUDE_DIRS})
+        target_link_libraries(umfeld-lib PUBLIC ${FFMPEG_LIBRARIES})
         if (APPLE)
-            target_link_libraries(${PROJECT_NAME} PUBLIC
+            target_link_libraries(umfeld-lib PUBLIC
                     "-framework AVFoundation"
                     "-framework Foundation"
                     "-framework CoreMedia"
@@ -540,6 +562,16 @@ function(add_umfeld_libs)
     set_target_properties(${PROJECT_NAME} PROPERTIES POSITION_INDEPENDENT_CODE ON)
     target_link_libraries(${PROJECT_NAME} PRIVATE umfeld-lib-interface)
     target_link_libraries(${PROJECT_NAME} PRIVATE umfeld-lib)
+
+    # Add library search paths for macOS package managers
+    if (APPLE)
+        if (HOMEBREW_LIB_PATH)
+            target_link_directories(${PROJECT_NAME} PRIVATE ${HOMEBREW_LIB_PATH})
+        endif ()
+        if (EXISTS "/opt/local/bin/port")
+            target_link_directories(${PROJECT_NAME} PRIVATE "/opt/local/lib")
+        endif ()
+    endif ()
 
     # pffft SIMD detection
     # TODO maybe make this more platform specific?

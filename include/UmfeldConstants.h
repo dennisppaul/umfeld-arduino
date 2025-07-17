@@ -23,6 +23,7 @@
 
 // ReSharper disable once CppUnusedIncludeDirective
 #include "UmfeldDefines.h"
+#include "UmfeldVersion.h"
 
 namespace umfeld {
 #ifndef UMFELD_APP_NAME
@@ -30,9 +31,6 @@ namespace umfeld {
 #else
     static constexpr auto DEFAULT_WINDOW_TITLE = UMFELD_APP_NAME;
 #endif
-    static constexpr int   VERSION_MAJOR                 = 2; // SemVer: increase when introducing breaking changes
-    static constexpr int   VERSION_MINOR                 = 2; // SemVer: increase when introducing new features
-    static constexpr int   VERSION_PATCH                 = 2; // SemVer: increase when introducing bug fixes
     static constexpr int   DEFAULT                       = -1;
     static constexpr int   NOT_INITIALIZED               = -1;
     static constexpr int   DISPLAY_WIDTH                 = -1;

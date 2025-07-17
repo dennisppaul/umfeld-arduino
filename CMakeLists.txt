@@ -1,9 +1,6 @@
 cmake_minimum_required(VERSION 3.20)
 
-project(umfeld-lib)
-
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
+project(umfeld-lib VERSION 2.2.2)
 
 message(STATUS "----------------------------------------")
 message(STATUS "UMFELD LIBRARY")
@@ -23,40 +20,56 @@ option(DISABLE_AUDIO "Disable audio ( SDL3 + portaudio ) support" OFF)
 #option(DISABLE_FONT "Disable font rendering ( harfbuzz + freetype ) support" OFF)
 #option(DISABLE_MAIN "Disable main function" OFF)
 
+# TODO IMPORTANT! make package finding more reliable see `2025-07-17--Umfeld-Improve-Package-Finding.md`
+
+configure_file(
+        "${CMAKE_CURRENT_SOURCE_DIR}/include/UmfeldVersion.h.in"
+        "${CMAKE_CURRENT_SOURCE_DIR}/include/UmfeldVersion.h"
+        @ONLY
+)
+
 ##########################################################################################################
-### CHECK FOR HOMEBREW                                                                                 ###
+### CHECK FOR HOMEBREW + MACPORTS                                                                      ###
 ##########################################################################################################
-find_program(BREW_FOUND brew)
+
 if (APPLE)
+    find_program(BREW_FOUND brew)
     if (BREW_FOUND)
         execute_process(COMMAND brew --prefix
                 OUTPUT_VARIABLE HOMEBREW_PREFIX
                 OUTPUT_STRIP_TRAILING_WHITESPACE)
         set(HOMEBREW_LIB_PATH "${HOMEBREW_PREFIX}/lib")
+        set(HOMEBREW_INCLUDE_PATH "${HOMEBREW_PREFIX}/include")
+        set(ENV{PKG_CONFIG_PATH} "${HOMEBREW_PREFIX}/lib/pkgconfig:$ENV{PKG_CONFIG_PATH}")
+        message(STATUS "HOMEBREW PRFX : ${HOMEBREW_PREFIX}")
         message(STATUS "HOMEBREW LIBS : ${HOMEBREW_LIB_PATH}")
+        message(STATUS "HOMEBREW INCL : ${HOMEBREW_INCLUDE_PATH}")
     else ()
-        message(WARNING "HOMEBREW not found.")
+        message(STATUS "HOMEBREW      : not found")
+    endif ()
+
+    find_program(PORT_FOUND port)
+    if (PORT_FOUND)
+        execute_process(COMMAND port dir
+                OUTPUT_VARIABLE MACPORTS_PREFIX
+                OUTPUT_STRIP_TRAILING_WHITESPACE)
+        set(MACPORTS_LIB_PATH "${MACPORTS_PREFIX}/lib")
+        set(MACPORTS_INCLUDE_PATH "${MACPORTS_PREFIX}/include")
+        set(ENV{PKG_CONFIG_PATH} "${MACPORTS_LIB_PATH}/pkgconfig:$ENV{PKG_CONFIG_PATH}")
+        message(STATUS "MACPORTS PRFX : ${MACPORTS_PREFIX}")
+        message(STATUS "MACPORTS LIBS : ${MACPORTS_LIB_PATH}")
+        message(STATUS "MACPORTS INCL : ${MACPORTS_INCLUDE_PATH}")
+    else ()
+        message(STATUS "MACPORTS      : not found")
+    endif ()
+
+    # TODO @dpp(not sure if it is necessary to set include paths like this. shouldn’t this be covered by 'find_package' or 'pkg_check_modules')
+
+    # NOTE combined warning for both package managers
+    if (NOT BREW_FOUND AND NOT PORT_FOUND)
+        message(WARNING "Neither HOMEBREW nor MACPORTS found. Build may fail.")
     endif ()
 endif (APPLE)
-
-##########################################################################################################
-### CHECK FOR MACPORTS                                                                                 ###
-##########################################################################################################
-if (APPLE AND EXISTS "/opt/local/bin/port")
-    message(STATUS "MACPORTS found, setting paths.")
-    # 1. Add MacPorts library path to link_directories
-    link_directories("/opt/local/lib")
-
-    # 2. Set environment variable so pkg-config can find MacPorts libraries
-    set(ENV{PKG_CONFIG_PATH} "/opt/local/lib/pkgconfig:$ENV{PKG_CONFIG_PATH}")
-
-    # Note: Add MacPorts header file path
-    include_directories("/opt/local/include")
-else()
-    if (APPLE AND NOT BREW_FOUND)
-        message(WARNING "Neither HOMEBREW nor MACPORTS found. Build may fail.")
-    endif()
-endif()
 
 ##########################################################################################################
 ### SUPPLEMENT LIBRARY SEARCH PATH                                                                     ###
@@ -131,6 +144,7 @@ endif ()
 
 if (NOT TARGET umfeld-lib)
     add_library(umfeld-lib ${UMFELD_SOURCE_FILES})
+    target_compile_features(umfeld-lib PUBLIC cxx_std_17)
 endif ()
 
 # Specify include directories for the library
@@ -151,55 +165,57 @@ target_include_directories(umfeld-lib PUBLIC
 
 if (NOT TARGET umfeld-lib-interface)
     add_library(umfeld-lib-interface INTERFACE) # this enables `glm::aligned_vec*` types
+    target_compile_features(umfeld-lib-interface INTERFACE cxx_std_17)
 endif ()
+
 
 # application name
 
 if (NOT DEFINED UMFELD_APP_NAME)
     set(UMFELD_APP_NAME "${CMAKE_PROJECT_NAME}")
 endif ()
-target_compile_definitions(${PROJECT_NAME} PUBLIC UMFELD_APP_NAME=\"${UMFELD_APP_NAME}\")
+target_compile_definitions(umfeld-lib PUBLIC UMFELD_APP_NAME=\"${UMFELD_APP_NAME}\")
 message(STATUS "APP NAME      : ${UMFELD_APP_NAME}")
 
 if (NOT DISABLE_MAIN)
-    target_compile_definitions(${PROJECT_NAME} PUBLIC SDL_MAIN_USE_CALLBACKS)
+    target_compile_definitions(umfeld-lib PUBLIC SDL_MAIN_USE_CALLBACKS)
 else ()
     message(STATUS "DISABLE_MAIN  : no `main` function entry point. must be defined in project.")
 endif (NOT DISABLE_MAIN)
 
 if (DISABLE_GRAPHICS)
     target_compile_definitions(umfeld-lib-interface INTERFACE DISABLE_GRAPHICS)
-    target_compile_definitions(${PROJECT_NAME} PUBLIC DISABLE_GRAPHICS)
+    target_compile_definitions(umfeld-lib PUBLIC DISABLE_GRAPHICS)
     message(STATUS "DISABLING     : graphics")
 endif (DISABLE_GRAPHICS)
 
 if (DISABLE_AUDIO)
     target_compile_definitions(umfeld-lib-interface INTERFACE DISABLE_AUDIO)
-    target_compile_definitions(${PROJECT_NAME} PUBLIC DISABLE_AUDIO)
+    target_compile_definitions(umfeld-lib PUBLIC DISABLE_AUDIO)
     message(STATUS "DISABLING     : audio")
 endif (DISABLE_AUDIO)
 
 if (DISABLE_VIDEO)
     target_compile_definitions(umfeld-lib-interface INTERFACE DISABLE_VIDEO)
-    target_compile_definitions(${PROJECT_NAME} PUBLIC DISABLE_VIDEO)
+    target_compile_definitions(umfeld-lib PUBLIC DISABLE_VIDEO)
     message(STATUS "DISABLING     : video")
 endif (DISABLE_VIDEO)
 
 if (DISABLE_PDF)
     target_compile_definitions(umfeld-lib-interface INTERFACE DISABLE_PDF)
-    target_compile_definitions(${PROJECT_NAME} PUBLIC DISABLE_PDF)
+    target_compile_definitions(umfeld-lib PUBLIC DISABLE_PDF)
     message(STATUS "DISABLING     : pdf")
 endif (DISABLE_PDF)
 
 if (ENABLE_PORTAUDIO)
     target_compile_definitions(umfeld-lib-interface INTERFACE ENABLE_PORTAUDIO)
-    target_compile_definitions(${PROJECT_NAME} PUBLIC ENABLE_PORTAUDIO)
+    target_compile_definitions(umfeld-lib PUBLIC ENABLE_PORTAUDIO)
     message(STATUS "ENABLING      : PortAudio Driver")
 endif (ENABLE_PORTAUDIO)
 
 if (ENABLE_CAPTURE)
     target_compile_definitions(umfeld-lib-interface INTERFACE ENABLE_CAPTURE)
-    target_compile_definitions(${PROJECT_NAME} PUBLIC ENABLE_CAPTURE)
+    target_compile_definitions(umfeld-lib PUBLIC ENABLE_CAPTURE)
     message(STATUS "ENABLING      : Capture")
 endif (ENABLE_CAPTURE)
 
@@ -210,7 +226,7 @@ endif (ENABLE_CAPTURE)
 if (APPLE)
     message(STATUS "SYSTEM        : macOS")
     target_compile_definitions(umfeld-lib-interface INTERFACE SYSTEM_MACOS)
-    target_compile_definitions(${PROJECT_NAME} PUBLIC SYSTEM_MACOS)
+    target_compile_definitions(umfeld-lib PUBLIC SYSTEM_MACOS)
 elseif (UNIX)
     # default to UNIX
     set(SYSTEM_TYPE "UNIX")
@@ -229,15 +245,15 @@ elseif (UNIX)
         message(STATUS "SYSTEM        : ${SYSTEM_TYPE}")
     endif ()
     target_compile_definitions(umfeld-lib-interface INTERFACE ${SYSTEM_DEFINE})
-    target_compile_definitions(${PROJECT_NAME} PUBLIC ${SYSTEM_DEFINE})
+    target_compile_definitions(umfeld-lib PUBLIC ${SYSTEM_DEFINE})
 elseif (WIN32)
     message(STATUS "SYSTEM        : Windows")
     target_compile_definitions(umfeld-lib-interface INTERFACE SYSTEM_WINDOWS)
-    target_compile_definitions(${PROJECT_NAME} PUBLIC SYSTEM_WINDOWS)
+    target_compile_definitions(umfeld-lib PUBLIC SYSTEM_WINDOWS)
 else ()
     message(STATUS "SYSTEM        : Undefined, Good Luck!")
     target_compile_definitions(umfeld-lib-interface INTERFACE SYSTEM_UNDEFINED)
-    target_compile_definitions(${PROJECT_NAME} PUBLIC SYSTEM_UNDEFINED)
+    target_compile_definitions(umfeld-lib PUBLIC SYSTEM_UNDEFINED)
 endif ()
 
 ##########################################################################################################
@@ -280,17 +296,17 @@ endif ()
 # set GLAD path and define
 if (OPENGL_3_3_CORE)
     target_compile_definitions(umfeld-lib-interface INTERFACE OPENGL_3_3_CORE)
-    target_compile_definitions(${PROJECT_NAME} PUBLIC OPENGL_3_3_CORE)
+    target_compile_definitions(umfeld-lib PUBLIC OPENGL_3_3_CORE)
     set(GLAD_DIR "${UMFELD_GLAD_BASE_DIR}/glad_opengl_33")
     message(STATUS "OPEN_GL       : OPENGL_3_3_CORE")
 elseif (OPENGL_2_0)
     target_compile_definitions(umfeld-lib-interface INTERFACE OPENGL_2_0)
-    target_compile_definitions(${PROJECT_NAME} PUBLIC OPENGL_2_0)
+    target_compile_definitions(umfeld-lib PUBLIC OPENGL_2_0)
     set(GLAD_DIR "${UMFELD_GLAD_BASE_DIR}/glad_opengl_20")
     message(STATUS "OPEN_GL       : OPENGL_2_0")
 elseif (OPENGL_ES_3_0)
     target_compile_definitions(umfeld-lib-interface INTERFACE OPENGL_ES_3_0)
-    target_compile_definitions(${PROJECT_NAME} PUBLIC OPENGL_ES_3_0)
+    target_compile_definitions(umfeld-lib PUBLIC OPENGL_ES_3_0)
     set(GLAD_DIR "${UMFELD_GLAD_BASE_DIR}/glad_opengles_30")
     message(STATUS "OPEN_GL       : OPENGL_ES_3_0")
 endif ()
@@ -316,10 +332,10 @@ target_include_directories(glad PUBLIC "${GLAD_DIR}/include")
 ##########################################################################################################
 
 #if (BUILD_STANDALONE)
-#    add_executable(${PROJECT_NAME} ${UMFELD_SOURCE_FILES})
-#    target_compile_definitions(${PROJECT_NAME} PUBLIC UMFELD_STANDALONE)
+#    add_executable(umfeld-lib ${UMFELD_SOURCE_FILES})
+#    target_compile_definitions(umfeld-lib PUBLIC UMFELD_STANDALONE)
 #else (BUILD_STANDALONE)
-target_sources(${PROJECT_NAME}
+target_sources(umfeld-lib
         PUBLIC
         ${UMFELD_SOURCE_FILES}
 )
@@ -337,6 +353,7 @@ endif (APPLE)
 ### FIND PACKAGES + LIBRARIES                                                                          ###
 ##########################################################################################################
 
+# SYSTEM
 find_package(PkgConfig REQUIRED)
 if (WIN32)
 elseif (APPLE)
@@ -381,8 +398,8 @@ if (NOT DISABLE_GRAPHICS)
             set(NCURSES_INCLUDE_DIR ${CURSES_INCLUDE_DIR})
             set(NCURSES_LIBRARY ${CURSES_LIBRARIES})
         endif ()
-        target_include_directories(${PROJECT_NAME} PRIVATE ${NCURSES_INCLUDE_DIR})
-        target_link_libraries(${PROJECT_NAME} PRIVATE ${NCURSES_LIBRARY})
+        target_include_directories(umfeld-lib PRIVATE ${NCURSES_INCLUDE_DIR})
+        target_link_libraries(umfeld-lib PRIVATE ${NCURSES_LIBRARY})
     else (NOT DISABLE_NCURSES)
         message(STATUS "NCURSES(TERM) : DISABLED")
     endif (NOT DISABLE_NCURSES)
@@ -391,10 +408,10 @@ if (NOT DISABLE_GRAPHICS)
     #if (UNIX)
     #    find_package(Curses REQUIRED)
     #    include_directories(${CURSES_INCLUDE_DIR})
-    #    target_link_libraries(${PROJECT_NAME} PUBLIC ${CURSES_LIBRARIES})
+    #    target_link_libraries(umfeld-lib PUBLIC ${CURSES_LIBRARIES})
     #endif (UNIX)
     #if (WIN32)
-    #    target_link_libraries(${PROJECT_NAME} PUBLIC pdcurses)
+    #    target_link_libraries(umfeld-lib PUBLIC pdcurses)
     #endif (WIN32)
 
     # curl
@@ -457,44 +474,51 @@ endif ()
 ##########################################################################################################
 
 if (HOMEBREW_LIB_PATH)
-    target_link_directories(${PROJECT_NAME} PUBLIC ${HOMEBREW_LIB_PATH})
+    target_link_directories(umfeld-lib PUBLIC ${HOMEBREW_LIB_PATH})
+    target_include_directories(umfeld-lib PUBLIC ${HOMEBREW_INCLUDE_PATH})
 endif ()
 
+if (MACPORTS_LIB_PATH)
+    target_link_directories(umfeld-lib PUBLIC ${MACPORTS_LIB_PATH})
+    target_include_directories(umfeld-lib PUBLIC ${MACPORTS_INCLUDE_PATH})
+endif ()
+
+# SYSTEM
 if (WIN32)
-    target_link_libraries(${PROJECT_NAME} PUBLIC wsock32 ws2_32 winmm)
+    target_link_libraries(umfeld-lib PUBLIC wsock32 ws2_32 winmm)
 elseif (APPLE)
 elseif (UNIX)
-    target_link_libraries(${PROJECT_NAME} PUBLIC Threads::Threads)
+    target_link_libraries(umfeld-lib PUBLIC Threads::Threads)
 else ()
 endif ()
 
 # GRAPHICS + VIDEO + AUDIO
 if (NOT DISABLE_AUDIO)
     if (ENABLE_PORTAUDIO)
-        target_link_libraries(${PROJECT_NAME} PUBLIC ${PORTAUDIO_LIBRARIES})
-        target_include_directories(${PROJECT_NAME} PUBLIC ${PORTAUDIO_INCLUDE_DIRS})
+        target_link_libraries(umfeld-lib PUBLIC ${PORTAUDIO_LIBRARIES})
+        target_include_directories(umfeld-lib PUBLIC ${PORTAUDIO_INCLUDE_DIRS})
     endif (ENABLE_PORTAUDIO)
 endif (NOT DISABLE_AUDIO)
 
 if (NOT DISABLE_GRAPHICS OR NOT DISABLE_AUDIO)
-    target_link_libraries(${PROJECT_NAME} PUBLIC SDL3::SDL3) # NOTE not sure about these explicit lib names
-    target_include_directories(${PROJECT_NAME} PUBLIC ${SDL3_INCLUDE_DIRS})
+    target_link_libraries(umfeld-lib PUBLIC SDL3::SDL3) # NOTE not sure about these explicit lib names
+    target_include_directories(umfeld-lib PUBLIC ${SDL3_INCLUDE_DIRS})
 endif (NOT DISABLE_GRAPHICS OR NOT DISABLE_AUDIO)
 
 if (NOT DISABLE_GRAPHICS)
     # GLM
-    target_compile_definitions(${PROJECT_NAME} PUBLIC GLM_ENABLE_EXPERIMENTAL)
+    target_compile_definitions(umfeld-lib PUBLIC GLM_ENABLE_EXPERIMENTAL)
     target_compile_definitions(umfeld-lib-interface INTERFACE GLM_ENABLE_EXPERIMENTAL)
     # OpenGL + GLAD + GLM
-    target_link_libraries(${PROJECT_NAME} PUBLIC ${OPENGL_LIBRARIES})
-    target_include_directories(${PROJECT_NAME} PUBLIC ${OPENGL_INCLUDE_DIRS})
-    target_link_libraries(${PROJECT_NAME} PUBLIC glad)
-    target_link_libraries(${PROJECT_NAME} PUBLIC glm::glm)
+    target_link_libraries(umfeld-lib PUBLIC ${OPENGL_LIBRARIES})
+    target_include_directories(umfeld-lib PUBLIC ${OPENGL_INCLUDE_DIRS})
+    target_link_libraries(umfeld-lib PUBLIC glad)
+    target_link_libraries(umfeld-lib PUBLIC glm::glm)
     # font rendering
-    target_link_libraries(${PROJECT_NAME} PUBLIC harfbuzz::harfbuzz)
-    target_include_directories(${PROJECT_NAME} PUBLIC ${HARFBUZZ_INCLUDE_DIRS})
-    target_link_libraries(${PROJECT_NAME} PUBLIC ${FREETYPE_LIBRARIES})
-    target_include_directories(${PROJECT_NAME} PUBLIC ${FREETYPE_INCLUDE_DIRS})
+    target_link_libraries(umfeld-lib PUBLIC harfbuzz::harfbuzz)
+    target_include_directories(umfeld-lib PUBLIC ${HARFBUZZ_INCLUDE_DIRS})
+    target_link_libraries(umfeld-lib PUBLIC ${FREETYPE_LIBRARIES})
+    target_include_directories(umfeld-lib PUBLIC ${FREETYPE_INCLUDE_DIRS})
     # FFMPEG
     if (NOT DISABLE_VIDEO)
         target_include_directories(umfeld-lib PUBLIC ${FFMPEG_INCLUDE_DIRS})
@@ -515,38 +539,39 @@ if (NOT DISABLE_GRAPHICS)
 
     # PDF export
     if (NOT DISABLE_PDF)
-        target_include_directories(${PROJECT_NAME} PUBLIC ${CAIRO_INCLUDE_DIRS})
-        target_link_libraries(${PROJECT_NAME} PUBLIC ${CAIRO_LIBRARIES})
-        target_compile_options(${PROJECT_NAME} PUBLIC ${CAIRO_CFLAGS_OTHER})
+        target_include_directories(umfeld-lib PUBLIC ${CAIRO_INCLUDE_DIRS})
+        target_link_libraries(umfeld-lib PUBLIC ${CAIRO_LIBRARIES})
+        target_compile_options(umfeld-lib PUBLIC ${CAIRO_CFLAGS_OTHER})
     endif (NOT DISABLE_PDF)
 
     if (NOT DISABLE_NCURSES)
-        target_include_directories(${PROJECT_NAME} PRIVATE ${NCURSES_INCLUDE_DIRS})
-        target_link_libraries(${PROJECT_NAME} PRIVATE ${NCURSES_LIBRARIES})
+        target_include_directories(umfeld-lib PRIVATE ${NCURSES_INCLUDE_DIRS})
+        target_link_libraries(umfeld-lib PRIVATE ${NCURSES_LIBRARIES})
     endif (NOT DISABLE_NCURSES)
 
 endif (NOT DISABLE_GRAPHICS)
 
 # MIDI
 if (NOT DISABLE_MIDI)
-    target_link_libraries(${PROJECT_NAME} PUBLIC ${RTMIDI_LIBRARIES})
-    target_include_directories(${PROJECT_NAME} PUBLIC ${RTMIDI_INCLUDE_DIRS})
+    target_link_libraries(umfeld-lib PUBLIC ${RTMIDI_LIBRARIES})
+    target_include_directories(umfeld-lib PUBLIC ${RTMIDI_INCLUDE_DIRS})
     foreach (flag ${RTMIDI_CFLAGS_OTHER})
         if (flag MATCHES "^-D[^=]+(=.+)?$")  # only pass valid -D macros
-            target_compile_definitions(${PROJECT_NAME} PUBLIC "${flag}")
+            target_compile_definitions(umfeld-lib PUBLIC "${flag}")
         elseif (flag STREQUAL "-pthread")
-            target_compile_options(${PROJECT_NAME} PUBLIC "${flag}")
+            target_compile_options(umfeld-lib PUBLIC "${flag}")
         endif ()
     endforeach ()
 endif (NOT DISABLE_MIDI)
 
-#target_link_libraries(${PROJECT_NAME} PRIVATE CURL::libcurl)
-target_include_directories(${PROJECT_NAME} PRIVATE ${CURL_INCLUDE_DIRS})
-target_link_libraries(${PROJECT_NAME} PRIVATE ${CURL_LIBRARIES})
+#target_link_libraries(umfeld-lib PRIVATE CURL::libcurl)
+target_include_directories(umfeld-lib PRIVATE ${CURL_INCLUDE_DIRS})
+target_link_libraries(umfeld-lib PRIVATE ${CURL_LIBRARIES})
 
 ##########################################################################################################
-### COMPILER FLAGS                                                                                     ###
+### ENTRY POINT FOR APPLICATIONS SCRIPT                                                                ###
 ##########################################################################################################
+
 function(add_umfeld_libs)
     # Check if umfeld-lib-interface target already exists
     if (NOT TARGET umfeld-lib-interface)
@@ -563,13 +588,20 @@ function(add_umfeld_libs)
     target_link_libraries(${PROJECT_NAME} PRIVATE umfeld-lib-interface)
     target_link_libraries(${PROJECT_NAME} PRIVATE umfeld-lib)
 
-    # Add library search paths for macOS package managers
+    # Add library + include search paths for macOS package managers
     if (APPLE)
+        # NOTE this sets link directories for calling application
         if (HOMEBREW_LIB_PATH)
             target_link_directories(${PROJECT_NAME} PRIVATE ${HOMEBREW_LIB_PATH})
         endif ()
-        if (EXISTS "/opt/local/bin/port")
-            target_link_directories(${PROJECT_NAME} PRIVATE "/opt/local/lib")
+        if (HOMEBREW_INCLUDE_PATH)
+            target_include_directories(${PROJECT_NAME} PRIVATE ${HOMEBREW_INCLUDE_DIRS})
+        endif ()
+        if (MACPORTS_LIB_PATH)
+            target_link_directories(${PROJECT_NAME} PRIVATE ${MACPORTS_LIB_PATH})
+        endif ()
+        if (MACPORTS_INCLUDE_PATH)
+            target_include_directories(${PROJECT_NAME} PRIVATE ${MACPORTS_INCLUDE_PATH})
         endif ()
     endif ()
 
@@ -647,13 +679,13 @@ if (ENABLE_ANGLE)
         message(STATUS "ANGLE_SUPPORT : ENABLED")
         message(STATUS "ANGLE_DIR     : ${UMFELD_ANGLE_DIR}")
 
-        add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+        add_custom_command(TARGET umfeld-lib POST_BUILD
                 COMMAND ${CMAKE_COMMAND} -E copy_if_different
                 ${UMFELD_ANGLE_DIR}/libEGL.dylib
                 ${UMFELD_ANGLE_DIR}/libGLESv2.dylib
                 # NOTE this relies on the build output of `umfeld-lib` being placed inside a subfolder
-                #      like `${CMAKE_BINARY_DIR}/umfeld-lib-${PROJECT_NAME}` so that copying ../ lands in app dir
-                $<TARGET_FILE_DIR:${PROJECT_NAME}>/..
+                #      like `${CMAKE_BINARY_DIR}/umfeld-lib-umfeld-lib` so that copying ../ lands in app dir
+                $<TARGET_FILE_DIR:umfeld-lib>/..
         )
     else ()
         message(STATUS "ANGLE_SUPPORT : DISABLED ( not supported on this platform )")

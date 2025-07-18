@@ -17,7 +17,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <ncurses.h>
+#include <curses.h>
 #include <cmath>
 #include <unistd.h>
 

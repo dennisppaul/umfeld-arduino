@@ -29,13 +29,16 @@ if left blank *Umfeld* tries to find the *best* version.
 
 ## Build Options
 
-option(ENABLE_PORTAUDIO "Enable PortAudio output" ON)
-option(ENABLE_ANGLE "Enable ANGLE OpenGL ES emulation on macOS ( apple silicon )" OFF)
-option(DISABLE_PDF "Disable PDF export ( cairo )" OFF)
-option(DISABLE_NCURSES "Disable ncurses support" OFF)
-option(DISABLE_VIDEO "Disable video ( ffmpeg ) support" OFF)
-option(DISABLE_AUDIO "Disable audio ( SDL3 + portaudio ) support" OFF)
-option(DISABLE_OPENGL "Disable OpenGL support" OFF)
-option(DISABLE_GRAPHICS "Disable graphics support" OFF) # same as DISABLE_OPENGL?
-option(DISABLE_FONT "Disable font rendering ( harfbuzz + freetype ) support" OFF)
+```
 option(DISABLE_MAIN "Disable main function" OFF)
+option(DISABLE_GRAPHICS "Disable graphics support" OFF)
+option(DISABLE_AUDIO "Disable audio ( SDL3 + portaudio ) support" OFF)
+option(DISABLE_VIDEO "Disable video ( ffmpeg ) support" OFF)
+option(DISABLE_PDF "Disable PDF export ( cairo )" OFF)
+option(ENABLE_PORTAUDIO "Enable PortAudio output" OFF)
+option(ENABLE_CAPTURE "Enable Capture" OFF)
+option(ENABLE_ANGLE "Enable ANGLE OpenGL ES emulation on macOS ( apple silicon )" OFF)
+option(DISABLE_NCURSES "Disable ncurses support" OFF)
+option(DISABLE_OPENGL "Disable OpenGL support" OFF)
+option(DISABLE_FONT "Disable font rendering ( harfbuzz + freetype ) support" OFF)
+```

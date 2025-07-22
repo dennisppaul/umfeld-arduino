@@ -652,13 +652,21 @@ endif (NOT DISABLE_PDF)
 
 if (NOT DISABLE_NCURSES)
     if (WIN32)
-        # TODO test if it needs
-        target_link_libraries(umfeld-lib PUBLIC pdcurses)
+        discover_library(
+                umfeld-lib
+                Curses
+                Curses::Curses
+                pdcurses
+                PDCURSES
+                "pdcurses"
+                "curses.h"
+                PUBLIC
+        )
     else ()
         discover_library(
                 umfeld-lib
                 Curses
-                Curses::Curses        # unlikely to exist; your fallback handles it
+                Curses::Curses
                 ncurses
                 NCURSES
                 "ncurses"

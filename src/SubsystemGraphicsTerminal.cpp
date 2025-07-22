@@ -17,7 +17,12 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifdef SYSTEM_WINDOWS
+#include <pdcurses/curses.h>
+extern MEVENT mouse_event;
+#else
 #include <curses.h>
+#endif
 #include <cmath>
 #include <unistd.h>
 
@@ -63,7 +68,11 @@ namespace umfeld {
         }
 
         // TODO ugly hack!!!
+#ifdef SYSTEM_WINDOWS
+        resize_term(0, 0);
+#else
         resizeterm(0, 0);
+#endif
         int rows, cols;
         getmaxyx(stdscr, rows, cols);
         width  = cols;
@@ -80,6 +89,23 @@ namespace umfeld {
 
     static void draw_pre() {}
 
+    static bool get_mouse_event(int ch, int& x, int& y) {
+        if (ch != KEY_MOUSE) return false;
+#ifdef SYSTEM_WINDOWS
+        // TODO seems to be a bit broken
+        if (getmouse() == 0) return false;
+        x = mouse_event.x;
+        y = mouse_event.y;
+        return true;
+#else
+        MEVENT e;
+        if (getmouse(&e) != OK) return false;
+        x = e.x;
+        y = e.y;
+        return true;
+#endif
+    }
+
     static void draw_post() {
         if (g != nullptr) {
             g->endDraw();
@@ -90,10 +116,10 @@ namespace umfeld {
         // mvaddstr(3, 0, to_string(rows, ", ", cols).c_str());
 
         const int ch = getch();
-
-        if (ch == KEY_MOUSE && getmouse(&curses_event) == OK) {
-            mouseX = curses_event.x;
-            mouseY = curses_event.y;
+        int mx, my;
+        if (get_mouse_event(ch, mx, my)) {
+            mouseX = (float)mx;
+            mouseY = (float)my;
         }
 
         if (use_esc_key_to_quit) {
@@ -106,7 +132,9 @@ namespace umfeld {
     static void shutdown() {
         printf("\033[?1003l\n"); // Disable mouse tracking
         fflush(stdout);
+#ifndef SYSTEM_WINDOWS
         endwin();
+#endif
         console("terminal graphics shutdown.");
     }
 

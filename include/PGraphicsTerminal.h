@@ -22,7 +22,11 @@
 #include <map>
 #include <tuple>
 #include <cmath>
+#ifdef SYSTEM_WINDOWS
+#include <pdcurses/curses.h>
+#else
 #include <curses.h>
+#endif
 
 #include "PGraphics.h"
 

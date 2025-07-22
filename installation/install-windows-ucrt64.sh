@@ -7,8 +7,8 @@ if [[ "$MSYSTEM" != "UCRT64" ]]; then
   exit 1
 fi
 
-echo "--- udating MSYS2 package database and core system packages..."
-echo "--- NOTE this might quick this console! just re-open and re-run this script if that happens ..."
+echo "--- updating MSYS2 package database and core system packages..."
+echo "--- NOTE the update might quit this console! in that case just re-open and re-run this script if that happens ..."
 pacman -Syu --noconfirm
 # Repeat after first upgrade to ensure core tools are also updated
 pacman -Syu --noconfirm
@@ -21,7 +21,7 @@ pacman -S --noconfirm \
   mingw-w64-ucrt-x86_64-ninja \
   mingw-w64-ucrt-x86_64-curl \
   mingw-w64-ucrt-x86_64-mesa
-echo "--- installing umfeld dependencies"
+echo "--- installing Umfeld dependencies"
 pacman -S --noconfirm \
   mingw-w64-ucrt-x86_64-pkgconf \
   mingw-w64-ucrt-x86_64-ffmpeg \
@@ -32,12 +32,12 @@ pacman -S --noconfirm \
   mingw-w64-ucrt-x86_64-portaudio pkgconf \
   mingw-w64-ucrt-x86_64-cairo \
   mingw-w64-ucrt-x86_64-cairomm \
-  mingw-w64-ucrt-x86_64-ncurses
+  mingw-w64-ucrt-x86_64-pdcurses
 echo "--- installing SDL3"
 pacman -S --noconfirm \
   mingw-w64-ucrt-x86_64-sdl3 \
   mingw-w64-ucrt-x86_64-sdl3-image \
   mingw-w64-ucrt-x86_64-sdl3-ttf
 
-echo "--- Windows MSYS2 UCRT64 environment set up for 'umfeld'."
+echo "--- Windows MSYS2 UCRT64 environment set up for 'Umfeld'."
 echo

@@ -200,7 +200,7 @@ pacman -S --noconfirm \
   mingw-w64-ucrt-x86_64-portaudio pkgconf \
   mingw-w64-ucrt-x86_64-cairo \
   mingw-w64-ucrt-x86_64-cairomm \
-  mingw-w64-ucrt-x86_64-ncurses \
+  mingw-w64-ucrt-x86_64-pdcurses \
   mingw-w64-ucrt-x86_64-sdl3 \
   mingw-w64-ucrt-x86_64-sdl3-image \
   mingw-w64-ucrt-x86_64-sdl3-ttf

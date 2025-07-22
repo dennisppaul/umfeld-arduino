@@ -19,7 +19,13 @@ option(DISABLE_OPENGL "Disable OpenGL support" OFF)
 option(DISABLE_FONT "Disable font rendering ( harfbuzz + freetype ) support" OFF)
 option(DISABLE_MIDI "Disable MIDI support" OFF)
 
+
+##########################################################################################################
+### INTERNAL OPTIONS + VARIABLES                                                                       ###
+##########################################################################################################
+
 set(UMFELD_CXX_VERSION "cxx_std_17")
+option(USE_ASCII_LOGGING "Disable UTF-8 symbols for log output" OFF)
 
 ##########################################################################################################
 ### PROPAGATE VERSION                                                                                  ###
@@ -102,6 +108,14 @@ function(discover_library
     set(FOUND_METHOD "")
     set(USING_DESC "")
 
+    if (USE_ASCII_LOGGING)
+        set(SYMBOL_OK   "[OK]  ")
+        set(SYMBOL_FAIL "[FAIL]")
+    else ()
+        set(SYMBOL_OK   "✓")
+        set(SYMBOL_FAIL "✗")
+    endif ()
+
     find_package(${FIND_PACKAGE_NAME} QUIET)
 
     if (${FIND_PACKAGE_NAME}_FOUND)
@@ -178,9 +192,9 @@ function(discover_library
     string(REPEAT " " ${pad_len} pad)
 
     if (LIB_FOUND)
-        message(STATUS "    PACKAGE: ${FIND_PACKAGE_NAME}${pad}✓ found with ${FOUND_METHOD} ( ${USING_DESC} )")
+        message(STATUS "    PACKAGE: ${FIND_PACKAGE_NAME}${pad}${SYMBOL_OK} found with ${FOUND_METHOD} ( ${USING_DESC} )")
     else ()
-        message(STATUS "[PACKAGE]: ${FIND_PACKAGE_NAME}${pad}✗ not found")
+        message(STATUS "[PACKAGE]: ${FIND_PACKAGE_NAME}${pad}${SYMBOL_FAIL} not found")
         message(FATAL_ERROR "${FIND_PACKAGE_NAME} not found! Please install ${FIND_PACKAGE_NAME} development files.")
     endif ()
 endfunction(discover_library)

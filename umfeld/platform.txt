@@ -7,7 +7,7 @@
 ###################################################################################################
 
 name=Umfeld
-version=2.2.1
+version=2.2.2
 
 ###################################################################################################
 #
@@ -15,29 +15,10 @@ version=2.2.1
 #
 ###################################################################################################
 
-recipe.hooks.prebuild.01.pattern=echo "Umfeld: " {build.flags.board}
-#recipe.hooks.prebuild.02.pattern=sh "{runtime.platform.path}/extras/check-for-tools.sh"
-# try to retreive system information with env variable e.g: `compiler.c.flags=-DVAR_FROM_ENVIRONMENT="{ENV_VAR_NAME}"`
-
-# research: set environment variables from with `platform.txt`
-# a. Preprocess information into environment variables before calling arduino-cli compile:
-# ```sh
-# #!/bin/bash
-# 
-# MYINFO=$(./retrieve-info.sh)
-# export MYINFO
-# 
-# arduino-cli compile --build-path ./build ...
-# ```
-# platform.txt: `compiler.cpp.flags=-DINFO_FROM_SCRIPT="{MYINFO}"`
-#
-# b. OR: Write your info to a known file and read that via a custom wrapper:
-# ```sh
-# #!/bin/sh
-# echo "#define MYINFO \"$VALUE\"" > generated_info.h
-# ```
-# platform.txt: `compiler.cpp.extra_flags=-include{build.path}/generated_info.h`
-# TODO this should be configured according for each system … maybe with a script? see above ^^^
+recipe.hooks.prebuild.01.pattern=echo "Umfeld  : " {version}
+# TODO WIP this could be a way to be a bit more flexible with compiler paths
+recipe.hooks.prebuild.02.pattern=echo "Compiler: " {compiler.path}{compiler.c.cmd} 
+#recipe.hooks.prebuild.02.pattern=sh "{runtime.platform.path}/extras/check-for-tools.sh" # TODO <- could check for compiler here
 
 ###################################################################################################
 #
@@ -45,9 +26,9 @@ recipe.hooks.prebuild.01.pattern=echo "Umfeld: " {build.flags.board}
 #
 ###################################################################################################
 
-compiler.path.macosx  = /usr/bin/
-compiler.path.linux   = /usr/bin/
-compiler.path.windows = C:\\msys64\\ucrt64\\bin\
+# compiler.path.macosx  = /usr/bin/
+# compiler.path.linux   = /usr/bin/
+# compiler.path.windows = C:\\msys64\\ucrt64\\bin\
 
 ###################################################################################################
 #
@@ -55,9 +36,12 @@ compiler.path.windows = C:\\msys64\\ucrt64\\bin\
 #
 ###################################################################################################
 
-compiler.umf_define.macosx  = -DUMF_ENV={build.flags.board} {build.flags.opengl} -DSYSTEM_MACOS
-compiler.umf_define.linux   = -DUMF_ENV={build.flags.board} {build.flags.opengl} -DSYSTEM_LINUX
-compiler.umf_define.windows = -DUMF_ENV={build.flags.board} {build.flags.opengl} -DSYSTEM_WINDOWS
+compiler.umf_define.macosx  = {build.flags.opengl} -DSYSTEM_MACOS
+compiler.umf_define.linux   = {build.flags.opengl} -DSYSTEM_LINUX
+compiler.umf_define.windows = {build.flags.opengl} -DSYSTEM_WINDOWS
+# compiler.umf_define.macosx  = -DUMF_ENV={build.flags.board} {build.flags.opengl} -DSYSTEM_MACOS
+# compiler.umf_define.linux   = -DUMF_ENV={build.flags.board} {build.flags.opengl} -DSYSTEM_LINUX
+# compiler.umf_define.windows = -DUMF_ENV={build.flags.board} {build.flags.opengl} -DSYSTEM_WINDOWS
 
 ###################################################################################################
 #

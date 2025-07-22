@@ -3,12 +3,12 @@ UMFELD.upload.tool=sdlexecprog
 UMFELD.upload.wait_for_upload_port=false
 UMFELD.build.board=UMFELD
 UMFELD.build.core=sdl3
+UMFELD.compiler.path=/usr/bin
 
 menu.upload_method=Upload method
-menu.board=Board
+# menu.board=Board
 menu.OPENGL_VERSION=OpenGL Version
-menu.OSC=Enable OSC
-menu.DISPLAY=Enable Display
+menu.compiler_path=C/C++ Compiler Path
 
 UMFELD.menu.upload_method.sdlexec=Execute Application
 UMFELD.menu.upload_method.sdlexec.upload.protocol=1
@@ -16,8 +16,8 @@ UMFELD.menu.upload_method.sdlexec.upload.options=-g
 UMFELD.menu.upload_method.sdlexec.upload.tool=sdlexecprog
 UMFELD.menu.upload_method.sdlexec.upload.options=
 
-UMFELD.menu.board.GENERIC=GENERIC
-UMFELD.menu.board.GENERIC.build.flags.board=0x00
+# UMFELD.menu.board.GENERIC=GENERIC
+# UMFELD.menu.board.GENERIC.build.flags.board=0x00
 
 UMFELD.menu.OPENGL_VERSION.3_3_core=OpenGL 3.3 Core
 UMFELD.menu.OPENGL_VERSION.3_3_core.build.flags.opengl=-DOPENGL_3_3_CORE -I{runtime.platform.path}/cores/sdl3/umfeld/external/glad_opengl_33/include
@@ -25,3 +25,10 @@ UMFELD.menu.OPENGL_VERSION.2_0=OpenGL 2.0
 UMFELD.menu.OPENGL_VERSION.2_0.build.flags.opengl=-DOPENGL_2_0 -I{runtime.platform.path}/cores/sdl3/umfeld/external/glad_opengl_20/include
 UMFELD.menu.OPENGL_VERSION.es_3_0=OpenGL ES 3.0
 UMFELD.menu.OPENGL_VERSION.es_3_0.build.flags.opengl=-DOPENGL_ES_3_0 -I{runtime.platform.path}/cores/sdl3/umfeld/external/glad_opengles_30/include
+
+UMFELD.menu.compiler_path.macos=macOS default
+UMFELD.menu.compiler_path.macos.compiler.path=/usr/bin/
+UMFELD.menu.compiler_path.linux=Linux
+UMFELD.menu.compiler_path.linux.compiler.path=/usr/bin/
+UMFELD.menu.compiler_path.windows=Windows UCRT64
+UMFELD.menu.compiler_path.windows.compiler.path=C:\\msys64\\ucrt64\\bin\

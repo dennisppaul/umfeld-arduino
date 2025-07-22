@@ -448,11 +448,17 @@ SDL_AppResult SDL_AppInit(void** appstate, const int argc, char* argv[]) {
             // NOTE create two pixel buffers if display density is greater than 1 ( e.g retina display )
             //      g->pixels -> physical size ( w * d * h * d )
             //      pixels    -> logical size ( w * h )
-            umfeld::g->pixels = new uint32_t[umfeld::g->width * umfeld::g->displayDensity() * umfeld::g->height * umfeld::g->displayDensity()];
-            umfeld::pixels    = new uint32_t[umfeld::g->width * umfeld::g->height];
+            //umfeld::g->pixels = new uint32_t[umfeld::g->width * umfeld::g->displayDensity() * umfeld::g->height * umfeld::g->displayDensity()];
+            //umfeld::pixels    = new uint32_t[umfeld::g->width * umfeld::g->height];
+            size_t count_d = static_cast<size_t>(umfeld::g->width * umfeld::g->displayDensity() * umfeld::g->height * umfeld::g->displayDensity());
+            size_t count = static_cast<size_t>(umfeld::g->width * umfeld::g->height);
+            umfeld::g->pixels = new uint32_t[count_d];
+            umfeld::pixels    = new uint32_t[count];
         } else {
             // NOTE create single pixel buffer and share it
-            umfeld::g->pixels = new uint32_t[umfeld::g->width * umfeld::g->height];
+            //umfeld::pixels    = new uint32_t[umfeld::g->width * umfeld::g->height];
+            size_t count = static_cast<size_t>(umfeld::g->width * umfeld::g->height);
+            umfeld::g->pixels = new uint32_t[count];
             umfeld::pixels    = umfeld::g->pixels;
         }
         // NOTE umfeld now owns the pixel buffer and takes care of deleting it

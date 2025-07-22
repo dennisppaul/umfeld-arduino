@@ -89,75 +89,63 @@ function(setup_library_search_paths)
 endfunction()
 
 function(discover_library
-        TARGET_NAME           # What you want to call it (e.g., "${PROJECT_NAME}")
-        FIND_PACKAGE_NAME     # find_package name (e.g., "portaudio")
-        FIND_PACKAGE_TARGET   # Modern target name (e.g., "portaudio")
-        PKG_CONFIG_NAME       # pkg-config name (e.g., "portaudio-2.0")
-        PKG_CONFIG_VAR        # Variable prefix (e.g., "PORTAUDIO")
-        MANUAL_LIB_NAMES      # Manual library names (e.g., "portaudio")
-        MANUAL_HEADER_NAME    # Manual header name (e.g., "portaudio.h")
-        LINK_SCOPE            # PRIVATE or PUBLIC
+        TARGET_NAME
+        FIND_PACKAGE_NAME
+        FIND_PACKAGE_TARGET
+        PKG_CONFIG_NAME
+        PKG_CONFIG_VAR
+        MANUAL_LIB_NAMES
+        MANUAL_HEADER_NAME
+        LINK_SCOPE
 )
     set(LIB_FOUND FALSE)
+    set(FOUND_METHOD "")
+    set(USING_DESC "")
 
-    message(STATUS "CHECKING LIB  : ${FIND_PACKAGE_NAME}")
-
-    # Step 1: Try find_package
     find_package(${FIND_PACKAGE_NAME} QUIET)
 
     if (${FIND_PACKAGE_NAME}_FOUND)
-        message(STATUS "${FIND_PACKAGE_NAME} found via find_package")
-
-        # Check for modern target
         if (TARGET ${FIND_PACKAGE_TARGET})
-            message(STATUS "Using modern ${FIND_PACKAGE_NAME} target")
             target_link_libraries(${TARGET_NAME} ${LINK_SCOPE} ${FIND_PACKAGE_TARGET})
             set(LIB_FOUND TRUE)
+            set(FOUND_METHOD "'find_package'")
+            set(USING_DESC "target")
         else ()
-            # Try common variable patterns
             string(TOUPPER ${FIND_PACKAGE_NAME} UPPER_NAME)
             if (DEFINED ${UPPER_NAME}_LIBRARIES)
-                message(STATUS "Using legacy ${FIND_PACKAGE_NAME} variables")
                 target_link_libraries(${TARGET_NAME} ${LINK_SCOPE} ${${UPPER_NAME}_LIBRARIES})
                 if (DEFINED ${UPPER_NAME}_INCLUDE_DIRS)
                     target_include_directories(${TARGET_NAME} ${LINK_SCOPE} ${${UPPER_NAME}_INCLUDE_DIRS})
                 endif ()
                 set(LIB_FOUND TRUE)
+                set(FOUND_METHOD "'find_package'")
+                set(USING_DESC "variables")
             endif ()
         endif ()
     endif ()
 
-    # Step 2: Try pkg_check_modules
     if (NOT LIB_FOUND)
-        message(STATUS "${FIND_PACKAGE_NAME} not found via find_package, trying pkg-config...")
-
         find_package(PkgConfig QUIET)
         if (PKG_CONFIG_FOUND)
             pkg_check_modules(${PKG_CONFIG_VAR} QUIET IMPORTED_TARGET ${PKG_CONFIG_NAME})
-
             if (${PKG_CONFIG_VAR}_FOUND)
-                message(STATUS "${FIND_PACKAGE_NAME} found via pkg-config")
                 target_link_libraries(${TARGET_NAME} ${LINK_SCOPE} PkgConfig::${PKG_CONFIG_VAR})
                 set(LIB_FOUND TRUE)
+                set(FOUND_METHOD "'pkg-config'  ")
+                set(USING_DESC "variables")
             endif ()
         endif ()
     endif ()
 
-    # Step 3: Manual fallback
     if (NOT LIB_FOUND)
-        message(STATUS "Trying manual ${FIND_PACKAGE_NAME} discovery...")
-
-        # Add package manager paths
         if (APPLE)
             set(_FALLBACK_PATHS)
-
             if (DEFINED HOMEBREW_PREFIX)
                 list(APPEND _FALLBACK_PATHS "${HOMEBREW_PREFIX}")
             endif ()
             if (DEFINED MACPORTS_PREFIX)
                 list(APPEND _FALLBACK_PATHS "${MACPORTS_PREFIX}")
             endif ()
-            # Always include /usr/local
             list(APPEND _FALLBACK_PATHS "/usr/local")
 
             foreach (PREFIX IN LISTS _FALLBACK_PATHS)
@@ -170,27 +158,32 @@ function(discover_library
             endforeach ()
         endif ()
 
-        # Find manually
         find_library(${PKG_CONFIG_VAR}_LIBRARY NAMES ${MANUAL_LIB_NAMES})
         find_path(${PKG_CONFIG_VAR}_INCLUDE_DIR ${MANUAL_HEADER_NAME})
 
         if (${PKG_CONFIG_VAR}_LIBRARY AND ${PKG_CONFIG_VAR}_INCLUDE_DIR)
-            message(STATUS "${FIND_PACKAGE_NAME} found manually: ${${PKG_CONFIG_VAR}_LIBRARY}")
             target_link_libraries(${TARGET_NAME} ${LINK_SCOPE} ${${PKG_CONFIG_VAR}_LIBRARY})
             target_include_directories(${TARGET_NAME} ${LINK_SCOPE} ${${PKG_CONFIG_VAR}_INCLUDE_DIR})
             set(LIB_FOUND TRUE)
+            set(FOUND_METHOD "manual        ")
+            set(USING_DESC "variables")
         endif ()
     endif ()
 
-    # Step 4: Error if not found
-    # Export result
     set(${FIND_PACKAGE_NAME}_FOUND ${LIB_FOUND} PARENT_SCOPE)
 
-    # Step 4: Error if not found
-    if (NOT LIB_FOUND)
+    # -- Final printout --
+    string(LENGTH "${FIND_PACKAGE_NAME}" name_len)
+    math(EXPR pad_len "18 - ${name_len}")
+    string(REPEAT " " ${pad_len} pad)
+
+    if (LIB_FOUND)
+        message(STATUS "    PACKAGE: ${FIND_PACKAGE_NAME}${pad}✓ found with ${FOUND_METHOD} ( ${USING_DESC} )")
+    else ()
+        message(STATUS "[PACKAGE]: ${FIND_PACKAGE_NAME}${pad}✗ not found")
         message(FATAL_ERROR "${FIND_PACKAGE_NAME} not found! Please install ${FIND_PACKAGE_NAME} development files.")
     endif ()
-endfunction()
+endfunction(discover_library)
 
 setup_library_search_paths()
 
@@ -521,6 +514,8 @@ elseif (UNIX)
     target_link_libraries(umfeld-lib PUBLIC Threads::Threads)
 endif ()
 
+message(STATUS "START FINDING PACKAGES ...")
+
 discover_library(
         umfeld-lib
         CURL
@@ -709,6 +704,8 @@ if (NOT DISABLE_MIDI)
         endif ()
     endforeach ()
 endif (NOT DISABLE_MIDI)
+
+message(STATUS "... DONE")
 
 # GRAPHICS + VIDEO
 #if (NOT DISABLE_GRAPHICS)

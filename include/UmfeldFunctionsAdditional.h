@@ -55,18 +55,20 @@ namespace umfeld {
     int                      get_int_from_argument(const std::string& argument);
     std::string              get_string_from_argument(const std::string& argument);
     std::string              timestamp();
-    void                     audio(int input_channels  = DEFAULT_INPUT_CHANNELS,
-                                   int output_channels = DEFAULT_OUTPUT_CHANNELS,
-                                   int sample_rate     = DEFAULT_SAMPLE_RATE,
-                                   int buffer_size     = DEFAULT_AUDIO_BUFFER_SIZE,
-                                   int input_device    = DEFAULT_AUDIO_DEVICE,
-                                   int output_device   = DEFAULT_AUDIO_DEVICE);
+    void                     audio(int  input_channels  = DEFAULT_INPUT_CHANNELS,
+                                   int  output_channels = DEFAULT_OUTPUT_CHANNELS,
+                                   int  sample_rate     = DEFAULT_SAMPLE_RATE,
+                                   int  buffer_size     = DEFAULT_AUDIO_BUFFER_SIZE,
+                                   int  input_device    = DEFAULT_AUDIO_DEVICE,
+                                   int  output_device   = DEFAULT_AUDIO_DEVICE,
+                                   bool threaded        = DEFAULT_AUDIO_RUN_IN_THREAD);
     void                     audio(int                input_channels,
                                    int                output_channels,
                                    int                sample_rate,
                                    int                buffer_size,
                                    const std::string& input_device_name,
-                                   const std::string& output_device_name);
+                                   const std::string& output_device_name,
+                                   bool               threaded = DEFAULT_AUDIO_RUN_IN_THREAD);
     void                     audio(const AudioUnitInfo& info);
     void                     audio_start(PAudio* device = nullptr);
     void                     audio_stop(PAudio* device = nullptr);
@@ -187,6 +189,16 @@ namespace umfeld {
 #define error_in_function(...)   error("'", __func__, "' :: ", __VA_ARGS__)
 #define warning_in_function(...) warning("'", __func__, "' :: ", __VA_ARGS__)
 #define console_in_function(...) console("'", __func__, "' :: ", __VA_ARGS__)
+#define _console_once(counter, ...)               \
+    do {                                          \
+        static bool _once_flag_##counter = false; \
+        if (!_once_flag_##counter) {              \
+            console(__VA_ARGS__);                 \
+            _once_flag_##counter = true;          \
+        }                                         \
+    } while (0)
+#define console_once(...) \
+    _console_once(__COUNTER__, __VA_ARGS__)
 #define _warning_in_function_once(counter, ...)           \
     do {                                                  \
         static bool _once_flag_##counter = false;         \

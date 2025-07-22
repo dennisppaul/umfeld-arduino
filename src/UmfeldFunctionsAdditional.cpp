@@ -184,12 +184,13 @@ namespace umfeld {
         return oss.str();
     }
 
-    void audio(const int input_channels,
-               const int output_channels,
-               const int sample_rate,
-               const int buffer_size,
-               const int input_device,
-               const int output_device) {
+    void audio(const int  input_channels,
+               const int  output_channels,
+               const int  sample_rate,
+               const int  buffer_size,
+               const int  input_device,
+               const int  output_device,
+               const bool threaded) {
         // TODO maybe add option to choose driver e.g SDL, PORTAUDIO, …
         //      similar to renderer parameter in `size()` with RENDERER_OPENGL_3_3_CORE, …
         if (is_initialized()) {
@@ -197,12 +198,13 @@ namespace umfeld {
             return;
         }
         umfeld::enable_audio           = true;
-        umfeld::audio_input_channels   = input_channels;
-        umfeld::audio_output_channels  = output_channels;
-        umfeld::audio_sample_rate      = sample_rate;
-        umfeld::audio_buffer_size      = buffer_size;
         umfeld::audio_input_device_id  = input_device;
+        umfeld::audio_input_channels   = input_channels;
         umfeld::audio_output_device_id = output_device;
+        umfeld::audio_output_channels  = output_channels;
+        umfeld::audio_buffer_size      = buffer_size;
+        umfeld::audio_sample_rate      = sample_rate;
+        umfeld::audio_threaded         = threaded;
     }
 
     void audio(const int          input_channels,
@@ -210,21 +212,24 @@ namespace umfeld {
                const int          sample_rate,
                const int          buffer_size,
                const std::string& input_device_name,
-               const std::string& output_device_name) {
+               const std::string& output_device_name,
+               const bool         threaded) {
         if (is_initialized()) {
             warning("`audio()` must be called before or within `settings()`.");
             return;
         }
         umfeld::enable_audio             = true;
-        umfeld::audio_input_channels     = input_channels;
-        umfeld::audio_output_channels    = output_channels;
-        umfeld::audio_sample_rate        = sample_rate;
-        umfeld::audio_buffer_size        = buffer_size;
         umfeld::audio_input_device_id    = AUDIO_DEVICE_FIND_BY_NAME;
-        umfeld::audio_output_device_id   = AUDIO_DEVICE_FIND_BY_NAME;
         umfeld::audio_input_device_name  = input_device_name;
+        umfeld::audio_input_channels     = input_channels;
+        umfeld::audio_output_device_id   = AUDIO_DEVICE_FIND_BY_NAME;
         umfeld::audio_output_device_name = output_device_name;
+        umfeld::audio_output_channels    = output_channels;
+        umfeld::audio_buffer_size        = buffer_size;
+        umfeld::audio_sample_rate        = sample_rate;
+        umfeld::audio_threaded           = threaded;
     }
+
     void audio(const AudioUnitInfo& info) {
         if (is_initialized()) {
             warning("`audio()` must be called before or within `settings()`.");
@@ -239,6 +244,7 @@ namespace umfeld {
         umfeld::audio_output_channels    = info.output_channels;
         umfeld::audio_buffer_size        = info.buffer_size;
         umfeld::audio_sample_rate        = info.sample_rate;
+        umfeld::audio_threaded           = info.threaded;
     }
 
     void audio_start(PAudio* device) {

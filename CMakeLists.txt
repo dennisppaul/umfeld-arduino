@@ -431,7 +431,7 @@ endif ()
 
 if (NOT DISABLE_GRAPHICS)
     if (NOT DISABLE_OPENGL)
-        if (SYSTEM_UNIX_RASPBERRY_PI)
+        if (RASPBERRY_PI)
             set(UMFELD_DEFAULT_OPENGL_VERSION "OPENGL_ES_3_0" CACHE STRING "OpenGL version used in umfeld")
         else ()
             set(UMFELD_DEFAULT_OPENGL_VERSION "OPENGL_3_3_CORE" CACHE STRING "OpenGL version used in umfeld")

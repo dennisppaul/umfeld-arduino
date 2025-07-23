@@ -67,7 +67,7 @@ namespace umfeld {
     public:
         Capture();
 
-        // TODO check if this conflicts with init in PImage `warning: 'umfeld::Capture::init' hides overloaded virtual function [-Woverloaded-virtual]`
+        using PImage::init;
         bool        init(const char* device_name,
                          const char* resolution,
                          const char* frame_rate,

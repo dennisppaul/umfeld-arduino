@@ -71,7 +71,7 @@ namespace umfeld {
         virtual void IMPL_bind_texture(int bind_texture_id)              = 0;
         virtual void IMPL_set_texture(PImage* img)                       = 0;
 
-        virtual void render_framebuffer_to_screen(bool use_blit) {} // TODO this should probably go to PGraphicsOpenGL
+        virtual void render_framebuffer_to_screen(bool use_blit) { (void)use_blit; } // TODO this should probably go to PGraphicsOpenGL
         virtual bool read_framebuffer(std::vector<unsigned char>& pixels) { return false; }
 
         /* --- implementation specific methods ( pure virtual ) --- */

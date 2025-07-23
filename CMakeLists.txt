@@ -6,7 +6,6 @@ message(STATUS "----------------------------------------")
 message(STATUS "UMFELD LIBRARY")
 message(STATUS "----------------------------------------")
 
-option(DISABLE_MAIN "Disable main function" OFF)
 option(DISABLE_GRAPHICS "Disable graphics support" OFF)
 option(DISABLE_AUDIO "Disable audio ( SDL3 + portaudio ) support" OFF)
 option(DISABLE_VIDEO "Disable video ( ffmpeg ) support" OFF)
@@ -19,6 +18,8 @@ option(DISABLE_OPENGL "Disable OpenGL support" OFF)
 option(DISABLE_FONT "Disable font rendering ( harfbuzz + freetype ) support" OFF)
 option(DISABLE_MIDI "Disable MIDI support" OFF)
 
+option(DISABLE_MAIN "Disable main function" OFF)
+option(ENABLE_PEDANTIC_COMPILER "Enable pedantic compiler warnings" OFF)
 
 ##########################################################################################################
 ### INTERNAL OPTIONS + VARIABLES                                                                       ###
@@ -38,8 +39,17 @@ configure_file(
 )
 
 ##########################################################################################################
-### LIBRARY DISCOVERY FUNCTIONS                                                                        ###
+### LIBRARY FUNCTIONS                                                                                  ###
 ##########################################################################################################
+
+function(set_compile_definition_macro option definition_text)
+    # TODO use this to replace `target_compile_definitions` calls in script
+    #      target_compile_definitions(umfeld-lib-interface INTERFACE ...)
+    #      target_compile_definitions(umfeld-lib PUBLIC ...)
+    target_compile_definitions(umfeld-lib-interface INTERFACE ${option})
+    target_compile_definitions(umfeld-lib PUBLIC ${option})
+    message(STATUS "${definition_text}${option}")
+endfunction()
 
 function(setup_library_search_paths)
     # set up common search paths (call once)
@@ -90,7 +100,11 @@ function(setup_library_search_paths)
         # Propagate all useful paths
         set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} PARENT_SCOPE)
         set(HOMEBREW_PREFIX "${HOMEBREW_PREFIX}" CACHE INTERNAL "")
+        set(HOMEBREW_LIB_PATH "${HOMEBREW_LIB_PATH}" CACHE INTERNAL "")
+        set(HOMEBREW_INCLUDE_PATH "${HOMEBREW_INCLUDE_PATH}" CACHE INTERNAL "")
         set(MACPORTS_PREFIX "${MACPORTS_PREFIX}" CACHE INTERNAL "")
+        set(MACPORTS_LIB_PATH "${MACPORTS_LIB_PATH}" CACHE INTERNAL "")
+        set(MACPORTS_INCLUDE_PATH "${MACPORTS_INCLUDE_PATH}" CACHE INTERNAL "")
     endif ()
 endfunction()
 
@@ -109,10 +123,10 @@ function(discover_library
     set(USING_DESC "")
 
     if (USE_ASCII_LOGGING)
-        set(SYMBOL_OK   "[OK]  ")
+        set(SYMBOL_OK "[OK]  ")
         set(SYMBOL_FAIL "[FAIL]")
     else ()
-        set(SYMBOL_OK   "✓")
+        set(SYMBOL_OK "✓")
         set(SYMBOL_FAIL "✗")
     endif ()
 
@@ -206,44 +220,45 @@ setup_library_search_paths()
 ### CHECK FOR HOMEBREW + MACPORTS                                                                      ###
 ##########################################################################################################
 
-if (APPLE)
-    find_program(BREW_FOUND brew)
-    if (BREW_FOUND)
-        execute_process(COMMAND brew --prefix
-                OUTPUT_VARIABLE HOMEBREW_PREFIX
-                OUTPUT_STRIP_TRAILING_WHITESPACE)
-        set(HOMEBREW_LIB_PATH "${HOMEBREW_PREFIX}/lib")
-        set(HOMEBREW_INCLUDE_PATH "${HOMEBREW_PREFIX}/include")
-        set(ENV{PKG_CONFIG_PATH} "${HOMEBREW_PREFIX}/lib/pkgconfig:$ENV{PKG_CONFIG_PATH}")
-        message(STATUS "HOMEBREW PRFX : ${HOMEBREW_PREFIX}")
-        message(STATUS "HOMEBREW LIBS : ${HOMEBREW_LIB_PATH}")
-        message(STATUS "HOMEBREW INCL : ${HOMEBREW_INCLUDE_PATH}")
-    else ()
-        message(STATUS "HOMEBREW      : not found")
-    endif ()
-
-    find_program(PORT_FOUND port)
-    if (PORT_FOUND)
-        execute_process(COMMAND port dir
-                OUTPUT_VARIABLE MACPORTS_PREFIX
-                OUTPUT_STRIP_TRAILING_WHITESPACE)
-        set(MACPORTS_LIB_PATH "${MACPORTS_PREFIX}/lib")
-        set(MACPORTS_INCLUDE_PATH "${MACPORTS_PREFIX}/include")
-        set(ENV{PKG_CONFIG_PATH} "${MACPORTS_LIB_PATH}/pkgconfig:$ENV{PKG_CONFIG_PATH}")
-        message(STATUS "MACPORTS PRFX : ${MACPORTS_PREFIX}")
-        message(STATUS "MACPORTS LIBS : ${MACPORTS_LIB_PATH}")
-        message(STATUS "MACPORTS INCL : ${MACPORTS_INCLUDE_PATH}")
-    else ()
-        message(STATUS "MACPORTS      : not found")
-    endif ()
-
-    # TODO @dpp(not sure if it is necessary to set include paths like this. shouldn’t this be covered by 'find_package' or 'pkg_check_modules')
-
-    # NOTE combined warning for both package managers
-    if (NOT BREW_FOUND AND NOT PORT_FOUND)
-        message(WARNING "Neither HOMEBREW nor MACPORTS found. Build may fail.")
-    endif ()
-endif (APPLE)
+# NOTE merged this with `setup_library_search_paths` function
+#if (APPLE)
+#    find_program(BREW_FOUND brew)
+#    if (BREW_FOUND)
+#        execute_process(COMMAND brew --prefix
+#                OUTPUT_VARIABLE HOMEBREW_PREFIX
+#                OUTPUT_STRIP_TRAILING_WHITESPACE)
+#        set(HOMEBREW_LIB_PATH "${HOMEBREW_PREFIX}/lib")
+#        set(HOMEBREW_INCLUDE_PATH "${HOMEBREW_PREFIX}/include")
+#        set(ENV{PKG_CONFIG_PATH} "${HOMEBREW_PREFIX}/lib/pkgconfig:$ENV{PKG_CONFIG_PATH}")
+#        message(STATUS "HOMEBREW PRFX : ${HOMEBREW_PREFIX}")
+#        message(STATUS "HOMEBREW LIBS : ${HOMEBREW_LIB_PATH}")
+#        message(STATUS "HOMEBREW INCL : ${HOMEBREW_INCLUDE_PATH}")
+#    else ()
+#        message(STATUS "HOMEBREW      : not found")
+#    endif ()
+#
+#    find_program(PORT_FOUND port)
+#    if (PORT_FOUND)
+#        execute_process(COMMAND port dir
+#                OUTPUT_VARIABLE MACPORTS_PREFIX
+#                OUTPUT_STRIP_TRAILING_WHITESPACE)
+#        set(MACPORTS_LIB_PATH "${MACPORTS_PREFIX}/lib")
+#        set(MACPORTS_INCLUDE_PATH "${MACPORTS_PREFIX}/include")
+#        set(ENV{PKG_CONFIG_PATH} "${MACPORTS_LIB_PATH}/pkgconfig:$ENV{PKG_CONFIG_PATH}")
+#        message(STATUS "MACPORTS PRFX : ${MACPORTS_PREFIX}")
+#        message(STATUS "MACPORTS LIBS : ${MACPORTS_LIB_PATH}")
+#        message(STATUS "MACPORTS INCL : ${MACPORTS_INCLUDE_PATH}")
+#    else ()
+#        message(STATUS "MACPORTS      : not found")
+#    endif ()
+#
+#    # TODO @dpp(not sure if it is necessary to set include paths like this. shouldn’t this be covered by 'find_package' or 'pkg_check_modules')
+#
+#    # NOTE combined warning for both package managers
+#    if (NOT BREW_FOUND AND NOT PORT_FOUND)
+#        message(WARNING "Neither HOMEBREW nor MACPORTS found. Build may fail.")
+#    endif ()
+#endif (APPLE)
 
 ##########################################################################################################
 ### SUPPLEMENT LIBRARY SEARCH PATH                                                                     ###
@@ -341,8 +356,9 @@ target_include_directories(umfeld-lib PUBLIC
 if (NOT DEFINED UMFELD_APP_NAME)
     set(UMFELD_APP_NAME "${CMAKE_PROJECT_NAME}")
 endif ()
-target_compile_definitions(umfeld-lib PUBLIC UMFELD_APP_NAME=\"${UMFELD_APP_NAME}\")
-message(STATUS "APP NAME      : ${UMFELD_APP_NAME}")
+#target_compile_definitions(umfeld-lib PUBLIC UMFELD_APP_NAME=\"${UMFELD_APP_NAME}\")
+#message(STATUS "APP NAME      : ${UMFELD_APP_NAME}")
+set_compile_definition_macro(UMFELD_APP_NAME=\"${UMFELD_APP_NAME}\" "APP NAME      : ")
 
 # module options
 
@@ -351,6 +367,16 @@ if (DISABLE_MAIN)
 else ()
     target_compile_definitions(umfeld-lib PUBLIC SDL_MAIN_USE_CALLBACKS)
 endif (DISABLE_MAIN)
+
+if (ENABLE_PEDANTIC_COMPILER)
+    message(STATUS "ENABLE_PEDAN… : enable pedantic compiler warnings.")
+    target_compile_options(umfeld-lib PRIVATE
+            -Wall # enable all warnings
+            -Wextra # enable extra warnings
+            -Wpedantic # enable pedantic warnings
+#            -Werror # treat warnings as errors
+    )
+endif (ENABLE_PEDANTIC_COMPILER)
 
 function(define_option_macro option enable_text)
     if (${option})
@@ -555,8 +581,8 @@ if (NOT DISABLE_GRAPHICS)
             "glm/glm.hpp"   # manual header
             PUBLIC          # link scope ( PUBLIC since it's header-only )
     )
-    target_compile_definitions(umfeld-lib PUBLIC GLM_ENABLE_EXPERIMENTAL)
     target_compile_definitions(umfeld-lib-interface INTERFACE GLM_ENABLE_EXPERIMENTAL)
+    target_compile_definitions(umfeld-lib PUBLIC GLM_ENABLE_EXPERIMENTAL)
 
     discover_library(       # TODO maybe we need to handle SDL3 differently
             umfeld-lib
@@ -703,16 +729,16 @@ endif (NOT DISABLE_VIDEO)
 # MIDI
 
 if (NOT DISABLE_MIDI)
-#    discover_library(
-#            umfeld-lib             # target to link to
-#            RtMidi                 # find_package name
-#            RtMidi::rtmidi         # modern CMake target (provided by RtMidi)
-#            rtmidi                 # pkg-config name
-#            RTMIDI                 # variable prefix
-#            "rtmidi"               # manual library name
-#            "RtMidi.h"             # manual header
-#            PRIVATE                # link scope
-#    )
+    #    discover_library(
+    #            umfeld-lib             # target to link to
+    #            RtMidi                 # find_package name
+    #            RtMidi::rtmidi         # modern CMake target (provided by RtMidi)
+    #            rtmidi                 # pkg-config name
+    #            RTMIDI                 # variable prefix
+    #            "rtmidi"               # manual library name
+    #            "RtMidi.h"             # manual header
+    #            PRIVATE                # link scope
+    #    )
     # NOTE rtmidi requires some manual handling somehow `pkg_check_modules` seems to fail
     pkg_search_module(RTMIDI REQUIRED rtmidi)
     target_link_directories(umfeld-lib PUBLIC ${RTMIDI_LIBRARY_DIRS})

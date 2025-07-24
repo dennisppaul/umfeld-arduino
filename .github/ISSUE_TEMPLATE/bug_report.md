@@ -1,13 +1,12 @@
 ---
 name: Bug report
 about: Create a report to help improve Umfeld
-title: ''
-labels: ''
+title: '[BUG] '
+labels: bug
 assignees: ''
-
 ---
 
-Thanks for helping improve **Umfeld**! Please complete the checklist and provide as much detail as possible.
+Thank you for helping improve **Umfeld**! Please complete the checklist and provide as much detail as possible.
 
 ---
 
@@ -26,7 +25,7 @@ Thanks for helping improve **Umfeld**! Please complete the checklist and provide
 - Renderer backend: (e.g. OpenGL 3.3, GLES, etc.)
 - SDL version: (if known)
 - Compiler: (e.g. clang 17, gcc 13)
-- Umfeld version / commit:
+- Umfeld version / commit: (e.g. v0.3.1 or `a1b2c3d`)
 
 ## Describe the Bug
 

@@ -21,11 +21,42 @@ Thank you for helping improve **Umfeld**! Please complete the checklist and prov
 
 ## Environment
 
-- OS: (e.g. macOS 15.5, Ubuntu 24.04)
+- OS: (e.g. macOS 15.5, Ubuntu 24.04, Windows 11 UCRT64)
 - Renderer backend: (e.g. OpenGL 3.3, GLES, etc.)
-- SDL version: (if known)
+- SDL version: (if known e.g. 3.2.18)
 - Compiler: (e.g. clang 17, gcc 13)
-- Umfeld version / commit: (e.g. v0.3.1 or `a1b2c3d`)
+- Umfeld version / commit: (e.g. v2.0.1 or `a1b2c3d`)
+
+<details>
+<summary><strong>Not sure where to find this info?</strong> (click to expand)</summary>
+
+- **OS**:  
+  - **macOS**: Run `sw_vers`  
+  - **Linux**: Run `lsb_release -a` or `cat /etc/os-release`  
+  - **Windows (MSYS2 UCRT64)**: Run `uname -o && uname -m && gcc --version`
+
+- **Renderer backend**:  
+  Check your code or console/log output.  
+  CMake script output something like `-- OPEN_GL       : OPENGL_3_3_CORE`
+
+- **SDL version (SDL3)**:  
+  - If you built SDL3 from source: check `CMakeCache.txt` or the cloned commit  
+  - If installed via package manager:  
+    - macOS: `brew info sdl3`  
+    - Linux: `apt show libsdl3` or `pacman -Qi sdl3`  
+    - Windows (MSYS2 UCRT64): `pacman -Qi mingw-w64-ucrt-x86_64-SDL3`
+
+- **Compiler**:  
+  - macOS: `clang --version`  
+  - Linux: `gcc --version` or `clang --version`  
+  - Windows (MSYS2 UCRT64): `gcc --version` or `clang --version`
+
+- **Umfeld version / commit**:  
+  - Umfeld version is defined in `include/UmfeldVersion.h`  
+  - If you cloned the repo: `git rev-parse --short HEAD`  
+  - If using a zip or release: check the GitHub tag or folder name
+
+</details>
 
 ## Describe the Bug
 

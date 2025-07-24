@@ -20,7 +20,7 @@
 #if defined(OPENGL_2_0)
 #include "glad_opengl_20/src/gl.c.keep"
 #elif defined(OPENGL_ES_3_0)
-#include "glad_opengles_30/src/gl.c.keep"
+#include "glad_opengles_30/src/gles2.c.keep"
 #elif defined(OPENGL_3_3_CORE)
 #include "glad_opengl_33/src/gl.c.keep"
 #else

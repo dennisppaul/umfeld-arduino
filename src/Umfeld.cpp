@@ -129,8 +129,8 @@ namespace umfeld {
             warning(umfeld::format_label("failed to get display mode"), "SDL ", SDL_GetError());
         }
         warning(umfeld::format_label("setting display size to window size"), width, " x ", height, " px");
-        display_width  = width;
-        display_height = height;
+        display_width  = static_cast<int>(width);
+        display_height = static_cast<int>(height);
         return false;
     }
 
@@ -296,9 +296,10 @@ SDL_AppResult SDL_AppInit(void** appstate, const int argc, char* argv[]) {
                 umfeld::subsystem_audio                = umfeld::create_subsystem_audio();
                 umfeld::handle_subsystem_audio_cleanup = true;
             } else {
-                umfeld::console("no audio subsystem provided, using default ( PortAudio ).");
-                // umfeld::subsystem_audio                = umfeld_create_subsystem_audio_sdl();
-                umfeld::subsystem_audio                = umfeld_create_subsystem_audio_portaudio();
+                umfeld::console("no audio subsystem provided, using default ( SDL ).");
+                umfeld::subsystem_audio                = umfeld_create_subsystem_audio_sdl();
+                // umfeld::console("no audio subsystem provided, using default ( PortAudio ).");
+                // umfeld::subsystem_audio                = umfeld_create_subsystem_audio_portaudio();
                 umfeld::handle_subsystem_audio_cleanup = true;
             }
             if (umfeld::subsystem_audio == nullptr) {
@@ -375,10 +376,10 @@ SDL_AppResult SDL_AppInit(void** appstate, const int argc, char* argv[]) {
             umfeld::console(umfeld::format_label("video driver"), video_driver);
         }
         if (umfeld::width == umfeld::DISPLAY_WIDTH) {
-            umfeld::width = umfeld::display_width;
+            umfeld::width = static_cast<float>(umfeld::display_width);
         }
         if (umfeld::height == umfeld::DISPLAY_HEIGHT) {
-            umfeld::height = umfeld::display_height;
+            umfeld::height = static_cast<float>(umfeld::display_height);
         }
     }
 
@@ -448,11 +449,17 @@ SDL_AppResult SDL_AppInit(void** appstate, const int argc, char* argv[]) {
             // NOTE create two pixel buffers if display density is greater than 1 ( e.g retina display )
             //      g->pixels -> physical size ( w * d * h * d )
             //      pixels    -> logical size ( w * h )
-            umfeld::g->pixels = new uint32_t[umfeld::g->width * umfeld::g->displayDensity() * umfeld::g->height * umfeld::g->displayDensity()];
-            umfeld::pixels    = new uint32_t[umfeld::g->width * umfeld::g->height];
+            //umfeld::g->pixels = new uint32_t[umfeld::g->width * umfeld::g->displayDensity() * umfeld::g->height * umfeld::g->displayDensity()];
+            //umfeld::pixels    = new uint32_t[umfeld::g->width * umfeld::g->height];
+            const auto count_d = static_cast<size_t>(umfeld::g->width * static_cast<float>(umfeld::g->displayDensity()) * umfeld::g->height * static_cast<float>(umfeld::g->displayDensity()));
+            const auto count   = static_cast<size_t>(umfeld::g->width * umfeld::g->height);
+            umfeld::g->pixels  = new uint32_t[count_d];
+            umfeld::pixels     = new uint32_t[count];
         } else {
             // NOTE create single pixel buffer and share it
-            umfeld::g->pixels = new uint32_t[umfeld::g->width * umfeld::g->height];
+            //umfeld::pixels    = new uint32_t[umfeld::g->width * umfeld::g->height];
+            const auto count  = static_cast<size_t>(umfeld::g->width * umfeld::g->height);
+            umfeld::g->pixels = new uint32_t[count];
             umfeld::pixels    = umfeld::g->pixels;
         }
         // NOTE umfeld now owns the pixel buffer and takes care of deleting it

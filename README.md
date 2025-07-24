@@ -1,4 +1,4 @@
-![umfeld-logotype-3D](assets/umfeld-logotype-3D-round.png)
+![umfeld-logotype-3D](assets/umfeld-logotype.png)
 
 *Umfeld* is a C++ environment for audio- and graphics-based applications. it is inspired by [Processing.org](https://processing.org) and similar environments.
 
@@ -96,7 +96,7 @@ this project relies on the following libraries and packages:
 - [PortAudio](https://www.portaudio.com) ( can be used as a replacement for SDL-based audio. in contrast to SDL it can output audio to multiple channels. it can also be installed via homebrew with `brew install portaudio` ) `@version(macOS, 19.7.0)`
 - [cairo](https://www.cairographics.org) `@version(macOS, 1.18.4)`
 - [curl](https://curl.se) `@version(macOS, 8.14.1)`
-- [ncurses](https://invisible-island.net/ncurses) `@version(macOS, 6.5)`
+- [ncurses](https://invisible-island.net/ncurses) `@version(macOS, 6.5)` ( on Windows `ncurses` is replaced by `pdcurses` )
 
 ( version numbers reflect the setup on macOS and are only updated sporadically )
 

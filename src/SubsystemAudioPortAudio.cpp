@@ -57,7 +57,6 @@ namespace umfeld {
                 return;
             }
             this->audio = audio;
-            // TODO implement threaded audio processing
             if (audio->threaded) {
                 console("PAudioPortAudio: threaded audio processing enabled");
             } else {

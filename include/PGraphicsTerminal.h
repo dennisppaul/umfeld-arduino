@@ -22,8 +22,12 @@
 #include <map>
 #include <tuple>
 #include <cmath>
+#ifdef SYSTEM_WINDOWS
+#include <pdcurses/curses.h>
+#else
+#include <curses.h>
+#endif
 
-#include "curses.h"
 #include "PGraphics.h"
 
 extern umfeld::SubsystemGraphics* umfeld_create_subsystem_graphics_terminal();

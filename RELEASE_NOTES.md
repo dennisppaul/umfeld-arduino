@@ -1,5 +1,21 @@
 # RELEASE NOTES
 
+## v2.3.0 (2025-07-24)
+
+- textures now have filtering and wrapping options with `texture_filter` and `texture_wrap`
+- application now set automatically window title to project title
+- added option `flip_y_texcoords` to `PImage` to flip y-axis when drawn ( addressing the bottom-left vs bottom-right dilema )
+- terminal renderer has been improved, can draw images now, handles colors, and has been added officially
+- pixel operations `loadPixels()`, `pixels[]`, and `updatePixel()` now work
+- improved install scripts
+- Arch Linux now works again and is detected by installation script
+- improved random functions; mode can be set with `set_random_mode()`
+- added additional console and warning function that only emit a message once: `console_once()` and `warning_in_function_once()`
+- default window name is now deduced from CMake script
+- made package and library finding in CMake script more robust 
+- improved terminal ( CLI ) renderer
+- fixed threaded audio
+
 ## v2.2.0 (2025-06-27)
 
 - `size()` can now interpret `DISPLAY_WIDTH, DISPLAY_HEIGHT` to set window to full display width and height

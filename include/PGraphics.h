@@ -71,7 +71,7 @@ namespace umfeld {
         virtual void IMPL_bind_texture(int bind_texture_id)              = 0;
         virtual void IMPL_set_texture(PImage* img)                       = 0;
 
-        virtual void render_framebuffer_to_screen(bool use_blit) { (void)use_blit; } // TODO this should probably go to PGraphicsOpenGL
+        virtual void render_framebuffer_to_screen(bool use_blit) { (void) use_blit; } // TODO this should probably go to PGraphicsOpenGL
         virtual bool read_framebuffer(std::vector<unsigned char>& pixels) { return false; }
 
         /* --- implementation specific methods ( pure virtual ) --- */
@@ -238,6 +238,7 @@ namespace umfeld {
         int                 getPixelDensity() const { return pixel_density; }
         void                set_point_render_mode(const int point_render_mode) { this->point_render_mode = point_render_mode; }
         void                set_stroke_render_mode(const int stroke_render_mode) { this->stroke_render_mode = stroke_render_mode; }
+        int                 get_stroke_render_mode() const { return stroke_render_mode; }
         void                stroke_properties(float stroke_join_round_resolution, float stroke_cap_round_resolution, float stroke_join_miter_max_angle);
         void                triangulate_line_strip_vertex(const std::vector<Vertex>& line_strip,
                                                           bool                       close_shape,

@@ -388,7 +388,6 @@ namespace umfeld {
         //     return fastRandom01();
         // }
         const Random mode = get_random_mode();
-        console(__func__, " mode: ", mode);
         switch (mode) {
             case FAST:
                 return fastRandom01();

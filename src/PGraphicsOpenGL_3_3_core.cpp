@@ -182,7 +182,6 @@ void PGraphicsOpenGL_3_3_core::IMPL_emit_shape_stroke_line_strip(std::vector<Ver
         //      - STROKE_RENDER_MODE_BARYCENTRIC_SHADER
         //      - STROKE_RENDER_MODE_GEOMETRY_SHADER
         if (stroke_render_mode == STROKE_RENDER_MODE_TRIANGULATE_2D) {
-
             std::vector<Vertex> line_vertices;
             triangulate_line_strip_vertex(line_strip_vertices,
                                           line_strip_closed,
@@ -311,7 +310,7 @@ void PGraphicsOpenGL_3_3_core::IMPL_emit_shape_stroke_points(std::vector<Vertex>
             shader_point->set_uniform("perspective", 1);
             std::vector<Vertex> point_vertices_expanded;
 
-            for (size_t i = 0; i + 1 < point_vertices.size(); i++) {
+            for (size_t i = 0; i < point_vertices.size(); i++) {
                 Vertex v0, v1, v2, v3;
 
                 v0 = point_vertices[i];

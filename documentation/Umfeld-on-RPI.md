@@ -154,9 +154,9 @@ note, the first time might take a bit on a small machine. note, examples can not
 
 ## Running Applications Outside the Windowing System
 
-- to leave the windowing system to a console (TTY) press `CTRL+ALT+F3` ( or any `+F[3–6]` )
+- to leave the windowing system to a console (TTY) press `CTRL+ALT+F3` ( or any `+F[1–6]` )
 - run application from console e.g: `./build/minimal` ( make sure the application was built with OpenGL ES 3.0 )
-- to return to the desktop press `CTRL+ALT+F1` or `CTRL+ALT+F2`.
+- to return to the desktop press `CTRL+ALT+F7`
 
 ## X11 Forwarding
 

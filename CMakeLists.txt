@@ -20,6 +20,7 @@ option(DISABLE_MIDI "Disable MIDI support" OFF)
 
 option(DISABLE_MAIN "Disable main function" OFF)
 option(ENABLE_PEDANTIC_COMPILER "Enable pedantic compiler warnings" OFF)
+option(ENABLE_PROFILING "Enable Tracy Profiler" ON)
 
 ##########################################################################################################
 ### INTERNAL OPTIONS + VARIABLES                                                                       ###
@@ -215,67 +216,6 @@ endfunction(discover_library)
 
 setup_library_search_paths()
 
-# @REMOVE -->
-##########################################################################################################
-### CHECK FOR HOMEBREW + MACPORTS                                                                      ###
-##########################################################################################################
-
-# NOTE merged this with `setup_library_search_paths` function
-#if (APPLE)
-#    find_program(BREW_FOUND brew)
-#    if (BREW_FOUND)
-#        execute_process(COMMAND brew --prefix
-#                OUTPUT_VARIABLE HOMEBREW_PREFIX
-#                OUTPUT_STRIP_TRAILING_WHITESPACE)
-#        set(HOMEBREW_LIB_PATH "${HOMEBREW_PREFIX}/lib")
-#        set(HOMEBREW_INCLUDE_PATH "${HOMEBREW_PREFIX}/include")
-#        set(ENV{PKG_CONFIG_PATH} "${HOMEBREW_PREFIX}/lib/pkgconfig:$ENV{PKG_CONFIG_PATH}")
-#        message(STATUS "HOMEBREW PRFX : ${HOMEBREW_PREFIX}")
-#        message(STATUS "HOMEBREW LIBS : ${HOMEBREW_LIB_PATH}")
-#        message(STATUS "HOMEBREW INCL : ${HOMEBREW_INCLUDE_PATH}")
-#    else ()
-#        message(STATUS "HOMEBREW      : not found")
-#    endif ()
-#
-#    find_program(PORT_FOUND port)
-#    if (PORT_FOUND)
-#        execute_process(COMMAND port dir
-#                OUTPUT_VARIABLE MACPORTS_PREFIX
-#                OUTPUT_STRIP_TRAILING_WHITESPACE)
-#        set(MACPORTS_LIB_PATH "${MACPORTS_PREFIX}/lib")
-#        set(MACPORTS_INCLUDE_PATH "${MACPORTS_PREFIX}/include")
-#        set(ENV{PKG_CONFIG_PATH} "${MACPORTS_LIB_PATH}/pkgconfig:$ENV{PKG_CONFIG_PATH}")
-#        message(STATUS "MACPORTS PRFX : ${MACPORTS_PREFIX}")
-#        message(STATUS "MACPORTS LIBS : ${MACPORTS_LIB_PATH}")
-#        message(STATUS "MACPORTS INCL : ${MACPORTS_INCLUDE_PATH}")
-#    else ()
-#        message(STATUS "MACPORTS      : not found")
-#    endif ()
-#
-#    # TODO @dpp(not sure if it is necessary to set include paths like this. shouldn’t this be covered by 'find_package' or 'pkg_check_modules')
-#
-#    # NOTE combined warning for both package managers
-#    if (NOT BREW_FOUND AND NOT PORT_FOUND)
-#        message(WARNING "Neither HOMEBREW nor MACPORTS found. Build may fail.")
-#    endif ()
-#endif (APPLE)
-
-##########################################################################################################
-### SUPPLEMENT LIBRARY SEARCH PATH                                                                     ###
-##########################################################################################################
-
-# NOTE this does not work when executed after `add_executable` or `add_library` … which is exactly what happens :(
-# if (APPLE)
-#     # NOTE add default search path for libraries on macOS e.g for default Homebrew installation
-#     link_directories("/usr/local/lib")
-#     link_directories("/opt/homebrew/lib")
-#     message(STATUS "GLOBAL LIB    : adding `/usr/local/lib` + `/opt/homebrew/lib` to library search path")
-# elseif (UNIX)
-# elseif (WIN32)
-# else ()
-# endif ()
-# <-- @REMOVE
-
 ##########################################################################################################
 ### ADD SOURCE + HEADER FILES                                                                          ###
 ##########################################################################################################
@@ -374,7 +314,7 @@ if (ENABLE_PEDANTIC_COMPILER)
             -Wall # enable all warnings
             -Wextra # enable extra warnings
             -Wpedantic # enable pedantic warnings
-#            -Werror # treat warnings as errors
+            #            -Werror # treat warnings as errors
     )
 endif (ENABLE_PEDANTIC_COMPILER)
 
@@ -753,209 +693,40 @@ if (NOT DISABLE_MIDI)
     endforeach ()
 endif (NOT DISABLE_MIDI)
 
+##########################################################################################################
+### PROFILING                                                                                          ###
+##########################################################################################################
+
+if (ENABLE_PROFILING)
+    define_option_macro(ENABLE_PROFILING "ENABLING      : profiling ( with Tracy Profiler )")
+
+    find_package(TRACY CONFIG REQUIRED)
+    if (TRACY_FOUND)
+        message(STATUS "              : found tracy library at ${TRACY_DIR}")
+        target_link_libraries(umfeld-lib PUBLIC Tracy::TracyClient)
+        target_compile_definitions(umfeld-lib PUBLIC ENABLE_TRACY)
+        target_compile_definitions(umfeld-lib PUBLIC TRACY_ENABLE) # Enable Tracy zones
+        target_link_libraries(umfeld-lib-interface INTERFACE Tracy::TracyClient)
+        target_compile_definitions(umfeld-lib-interface INTERFACE ENABLE_TRACY)
+        target_compile_definitions(umfeld-lib-interface INTERFACE TRACY_ENABLE) # Enable Tracy zones
+    else ()
+        message(STATUS "              : tracy not found")
+    endif ()
+
+    # TODO look into why `discover_library` does not work with Tracy
+    #    discover_library(
+    #            umfeld-lib
+    #            TRACY
+    #            tracy::tracy
+    #            tracy
+    #            TRACY
+    #            "tracy"
+    #            "tracy.h"
+    #            PRIVATE
+    #    )
+endif (ENABLE_PROFILING)
+
 message(STATUS "... DONE")
-
-# GRAPHICS + VIDEO
-#if (NOT DISABLE_GRAPHICS)
-# OpenGL
-#    find_package(glm REQUIRED)
-#    find_package(OpenGL REQUIRED)
-#    find_package(SDL3 CONFIG REQUIRED)
-
-# font rendering
-#    find_package(harfbuzz CONFIG REQUIRED)
-#    pkg_check_modules(FREETYPE REQUIRED freetype2)
-
-#    # PDF export
-#    if (DISABLE_PDF)
-#        message(STATUS "PDF_EXPORT    : DISABLED")
-#    else (DISABLE_PDF)
-#        message(STATUS "PDF_EXPORT    : ENABLED")
-#        pkg_check_modules(CAIRO REQUIRED cairo)
-#    endif (DISABLE_PDF)
-
-#    # Ncurses
-#    if (DISABLE_NCURSES)
-#        message(STATUS "NCURSES(TERM) : DISABLED")
-#    else (DISABLE_NCURSES)
-#        message(STATUS "NCURSES(TERM) : ENABLED")
-#        # find_package(Curses REQUIRED)
-#        pkg_check_modules(NCURSES REQUIRED ncurses)
-#        pkg_check_modules(NCURSES_PKG ncurses)
-#
-#        if (NCURSES_PKG_FOUND)
-#            set(NCURSES_INCLUDE_DIR ${NCURSES_PKG_INCLUDE_DIRS})
-#            set(NCURSES_LIBRARY ${NCURSES_PKG_LIBRARIES})
-#        else ()
-#            find_package(Curses REQUIRED)
-#            set(NCURSES_INCLUDE_DIR ${CURSES_INCLUDE_DIR})
-#            set(NCURSES_LIBRARY ${CURSES_LIBRARIES})
-#        endif ()
-#    endif (DISABLE_NCURSES)
-
-# TODO check if ncurses needs extra treatment on other platforms
-#if (UNIX)
-#    find_package(Curses REQUIRED)
-#    include_directories(${CURSES_INCLUDE_DIR})
-#    target_link_libraries(umfeld-lib PUBLIC ${CURSES_LIBRARIES})
-#endif (UNIX)
-#if (WIN32)
-#    target_link_libraries(umfeld-lib PUBLIC pdcurses)
-#endif (WIN32)
-
-# curl
-#    pkg_check_modules(CURL REQUIRED libcurl)
-#    find_package(CURL REQUIRED)
-#    if (APPLE)
-#    elseif (UNIX)
-#    elseif (WIN32)
-#    else ()
-#        message(STATUS "platform may not be supported.")
-#    endif ()
-
-#    # FFMPEG
-#    if (NOT DISABLE_VIDEO)
-#        pkg_check_modules(FFMPEG REQUIRED
-#                libavcodec
-#                libavformat
-#                libavutil
-#                libswscale
-#                libswresample
-#                libavdevice
-#        )
-#        if (APPLE)
-#        elseif (UNIX)
-#        elseif (WIN32)
-#        else ()
-#            message(STATUS "platform may not be supported ... assuming windows.")
-#        endif ()
-#    endif (NOT DISABLE_VIDEO)
-#endif (NOT DISABLE_GRAPHICS)
-
-## AUDIO
-#if (NOT DISABLE_AUDIO)
-#    if (ENABLE_PORTAUDIO)
-#        pkg_search_module(PORTAUDIO REQUIRED portaudio-2.0)
-#    else (ENABLE_PORTAUDIO)
-#        #        find_package(SDL3 CONFIG REQUIRED)
-#    endif (ENABLE_PORTAUDIO)
-#endif (NOT DISABLE_AUDIO)
-
-# MIDI
-#if (NOT DISABLE_MIDI)
-#    pkg_search_module(RTMIDI REQUIRED rtmidi)
-#endif (NOT DISABLE_MIDI)
-
-##########################################################################################################
-### SUPRESS WARNINGS FOR APPLE                                                                         ###
-##########################################################################################################
-
-#if (WIN32)
-#elseif (APPLE)
-#    set(CMAKE_SUPPRESS_DEVELOPER_WARNINGS OFF)
-#elseif (UNIX)
-#else ()
-#endif ()
-
-##########################################################################################################
-### INCLUDE + LINK LIBRARIES                                                                           ###
-##########################################################################################################
-
-# @REMOVE -->
-#if (HOMEBREW_LIB_PATH)
-#    target_link_directories(umfeld-lib PUBLIC ${HOMEBREW_LIB_PATH})
-#    target_include_directories(umfeld-lib PUBLIC ${HOMEBREW_INCLUDE_PATH})
-#endif ()
-#
-#if (MACPORTS_LIB_PATH)
-#    target_link_directories(umfeld-lib PUBLIC ${MACPORTS_LIB_PATH})
-#    target_include_directories(umfeld-lib PUBLIC ${MACPORTS_INCLUDE_PATH})
-#endif ()
-# <-- @REMOVE
-
-# SYSTEM
-#if (WIN32)
-#    target_link_libraries(umfeld-lib PUBLIC wsock32 ws2_32 winmm)
-#elseif (APPLE)
-#elseif (UNIX)
-#    target_link_libraries(umfeld-lib PUBLIC Threads::Threads)
-#else ()
-#endif ()
-
-## GRAPHICS + VIDEO + AUDIO
-#if (NOT DISABLE_AUDIO)
-#    if (ENABLE_PORTAUDIO)
-#        target_link_libraries(umfeld-lib PUBLIC ${PORTAUDIO_LIBRARIES})
-#        target_include_directories(umfeld-lib PUBLIC ${PORTAUDIO_INCLUDE_DIRS})
-#    endif (ENABLE_PORTAUDIO)
-#endif (NOT DISABLE_AUDIO)
-
-#if (NOT DISABLE_GRAPHICS OR NOT DISABLE_AUDIO)
-#    target_link_libraries(umfeld-lib PUBLIC SDL3::SDL3) # NOTE not sure about these explicit lib names
-#    target_include_directories(umfeld-lib PUBLIC ${SDL3_INCLUDE_DIRS})
-#endif (NOT DISABLE_GRAPHICS OR NOT DISABLE_AUDIO)
-
-#if (NOT DISABLE_GRAPHICS)
-# GLM
-#    target_compile_definitions(umfeld-lib PUBLIC GLM_ENABLE_EXPERIMENTAL)
-#    target_compile_definitions(umfeld-lib-interface INTERFACE GLM_ENABLE_EXPERIMENTAL)
-# OpenGL + GLAD + GLM
-#    target_link_libraries(umfeld-lib PUBLIC ${OPENGL_LIBRARIES})
-#    target_include_directories(umfeld-lib PUBLIC ${OPENGL_INCLUDE_DIRS})
-#    target_link_libraries(umfeld-lib PUBLIC glad)
-#    target_link_libraries(umfeld-lib PUBLIC glm::glm)
-# font rendering
-#    target_link_libraries(umfeld-lib PUBLIC harfbuzz::harfbuzz)
-#    target_include_directories(umfeld-lib PUBLIC ${HARFBUZZ_INCLUDE_DIRS})
-#    target_link_libraries(umfeld-lib PUBLIC ${FREETYPE_LIBRARIES})
-#    target_include_directories(umfeld-lib PUBLIC ${FREETYPE_INCLUDE_DIRS})
-#    # FFMPEG
-#    if (NOT DISABLE_VIDEO)
-#        target_include_directories(umfeld-lib PUBLIC ${FFMPEG_INCLUDE_DIRS})
-#        target_link_libraries(umfeld-lib PUBLIC ${FFMPEG_LIBRARIES})
-#        if (APPLE)
-#            target_link_libraries(umfeld-lib PUBLIC
-#                    "-framework AVFoundation"
-#                    "-framework Foundation"
-#                    "-framework CoreMedia"
-#            )
-#        elseif (UNIX)
-#        elseif (WIN32)
-#            message(STATUS "platform may not be supported")
-#        else ()
-#            message(STATUS "platform may not be supported ... assuming windows.")
-#        endif ()
-#    endif (NOT DISABLE_VIDEO)
-
-# PDF export
-#    if (NOT DISABLE_PDF)
-#        target_include_directories(umfeld-lib PUBLIC ${CAIRO_INCLUDE_DIRS})
-#        target_link_libraries(umfeld-lib PUBLIC ${CAIRO_LIBRARIES})
-#    endif (NOT DISABLE_PDF)
-
-#    if (NOT DISABLE_NCURSES)
-#        target_include_directories(umfeld-lib PRIVATE ${NCURSES_INCLUDE_DIRS})
-#        target_link_libraries(umfeld-lib PRIVATE ${NCURSES_LIBRARY})
-#    endif (NOT DISABLE_NCURSES)
-
-#endif (NOT DISABLE_GRAPHICS)
-
-# MIDI
-#if (NOT DISABLE_MIDI)
-#    target_link_libraries(umfeld-lib PUBLIC ${RTMIDI_LIBRARIES})
-#    target_include_directories(umfeld-lib PUBLIC ${RTMIDI_INCLUDE_DIRS})
-#    foreach (flag ${RTMIDI_CFLAGS_OTHER})
-#        if (flag MATCHES "^-D[^=]+(=.+)?$")  # only pass valid -D macros
-#            target_compile_definitions(umfeld-lib PUBLIC "${flag}")
-#        elseif (flag STREQUAL "-pthread")
-#            target_compile_options(umfeld-lib PUBLIC "${flag}")
-#        endif ()
-#    endforeach ()
-#endif (NOT DISABLE_MIDI)
-
-#target_include_directories(umfeld-lib PUBLIC ${CURL_INCLUDE_DIRS})
-#target_link_libraries(umfeld-lib PUBLIC ${CURL_LIBRARIES})
-#target_link_libraries(umfeld-lib PUBLIC CURL::libcurl)
 
 ##########################################################################################################
 ### ENTRY POINT FOR APPLICATIONS SCRIPT                                                                ###

@@ -100,4 +100,29 @@
 
 #define TIME_FUNCTION_MS(fn) time_function_ms([&]() { fn; })
 
+/* --- PROFILING --- */
+
+#ifdef ENABLE_PROFILING
+#define TRACY_ALLOC
+#include <tracy/Tracy.hpp>
+#include <tracy/TracyOpenGL.hpp>
+#define TRACE_SCOPE            ZoneScoped
+#define TRACE_SCOPE_N(name)    ZoneScopedN(name)
+#define TRACE_FRAME            FrameMark
+#define TRACE_ALLOC(ptr, size) TracyAlloc(ptr, size)
+#define TRACE_FREE(ptr)        TracyFree(ptr)
+#define TRACE_PLOT(name, value) TracyPlot(name, value)
+#define TRACE_GPU_CONTEXT      TracyGpuContext
+#define TRACE_GPU_ZONE(name)   TracyGpuZone(name)
+#else
+#define TRACE_SCOPE
+#define TRACE_SCOPE_N(name)
+#define TRACE_FRAME
+#define TRACE_ALLOC(ptr, size)
+#define TRACE_FREE(ptr)
+#define TRACE_PLOT(name, value)
+#define TRACE_GPU_CONTEXT
+#define TRACE_GPU_ZONE(name)
+#endif
+
 /* --- */

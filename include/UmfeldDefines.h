@@ -104,16 +104,17 @@
 
 #ifdef ENABLE_PROFILING
 #define TRACY_ALLOC
+// TODO should we have includes here? maybe ok because this is usually disabled
 #include <tracy/Tracy.hpp>
 #include <tracy/TracyOpenGL.hpp>
-#define TRACE_SCOPE            ZoneScoped
-#define TRACE_SCOPE_N(name)    ZoneScopedN(name)
-#define TRACE_FRAME            FrameMark
-#define TRACE_ALLOC(ptr, size) TracyAlloc(ptr, size)
-#define TRACE_FREE(ptr)        TracyFree(ptr)
+#define TRACE_SCOPE             ZoneScoped
+#define TRACE_SCOPE_N(name)     ZoneScopedN(name)
+#define TRACE_FRAME             FrameMark
+#define TRACE_ALLOC(ptr, size)  TracyAlloc(ptr, size)
+#define TRACE_FREE(ptr)         TracyFree(ptr)
 #define TRACE_PLOT(name, value) TracyPlot(name, value)
-#define TRACE_GPU_CONTEXT      TracyGpuContext
-#define TRACE_GPU_ZONE(name)   TracyGpuZone(name)
+#define TRACE_GPU_CONTEXT       TracyGpuContext
+#define TRACE_GPU_ZONE(name)    TracyGpuZone(name)
 #else
 #define TRACE_SCOPE
 #define TRACE_SCOPE_N(name)
@@ -123,6 +124,17 @@
 #define TRACE_PLOT(name, value)
 #define TRACE_GPU_CONTEXT
 #define TRACE_GPU_ZONE(name)
+#endif // ENABLE_PROFILING
+
+// template for profiling blocks:
+#define PROFILE_PG_OGL33
+#if defined(PROFILE_PG_OGL33)
+#include "UmfeldDefines.h"
+#define PROFILE_PG_OGL33_SCOPE         TRACE_SCOPE
+#define PROFILE_PG_OGL33_SCOPE_N(name) TRACE_SCOPE_N(name)
+#else
+#define PROFILE_PG_OGL33_SCOPE
+#define PROFILE_PG_OGL33_SCOPE_N(name)
 #endif
 
 /* --- */

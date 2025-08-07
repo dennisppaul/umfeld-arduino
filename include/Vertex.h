@@ -24,26 +24,34 @@
 
 namespace umfeld {
     struct Vertex {
-        static constexpr int ATTRIBUTE_LOCATION_POSITION = 0;
-        static constexpr int ATTRIBUTE_LOCATION_NORMAL   = 1;
-        static constexpr int ATTRIBUTE_LOCATION_COLOR    = 2;
-        static constexpr int ATTRIBUTE_LOCATION_TEXCOORD = 3;
-        static constexpr int ATTRIBUTE_LOCATION_USERDATA = 4;
-        static constexpr int ATTRIBUTE_SIZE_POSITION     = 4;
-        static constexpr int ATTRIBUTE_SIZE_NORMAL       = 4;
-        static constexpr int ATTRIBUTE_SIZE_COLOR        = 4;
-        static constexpr int ATTRIBUTE_SIZE_TEXCOORD     = 3;
-        static constexpr int ATTRIBUTE_SIZE_USERDATA     = 1;
-
-        static constexpr auto DEFAULT_POSITION  = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
-        static constexpr auto DEFAULT_NORMAL    = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
-        static constexpr auto DEFAULT_COLOR     = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
-        static constexpr auto DEFAULT_TEX_COORD = glm::vec3(0.0f, 0.0f, 0.0f);
+        static constexpr int  ATTRIBUTE_LOCATION_POSITION     = 0;
+        static constexpr int  ATTRIBUTE_LOCATION_NORMAL       = 1;
+        static constexpr int  ATTRIBUTE_LOCATION_COLOR        = 2;
+        static constexpr int  ATTRIBUTE_LOCATION_TEXCOORD     = 3;
+        static constexpr int  ATTRIBUTE_LOCATION_TRANSFORM_ID = 4;
+        static constexpr int  ATTRIBUTE_LOCATION_USERDATA     = 5;
+        static constexpr int  ATTRIBUTE_SIZE_POSITION         = 4;
+        static constexpr int  ATTRIBUTE_SIZE_NORMAL           = 4;
+        static constexpr int  ATTRIBUTE_SIZE_COLOR            = 4;
+        static constexpr int  ATTRIBUTE_SIZE_TEXCOORD         = 3;
+        static constexpr int  ATTRIBUTE_SIZE_TRANSFORM_ID     = 1;
+        static constexpr int  ATTRIBUTE_SIZE_USERDATA         = 1;
+        static constexpr auto ATTRIBUTE_NAME_POSITION         = "aPosition";
+        static constexpr auto ATTRIBUTE_NAME_NORMAL           = "aNormal";
+        static constexpr auto ATTRIBUTE_NAME_COLOR            = "aColor";
+        static constexpr auto ATTRIBUTE_NAME_TEXCOORD         = "aTexCoord";
+        static constexpr auto ATTRIBUTE_NAME_TRANSFORM_ID     = "aTransformID";
+        static constexpr auto ATTRIBUTE_NAME_USERDATA         = "aUserdata";
+        static constexpr auto DEFAULT_POSITION                = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+        static constexpr auto DEFAULT_NORMAL                  = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
+        static constexpr auto DEFAULT_COLOR                   = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+        static constexpr auto DEFAULT_TEX_COORD               = glm::vec3(0.0f, 0.0f, 0.0f);
         glm::aligned_vec4     position;
         glm::aligned_vec4     normal;
         glm::aligned_vec4     color;
         glm::vec3             tex_coord;
-        float                 userdata{0};
+        uint16_t              transform_id{0};
+        uint16_t              userdata{0};
 
         // NOTE aligned_vec4 makes sure all data types are aligned to 16 bytes ( GLM_ENABLE_EXPERIMENTAL )
         //      make sure this does not cause any issues … it s experimental after all
@@ -71,4 +79,6 @@ namespace umfeld {
         Vertex()
             : Vertex(glm::vec3(DEFAULT_POSITION)) {}
     };
+    static_assert(sizeof(Vertex) == 64, "Vertex size should be exactly 64 bytes");
+
 } // namespace umfeld

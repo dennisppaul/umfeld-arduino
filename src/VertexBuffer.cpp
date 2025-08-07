@@ -279,7 +279,7 @@ void VertexBuffer::upload_with_resize(const size_t current_size, const size_t re
     if (current_size > server_buffer_size) {
         // grow buffer
         const size_t grow_size_bytes = required_bytes + VBO_BUFFER_CHUNK_SIZE_BYTES;
-        const size_t new_capacity = grow_size_bytes / sizeof(Vertex);
+        const size_t new_capacity    = grow_size_bytes / sizeof(Vertex);
         _vertices.reserve(new_capacity);
         glBufferData(GL_ARRAY_BUFFER, grow_size_bytes, _vertices.data(), GL_DYNAMIC_DRAW);
 #ifdef UMFELD_VERTEX_BUFFER_DEBUG_OPENGL_ERRORS
@@ -289,7 +289,7 @@ void VertexBuffer::upload_with_resize(const size_t current_size, const size_t re
     } else if (needs_buffer_shrink(current_size)) {
         // shrink buffer
         const size_t shrink_size_bytes = required_bytes + VBO_BUFFER_CHUNK_SIZE_BYTES;
-        const size_t new_capacity = shrink_size_bytes / sizeof(Vertex);
+        const size_t new_capacity      = shrink_size_bytes / sizeof(Vertex);
         _vertices.reserve(new_capacity);
         glBufferData(GL_ARRAY_BUFFER, shrink_size_bytes, _vertices.data(), GL_DYNAMIC_DRAW);
 #ifdef UMFELD_VERTEX_BUFFER_DEBUG_OPENGL_ERRORS
@@ -331,7 +331,10 @@ void VertexBuffer::enable_vertex_attributes() const {
     glVertexAttribPointer(Vertex::ATTRIBUTE_LOCATION_TEXCOORD, Vertex::ATTRIBUTE_SIZE_TEXCOORD, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(offsetof(Vertex, tex_coord)));
     glEnableVertexAttribArray(Vertex::ATTRIBUTE_LOCATION_TEXCOORD);
 
-    glVertexAttribPointer(Vertex::ATTRIBUTE_LOCATION_USERDATA, Vertex::ATTRIBUTE_SIZE_USERDATA, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(offsetof(Vertex, userdata)));
+    glVertexAttribIPointer(Vertex::ATTRIBUTE_LOCATION_TRANSFORM_ID, Vertex::ATTRIBUTE_SIZE_TRANSFORM_ID, GL_UNSIGNED_SHORT, sizeof(Vertex), reinterpret_cast<void*>(offsetof(Vertex, transform_id)));
+    glEnableVertexAttribArray(Vertex::ATTRIBUTE_LOCATION_TRANSFORM_ID);
+
+    glVertexAttribIPointer(Vertex::ATTRIBUTE_LOCATION_USERDATA, Vertex::ATTRIBUTE_SIZE_USERDATA, GL_UNSIGNED_SHORT, sizeof(Vertex), reinterpret_cast<void*>(offsetof(Vertex, userdata)));
     glEnableVertexAttribArray(Vertex::ATTRIBUTE_LOCATION_USERDATA);
 }
 
@@ -340,6 +343,7 @@ void VertexBuffer::disable_vertex_attributes() {
     glDisableVertexAttribArray(Vertex::ATTRIBUTE_LOCATION_NORMAL);
     glDisableVertexAttribArray(Vertex::ATTRIBUTE_LOCATION_COLOR);
     glDisableVertexAttribArray(Vertex::ATTRIBUTE_LOCATION_TEXCOORD);
+    glDisableVertexAttribArray(Vertex::ATTRIBUTE_LOCATION_TRANSFORM_ID);
     glDisableVertexAttribArray(Vertex::ATTRIBUTE_LOCATION_USERDATA);
 }
 

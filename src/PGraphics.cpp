@@ -1295,10 +1295,9 @@ void PGraphics::beginShape(const int shape) {
     shape_has_begun  = true;
 }
 
-
 void PGraphics::endShape(const bool close_shape) {
     /*
-     * OpenGL ES 3.1 is stricter:
+     * OpenGL ES 3.0 is stricter:
      *
      * 1. No GL_LINES, GL_LINE_STRIP, or GL_LINE_LOOP support in core spec!
      * 2. No glLineWidth support at all.

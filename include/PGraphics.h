@@ -27,6 +27,7 @@
 #include "UmfeldFunctionsAdditional.h"
 #include "PImage.h"
 #include "Vertex.h"
+#include "Shape.h"
 #include "Triangulator.h"
 
 namespace umfeld {

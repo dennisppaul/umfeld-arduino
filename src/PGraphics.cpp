@@ -53,6 +53,10 @@ void PGraphics::beginDraw() {
 }
 
 void PGraphics::endDraw() {
+    if (shape_renderer) {
+        const glm::mat4 view_projection_matrix = projection_matrix * view_matrix;
+        shape_renderer->flush(view_projection_matrix);
+    }
     restore_mvp_matrices();
 }
 
@@ -1295,7 +1299,47 @@ void PGraphics::beginShape(const int shape) {
     shape_has_begun  = true;
 }
 
-void PGraphics::endShape(const bool close_shape) {
+void PGraphics::vertex(const float x, const float y, const float z) {
+    vertex(x, y, z, 0, 0);
+}
+
+void PGraphics::vertex(const float x, const float y, const float z, const float u, const float v) {
+    if (!color_stroke.active && !color_fill.active) {
+        return;
+    }
+
+    const glm::vec3 position{x, y, z};
+
+    if (color_stroke.active) {
+        const glm::vec4 strokeColor = as_vec4(color_stroke);
+        shape_stroke_vertex_buffer.emplace_back(position, strokeColor, glm::vec3{u, v, 0.0f}, current_normal);
+    }
+
+    if (color_fill.active) {
+        const glm::vec4 fillColor = as_vec4(color_fill);
+        shape_fill_vertex_buffer.emplace_back(position, fillColor, glm::vec3{u, v, 0.0f}, current_normal);
+    }
+}
+
+void PGraphics::vertex(Vertex v) {
+    if (!color_stroke.active && !color_fill.active) {
+        return;
+    }
+
+    if (color_stroke.active) {
+        const glm::vec4 strokeColor = as_vec4(color_stroke);
+        shape_stroke_vertex_buffer.emplace_back(v.position, strokeColor, v.tex_coord, v.normal);
+    }
+
+    if (color_fill.active) {
+        const glm::vec4 fillColor = as_vec4(color_fill);
+        // TODO maybe use v.color instead of color_fill?
+        // shape_fill_vertex_buffer.emplace_back(v);
+        shape_fill_vertex_buffer.emplace_back(v.position, fillColor, v.tex_coord, v.normal);
+    }
+}
+
+void PGraphics::endShape(const bool closed) {
     /*
      * OpenGL ES 3.0 is stricter:
      *
@@ -1305,8 +1349,25 @@ void PGraphics::endShape(const bool close_shape) {
      *
      * i.e GL_LINES + GL_LINE_STRIP must be emulated
      */
-    process_collected_fill_vertices();
-    process_collected_stroke_vertices(close_shape);
+
+    // process_collected_fill_vertices();
+    // process_collected_stroke_vertices(closed);
+
+    if (shape_renderer) {
+        if (!shape_fill_vertex_buffer.empty()) {
+            // TODO replace this with `submitShape()`
+            // TODO submit transparent and opaque shapes +
+            //      submit filled and stroked shapes
+            shape_renderer->beginShape(static_cast<ShapeMode>(shape_mode_cache),
+                                       true,
+                                       false,
+                                       TEXTURE_NONE, // TODO get from texture cache
+                                       model_matrix);
+            shape_renderer->setVertices(shape_fill_vertex_buffer);
+            shape_renderer->endShape(closed);
+        }
+    }
+
     shape_fill_vertex_buffer.clear();
     shape_stroke_vertex_buffer.clear();
     shape_has_begun = false;
@@ -1454,45 +1515,5 @@ void PGraphics::process_collected_stroke_vertices(const bool close_shape) {
                 emit_shape_stroke_line_strip(shape_stroke_vertex_buffer, close_shape);
             } break;
         }
-    }
-}
-
-void PGraphics::vertex(const float x, const float y, const float z) {
-    vertex(x, y, z, 0, 0);
-}
-
-void PGraphics::vertex(const float x, const float y, const float z, const float u, const float v) {
-    if (!color_stroke.active && !color_fill.active) {
-        return;
-    }
-
-    const glm::vec3 position{x, y, z};
-
-    if (color_stroke.active) {
-        const glm::vec4 strokeColor = as_vec4(color_stroke);
-        shape_stroke_vertex_buffer.emplace_back(position, strokeColor, glm::vec3{u, v, 0.0f}, current_normal);
-    }
-
-    if (color_fill.active) {
-        const glm::vec4 fillColor = as_vec4(color_fill);
-        shape_fill_vertex_buffer.emplace_back(position, fillColor, glm::vec3{u, v, 0.0f}, current_normal);
-    }
-}
-
-void PGraphics::vertex(Vertex v) {
-    if (!color_stroke.active && !color_fill.active) {
-        return;
-    }
-
-    if (color_stroke.active) {
-        const glm::vec4 strokeColor = as_vec4(color_stroke);
-        shape_stroke_vertex_buffer.emplace_back(v.position, strokeColor, v.tex_coord, v.normal);
-    }
-
-    if (color_fill.active) {
-        const glm::vec4 fillColor = as_vec4(color_fill);
-        // TODO maybe use v.color instead of color_fill?
-        // shape_fill_vertex_buffer.emplace_back(v);
-        shape_fill_vertex_buffer.emplace_back(v.position, fillColor, v.tex_coord, v.normal);
     }
 }

@@ -71,7 +71,7 @@ namespace umfeld {
     static constexpr int   RIGHT                         = 0x02;
     static constexpr int   MIDDLE                        = 0x03;
     static constexpr int   CENTER                        = 0x04;
-    enum ShapeKind {
+    enum ShapeMode {
         TRIANGLES = 0x10,
         TRIANGLE_STRIP,
         TRIANGLE_FAN,

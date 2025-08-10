@@ -29,7 +29,7 @@
 #include "Vertex.h"
 #include "Shape.h"
 #include "Triangulator.h"
-#include "ShapeRendererBatch.h"
+#include "ShapeRenderer.h"
 
 namespace umfeld {
     class PFont;
@@ -152,7 +152,7 @@ namespace umfeld {
         // ### Vertex
 
         virtual void beginShape(int shape = POLYGON);
-        virtual void endShape(bool close_shape = false);
+        virtual void endShape(bool closed = false);
         virtual void vertex(float x, float y, float z = 0.0f);
         virtual void vertex(float x, float y, float z, float u, float v);
         virtual void vertex(Vertex v);
@@ -279,10 +279,12 @@ namespace umfeld {
             // TODO add style values like tint, blend mode, etc.
         };
 
+
         // const float                      DEFAULT_FOV            = 2.0f * atan(0.5f); // = 53.1301f; // P5 :: tan(PI*30.0 / 180.0);
         static constexpr uint16_t        ELLIPSE_DETAIL_MIN     = 3;
         static constexpr uint16_t        ELLIPSE_DETAIL_DEFAULT = 36;
         static constexpr uint16_t        ARC_DETAIL_DEFAULT     = 36;
+        ShapeRenderer*                   shape_renderer{nullptr};
         std::stack<StyleState>           style_stack;
         bool                             init_properties_locked{false};
         PFont*                           current_font{nullptr};

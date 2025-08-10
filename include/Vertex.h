@@ -52,7 +52,10 @@ namespace umfeld {
         glm::vec3             tex_coord;
         uint16_t              transform_id{0};
         uint16_t              userdata{0};
-
+        // TODO check with profiler if reduced data types are faster. i.e
+        //      - glm::aligned_vec3     position;
+        //      - glm::aligned_vec3     normal;
+        //      - glm::vec2             tex_coord;
         // NOTE aligned_vec4 makes sure all data types are aligned to 16 bytes ( GLM_ENABLE_EXPERIMENTAL )
         //      make sure this does not cause any issues … it s experimental after all
 

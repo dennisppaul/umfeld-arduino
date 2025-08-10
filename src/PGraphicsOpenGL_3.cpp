@@ -36,6 +36,7 @@
 #include "ShaderSourceColorTextureLights.h"
 #include "ShaderSourceLine.h"
 #include "ShaderSourcePoint.h"
+#include "ShapeRendererBatchOpenGL_3.h"
 
 #ifdef UMFELD_PGRAPHICS_OPENGL_3_3_CORE_ERRORS
 #define UMFELD_PGRAPHICS_OPENGL_3_3_CORE_CHECK_ERRORS(msg) \
@@ -510,11 +511,11 @@ void PGraphicsOpenGL_3::hint(const uint16_t property) {
 }
 
 void PGraphicsOpenGL_3::upload_texture(PImage*         img,
-                                              const uint32_t* pixel_data,
-                                              const int       width,
-                                              const int       height,
-                                              const int       offset_x,
-                                              const int       offset_y) {
+                                       const uint32_t* pixel_data,
+                                       const int       width,
+                                       const int       height,
+                                       const int       offset_x,
+                                       const int       offset_y) {
     if (img == nullptr) {
         error_in_function("image is nullptr.");
         return;
@@ -600,8 +601,8 @@ void PGraphicsOpenGL_3::download_texture(PImage* img) {
 }
 
 void PGraphicsOpenGL_3::init(uint32_t* pixels,
-                                    const int width,
-                                    const int height) {
+                             const int width,
+                             const int height) {
     const int msaa_samples = antialiasing; // TODO not cool to take this from Umfeld
 
     // TODO create shader system with `get_versioned_source(string)` for:
@@ -746,11 +747,20 @@ void PGraphicsOpenGL_3::init(uint32_t* pixels,
         texture_id = _buffer_texture_id;
     }
 
-    // static_assert(sizeof(Vertex) == 64, "Vertex struct must be 64 bytes"); // TODO check this on other systems
+    // TODO this should be configurable. alternative might be `ShapeRendererImmediateOpenGL_3`
+    shape_renderer = new ShapeRendererBatchOpenGL_3();
+    shape_renderer->init();
 
+    if constexpr (sizeof(Vertex) != 64) {
+        // ReSharper disable once CppDFAUnreachableCode
+        warning("Vertex struct must be 64 bytes");
+    }
+
+    // >>> ShapeRendererImmediateOpenGL_3
     OGL3_create_solid_color_texture();
     texture_id_current = TEXTURE_NONE;
     IMPL_bind_texture(texture_id_solid_color);
+    // <<< ShapeRendererImmediateOpenGL_3
 }
 
 /* additional */
@@ -1121,7 +1131,7 @@ void PGraphicsOpenGL_3::pointLight(const float r, const float g, const float b, 
 }
 
 void PGraphicsOpenGL_3::spotLight(const float r, const float g, const float b, const float x, const float y, const float z,
-                                         const float nx, const float ny, const float nz, const float angle, const float concentration) {
+                                  const float nx, const float ny, const float nz, const float angle, const float concentration) {
     enableLighting();
     if (lightCount >= MAX_LIGHTS) {
         return;

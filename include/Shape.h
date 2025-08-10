@@ -20,18 +20,17 @@
 #pragma once
 
 #include <glm/glm.hpp>
-#include <glm/gtx/type_aligned.hpp>
 #include "UmfeldConstants.h"
 
 namespace umfeld {
     struct Shape {
-        ShapeKind           mode{POLYGON};
+        ShapeMode           mode{POLYGON};
         bool                filled{true};
         std::vector<Vertex> vertices;
         glm::mat4           model{};
         glm::vec3           centerOS{};
         bool                transparent{};
         float               depth{};
-        uint16_t            textureID{TEXTURE_NONE};
+        uint16_t            texture_id{TEXTURE_NONE};
     };
 } // namespace umfeld

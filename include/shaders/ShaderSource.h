@@ -21,12 +21,31 @@
 
 namespace umfeld {
     struct ShaderSource {
-        // NOTE that it is important to start the header immediately with `#version` to avoid
-        //      issues with the shader compiler ( e.g on Windows ).
+        // TODO maybe add this to header:
+        //      for OpenGL ES 3.0 change from:
+        //      ```glsl
+        //      #version 330 core
+        //      ```
+        //      to:
+        //      ```glsl
+        //      #version 300 es
+        //      precision mediump float;
+        //      precision mediump int;
+        //      precision mediump sampler2D;
+        //      ```
+        //      and create shader source with dynamic array size
+        //      ```c
+        //      std::string transformsDefine = "#define MAX_TRANSFORMS " + std::to_string(MAX_TRANSFORMS) + "\n";
+        //      const auto texturedVS = transformsDefine + R"(#version 330 core
+        //      ```
+
+        // NOTE that it is important to start the header immediately with `#version` after `R"(`
+        //      to avoid issues with the shader compiler ( e.g on Windows ).
 #if defined(OPENGL_ES_3_0)
         inline static std::string header = R"(#version 300 es
                                 precision mediump float;
                                 precision mediump int;
+                                precision mediump sampler2D;
         )";
 #elif defined(OPENGL_3_3_CORE)
         inline static std::string header = R"(#version 330 core
@@ -50,7 +69,7 @@ namespace umfeld {
         std::string get_fragment_geometry() const {
             return get_versioned_source(geometry);
         }
-
+    private:
         static std::string get_versioned_source(const std::string& source) {
             if (source.empty()) {
                 return "";

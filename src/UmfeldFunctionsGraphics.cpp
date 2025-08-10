@@ -491,6 +491,11 @@ namespace umfeld {
 
     /* additional */
 
+    void flush() {
+        if (g == nullptr) { return; }
+        g->flush();
+    }
+
     void debug_text(const std::string& text, const float x, const float y) {
         if (g == nullptr) { return; }
         g->debug_text(text, x, y);

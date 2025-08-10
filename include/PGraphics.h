@@ -29,6 +29,7 @@
 #include "Vertex.h"
 #include "Shape.h"
 #include "Triangulator.h"
+#include "ShapeRendererBatch.h"
 
 namespace umfeld {
     class PFont;
@@ -158,10 +159,8 @@ namespace umfeld {
 
         // ## Structure
 
-        virtual void pushStyle();
-        virtual void popStyle();
-
-
+        virtual void     pushStyle();
+        virtual void     popStyle();
         virtual void     bezier(float x1, float y1, float x2, float y2, float x3, float y3, float x4, float y4);
         virtual void     bezier(float x1, float y1, float z1, float x2, float y2, float z2, float x3, float y3, float z3, float x4, float y4, float z4);
         virtual void     bezierDetail(int detail);
@@ -228,6 +227,7 @@ namespace umfeld {
 
         /* --- additional --- */
 
+        virtual void        flush() {}
         virtual void        mesh(VertexBuffer* mesh_shape) {}
         virtual void        lock_init_properties(const bool lock_properties) { init_properties_locked = lock_properties; }
         virtual void        hint(uint16_t property);

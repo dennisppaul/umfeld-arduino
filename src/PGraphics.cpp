@@ -1478,6 +1478,7 @@ void PGraphics::vertex(const float x, const float y, const float z, const float 
         shape_fill_vertex_buffer.emplace_back(position, fillColor, glm::vec3{u, v, 0.0f}, current_normal);
     }
 }
+
 void PGraphics::vertex(Vertex v) {
     if (!color_stroke.active && !color_fill.active) {
         return;

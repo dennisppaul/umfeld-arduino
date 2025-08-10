@@ -27,7 +27,7 @@
 
 #include "Umfeld.h"
 #include "PGraphicsOpenGL.h"
-#include "PGraphicsOpenGL_3_3_core.h"
+#include "PGraphicsOpenGL_3.h"
 #include "Vertex.h"
 #include "Geometry.h"
 #include "VertexBuffer.h"
@@ -49,16 +49,16 @@
 
 using namespace umfeld;
 
-PGraphicsOpenGL_3_3_core::PGraphicsOpenGL_3_3_core(const bool render_to_offscreen) : PImage(0, 0) {
+PGraphicsOpenGL_3::PGraphicsOpenGL_3(const bool render_to_offscreen) : PImage(0, 0) {
     this->render_to_offscreen = render_to_offscreen;
 }
 
-void PGraphicsOpenGL_3_3_core::IMPL_background(const float a, const float b, const float c, const float d) {
+void PGraphicsOpenGL_3::IMPL_background(const float a, const float b, const float c, const float d) {
     glClearColor(a, b, c, d);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
-void PGraphicsOpenGL_3_3_core::IMPL_bind_texture(const int bind_texture_id) {
+void PGraphicsOpenGL_3::IMPL_bind_texture(const int bind_texture_id) {
     if (bind_texture_id != texture_id_current) {
         texture_id_current = bind_texture_id;
         glActiveTexture(GL_TEXTURE0 + DEFAULT_ACTIVE_TEXTURE_UNIT);
@@ -66,7 +66,7 @@ void PGraphicsOpenGL_3_3_core::IMPL_bind_texture(const int bind_texture_id) {
     }
 }
 
-void PGraphicsOpenGL_3_3_core::IMPL_set_texture(PImage* img) {
+void PGraphicsOpenGL_3::IMPL_set_texture(PImage* img) {
     if (img == nullptr) {
         IMPL_bind_texture(texture_id_solid_color);
         return;
@@ -93,7 +93,7 @@ void PGraphicsOpenGL_3_3_core::IMPL_set_texture(PImage* img) {
     // NOTE identical <<<
 }
 
-void PGraphicsOpenGL_3_3_core::add_line_quad(const Vertex& p0, const Vertex& p1, float thickness, std::vector<Vertex>& out) {
+void PGraphicsOpenGL_3::add_line_quad(const Vertex& p0, const Vertex& p1, float thickness, std::vector<Vertex>& out) {
     // glm::vec3 dir = glm::normalize(p1 - p0);
     glm::vec3 dir = p1.position - p0.position; // NOTE no need to noralize, the shader will do it
 
@@ -146,7 +146,7 @@ void PGraphicsOpenGL_3_3_core::add_line_quad(const Vertex& p0, const Vertex& p1,
  * @param line_strip_vertices
  * @param line_strip_closed
  */
-void PGraphicsOpenGL_3_3_core::IMPL_emit_shape_stroke_line_strip(std::vector<Vertex>& line_strip_vertices, const bool line_strip_closed) {
+void PGraphicsOpenGL_3::IMPL_emit_shape_stroke_line_strip(std::vector<Vertex>& line_strip_vertices, const bool line_strip_closed) {
     // NOTE relevant information for this method
     //     - closed
     //     - stroke_weight
@@ -249,7 +249,7 @@ void PGraphicsOpenGL_3_3_core::IMPL_emit_shape_stroke_line_strip(std::vector<Ver
      */
 }
 
-void PGraphicsOpenGL_3_3_core::IMPL_emit_shape_fill_triangles(std::vector<Vertex>& triangle_vertices) {
+void PGraphicsOpenGL_3::IMPL_emit_shape_fill_triangles(std::vector<Vertex>& triangle_vertices) {
     // NOTE relevant information for this method
     //     - vertex ( i.e position, normal, color, tex_coord )
     //     - textured_id ( current id or solid color )
@@ -298,7 +298,7 @@ void PGraphicsOpenGL_3_3_core::IMPL_emit_shape_fill_triangles(std::vector<Vertex
     }
 }
 
-void PGraphicsOpenGL_3_3_core::IMPL_emit_shape_stroke_points(std::vector<Vertex>& point_vertices, float point_size) {
+void PGraphicsOpenGL_3::IMPL_emit_shape_stroke_points(std::vector<Vertex>& point_vertices, float point_size) {
     if (render_mode == RENDER_MODE_BUFFERED) {
     }
     if (render_mode == RENDER_MODE_IMMEDIATE) {
@@ -344,7 +344,7 @@ void PGraphicsOpenGL_3_3_core::IMPL_emit_shape_stroke_points(std::vector<Vertex>
 }
 
 // TODO could move this to a shared method in `PGraphics` and use beginShape(TRIANGLES)
-void PGraphicsOpenGL_3_3_core::debug_text(const std::string& text, const float x, const float y) {
+void PGraphicsOpenGL_3::debug_text(const std::string& text, const float x, const float y) {
     const std::vector<Vertex> triangle_vertices = debug_font.generate(text, x, y, glm::vec4(color_fill));
     push_texture_id();
     IMPL_bind_texture(debug_font.textureID);
@@ -356,7 +356,7 @@ void PGraphicsOpenGL_3_3_core::debug_text(const std::string& text, const float x
 
 /* --- UTILITIES --- */
 
-void PGraphicsOpenGL_3_3_core::beginDraw() {
+void PGraphicsOpenGL_3::beginDraw() {
     if (render_mode == RENDER_MODE_SHAPE) {
         static bool warning_once = true;
         if (warning_once) {
@@ -376,12 +376,12 @@ void PGraphicsOpenGL_3_3_core::beginDraw() {
     IMPL_bind_texture(texture_id_solid_color);
 }
 
-void PGraphicsOpenGL_3_3_core::endDraw() {
+void PGraphicsOpenGL_3::endDraw() {
     if (render_mode == RENDER_MODE_BUFFERED) {
         // TODO flush collected vertices
         // RM_flush_fill();
         // RM_flush_stroke();
-        // void PGraphicsOpenGL_3_3_core::RM_flush_stroke() {
+        // void PGraphicsOpenGL_3::RM_flush_stroke() {
         //     if (stroke_vertices_xyz_rgba.empty()) {
         //         return;
         //     }
@@ -412,7 +412,7 @@ void PGraphicsOpenGL_3_3_core::endDraw() {
         //     stroke_vertices_xyz_rgba.clear();
         // }
         //
-        // void PGraphicsOpenGL_3_3_core::RM_flush_fill() {
+        // void PGraphicsOpenGL_3::RM_flush_fill() {
         //     if (fill_vertices_xyz_rgba_uv.empty()) {
         //         return;
         //     }
@@ -453,7 +453,7 @@ void PGraphicsOpenGL_3_3_core::endDraw() {
     PGraphicsOpenGL::endDraw();
 }
 
-void PGraphicsOpenGL_3_3_core::render_framebuffer_to_screen(const bool use_blit) {
+void PGraphicsOpenGL_3::render_framebuffer_to_screen(const bool use_blit) {
     // modern OpenGL framebuffer rendering method
     if (use_blit) {
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -482,7 +482,7 @@ void PGraphicsOpenGL_3_3_core::render_framebuffer_to_screen(const bool use_blit)
     }
 }
 
-void PGraphicsOpenGL_3_3_core::hint(const uint16_t property) {
+void PGraphicsOpenGL_3::hint(const uint16_t property) {
     // TODO @MERGE
     switch (property) {
         case ENABLE_SMOOTH_LINES:
@@ -509,7 +509,7 @@ void PGraphicsOpenGL_3_3_core::hint(const uint16_t property) {
     }
 }
 
-void PGraphicsOpenGL_3_3_core::upload_texture(PImage*         img,
+void PGraphicsOpenGL_3::upload_texture(PImage*         img,
                                               const uint32_t* pixel_data,
                                               const int       width,
                                               const int       height,
@@ -568,7 +568,7 @@ void PGraphicsOpenGL_3_3_core::upload_texture(PImage*         img,
     IMPL_bind_texture(tmp_bound_texture);
 }
 
-void PGraphicsOpenGL_3_3_core::download_texture(PImage* img) {
+void PGraphicsOpenGL_3::download_texture(PImage* img) {
     if (img == nullptr) {
         error_in_function("image is nullptr");
         return;
@@ -599,7 +599,7 @@ void PGraphicsOpenGL_3_3_core::download_texture(PImage* img) {
 #endif
 }
 
-void PGraphicsOpenGL_3_3_core::init(uint32_t* pixels,
+void PGraphicsOpenGL_3::init(uint32_t* pixels,
                                     const int width,
                                     const int height) {
     const int msaa_samples = antialiasing; // TODO not cool to take this from Umfeld
@@ -755,7 +755,7 @@ void PGraphicsOpenGL_3_3_core::init(uint32_t* pixels,
 
 /* additional */
 
-void PGraphicsOpenGL_3_3_core::OGL3_create_solid_color_texture() {
+void PGraphicsOpenGL_3::OGL3_create_solid_color_texture() {
     GLuint _texture_id;
     glGenTextures(1, &_texture_id);
     glBindTexture(GL_TEXTURE_2D, _texture_id); // NOTE no need to use `IMPL_bind_texture()`
@@ -778,7 +778,7 @@ void PGraphicsOpenGL_3_3_core::OGL3_create_solid_color_texture() {
     texture_id_solid_color = _texture_id;
 }
 
-// void PGraphicsOpenGL_3_3_core::OGL3_tranform_model_matrix_and_render_vertex_buffer(VertexBuffer&              vertex_buffer,
+// void PGraphicsOpenGL_3::OGL3_tranform_model_matrix_and_render_vertex_buffer(VertexBuffer&              vertex_buffer,
 //                                                                                    const GLenum               primitive_mode,
 //                                                                                    const std::vector<Vertex>& shape_vertices) const {
 //     static bool _emit_warning_only_once = false;
@@ -832,7 +832,7 @@ void PGraphicsOpenGL_3_3_core::OGL3_create_solid_color_texture() {
 // #endif // VERTICES_CLIENT_SIDE_TRANSFORM
 // }
 
-void PGraphicsOpenGL_3_3_core::OGL3_render_vertex_buffer(VertexBuffer& vertex_buffer, const GLenum primitive_mode, const std::vector<Vertex>& shape_vertices) {
+void PGraphicsOpenGL_3::OGL3_render_vertex_buffer(VertexBuffer& vertex_buffer, const GLenum primitive_mode, const std::vector<Vertex>& shape_vertices) {
     if (shape_vertices.empty()) {
         return;
     }
@@ -842,7 +842,7 @@ void PGraphicsOpenGL_3_3_core::OGL3_render_vertex_buffer(VertexBuffer& vertex_bu
     vertex_buffer.draw();
 }
 
-void PGraphicsOpenGL_3_3_core::update_shader_matrices(PShader* shader) const {
+void PGraphicsOpenGL_3::update_shader_matrices(PShader* shader) const {
     if (shader == nullptr) { return; }
     if (shader->has_model_matrix) {
         shader->set_uniform(SHADER_UNIFORM_MODEL_MATRIX, model_matrix);
@@ -858,7 +858,7 @@ void PGraphicsOpenGL_3_3_core::update_shader_matrices(PShader* shader) const {
     }
 }
 
-void PGraphicsOpenGL_3_3_core::reset_shader_matrices(PShader* shader) {
+void PGraphicsOpenGL_3::reset_shader_matrices(PShader* shader) {
     if (shader == nullptr) { return; }
     if (shader->has_model_matrix) {
         shader->set_uniform(SHADER_UNIFORM_MODEL_MATRIX, glm::mat4(1.0f));
@@ -874,7 +874,7 @@ void PGraphicsOpenGL_3_3_core::reset_shader_matrices(PShader* shader) {
     }
 }
 
-void PGraphicsOpenGL_3_3_core::mesh(VertexBuffer* mesh_shape) {
+void PGraphicsOpenGL_3::mesh(VertexBuffer* mesh_shape) {
     UMFELD_PGRAPHICS_OPENGL_3_3_CORE_CHECK_ERRORS("mesh() begin");
     if (mesh_shape == nullptr) {
         return;
@@ -896,7 +896,7 @@ void PGraphicsOpenGL_3_3_core::mesh(VertexBuffer* mesh_shape) {
 #endif
 }
 
-PShader* PGraphicsOpenGL_3_3_core::loadShader(const std::string& vertex_code, const std::string& fragment_code, const std::string& geometry_code) {
+PShader* PGraphicsOpenGL_3::loadShader(const std::string& vertex_code, const std::string& fragment_code, const std::string& geometry_code) {
     const auto shader = new PShader();
     const bool result = shader->load(vertex_code, fragment_code, geometry_code);
     if (!result) {
@@ -907,7 +907,7 @@ PShader* PGraphicsOpenGL_3_3_core::loadShader(const std::string& vertex_code, co
     return shader;
 }
 
-void PGraphicsOpenGL_3_3_core::shader(PShader* shader) {
+void PGraphicsOpenGL_3::shader(PShader* shader) {
     if (shader == nullptr) {
         resetShader();
         return;
@@ -917,12 +917,12 @@ void PGraphicsOpenGL_3_3_core::shader(PShader* shader) {
     update_shader_matrices(custom_shader);
 }
 
-void PGraphicsOpenGL_3_3_core::resetShader() {
+void PGraphicsOpenGL_3::resetShader() {
     custom_shader = nullptr;
     // update_all_shader_matrices();
 }
 
-bool PGraphicsOpenGL_3_3_core::read_framebuffer(std::vector<unsigned char>& pixels) {
+bool PGraphicsOpenGL_3::read_framebuffer(std::vector<unsigned char>& pixels) {
     if (render_to_offscreen) {
         store_fbo_state();
         if (framebuffer.msaa) {
@@ -947,7 +947,7 @@ bool PGraphicsOpenGL_3_3_core::read_framebuffer(std::vector<unsigned char>& pixe
     }
 }
 
-void PGraphicsOpenGL_3_3_core::store_fbo_state() {
+void PGraphicsOpenGL_3::store_fbo_state() {
     if (render_to_offscreen) {
         glGetIntegerv(GL_CURRENT_PROGRAM, &previous_shader);
         glGetIntegerv(GL_VIEWPORT, previous_viewport);
@@ -958,7 +958,7 @@ void PGraphicsOpenGL_3_3_core::store_fbo_state() {
     }
 }
 
-void PGraphicsOpenGL_3_3_core::bind_fbo() {
+void PGraphicsOpenGL_3::bind_fbo() {
     if (render_to_offscreen) {
         glBindFramebuffer(GL_FRAMEBUFFER, framebuffer.id);
     } else {
@@ -966,7 +966,7 @@ void PGraphicsOpenGL_3_3_core::bind_fbo() {
     }
 }
 
-void PGraphicsOpenGL_3_3_core::restore_fbo_state() {
+void PGraphicsOpenGL_3::restore_fbo_state() {
     if (render_to_offscreen) {
         glBindFramebuffer(GL_READ_FRAMEBUFFER, previously_bound_read_FBO);
         glBindFramebuffer(GL_DRAW_FRAMEBUFFER, previously_bound_draw_FBO);
@@ -977,7 +977,7 @@ void PGraphicsOpenGL_3_3_core::restore_fbo_state() {
     }
 }
 
-void PGraphicsOpenGL_3_3_core::update_all_shader_matrices() const {
+void PGraphicsOpenGL_3::update_all_shader_matrices() const {
     if (custom_shader != nullptr) {
         custom_shader->use();
         update_shader_matrices(custom_shader);
@@ -994,29 +994,29 @@ void PGraphicsOpenGL_3_3_core::update_all_shader_matrices() const {
 }
 
 
-void PGraphicsOpenGL_3_3_core::camera(const float eyeX, const float eyeY, const float eyeZ, const float centerX, const float centerY, const float centerZ, const float upX, const float upY, const float upZ) {
+void PGraphicsOpenGL_3::camera(const float eyeX, const float eyeY, const float eyeZ, const float centerX, const float centerY, const float centerZ, const float upX, const float upY, const float upZ) {
     PGraphics::camera(eyeX, eyeY, eyeZ, centerX, centerY, centerZ, upX, upY, upZ);
     update_all_shader_matrices();
 }
 
-void PGraphicsOpenGL_3_3_core::frustum(const float left, const float right, const float bottom, const float top, const float near, const float far) {
+void PGraphicsOpenGL_3::frustum(const float left, const float right, const float bottom, const float top, const float near, const float far) {
     PGraphics::frustum(left, right, bottom, top, near, far);
     update_all_shader_matrices();
 }
 
-void PGraphicsOpenGL_3_3_core::ortho(const float left, const float right, const float bottom, const float top, const float near, const float far) {
+void PGraphicsOpenGL_3::ortho(const float left, const float right, const float bottom, const float top, const float near, const float far) {
     PGraphics::ortho(left, right, bottom, top, near, far);
     update_all_shader_matrices();
 }
 
-void PGraphicsOpenGL_3_3_core::perspective(const float fovy, const float aspect, const float near, const float far) {
+void PGraphicsOpenGL_3::perspective(const float fovy, const float aspect, const float near, const float far) {
     PGraphics::perspective(fovy, aspect, near, far);
     update_all_shader_matrices();
 }
 
 /* --- LIGHTS --- */
 
-void PGraphicsOpenGL_3_3_core::noLights() {
+void PGraphicsOpenGL_3::noLights() {
     lightCount                   = 0;
     currentLightSpecular         = glm::vec3(0.0f);
     currentLightFalloffConstant  = 1.0f;
@@ -1025,7 +1025,7 @@ void PGraphicsOpenGL_3_3_core::noLights() {
     resetShader();
 }
 
-void PGraphicsOpenGL_3_3_core::lights() {
+void PGraphicsOpenGL_3::lights() {
     enableLighting();
 
     // shader_fill_texture_lights->set_uniform(SHADER_UNIFORM_MODEL_MATRIX, g->model_matrix);
@@ -1047,7 +1047,7 @@ void PGraphicsOpenGL_3_3_core::lights() {
     directionalLight(128 / 255.0f, 128 / 255.0f, 128 / 255.0f, 0, 0, 1); // TODO why is this (0, 0, 1) and not (0, 0, -1) as described in the documentation?
 }
 
-void PGraphicsOpenGL_3_3_core::ambientLight(const float r, const float g, const float b, const float x, const float y, const float z) {
+void PGraphicsOpenGL_3::ambientLight(const float r, const float g, const float b, const float x, const float y, const float z) {
     enableLighting();
     if (lightCount >= MAX_LIGHTS) {
         return;
@@ -1070,7 +1070,7 @@ void PGraphicsOpenGL_3_3_core::ambientLight(const float r, const float g, const 
     updateShaderLighting();
 }
 
-void PGraphicsOpenGL_3_3_core::directionalLight(const float r, const float g, const float b, const float nx, const float ny, const float nz) {
+void PGraphicsOpenGL_3::directionalLight(const float r, const float g, const float b, const float nx, const float ny, const float nz) {
     enableLighting();
     if (lightCount >= MAX_LIGHTS) {
         return;
@@ -1093,7 +1093,7 @@ void PGraphicsOpenGL_3_3_core::directionalLight(const float r, const float g, co
     updateShaderLighting();
 }
 
-void PGraphicsOpenGL_3_3_core::pointLight(const float r, const float g, const float b, const float x, const float y, const float z) {
+void PGraphicsOpenGL_3::pointLight(const float r, const float g, const float b, const float x, const float y, const float z) {
     enableLighting();
     if (lightCount >= MAX_LIGHTS) {
         return;
@@ -1120,7 +1120,7 @@ void PGraphicsOpenGL_3_3_core::pointLight(const float r, const float g, const fl
     updateShaderLighting();
 }
 
-void PGraphicsOpenGL_3_3_core::spotLight(const float r, const float g, const float b, const float x, const float y, const float z,
+void PGraphicsOpenGL_3::spotLight(const float r, const float g, const float b, const float x, const float y, const float z,
                                          const float nx, const float ny, const float nz, const float angle, const float concentration) {
     enableLighting();
     if (lightCount >= MAX_LIGHTS) {
@@ -1146,51 +1146,51 @@ void PGraphicsOpenGL_3_3_core::spotLight(const float r, const float g, const flo
     updateShaderLighting();
 }
 
-void PGraphicsOpenGL_3_3_core::lightFalloff(const float constant, const float linear, const float quadratic) {
+void PGraphicsOpenGL_3::lightFalloff(const float constant, const float linear, const float quadratic) {
     currentLightFalloffConstant  = constant;
     currentLightFalloffLinear    = linear;
     currentLightFalloffQuadratic = quadratic;
 }
 
-void PGraphicsOpenGL_3_3_core::lightSpecular(const float r, const float g, const float b) {
+void PGraphicsOpenGL_3::lightSpecular(const float r, const float g, const float b) {
     currentLightSpecular = glm::vec3(r, g, b);
 }
 
-void PGraphicsOpenGL_3_3_core::ambient(const float r, const float g, const float b) {
+void PGraphicsOpenGL_3::ambient(const float r, const float g, const float b) {
     if (shader_fill_texture_lights) {
         shader_fill_texture_lights->set_uniform("ambient", glm::vec4(r, g, b, 1.0f));
     }
 }
 
-void PGraphicsOpenGL_3_3_core::specular(const float r, const float g, const float b) {
+void PGraphicsOpenGL_3::specular(const float r, const float g, const float b) {
     if (shader_fill_texture_lights) {
         shader_fill_texture_lights->set_uniform("specular", glm::vec4(r, g, b, 1.0f));
     }
 }
 
-void PGraphicsOpenGL_3_3_core::emissive(const float r, const float g, const float b) {
+void PGraphicsOpenGL_3::emissive(const float r, const float g, const float b) {
     if (shader_fill_texture_lights) {
         shader_fill_texture_lights->set_uniform("emissive", glm::vec4(r, g, b, 1.0f));
     }
 }
 
-void PGraphicsOpenGL_3_3_core::shininess(const float s) {
+void PGraphicsOpenGL_3::shininess(const float s) {
     if (shader_fill_texture_lights) {
         shader_fill_texture_lights->set_uniform("shininess", s);
     }
 }
 
-void PGraphicsOpenGL_3_3_core::enableLighting() {
+void PGraphicsOpenGL_3::enableLighting() {
     shader(shader_fill_texture_lights);
 }
 
-void PGraphicsOpenGL_3_3_core::setLightPosition(const int num, const float x, const float y, const float z, const bool directional) {
+void PGraphicsOpenGL_3::setLightPosition(const int num, const float x, const float y, const float z, const bool directional) {
     // TODO Transform position by current modelview matrix
     //      For now, assuming world space coordinates
     lightPositions[num] = glm::vec4(x, y, z, directional ? 0.0f : 1.0f);
 }
 
-void PGraphicsOpenGL_3_3_core::setLightNormal(const int num, const float dx, const float dy, const float dz) {
+void PGraphicsOpenGL_3::setLightNormal(const int num, const float dx, const float dy, const float dz) {
     // NOTE normalize the direction vector
     glm::vec3 normal(dx, dy, dz);
     if (glm::length(normal) > 0.0f) {
@@ -1199,47 +1199,47 @@ void PGraphicsOpenGL_3_3_core::setLightNormal(const int num, const float dx, con
     lightNormals[num] = normal;
 }
 
-void PGraphicsOpenGL_3_3_core::setLightAmbient(const int num, const float r, const float g, const float b) {
+void PGraphicsOpenGL_3::setLightAmbient(const int num, const float r, const float g, const float b) {
     lightAmbientColors[num] = glm::vec3(r, g, b);
 }
 
-void PGraphicsOpenGL_3_3_core::setNoLightAmbient(const int num) {
+void PGraphicsOpenGL_3::setNoLightAmbient(const int num) {
     lightAmbientColors[num] = glm::vec3(0.0f);
 }
 
-void PGraphicsOpenGL_3_3_core::setLightDiffuse(const int num, const float r, const float g, const float b) {
+void PGraphicsOpenGL_3::setLightDiffuse(const int num, const float r, const float g, const float b) {
     lightDiffuseColors[num] = glm::vec3(r, g, b);
 }
 
-void PGraphicsOpenGL_3_3_core::setNoLightDiffuse(const int num) {
+void PGraphicsOpenGL_3::setNoLightDiffuse(const int num) {
     lightDiffuseColors[num] = glm::vec3(0.0f);
 }
 
-void PGraphicsOpenGL_3_3_core::setLightSpecular(const int num, const float r, const float g, const float b) {
+void PGraphicsOpenGL_3::setLightSpecular(const int num, const float r, const float g, const float b) {
     lightSpecularColors[num] = glm::vec3(r, g, b);
 }
 
-void PGraphicsOpenGL_3_3_core::setNoLightSpecular(const int num) {
+void PGraphicsOpenGL_3::setNoLightSpecular(const int num) {
     lightSpecularColors[num] = glm::vec3(0.0f);
 }
 
-void PGraphicsOpenGL_3_3_core::setLightFalloff(const int num, const float constant, const float linear, const float quadratic) {
+void PGraphicsOpenGL_3::setLightFalloff(const int num, const float constant, const float linear, const float quadratic) {
     lightFalloffCoeffs[num] = glm::vec3(constant, linear, quadratic);
 }
 
-void PGraphicsOpenGL_3_3_core::setNoLightFalloff(const int num) {
+void PGraphicsOpenGL_3::setNoLightFalloff(const int num) {
     lightFalloffCoeffs[num] = glm::vec3(1.0f, 0.0f, 0.0f);
 }
 
-void PGraphicsOpenGL_3_3_core::setLightSpot(const int num, const float angle, const float concentration) {
+void PGraphicsOpenGL_3::setLightSpot(const int num, const float angle, const float concentration) {
     lightSpotParams[num] = glm::vec2(std::max(0.0f, std::cos(angle)), concentration);
 }
 
-void PGraphicsOpenGL_3_3_core::setNoLightSpot(const int num) {
+void PGraphicsOpenGL_3::setNoLightSpot(const int num) {
     lightSpotParams[num] = glm::vec2(-1.0f, 0.0f); // -1 disables spotlight
 }
 
-void PGraphicsOpenGL_3_3_core::updateShaderLighting() const {
+void PGraphicsOpenGL_3::updateShaderLighting() const {
     if (!shader_fill_texture_lights) {
         return;
     }
@@ -1267,7 +1267,7 @@ void PGraphicsOpenGL_3_3_core::updateShaderLighting() const {
     UMFELD_PGRAPHICS_OPENGL_3_3_CORE_CHECK_ERRORS("updateShaderLighting");
 }
 
-void PGraphicsOpenGL_3_3_core::texture_filter(const TextureFilter filter) {
+void PGraphicsOpenGL_3::texture_filter(const TextureFilter filter) {
     switch (filter) {
         case NEAREST:
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -1287,7 +1287,7 @@ void PGraphicsOpenGL_3_3_core::texture_filter(const TextureFilter filter) {
     }
 }
 
-void PGraphicsOpenGL_3_3_core::texture_wrap(const TextureWrap wrap) {
+void PGraphicsOpenGL_3::texture_wrap(const TextureWrap wrap) {
     switch (wrap) {
         case REPEAT:
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
@@ -1318,7 +1318,7 @@ void PGraphicsOpenGL_3_3_core::texture_wrap(const TextureWrap wrap) {
     }
 }
 
-void PGraphicsOpenGL_3_3_core::upload_colorbuffer(uint32_t* pixels) {
+void PGraphicsOpenGL_3::upload_colorbuffer(uint32_t* pixels) {
     if (pixels == nullptr) {
         error_in_function("pixels pointer is null, cannot upload color buffer.");
         return;
@@ -1447,7 +1447,7 @@ void PGraphicsOpenGL_3_3_core::upload_colorbuffer(uint32_t* pixels) {
     }
 }
 
-void PGraphicsOpenGL_3_3_core::download_colorbuffer(uint32_t* pixels) {
+void PGraphicsOpenGL_3::download_colorbuffer(uint32_t* pixels) {
     if (pixels == nullptr) {
         error_in_function("pixels pointer is null, cannot download color buffer.");
         return;
@@ -1527,7 +1527,7 @@ void PGraphicsOpenGL_3_3_core::download_colorbuffer(uint32_t* pixels) {
     flip_pixel_buffer(pixels);
 }
 
-void PGraphicsOpenGL_3_3_core::flip_pixel_buffer(uint32_t* pixels) {
+void PGraphicsOpenGL_3::flip_pixel_buffer(uint32_t* pixels) {
     const int d      = displayDensity();
     const int phys_w = width * d;
     const int phys_h = height * d;

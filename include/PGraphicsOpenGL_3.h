@@ -23,9 +23,9 @@
 #include "VertexBuffer.h"
 
 namespace umfeld {
-    class PGraphicsOpenGL_3_3_core final : public PGraphicsOpenGL {
+    class PGraphicsOpenGL_3 final : public PGraphicsOpenGL {
     public:
-        explicit PGraphicsOpenGL_3_3_core(bool render_to_offscreen);
+        explicit PGraphicsOpenGL_3(bool render_to_offscreen);
 
         /* --- OpenGL 3.3 specific implementation of shared methods --- */
 
@@ -57,7 +57,7 @@ namespace umfeld {
 #if defined(OPENGL_ES_3_0)
             return "PGraphicsOpenGL_ES_3_0";
 #elif defined(OPENGL_3_3_CORE)
-            return "PGraphicsOpenGL_3_3_core";
+            return "PGraphicsOpenGL_3";
 #else
             return "Unknown";
 #endif

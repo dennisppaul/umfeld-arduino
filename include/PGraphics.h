@@ -29,12 +29,12 @@
 #include "Vertex.h"
 #include "Shape.h"
 #include "Triangulator.h"
-#include "ShapeRenderer.h"
 
 namespace umfeld {
     class PFont;
     class VertexBuffer;
     class PShader;
+    class ShapeRenderer;
 
     class PGraphics : public virtual PImage {
     public:
@@ -155,7 +155,9 @@ namespace umfeld {
         virtual void endShape(bool closed = false);
         virtual void vertex(float x, float y, float z = 0.0f);
         virtual void vertex(float x, float y, float z, float u, float v);
-        virtual void vertex(Vertex v);
+        virtual void vertex(const Vertex& v);
+        void         submit_stroke_shape(bool closed);
+        void         submit_fill_shape(bool closed);
 
         // ## Structure
 
@@ -266,6 +268,8 @@ namespace umfeld {
         static std::vector<Vertex> triangulate_faster(const std::vector<Vertex>& vertices);
         static std::vector<Vertex> triangulate_better_quality(const std::vector<Vertex>& vertices);
         static std::vector<Vertex> triangulate_good(const std::vector<Vertex>& vertices);
+        void                       convert_fill_shape_to_triangles(Shape& s) const;
+        static void                convert_stroke_shape_to_line_strip(Shape& s, std::vector<Shape>& shapes);
 
     protected:
         struct ColorState : glm::vec4 {
@@ -278,7 +282,6 @@ namespace umfeld {
             float      strokeWeight;
             // TODO add style values like tint, blend mode, etc.
         };
-
 
         // const float                      DEFAULT_FOV            = 2.0f * atan(0.5f); // = 53.1301f; // P5 :: tan(PI*30.0 / 180.0);
         static constexpr uint16_t        ELLIPSE_DETAIL_MIN     = 3;
@@ -331,15 +334,25 @@ namespace umfeld {
         bool                             in_camera_block{false};
         void (*triangle_emitter_callback)(std::vector<Vertex>&){nullptr};
         void (*stroke_emitter_callback)(std::vector<Vertex>&, bool){nullptr};
+        bool texture_id_pushed{false};
 
     public:
         glm::mat4              model_matrix{};
         glm::mat4              view_matrix{};
         glm::mat4              projection_matrix{};
         std::vector<glm::mat4> model_matrix_stack{};
+        bool                   hint_enable_depth_test{false};
 
     protected:
-        bool texture_id_pushed{false};
+        static bool has_transparent_vertices(const std::vector<Vertex>& vertices) {
+            for (auto& v: vertices) {
+                if (v.color.a < 1.0f) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
         void push_texture_id() {
             if (!texture_id_pushed) {
                 texture_id_pushed           = true;

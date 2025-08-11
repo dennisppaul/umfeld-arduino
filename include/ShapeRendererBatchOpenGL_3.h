@@ -22,10 +22,19 @@
 #include "UmfeldSDLOpenGL.h"
 #include "ShapeRenderer.h"
 #include "Shape.h"
+#include "PGraphics.h"
 
 namespace umfeld {
     class ShapeRendererBatchOpenGL_3 final : public ShapeRenderer {
     public:
+        static constexpr uint16_t SHADER_PROGRAM_UNTEXTURED       = 0;
+        static constexpr uint16_t SHADER_PROGRAM_TEXTURED         = 1;
+        static constexpr uint16_t SHADER_PROGRAM_UNTEXTURED_LIGHT = 2; // TODO implement
+        static constexpr uint16_t SHADER_PROGRAM_TEXTURED_LIGHT   = 3; // TODO implement
+        static constexpr uint16_t SHADER_PROGRAM_POINT            = 4; // TODO implement
+        static constexpr uint16_t SHADER_PROGRAM_LINE             = 5; // TODO implement
+        static constexpr uint16_t NUM_SHADER_PROGRAMS             = 6;
+
         enum SHAPE_CENTER_COMPUTE_STRATEGY {
             ZERO_CENTER,
             AXIS_ALIGNED_BOUNDING_BOX,
@@ -33,7 +42,7 @@ namespace umfeld {
         };
 
         ~ShapeRendererBatchOpenGL_3() override {}
-        void init() override;
+        void init(PGraphics* g, std::vector<int> shader_programs) override;
         void beginShape(ShapeMode mode, bool filled, bool transparent, uint32_t texture_id, const glm::mat4& model_transform_matrix) override;
         void vertex(const Vertex& v) override;
         void setVertices(std::vector<Vertex>&& vertices) override;
@@ -53,8 +62,8 @@ namespace umfeld {
 
         struct TextureBatch {
             uint16_t            textureID{TEXTURE_NONE};
-            std::vector<Shape*> opaqueShapes;
-            std::vector<Shape*> transparentShapes;
+            std::vector<Shape*> opaque_shapes;
+            std::vector<Shape*> transparent_shapes;
         };
 
         // Cached uniform locations (avoid glGetUniformLocation every frame)
@@ -63,13 +72,18 @@ namespace umfeld {
             GLint uTex      = -1;
         };
 
+        // TODO implement for lighting, point and line shader
         ShaderUniforms                texturedUniforms;
         ShaderUniforms                untexturedUniforms;
-        GLuint                        vbo                     = 0;
-        GLuint                        ubo                     = 0;
-        GLuint                        vao                     = 0;
-        GLuint                        texturedShaderProgram   = 0;
-        GLuint                        untexturedShaderProgram = 0;
+        GLuint                        vbo                             = 0;
+        GLuint                        ubo                             = 0;
+        GLuint                        vao                             = 0;
+        GLuint                        texturedShaderProgram           = 0;
+        GLuint                        untexturedShaderProgram         = 0;
+        GLuint                        texturedLightingShaderProgram   = 0; // TODO implement
+        GLuint                        untexturedLightingShaderProgram = 0; // TODO implement
+        GLuint                        pointShaderProgram              = 0; // TODO implement
+        GLuint                        lineShaderProgram               = 0; // TODO implement
         std::vector<Shape>            shapes;
         Shape                         currentShape;
         SHAPE_CENTER_COMPUTE_STRATEGY shape_center_compute_strategy = ZERO_CENTER;
@@ -77,13 +91,14 @@ namespace umfeld {
         std::vector<Vertex>           frameVertices;
         std::vector<glm::mat4>        frameMatrices;
 
-        static GLuint compileShader(const char* src, GLenum type);
-        GLuint createShaderProgram(const char* vsSrc, const char* fsSrc);
+        //        static GLuint compileShader(const char* src, GLenum type);
+        //        static GLuint createShaderProgram(const char* vsSrc, const char* fsSrc);
         static void   setupUniformBlocks(GLuint program);
-        void   initShaders();
-        void   initBuffers();
+        void          initShaders(const std::vector<int>& shader_programm_id);
+        void          initBuffers();
         static size_t estimateTriangleCount(const Shape& s);
         static void   tessellateToTriangles(const Shape& s, std::vector<Vertex>& out, uint16_t transformID);
-        void   renderBatch(const std::vector<Shape*>& shapesToRender, const glm::mat4& viewProj, GLuint textureID);
+        void          renderBatch(const std::vector<Shape*>& shapesToRender, const glm::mat4& viewProj, GLuint textureID);
+        void          computeShapeCenter(Shape& s) const;
     };
 } // namespace umfeld

@@ -29,12 +29,17 @@
 #include "ShapeRendererBatchOpenGL_3.h"
 
 namespace umfeld {
-    void ShapeRendererBatchOpenGL_3::init() {
-        initShaders();
+    void ShapeRendererBatchOpenGL_3::init(PGraphics* g, const std::vector<int> shader_programs) {
+        graphics = g;
+        initShaders(shader_programs);
         initBuffers();
     }
 
-    void ShapeRendererBatchOpenGL_3::beginShape(ShapeMode mode, bool filled, bool transparent, uint32_t texture_id, const glm::mat4& model_transform_matrix) {
+    void ShapeRendererBatchOpenGL_3::beginShape(const ShapeMode  mode,
+                                                const bool       filled,
+                                                const bool       transparent,
+                                                const uint32_t   texture_id,
+                                                const glm::mat4& model_transform_matrix) {
         if (shapeInProgress) {
             warning("beginShape() called while another shape is in progress");
         }
@@ -45,7 +50,7 @@ namespace umfeld {
         currentShape.transparent = transparent;
         currentShape.texture_id  = texture_id;
         currentShape.model       = model_transform_matrix;
-        currentShape.vertices.clear(); // Ensure clean state
+        currentShape.vertices.clear();
         shapeInProgress = true;
     }
 
@@ -73,7 +78,7 @@ namespace umfeld {
         currentShape.vertices.push_back(v);
     }
 
-    void ShapeRendererBatchOpenGL_3::endShape(bool closed) {
+    void ShapeRendererBatchOpenGL_3::endShape(const bool closed) {
         (void) closed; // TODO ignored for now
         if (!shapeInProgress) {
             std::cerr << "Error: endShape() called without beginShape()" << std::endl;
@@ -82,6 +87,7 @@ namespace umfeld {
         if (currentShape.vertices.empty()) {
             std::cerr << "Warning: endShape() called with no vertices" << std::endl;
         }
+        currentShape.closed = closed;
         submitShape(currentShape);
         shapeInProgress = false;
     }
@@ -91,7 +97,7 @@ namespace umfeld {
             return;
         }
 
-        // Use unordered_map for better performance with many textures
+        // use unordered_map for better performance with many textures
         std::unordered_map<GLuint, TextureBatch> textureBatches;
         textureBatches.reserve(8); // Reasonable default
 
@@ -100,31 +106,40 @@ namespace umfeld {
             batch.textureID     = s.texture_id;
 
             if (s.transparent) {
-                batch.transparentShapes.push_back(&s);
+                batch.transparent_shapes.push_back(&s);
             } else {
-                batch.opaqueShapes.push_back(&s);
+                batch.opaque_shapes.push_back(&s);
             }
         }
 
         // Compute depth and sort transparents
         for (auto& [textureID, batch]: textureBatches) {
-            for (auto* s: batch.transparentShapes) {
-                const glm::vec4 centerWS = s->model * glm::vec4(s->centerOS, 1.0f);
-                const glm::vec4 centerVS = view_projection_matrix * centerWS;
-                s->depth                 = centerVS.z / centerVS.w; // Proper NDC depth
+            for (auto* s: batch.transparent_shapes) {
+                const glm::vec4 center_world_space = s->model * glm::vec4(s->center_object_space, 1.0f);
+                const glm::vec4 center_view_space  = view_projection_matrix * center_world_space;
+                s->depth                           = center_view_space.z / center_view_space.w; // Proper NDC depth
             }
-            std::sort(batch.transparentShapes.begin(), batch.transparentShapes.end(),
+            std::sort(batch.transparent_shapes.begin(), batch.transparent_shapes.end(),
                       [](const Shape* A, const Shape* B) { return A->depth > B->depth; }); // Back to front
         }
 
         glBindVertexArray(vao);
 
         // Opaque pass
-        glEnable(GL_DEPTH_TEST);
+        if (graphics != nullptr) {
+            if (graphics->hint_enable_depth_test) {
+                glEnable(GL_DEPTH_TEST);
+            } else {
+                glDisable(GL_DEPTH_TEST);
+            }
+        } else {
+            glEnable(GL_DEPTH_TEST);
+        }
+        glDepthFunc(GL_LEQUAL); // Allow equal depths to pass ( `GL_LESS` is default )
         glDepthMask(GL_TRUE);
         glDisable(GL_BLEND);
         for (auto& [textureID, batch]: textureBatches) {
-            renderBatch(batch.opaqueShapes, view_projection_matrix, textureID);
+            renderBatch(batch.opaque_shapes, view_projection_matrix, textureID);
         }
 
         // Transparent pass
@@ -132,7 +147,7 @@ namespace umfeld {
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         glDepthMask(GL_FALSE);
         for (auto& [textureID, batch]: textureBatches) {
-            renderBatch(batch.transparentShapes, view_projection_matrix, textureID);
+            renderBatch(batch.transparent_shapes, view_projection_matrix, textureID);
         }
 
         glDepthMask(GL_TRUE);
@@ -141,70 +156,68 @@ namespace umfeld {
     }
 
     void ShapeRendererBatchOpenGL_3::submitShape(Shape& s) {
+        if (s.transparent) { // NOTE only copmute center for transparent shapes
+            computeShapeCenter(s);
+        }
+
+        if (graphics != nullptr) {
+            /* convert stroke shape to line strips + triangulate stroke */
+            if (!s.filled) {
+                std::vector<Shape> converted_shapes;
+                graphics->convert_stroke_shape_to_line_strip(s, converted_shapes);
+
+                if (!converted_shapes.empty()) {
+                    for (auto& cs: converted_shapes) {
+                        std::vector<Vertex> triangulated_vertices;
+                        graphics->triangulate_line_strip_vertex(cs.vertices,
+                                                                cs.closed,
+                                                                triangulated_vertices);
+                        cs.vertices = std::move(triangulated_vertices);
+                        cs.filled   = true;
+                        cs.mode     = TRIANGLES;
+                        shapes.push_back(std::move(cs));
+                    }
+                }
+            }
+            /* convert filled shapes to triangles */
+            if (s.filled) {
+                graphics->convert_fill_shape_to_triangles(s);
+                s.mode = TRIANGLES;
+                shapes.push_back(std::move(s));
+            }
+        }
+    }
+
+    void ShapeRendererBatchOpenGL_3::computeShapeCenter(Shape& s) const {
+        if (s.vertices.empty()) {
+            s.center_object_space = glm::vec3(0, 0, 0);
+            return;
+        }
+
         switch (shape_center_compute_strategy) {
             case AXIS_ALIGNED_BOUNDING_BOX: {
-                if (s.vertices.empty()) {
-                    s.centerOS = glm::vec3(0, 0, 0);
-                    break;
-                }
                 glm::vec3 minP(FLT_MAX), maxP(-FLT_MAX);
                 for (const auto& v: s.vertices) {
                     minP = glm::min(minP, glm::vec3(v.position));
                     maxP = glm::max(maxP, glm::vec3(v.position));
                 }
-                s.centerOS = (minP + maxP) * 0.5f;
+                s.center_object_space = (minP + maxP) * 0.5f;
                 break;
             }
             case CENTER_OF_MASS: {
-                if (s.vertices.empty()) {
-                    s.centerOS = glm::vec3(0, 0, 0);
-                    break;
-                }
                 glm::vec4 center(0, 0, 0, 1);
-                for (const auto& v: s.vertices) { center += v.position; }
+                for (const auto& v: s.vertices) {
+                    center += v.position;
+                }
                 center /= static_cast<float>(s.vertices.size());
-                s.centerOS = center;
+                s.center_object_space = center;
                 break;
             }
             case ZERO_CENTER:
             default:
-                s.centerOS = glm::vec3(0, 0, 0);
+                s.center_object_space = glm::vec3(0, 0, 0);
                 break;
         }
-        shapes.push_back(std::move(s)); // Move to avoid copy
-    }
-
-    GLuint ShapeRendererBatchOpenGL_3::compileShader(const char* src, const GLenum type) {
-        const GLuint s = glCreateShader(type);
-        glShaderSource(s, 1, &src, nullptr);
-        glCompileShader(s);
-        GLint ok;
-        glGetShaderiv(s, GL_COMPILE_STATUS, &ok);
-        if (!ok) {
-            char buf[512];
-            glGetShaderInfoLog(s, 512, nullptr, buf);
-            std::cerr << "Shader compile error: " << buf << std::endl;
-        }
-        return s;
-    }
-
-    GLuint ShapeRendererBatchOpenGL_3::createShaderProgram(const char* vsSrc, const char* fsSrc) {
-        const GLuint vs      = compileShader(vsSrc, GL_VERTEX_SHADER);
-        const GLuint fs      = compileShader(fsSrc, GL_FRAGMENT_SHADER);
-        const GLuint program = glCreateProgram();
-        glAttachShader(program, vs);
-        glAttachShader(program, fs);
-        glLinkProgram(program);
-        GLint ok;
-        glGetProgramiv(program, GL_LINK_STATUS, &ok);
-        if (!ok) {
-            char buf[512];
-            glGetProgramInfoLog(program, 512, nullptr, buf);
-            std::cerr << "Link error: " << buf << std::endl;
-        }
-        glDeleteShader(vs); // Clean up shader objects
-        glDeleteShader(fs);
-        return program;
     }
 
     void ShapeRendererBatchOpenGL_3::setupUniformBlocks(const GLuint program) {
@@ -212,83 +225,20 @@ namespace umfeld {
         glUniformBlockBinding(program, blockIndex, 0);
     }
 
-    void ShapeRendererBatchOpenGL_3::initShaders() {
-
-        // NOTE for OpenGL ES 3.0 change from:
-        //      ```glsl
-        //      #version 330 core
-        //      ```
-        //      to:
-        //      ```glsl
-        //      #version 300 es
-        //      precision mediump float;
-        //      precision mediump int;
-        //      precision mediump sampler2D;
-        //      ```
-        //      and create shader source with dynamic array size
+    void ShapeRendererBatchOpenGL_3::initShaders(const std::vector<int>& shader_programm_id) {
+        // NOTE for OpenGL ES 3.0 create shader source with dynamic array size
         //      ```c
         //      std::string transformsDefine = "#define MAX_TRANSFORMS " + std::to_string(MAX_TRANSFORMS) + "\n";
         //      const auto texturedVS = transformsDefine + R"(#version 330 core
         //      ```
 
-        const auto texturedVS = R"(#version 330 core
-layout(location=0) in vec4 aPosition;
-layout(location=1) in vec4 aNormal;
-layout(location=2) in vec4 aColor;
-layout(location=3) in vec3 aTexCoord;
-layout(location=4) in uint aTransformID;
-layout(std140) uniform Transforms {
-    mat4 uModel[256];
-};
-uniform mat4 uViewProj;
-out vec2 vTexCoord;
-out vec4 vColor;
-void main() {
-    mat4 M = uModel[aTransformID];
-    gl_Position = uViewProj * M * aPosition;
-    vTexCoord = aTexCoord.xy;
-    vColor = aColor;
-}
-)";
-
-        const auto texturedFS = R"(#version 330 core
-in vec2 vTexCoord;
-in vec4 vColor;
-out vec4 fragColor;
-uniform sampler2D uTex;
-void main() {
-    fragColor = texture(uTex, vTexCoord) * vColor;
-}
-)";
-
-        const auto untexturedVS = R"(#version 330 core
-layout(location=0) in vec4 aPosition;
-layout(location=1) in vec4 aNormal;
-layout(location=2) in vec4 aColor;
-layout(location=3) in vec3 aTexCoord;
-layout(location=4) in uint aTransformID;
-layout(std140) uniform Transforms {
-    mat4 uModel[256];
-};
-uniform mat4 uViewProj;
-out vec4 vColor;
-void main() {
-    mat4 M = uModel[aTransformID];
-    gl_Position = uViewProj * M * aPosition;
-    vColor = aColor;
-}
-)";
-
-        const auto untexturedFS = R"(#version 330 core
-in vec4 vColor;
-out vec4 fragColor;
-void main() {
-    fragColor = vColor;
-}
-)";
-
-        texturedShaderProgram   = createShaderProgram(texturedVS, texturedFS);
-        untexturedShaderProgram = createShaderProgram(untexturedVS, untexturedFS);
+        texturedShaderProgram   = shader_programm_id[SHADER_PROGRAM_TEXTURED];
+        untexturedShaderProgram = shader_programm_id[SHADER_PROGRAM_UNTEXTURED];
+        // TODO implement
+        //      untexturedLightingShaderProgram = shader_programm_id[SHADER_PROGRAM_UNTEXTURED_LIGHT];
+        //      texturedLightingShaderProgram   = shader_programm_id[SHADER_PROGRAM_TEXTURED_LIGHT];
+        //      pointShaderProgram              = shader_programm_id[SHADER_PROGRAM_POINT];
+        //      lineShaderProgram               = shader_programm_id[SHADER_PROGRAM_LINE];
 
         setupUniformBlocks(texturedShaderProgram);
         setupUniformBlocks(untexturedShaderProgram);
@@ -418,7 +368,7 @@ void main() {
             return;
         }
 
-        const GLuint          shader   = (textureID == TEXTURE_NONE) ? untexturedShaderProgram : texturedShaderProgram;
+        const GLuint          shader   = enable_lighting ? ((textureID == TEXTURE_NONE) ? untexturedLightingShaderProgram : texturedLightingShaderProgram) : ((textureID == TEXTURE_NONE) ? untexturedShaderProgram : texturedShaderProgram);
         const ShaderUniforms& uniforms = (textureID == TEXTURE_NONE) ? untexturedUniforms : texturedUniforms;
 
         glUseProgram(shader);
@@ -455,10 +405,15 @@ void main() {
             frameVertices.reserve(totalEstimate);
 
             // Tessellate shapes in this chunk
+            // TODO tesselation is not necessary if shape is already TRIANGLES
             for (size_t i = 0; i < chunkSize; ++i) {
                 const auto* s = shapesToRender[offset + i];
                 tessellateToTriangles(*s, frameVertices, static_cast<uint16_t>(i));
             }
+            // for (size_t i = chunkSize; i-- > 0;) {
+            //     const auto* s = shapesToRender[offset + i];
+            //     tessellateToTriangles(*s, frameVertices, static_cast<uint16_t>(i));
+            // }
 
             if (!frameVertices.empty()) {
                 glBindBuffer(GL_ARRAY_BUFFER, vbo);
@@ -469,5 +424,4 @@ void main() {
             }
         }
     }
-
 } // namespace umfeld

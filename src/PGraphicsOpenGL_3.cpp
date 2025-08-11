@@ -36,6 +36,8 @@
 #include "ShaderSourceColorTextureLights.h"
 #include "ShaderSourceLine.h"
 #include "ShaderSourcePoint.h"
+#include "ShaderSourceBatchColor.h"
+#include "ShaderSourceBatchColorTexture.h"
 #include "ShapeRendererBatchOpenGL_3.h"
 
 #ifdef UMFELD_PGRAPHICS_OPENGL_3_3_CORE_ERRORS
@@ -501,9 +503,11 @@ void PGraphicsOpenGL_3::hint(const uint16_t property) {
         case ENABLE_DEPTH_TEST:
             glEnable(GL_DEPTH_TEST);
             glDepthFunc(GL_LESS);
+            hint_enable_depth_test = true;
             break;
         case DISABLE_DEPTH_TEST:
             glDisable(GL_DEPTH_TEST);
+            hint_enable_depth_test = false;
             break;
         default:
             break;
@@ -747,9 +751,23 @@ void PGraphicsOpenGL_3::init(uint32_t* pixels,
         texture_id = _buffer_texture_id;
     }
 
+    /* initialize shape renderer */
+
+#ifndef USE_IMMEDIATE_RENDERING
     // TODO this should be configurable. alternative might be `ShapeRendererImmediateOpenGL_3`
-    shape_renderer = new ShapeRendererBatchOpenGL_3();
-    shape_renderer->init();
+    const auto       shape_renderer_ogl3 = new ShapeRendererBatchOpenGL_3();
+    std::vector<int> shader_batch_programs(ShapeRendererBatchOpenGL_3::NUM_SHADER_PROGRAMS);
+    shader_batch_programs[ShapeRendererBatchOpenGL_3::SHADER_PROGRAM_UNTEXTURED] = loadShader(shader_source_batch_color.get_vertex_source(), shader_source_batch_color.get_fragment_source())->get_program_id();
+    shader_batch_programs[ShapeRendererBatchOpenGL_3::SHADER_PROGRAM_TEXTURED]   = loadShader(shader_source_batch_color_texture.get_vertex_source(), shader_source_batch_color_texture.get_fragment_source())->get_program_id();
+    // TODO add shader programms
+    //      SHADER_PROGRAM_UNTEXTURED_LIGHT
+    //      SHADER_PROGRAM_TEXTURED_LIGHT
+    //      SHADER_PROGRAM_UNTEXTURED_LIGHT
+    //      SHADER_PROGRAM_POINT
+    //      SHADER_PROGRAM_LINE
+    shape_renderer_ogl3->init(this, shader_batch_programs);
+    shape_renderer = shape_renderer_ogl3;
+#endif
 
     if constexpr (sizeof(Vertex) != 64) {
         // ReSharper disable once CppDFAUnreachableCode

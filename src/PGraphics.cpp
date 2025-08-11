@@ -35,6 +35,7 @@
 #include "PGraphics.h"
 #include "Vertex.h"
 #include "Geometry.h"
+#include "ShapeRenderer.h"
 
 using namespace umfeld;
 
@@ -623,6 +624,7 @@ void PGraphics::ellipse(const float a, const float b, const float c, const float
                             0.0f);
     }
 
+    // TODO optimize ellipse by drawing it as TRIANGLE_FAN
     beginShape(POLYGON);
     points.pop_back(); // remove duplicate point if LUT loops
     for (const auto& p: points) {
@@ -1309,37 +1311,75 @@ void PGraphics::vertex(const float x, const float y, const float z, const float 
     }
 
     const glm::vec3 position{x, y, z};
+    const glm::vec3 tex_coord{u, v, 0.0f};
 
     if (color_stroke.active) {
-        const glm::vec4 strokeColor = as_vec4(color_stroke);
-        shape_stroke_vertex_buffer.emplace_back(position, strokeColor, glm::vec3{u, v, 0.0f}, current_normal);
+        shape_stroke_vertex_buffer.emplace_back(position, as_vec4(color_stroke), tex_coord, current_normal);
     }
 
     if (color_fill.active) {
-        const glm::vec4 fillColor = as_vec4(color_fill);
-        shape_fill_vertex_buffer.emplace_back(position, fillColor, glm::vec3{u, v, 0.0f}, current_normal);
+        shape_fill_vertex_buffer.emplace_back(position, as_vec4(color_fill), tex_coord, current_normal);
     }
 }
 
-void PGraphics::vertex(Vertex v) {
+void PGraphics::vertex(const Vertex& v) {
     if (!color_stroke.active && !color_fill.active) {
         return;
     }
 
     if (color_stroke.active) {
-        const glm::vec4 strokeColor = as_vec4(color_stroke);
-        shape_stroke_vertex_buffer.emplace_back(v.position, strokeColor, v.tex_coord, v.normal);
+        shape_stroke_vertex_buffer.emplace_back(v.position, as_vec4(color_stroke), v.tex_coord, v.normal);
     }
 
     if (color_fill.active) {
-        const glm::vec4 fillColor = as_vec4(color_fill);
         // TODO maybe use v.color instead of color_fill?
-        // shape_fill_vertex_buffer.emplace_back(v);
-        shape_fill_vertex_buffer.emplace_back(v.position, fillColor, v.tex_coord, v.normal);
+        //      shape_fill_vertex_buffer.emplace_back(v);
+        shape_fill_vertex_buffer.emplace_back(v.position, as_vec4(color_fill), v.tex_coord, v.normal);
+    }
+}
+
+void PGraphics::submit_stroke_shape(const bool closed) {
+    if (!shape_stroke_vertex_buffer.empty()) {
+        Shape s;
+        s.mode        = static_cast<ShapeMode>(shape_mode_cache);
+        s.filled      = false;
+        s.vertices    = shape_stroke_vertex_buffer;
+        s.model       = model_matrix;
+        s.transparent = has_transparent_vertices(shape_stroke_vertex_buffer);
+        s.closed      = closed;
+        s.texture_id  = TEXTURE_NONE;
+        shape_renderer->submitShape(s);
+    }
+}
+
+void PGraphics::submit_fill_shape(const bool closed) {
+    if (!shape_fill_vertex_buffer.empty()) {
+        Shape s;
+        s.mode        = static_cast<ShapeMode>(shape_mode_cache);
+        s.filled      = true;
+        s.vertices    = shape_fill_vertex_buffer;
+        s.model       = model_matrix;
+        s.transparent = has_transparent_vertices(shape_fill_vertex_buffer);
+        s.closed      = closed;
+        s.texture_id  = TEXTURE_NONE;
+        shape_renderer->submitShape(s);
     }
 }
 
 void PGraphics::endShape(const bool closed) {
+    if (shape_renderer) {
+        submit_fill_shape(closed);
+        submit_stroke_shape(closed);
+    } else {
+        // TODO move immediate mode to dedicated file
+        process_collected_fill_vertices();
+        process_collected_stroke_vertices(closed);
+    }
+
+    shape_fill_vertex_buffer.clear();
+    shape_stroke_vertex_buffer.clear();
+    shape_has_begun = false;
+
     /*
      * OpenGL ES 3.0 is stricter:
      *
@@ -1349,28 +1389,6 @@ void PGraphics::endShape(const bool closed) {
      *
      * i.e GL_LINES + GL_LINE_STRIP must be emulated
      */
-
-    // process_collected_fill_vertices();
-    // process_collected_stroke_vertices(closed);
-
-    if (shape_renderer) {
-        if (!shape_fill_vertex_buffer.empty()) {
-            // TODO replace this with `submitShape()`
-            // TODO submit transparent and opaque shapes +
-            //      submit filled and stroked shapes
-            shape_renderer->beginShape(static_cast<ShapeMode>(shape_mode_cache),
-                                       true,
-                                       false,
-                                       TEXTURE_NONE, // TODO get from texture cache
-                                       model_matrix);
-            shape_renderer->setVertices(shape_fill_vertex_buffer);
-            shape_renderer->endShape(closed);
-        }
-    }
-
-    shape_fill_vertex_buffer.clear();
-    shape_stroke_vertex_buffer.clear();
-    shape_has_begun = false;
 }
 
 void PGraphics::emit_shape_fill_triangles(std::vector<Vertex>& triangle_vertices) {
@@ -1395,10 +1413,156 @@ void PGraphics::emit_shape_stroke_points(std::vector<Vertex>& point_vertices, fl
     IMPL_emit_shape_stroke_points(point_vertices, point_size);
 }
 
-void PGraphics::process_collected_fill_vertices() {
-    const int tmp_shape_mode_cache = shape_mode_cache;
+
+void PGraphics::convert_stroke_shape_to_line_strip(Shape& s, std::vector<Shape>& shapes) {
+    std::vector<Vertex> shape_stroke_vertex_buffer = s.vertices;
+    const int           shape_mode_cache           = s.mode;
+
+    if (!shape_stroke_vertex_buffer.empty()) {
+        // TODO revisit points … maybe extra render path?
+        // if (shape_mode_cache == POINTS) {
+        //     // TODO STROKE_RENDER_MODE_NATIVE is handled in renderer
+        //     // TODO decide if point is a fill shape or it s own shape
+        //     // if (point_render_mode == POINT_RENDER_MODE_NATIVE) {
+        //     //     // TODO does this still work under macOS? it renders squares … maybe texturize them
+        //     //     // TODO @OpenGLES3.1 replace with circle or textured quad
+        //     //     const float tmp_point_size = std::max(std::min(point_size, open_gl_capabilities.point_size_max), open_gl_capabilities.point_size_min);
+        //     //     glPointSize(tmp_point_size);
+        //     //     OGL_tranform_model_matrix_and_render_vertex_buffer(IM_primitive_shape, GL_POINTS, shape_stroke_vertex_buffer);
+        //     // }
+        //     if (point_render_mode == POINT_RENDER_MODE_TRIANGULATE) {
+        //         std::vector<Vertex> line_vertices = convertPointsToTriangles(shape_stroke_vertex_buffer, point_size);
+        //         emit_shape_fill_triangles(line_vertices);
+        //     } else if (point_render_mode == POINT_RENDER_MODE_SHADER) {
+        //         emit_shape_stroke_points(shape_stroke_vertex_buffer, point_size);
+        //     }
+        //     return; // NOTE strokes are rendered as points ... exit early
+        // }
+
+        // Helper struct to configure vertex group processing
+        struct VertexGroupConfig {
+            int                        vertices_per_group;
+            bool                       is_closed;
+            const std::vector<Vertex>* vertex_source;
+        };
+
+        // Helper function to process vertex groups
+        auto processVertexGroup = [&](const VertexGroupConfig& config) {
+            const int buffer_size = config.vertex_source->size() / config.vertices_per_group * config.vertices_per_group;
+            shapes.reserve(buffer_size / config.vertices_per_group);
+
+            for (int i = 0; i < buffer_size; i += config.vertices_per_group) {
+                std::vector<Vertex> vertices;
+                vertices.reserve(config.vertices_per_group);
+                for (int j = 0; j < config.vertices_per_group; ++j) {
+                    vertices.push_back((*config.vertex_source)[i + j]);
+                }
+
+                Shape ns{
+                    .mode        = LINE_STRIP,
+                    .filled      = s.filled,
+                    .vertices    = std::move(vertices),
+                    .model       = s.model,
+                    .transparent = s.transparent,
+                    .closed      = config.is_closed,
+                    .texture_id  = s.texture_id};
+                shapes.emplace_back(std::move(ns));
+            }
+        };
+
+        switch (shape_mode_cache) {
+            case LINES: {
+                const VertexGroupConfig config{2, false, &shape_stroke_vertex_buffer};
+                processVertexGroup(config);
+            } break;
+
+            case TRIANGLE_FAN: {
+                const std::vector<Vertex> converted_vertices = convertTriangleFanToTriangles(shape_stroke_vertex_buffer);
+                const VertexGroupConfig   config{3, true, &converted_vertices};
+                processVertexGroup(config);
+            } break;
+
+            case TRIANGLES: {
+                const VertexGroupConfig config{3, true, &shape_stroke_vertex_buffer};
+                processVertexGroup(config);
+            } break;
+
+            case TRIANGLE_STRIP: {
+                const std::vector<Vertex> converted_vertices = convertTriangleStripToTriangles(shape_stroke_vertex_buffer);
+                const VertexGroupConfig   config{3, true, &converted_vertices};
+                processVertexGroup(config);
+            } break;
+
+            case QUAD_STRIP: {
+                const std::vector<Vertex> converted_vertices = convertQuadStripToQuads(shape_stroke_vertex_buffer);
+                const VertexGroupConfig   config{4, true, &converted_vertices};
+                processVertexGroup(config);
+            } break;
+
+            case QUADS: {
+                const VertexGroupConfig config{4, true, &shape_stroke_vertex_buffer};
+                processVertexGroup(config);
+            } break;
+
+            default:
+            case LINE_STRIP:
+            case POLYGON:
+                shapes.emplace_back(std::move(s));
+                s.mode = LINE_STRIP;
+                break;
+        }
+    }
+}
+
+void PGraphics::convert_fill_shape_to_triangles(Shape& s) const {
+    const std::vector<Vertex> shape_fill_vertex_buffer = s.vertices;
+    const int                 shape_mode_cache         = s.mode;
     if (!shape_fill_vertex_buffer.empty()) {
-        switch (tmp_shape_mode_cache) {
+        switch (shape_mode_cache) {
+            case POINTS:
+            case LINES:
+            case LINE_STRIP:
+                return;
+            case TRIANGLES:
+                break;
+            case TRIANGLE_FAN: {
+                std::vector<Vertex> vertices_filled_triangles = convertTriangleFanToTriangles(shape_fill_vertex_buffer);
+                s.vertices                                    = std::move(vertices_filled_triangles);
+            } break;
+            case QUAD_STRIP: // NOTE does this just work?!?
+            case TRIANGLE_STRIP: {
+                std::vector<Vertex> vertices_filled_triangles = convertTriangleStripToTriangles(shape_fill_vertex_buffer);
+                s.vertices                                    = std::move(vertices_filled_triangles);
+            } break;
+            case QUADS: {
+                std::vector<Vertex> vertices_filled_triangles = convertQuadsToTriangles(shape_fill_vertex_buffer);
+                s.vertices                                    = std::move(vertices_filled_triangles);
+            } break;
+            case POLYGON: {
+                std::vector<Vertex> vertices_filled_triangles;
+                if (polygon_triangulation_strategy == POLYGON_TRIANGULATION_FASTER) {
+                    // EARCUT :: supports concave polygons, textures but no holes or self-intersection
+                    vertices_filled_triangles = triangulate_faster(shape_fill_vertex_buffer);
+                } else if (polygon_triangulation_strategy == POLYGON_TRIANGULATION_BETTER) {
+                    // LIBTESS2 :: supports concave polygons, textures, holes and self-intersection but no textures
+                    vertices_filled_triangles = triangulate_good(shape_fill_vertex_buffer);
+                } else if (polygon_triangulation_strategy == POLYGON_TRIANGULATION_MID) {
+                    // POLYPARTITION + CLIPPER2 // TODO maybe remove this option
+                    vertices_filled_triangles = triangulate_better_quality(shape_fill_vertex_buffer);
+                }
+                s.vertices = std::move(vertices_filled_triangles);
+                // TODO what if polygon has only 3 ( triangle ) or 4 vertices ( quad )? could shortcut … here
+            } break;
+            default:
+                return;
+        }
+    }
+    s.mode = TRIANGLES;
+}
+
+void PGraphics::process_collected_fill_vertices() {
+    if (!shape_fill_vertex_buffer.empty()) {
+        switch (shape_mode_cache) {
             case POINTS:
             case LINES:
             case LINE_STRIP:
@@ -1440,8 +1604,8 @@ void PGraphics::process_collected_fill_vertices() {
 }
 
 void PGraphics::process_collected_stroke_vertices(const bool close_shape) {
-    const int tmp_shape_mode_cache = shape_mode_cache;
     if (!shape_stroke_vertex_buffer.empty()) {
+        const int tmp_shape_mode_cache = shape_mode_cache;
         if (tmp_shape_mode_cache == POINTS) {
             // TODO STROKE_RENDER_MODE_NATIVE is handled in renderer
             // TODO decide if point is a fill shape or it s own shape

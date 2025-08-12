@@ -40,14 +40,16 @@ namespace umfeld {
         virtual void setVertices(std::vector<Vertex>&& vertices)          = 0;
         virtual void setVertices(const std::vector<Vertex>& vertices)     = 0;
         virtual void endShape(bool closed)                                = 0;
-        virtual void submitShape(Shape& s)                  = 0;
+        virtual void submitShape(Shape& s)                                = 0;
         virtual void flush(const glm::mat4& view_projection_matrix)       = 0;
         // NOTE `flush()` needs VP matrix and must be called to render batches at
         //      1. at end of frame
         //      2. before view or projection matrix are changed
         //      3. before downloading pixels from GPU
+        virtual void flush_submission_order(const glm::mat4& view_projection_matrix) = 0;
 
         bool enable_lighting{false};
+
     protected:
         PGraphics* graphics{nullptr};
     };

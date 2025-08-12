@@ -287,7 +287,7 @@ namespace umfeld {
         static constexpr uint16_t        ELLIPSE_DETAIL_MIN     = 3;
         static constexpr uint16_t        ELLIPSE_DETAIL_DEFAULT = 36;
         static constexpr uint16_t        ARC_DETAIL_DEFAULT     = 36;
-        ShapeRenderer*                   shape_renderer{nullptr};
+        ShapeRenderer*                   shape_renderer{nullptr}; // TODO @maybe make this `const` and set in constructor?
         std::stack<StyleState>           style_stack;
         bool                             init_properties_locked{false};
         PFont*                           current_font{nullptr};

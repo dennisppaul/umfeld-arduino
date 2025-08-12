@@ -50,6 +50,7 @@ namespace umfeld {
         void endShape(bool closed) override;
         void submitShape(Shape& s) override;
         void flush(const glm::mat4& view_projection_matrix) override;
+        void flush_submission_order(const glm::mat4& view_projection_matrix) override;
 
     private:
         static constexpr uint16_t MAX_TRANSFORMS = 256;

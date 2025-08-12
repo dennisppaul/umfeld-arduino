@@ -166,6 +166,11 @@ namespace umfeld {
         RENDER_MODE_BUFFERED,         // buffers vertices and renders them at the end of the frame
         RENDER_MODE_SHAPE             // renders shapes immediately, but via `beginShape()` and `endShape()` ( only for OpenGL 2.0 )
     };
+    enum RenderModeBatch {
+        RENDER_SORTED_BY_Z_ORDER = 0xC0,   // render sorted by z-order in batches ( fast, transparent shapes are sorted, textured are rendered in batches )
+        RENDER_SORTED_BY_SUBMISSION_ORDER, // render sorted by submission order ( slow, good for 2D, shapes are renderered one by one )
+        RENDER_IMMEDIATELY                 // render immediately ( slowest, shapes are rendered at call to `endShape()` )
+    };
     enum Hint {
         ENABLE_SMOOTH_LINES = 0xA0,
         DISABLE_SMOOTH_LINES,

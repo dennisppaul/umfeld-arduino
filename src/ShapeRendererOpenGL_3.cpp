@@ -93,6 +93,8 @@ namespace umfeld {
     }
 
     void ShapeRendererBatchOpenGL_3::flush(const glm::mat4& view_projection_matrix) {
+        console_once("rendering in batches + depth sorted order");
+
         if (shapes.empty()) {
             return;
         }
@@ -151,6 +153,74 @@ namespace umfeld {
         }
 
         glDepthMask(GL_TRUE);
+        glBindVertexArray(0);
+        shapes.clear();
+    }
+
+    void ShapeRendererBatchOpenGL_3::flush_submission_order(const glm::mat4& view_projection_matrix) {
+        console_once("rendering in submission order");
+
+        if (shapes.empty()) {
+            return;
+        }
+
+        glBindVertexArray(vao);
+
+        // Enable depth test for all shapes
+        if (graphics != nullptr) {
+            if (graphics->hint_enable_depth_test) {
+                glEnable(GL_DEPTH_TEST);
+            } else {
+                glDisable(GL_DEPTH_TEST);
+            }
+        } else {
+            glEnable(GL_DEPTH_TEST);
+        }
+        glDepthFunc(GL_LEQUAL);
+
+        GLuint currentTexture = UINT32_MAX; // Force initial texture bind
+        bool   blendEnabled   = false;
+
+        // Render each shape individually in submission order
+        for (auto& shape: shapes) {
+            // Handle transparency state changes
+            if (shape.transparent && !blendEnabled) {
+                glEnable(GL_BLEND);
+                glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+                glDepthMask(GL_FALSE); // Disable depth writes for transparency
+                blendEnabled = true;
+            } else if (!shape.transparent && blendEnabled) {
+                glDisable(GL_BLEND);
+                glDepthMask(GL_TRUE); // Enable depth writes for opaque
+                blendEnabled = false;
+            }
+
+            // Handle texture changes
+            if (shape.texture_id != currentTexture) {
+                currentTexture = shape.texture_id;
+
+                if (currentTexture == TEXTURE_NONE) {
+                    // Switch to untextured shader
+                    glUseProgram(untexturedShaderProgram);
+                    glUniformMatrix4fv(untexturedUniforms.uViewProj, 1, GL_FALSE, &view_projection_matrix[0][0]);
+                } else {
+                    // Switch to textured shader
+                    glUseProgram(texturedShaderProgram);
+                    glUniformMatrix4fv(texturedUniforms.uViewProj, 1, GL_FALSE, &view_projection_matrix[0][0]);
+                    glActiveTexture(GL_TEXTURE0);
+                    glBindTexture(GL_TEXTURE_2D, currentTexture);
+                    glUniform1i(texturedUniforms.uTex, 0);
+                }
+            }
+
+            // Render single shape (create a vector with just this shape)
+            std::vector<Shape*> singleShape = {&shape};
+            renderBatch(singleShape, view_projection_matrix, shape.texture_id);
+        }
+
+        // Restore default state
+        glDepthMask(GL_TRUE);
+        glDisable(GL_BLEND);
         glBindVertexArray(0);
         shapes.clear();
     }

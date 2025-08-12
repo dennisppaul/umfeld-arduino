@@ -247,16 +247,16 @@ namespace umfeld {
                                                           bool                       close_shape,
                                                           std::vector<Vertex>&       line_vertices) const;
         virtual void        set_default_graphics_state() {}
-        void                set_render_mode(const int render_mode) { this->render_mode = render_mode; }
+        void                set_render_mode(const RenderMode render_mode) { this->render_mode = render_mode; }
+        RenderMode          get_render_mode() const { return render_mode; }
         virtual std::string name() { return "PGraphics"; }
         float               get_stroke_weight() const { return stroke_weight; }
         virtual void        texture_filter(TextureFilter filter) {}
         virtual void        texture_wrap(TextureWrap wrap) {}
-
-        virtual void upload_texture(PImage* img, const uint32_t* pixel_data, int width, int height, int offset_x, int offset_y) {}
-        virtual void download_texture(PImage* img) {}
-        virtual void upload_colorbuffer(uint32_t* pixels) {}
-        virtual void download_colorbuffer(uint32_t* pixels) {}
+        virtual void        upload_texture(PImage* img, const uint32_t* pixel_data, int width, int height, int offset_x, int offset_y) {}
+        virtual void        download_texture(PImage* img) {}
+        virtual void        upload_colorbuffer(uint32_t* pixels) {}
+        virtual void        download_colorbuffer(uint32_t* pixels) {}
 
         template<typename T>
         void text(const T& value, const float x, const float y, const float z = 0.0f) {
@@ -330,7 +330,7 @@ namespace umfeld {
         glm::vec4                        current_normal{Vertex::DEFAULT_NORMAL};
         glm::mat4                        temp_view_matrix{};
         glm::mat4                        temp_projection_matrix{};
-        int                              render_mode{RENDER_MODE_IMMEDIATE};
+        RenderMode                       render_mode{RENDER_MODE_SORTED_BY_Z_ORDER};
         bool                             in_camera_block{false};
         void (*triangle_emitter_callback)(std::vector<Vertex>&){nullptr};
         void (*stroke_emitter_callback)(std::vector<Vertex>&, bool){nullptr};

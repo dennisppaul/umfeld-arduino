@@ -166,7 +166,7 @@ void PGraphicsOpenGL_3::IMPL_emit_shape_stroke_line_strip(std::vector<Vertex>& l
 
     // TODO maybe add stroke recorder here ( need to transform vertices to world space )
 
-    if (render_mode == RENDER_MODE_BUFFERED) {
+    if (render_mode == RENDER_MODE_DEPRECATED_BUFFERED) {
         if (stroke_render_mode == STROKE_RENDER_MODE_TRIANGULATE_2D) {
             std::vector<Vertex> line_vertices;
             triangulate_line_strip_vertex(line_strip_vertices,
@@ -179,7 +179,7 @@ void PGraphicsOpenGL_3::IMPL_emit_shape_stroke_line_strip(std::vector<Vertex>& l
         }
     }
 
-    if (render_mode == RENDER_MODE_IMMEDIATE) {
+    if (render_mode == RENDER_MODE_DEPRECATED_IMMEDIATE) {
         // TODO add other render modes:
         //      - STROKE_RENDER_MODE_TUBE_3D
         //      - STROKE_RENDER_MODE_BARYCENTRIC_SHADER
@@ -274,7 +274,7 @@ void PGraphicsOpenGL_3::IMPL_emit_shape_fill_triangles(std::vector<Vertex>& tria
 
     // TODO maybe add triangle recorder here ( need to transform vertices to world space )
 
-    if (render_mode == RENDER_MODE_BUFFERED) {
+    if (render_mode == RENDER_MODE_DEPRECATED_BUFFERED) {
         // TODO collect recorded_triangles and current texture information for retained mode here.
         //      - maybe sort by transparency ( and by depth )
         //      - maybe sort transparent recorded_triangles by depth
@@ -285,7 +285,7 @@ void PGraphicsOpenGL_3::IMPL_emit_shape_fill_triangles(std::vector<Vertex>& tria
         //      RM_add_texture_id_to_render_batch(triangle_vertices,num_vertices,batch_texture_id);
         //      ```
     }
-    if (render_mode == RENDER_MODE_IMMEDIATE) {
+    if (render_mode == RENDER_MODE_DEPRECATED_IMMEDIATE) {
         if (custom_shader != nullptr) {
             custom_shader->use();
             update_shader_matrices(custom_shader);
@@ -302,9 +302,9 @@ void PGraphicsOpenGL_3::IMPL_emit_shape_fill_triangles(std::vector<Vertex>& tria
 }
 
 void PGraphicsOpenGL_3::IMPL_emit_shape_stroke_points(std::vector<Vertex>& point_vertices, float point_size) {
-    if (render_mode == RENDER_MODE_BUFFERED) {
+    if (render_mode == RENDER_MODE_DEPRECATED_BUFFERED) {
     }
-    if (render_mode == RENDER_MODE_IMMEDIATE) {
+    if (render_mode == RENDER_MODE_DEPRECATED_IMMEDIATE) {
         if (point_render_mode == POINT_RENDER_MODE_SHADER) {
             shader_point->use();
             update_shader_matrices(shader_point);
@@ -360,13 +360,13 @@ void PGraphicsOpenGL_3::debug_text(const std::string& text, const float x, const
 /* --- UTILITIES --- */
 
 void PGraphicsOpenGL_3::beginDraw() {
-    if (render_mode == RENDER_MODE_SHAPE) {
+    if (render_mode == RENDER_MODE_DEPRECATED_SHAPE) {
         static bool warning_once = true;
         if (warning_once) {
-            warning("render_mode is set to RENDER_MODE_SHAPE. this is not implemented yet.");
-            warning("switching to RENDER_MODE_IMMEDIATE.");
+            warning("render_mode is set to RENDER_MODE_DEPRECATED_SHAPE. this is not implemented yet.");
+            warning("switching to RENDER_MODE_DEPRECATED_IMMEDIATE.");
             warning_once = false;
-            render_mode  = RENDER_MODE_IMMEDIATE;
+            render_mode  = RENDER_MODE_DEPRECATED_IMMEDIATE;
         }
     }
     if (render_to_offscreen) {
@@ -380,7 +380,7 @@ void PGraphicsOpenGL_3::beginDraw() {
 }
 
 void PGraphicsOpenGL_3::endDraw() {
-    if (render_mode == RENDER_MODE_BUFFERED) {
+    if (render_mode == RENDER_MODE_DEPRECATED_BUFFERED) {
         // TODO flush collected vertices
         // RM_flush_fill();
         // RM_flush_stroke();

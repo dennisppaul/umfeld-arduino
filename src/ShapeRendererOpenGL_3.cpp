@@ -25,6 +25,7 @@
 #include <iostream>
 #include <map>
 
+#include "UmfeldConstants.h"
 #include "UmfeldFunctionsAdditional.h"
 #include "ShapeRendererOpenGL_3.h"
 
@@ -36,10 +37,10 @@ namespace umfeld {
     }
 
     void ShapeRendererOpenGL_3::beginShape(const ShapeMode  mode,
-                                                const bool       filled,
-                                                const bool       transparent,
-                                                const uint32_t   texture_id,
-                                                const glm::mat4& model_transform_matrix) {
+                                           const bool       filled,
+                                           const bool       transparent,
+                                           const uint32_t   texture_id,
+                                           const glm::mat4& model_transform_matrix) {
         if (shapeInProgress) {
             warning("beginShape() called while another shape is in progress");
         }
@@ -93,8 +94,25 @@ namespace umfeld {
     }
 
     void ShapeRendererOpenGL_3::flush(const glm::mat4& view_projection_matrix) {
-        console_once("rendering in batches + depth sorted order");
+        if (graphics != nullptr) {
+            if (graphics->get_render_mode() == RENDER_MODE_SORTED_BY_Z_ORDER) {
+                console_once("render_mode: rendering in z-order ( + batches + depth sorted )");
+                flush_sort_by_z_order(view_projection_matrix);
+            } else if (graphics->get_render_mode() == RENDER_MODE_SORTED_BY_SUBMISSION_ORDER) {
+                console_once("render_mode: rendering in submission order");
+                flush_submission_order(view_projection_matrix);
+            } else if (graphics->get_render_mode() == RENDER_MODE_IMMEDIATELY) {
+                console_once("rendering shapes immediately");
+                flush_immediately(view_projection_matrix);
+            }
+        }
+    }
 
+    void ShapeRendererOpenGL_3::flush_immediately(const glm::mat4& view_projection_matrix) {
+        flush_sort_by_z_order(view_projection_matrix);
+    }
+
+    void ShapeRendererOpenGL_3::flush_sort_by_z_order(const glm::mat4& view_projection_matrix) {
         if (shapes.empty()) {
             return;
         }
@@ -158,8 +176,6 @@ namespace umfeld {
     }
 
     void ShapeRendererOpenGL_3::flush_submission_order(const glm::mat4& view_projection_matrix) {
-        console_once("rendering in submission order");
-
         if (shapes.empty()) {
             return;
         }

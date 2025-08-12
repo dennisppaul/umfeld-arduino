@@ -56,15 +56,7 @@ void PGraphics::beginDraw() {
 void PGraphics::endDraw() {
     if (shape_renderer) {
         const glm::mat4 view_projection_matrix = projection_matrix * view_matrix;
-
-        // RENDER_SORTED_BY_Z_ORDER
         shape_renderer->flush(view_projection_matrix);
-
-        // RENDER_SORTED_BY_SUBMISSION_ORDER
-        // shape_renderer->flush_submission_order(view_projection_matrix); // alternative flush path
-
-        // RENDER_IMMEDIATELY
-        // // nothing to do here
     }
     restore_mvp_matrices();
 }
@@ -1378,9 +1370,9 @@ void PGraphics::endShape(const bool closed) {
     if (shape_renderer) {
         submit_fill_shape(closed);
         submit_stroke_shape(closed);
-        // TODO add option to render every shape immediately after submission
-        // RENDER_IMMEDIATELY
-        // flush()
+        if (render_mode == RENDER_MODE_IMMEDIATELY) {
+            flush();
+        }
     } else {
         // TODO move immediate mode to dedicated file
         process_collected_fill_vertices();

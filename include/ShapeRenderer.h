@@ -46,6 +46,7 @@ namespace umfeld {
         //      1. at end of frame
         //      2. before view or projection matrix are changed
         //      3. before downloading pixels from GPU
+        //      4. before calls to `background()` ( or at least reject shapes? )
         virtual void flush_submission_order(const glm::mat4& view_projection_matrix) = 0;
 
         bool enable_lighting{false};

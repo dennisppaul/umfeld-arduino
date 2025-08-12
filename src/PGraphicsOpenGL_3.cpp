@@ -38,7 +38,7 @@
 #include "ShaderSourcePoint.h"
 #include "ShaderSourceBatchColor.h"
 #include "ShaderSourceBatchColorTexture.h"
-#include "ShapeRendererBatchOpenGL_3.h"
+#include "ShapeRendererOpenGL_3.h"
 
 #ifdef UMFELD_PGRAPHICS_OPENGL_3_3_CORE_ERRORS
 #define UMFELD_PGRAPHICS_OPENGL_3_3_CORE_CHECK_ERRORS(msg) \
@@ -755,10 +755,10 @@ void PGraphicsOpenGL_3::init(uint32_t* pixels,
 
 #ifndef USE_IMMEDIATE_RENDERING
     // TODO this should be configurable. alternative might be `ShapeRendererImmediateOpenGL_3`
-    const auto       shape_renderer_ogl3 = new ShapeRendererBatchOpenGL_3();
-    std::vector<int> shader_batch_programs(ShapeRendererBatchOpenGL_3::NUM_SHADER_PROGRAMS);
-    shader_batch_programs[ShapeRendererBatchOpenGL_3::SHADER_PROGRAM_UNTEXTURED] = loadShader(shader_source_batch_color.get_vertex_source(), shader_source_batch_color.get_fragment_source())->get_program_id();
-    shader_batch_programs[ShapeRendererBatchOpenGL_3::SHADER_PROGRAM_TEXTURED]   = loadShader(shader_source_batch_color_texture.get_vertex_source(), shader_source_batch_color_texture.get_fragment_source())->get_program_id();
+    const auto       shape_renderer_ogl3 = new ShapeRendererOpenGL_3();
+    std::vector<int> shader_batch_programs(ShapeRendererOpenGL_3::NUM_SHADER_PROGRAMS);
+    shader_batch_programs[ShapeRendererOpenGL_3::SHADER_PROGRAM_UNTEXTURED] = loadShader(shader_source_batch_color.get_vertex_source(), shader_source_batch_color.get_fragment_source())->get_program_id();
+    shader_batch_programs[ShapeRendererOpenGL_3::SHADER_PROGRAM_TEXTURED]   = loadShader(shader_source_batch_color_texture.get_vertex_source(), shader_source_batch_color_texture.get_fragment_source())->get_program_id();
     // TODO add shader programms
     //      SHADER_PROGRAM_UNTEXTURED_LIGHT
     //      SHADER_PROGRAM_TEXTURED_LIGHT

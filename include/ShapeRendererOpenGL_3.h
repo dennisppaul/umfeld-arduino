@@ -25,7 +25,7 @@
 #include "PGraphics.h"
 
 namespace umfeld {
-    class ShapeRendererBatchOpenGL_3 final : public ShapeRenderer {
+    class ShapeRendererOpenGL_3 final : public ShapeRenderer {
     public:
         static constexpr uint16_t SHADER_PROGRAM_UNTEXTURED       = 0;
         static constexpr uint16_t SHADER_PROGRAM_TEXTURED         = 1;
@@ -41,7 +41,7 @@ namespace umfeld {
             CENTER_OF_MASS,
         };
 
-        ~ShapeRendererBatchOpenGL_3() override {}
+        ~ShapeRendererOpenGL_3() override {}
         void init(PGraphics* g, std::vector<int> shader_programs) override;
         void beginShape(ShapeMode mode, bool filled, bool transparent, uint32_t texture_id, const glm::mat4& model_transform_matrix) override;
         void vertex(const Vertex& v) override;

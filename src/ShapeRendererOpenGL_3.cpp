@@ -26,16 +26,16 @@
 #include <map>
 
 #include "UmfeldFunctionsAdditional.h"
-#include "ShapeRendererBatchOpenGL_3.h"
+#include "ShapeRendererOpenGL_3.h"
 
 namespace umfeld {
-    void ShapeRendererBatchOpenGL_3::init(PGraphics* g, const std::vector<int> shader_programs) {
+    void ShapeRendererOpenGL_3::init(PGraphics* g, const std::vector<int> shader_programs) {
         graphics = g;
         initShaders(shader_programs);
         initBuffers();
     }
 
-    void ShapeRendererBatchOpenGL_3::beginShape(const ShapeMode  mode,
+    void ShapeRendererOpenGL_3::beginShape(const ShapeMode  mode,
                                                 const bool       filled,
                                                 const bool       transparent,
                                                 const uint32_t   texture_id,
@@ -54,7 +54,7 @@ namespace umfeld {
         shapeInProgress = true;
     }
 
-    void ShapeRendererBatchOpenGL_3::setVertices(std::vector<Vertex>&& vertices) {
+    void ShapeRendererOpenGL_3::setVertices(std::vector<Vertex>&& vertices) {
         if (!shapeInProgress) {
             error("Error: setVertices() called without beginShape()");
             return;
@@ -62,7 +62,7 @@ namespace umfeld {
         currentShape.vertices = std::move(vertices);
     }
 
-    void ShapeRendererBatchOpenGL_3::setVertices(const std::vector<Vertex>& vertices) {
+    void ShapeRendererOpenGL_3::setVertices(const std::vector<Vertex>& vertices) {
         if (!shapeInProgress) {
             error("Error: setVertices() called without beginShape()");
             return;
@@ -70,7 +70,7 @@ namespace umfeld {
         currentShape.vertices = vertices;
     }
 
-    void ShapeRendererBatchOpenGL_3::vertex(const Vertex& v) {
+    void ShapeRendererOpenGL_3::vertex(const Vertex& v) {
         if (!shapeInProgress) {
             error("Error: vertex() called without beginShape()");
             return;
@@ -78,7 +78,7 @@ namespace umfeld {
         currentShape.vertices.push_back(v);
     }
 
-    void ShapeRendererBatchOpenGL_3::endShape(const bool closed) {
+    void ShapeRendererOpenGL_3::endShape(const bool closed) {
         (void) closed; // TODO ignored for now
         if (!shapeInProgress) {
             std::cerr << "Error: endShape() called without beginShape()" << std::endl;
@@ -92,7 +92,7 @@ namespace umfeld {
         shapeInProgress = false;
     }
 
-    void ShapeRendererBatchOpenGL_3::flush(const glm::mat4& view_projection_matrix) {
+    void ShapeRendererOpenGL_3::flush(const glm::mat4& view_projection_matrix) {
         console_once("rendering in batches + depth sorted order");
 
         if (shapes.empty()) {
@@ -157,7 +157,7 @@ namespace umfeld {
         shapes.clear();
     }
 
-    void ShapeRendererBatchOpenGL_3::flush_submission_order(const glm::mat4& view_projection_matrix) {
+    void ShapeRendererOpenGL_3::flush_submission_order(const glm::mat4& view_projection_matrix) {
         console_once("rendering in submission order");
 
         if (shapes.empty()) {
@@ -198,7 +198,6 @@ namespace umfeld {
             // Handle texture changes
             if (shape.texture_id != currentTexture) {
                 currentTexture = shape.texture_id;
-
                 if (currentTexture == TEXTURE_NONE) {
                     // Switch to untextured shader
                     glUseProgram(untexturedShaderProgram);
@@ -225,7 +224,7 @@ namespace umfeld {
         shapes.clear();
     }
 
-    void ShapeRendererBatchOpenGL_3::submitShape(Shape& s) {
+    void ShapeRendererOpenGL_3::submitShape(Shape& s) {
         if (s.transparent) { // NOTE only copmute center for transparent shapes
             computeShapeCenter(s);
         }
@@ -234,7 +233,7 @@ namespace umfeld {
             /* convert stroke shape to line strips + triangulate stroke */
             if (!s.filled) {
                 std::vector<Shape> converted_shapes;
-                graphics->convert_stroke_shape_to_line_strip(s, converted_shapes);
+                PGraphics::convert_stroke_shape_to_line_strip(s, converted_shapes);
 
                 if (!converted_shapes.empty()) {
                     for (auto& cs: converted_shapes) {
@@ -258,7 +257,7 @@ namespace umfeld {
         }
     }
 
-    void ShapeRendererBatchOpenGL_3::computeShapeCenter(Shape& s) const {
+    void ShapeRendererOpenGL_3::computeShapeCenter(Shape& s) const {
         if (s.vertices.empty()) {
             s.center_object_space = glm::vec3(0, 0, 0);
             return;
@@ -290,12 +289,12 @@ namespace umfeld {
         }
     }
 
-    void ShapeRendererBatchOpenGL_3::setupUniformBlocks(const GLuint program) {
+    void ShapeRendererOpenGL_3::setupUniformBlocks(const GLuint program) {
         const GLuint blockIndex = glGetUniformBlockIndex(program, "Transforms");
         glUniformBlockBinding(program, blockIndex, 0);
     }
 
-    void ShapeRendererBatchOpenGL_3::initShaders(const std::vector<int>& shader_programm_id) {
+    void ShapeRendererOpenGL_3::initShaders(const std::vector<int>& shader_programm_id) {
         // NOTE for OpenGL ES 3.0 create shader source with dynamic array size
         //      ```c
         //      std::string transformsDefine = "#define MAX_TRANSFORMS " + std::to_string(MAX_TRANSFORMS) + "\n";
@@ -319,7 +318,7 @@ namespace umfeld {
         untexturedUniforms.uViewProj = glGetUniformLocation(untexturedShaderProgram, "uViewProj");
     }
 
-    void ShapeRendererBatchOpenGL_3::initBuffers() {
+    void ShapeRendererOpenGL_3::initBuffers() {
         glGenVertexArrays(1, &vao);
         glBindVertexArray(vao);
 
@@ -351,7 +350,7 @@ namespace umfeld {
         frameMatrices.reserve(MAX_TRANSFORMS);
     }
 
-    size_t ShapeRendererBatchOpenGL_3::estimateTriangleCount(const Shape& s) {
+    size_t ShapeRendererOpenGL_3::estimateTriangleCount(const Shape& s) {
         const size_t n = s.vertices.size();
         if (n < 3 || !s.filled) {
             return 0;
@@ -368,7 +367,7 @@ namespace umfeld {
         }
     }
 
-    void ShapeRendererBatchOpenGL_3::tessellateToTriangles(const Shape& s, std::vector<Vertex>& out, const uint16_t transformID) {
+    void ShapeRendererOpenGL_3::tessellateToTriangles(const Shape& s, std::vector<Vertex>& out, const uint16_t transformID) {
         const auto&  v = s.vertices;
         const size_t n = v.size();
         if (n < 3 || !s.filled) {
@@ -433,7 +432,7 @@ namespace umfeld {
         }
     }
 
-    void ShapeRendererBatchOpenGL_3::renderBatch(const std::vector<Shape*>& shapesToRender, const glm::mat4& viewProj, const GLuint textureID) {
+    void ShapeRendererOpenGL_3::renderBatch(const std::vector<Shape*>& shapesToRender, const glm::mat4& viewProj, const GLuint textureID) {
         if (shapesToRender.empty()) {
             return;
         }

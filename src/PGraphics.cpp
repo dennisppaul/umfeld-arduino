@@ -110,7 +110,7 @@ void PGraphics::background(const float a, const float b, const float c, const fl
         }
         emitted_warning = true;
     }
-    IMPL_background(a, b, c, d);
+    impl_background(a, b, c, d);
 }
 
 /* --- transform matrices --- */

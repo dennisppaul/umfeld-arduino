@@ -56,36 +56,10 @@ PGraphicsOpenGL_3::PGraphicsOpenGL_3(const bool render_to_offscreen) : PImage(0,
     this->render_to_offscreen = render_to_offscreen;
 }
 
-void PGraphicsOpenGL_3::IMPL_background(const float a, const float b, const float c, const float d) {
+void PGraphicsOpenGL_3::impl_background(const float a, const float b, const float c, const float d) {
     glClearColor(a, b, c, d);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
-
-// void PGraphicsOpenGL_3::IMPL_set_texture(PImage* img) { // REMOVE this in favour of `shape_renderer->set_texture(img)`
-// if (img == nullptr) {
-//     OGL_bind_texture(texture_id_solid_color);
-//     return;
-// }
-//
-// if (shape_has_begun) {
-//     console("`texture()` can only be called right before `beginShape(...)`. ( note, this is different from the original processing )");
-//     return;
-// }
-//
-// // TODO move this to own method and share with `texture()`
-// if (img->texture_id == TEXTURE_NOT_GENERATED) {
-//     OGL_generate_and_upload_image_as_texture(img);
-//     if (img->texture_id == TEXTURE_NOT_GENERATED) {
-//         error_in_function("image cannot create texture.");
-//         return;
-//     }
-// }
-//
-// OGL_bind_texture(img->texture_id);
-// // TODO so this is interesting: we could leave the texture bound and require the client
-// //      to unbind it with `texture_unbind()` or should `endShape()` always reset to
-// //      `texture_id_solid_color` with `texture_unbind()`.
-// }
 
 void PGraphicsOpenGL_3::add_line_quad(const Vertex& p0, const Vertex& p1, float thickness, std::vector<Vertex>& out) {
     // glm::vec3 dir = glm::normalize(p1 - p0);
@@ -141,6 +115,7 @@ void PGraphicsOpenGL_3::add_line_quad(const Vertex& p0, const Vertex& p1, float 
  * @param line_strip_closed
  */
 void PGraphicsOpenGL_3::IMPL_emit_shape_stroke_line_strip(std::vector<Vertex>& line_strip_vertices, const bool line_strip_closed) {
+    // REMOVE this as soon as the shape renderer is done
     // NOTE relevant information for this method
     //     - closed
     //     - stroke_weight
@@ -244,6 +219,7 @@ void PGraphicsOpenGL_3::IMPL_emit_shape_stroke_line_strip(std::vector<Vertex>& l
 }
 
 void PGraphicsOpenGL_3::IMPL_emit_shape_fill_triangles(std::vector<Vertex>& triangle_vertices) {
+    // REMOVE this as soon as the shape renderer is done
     // NOTE relevant information for this method
     //     - vertex ( i.e position, normal, color, tex_coord )
     //     - textured_id ( current id or solid color )
@@ -293,6 +269,7 @@ void PGraphicsOpenGL_3::IMPL_emit_shape_fill_triangles(std::vector<Vertex>& tria
 }
 
 void PGraphicsOpenGL_3::IMPL_emit_shape_stroke_points(std::vector<Vertex>& point_vertices, float point_size) {
+    // REMOVE this as soon as the shape renderer is done
     if (render_mode == RENDER_MODE_DEPRECATED_BUFFERED) {
     }
     if (render_mode == RENDER_MODE_DEPRECATED_IMMEDIATE) {

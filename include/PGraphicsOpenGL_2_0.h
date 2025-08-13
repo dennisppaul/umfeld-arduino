@@ -32,7 +32,7 @@ namespace umfeld {
         void IMPL_emit_shape_fill_triangles(std::vector<Vertex>& triangle_vertices) override;
         void IMPL_emit_shape_stroke_points(std::vector<Vertex>& point_vertices, float point_size) override;
 
-        void IMPL_background(float a, float b, float c, float d) override;
+        void impl_background(float a, float b, float c, float d) override;
 
         void render_framebuffer_to_screen(bool use_blit = false) override;
         bool read_framebuffer(std::vector<unsigned char>& pixels) override;

@@ -165,7 +165,7 @@ below is a list of all Processing functions from the official [Processing Refere
 ## Rendering
 
 - [x] `PGraphics` :: Main graphics and rendering context, as well as the base API implementation for processing "core"
-- [ ] `blendMode()` :: Blends the pixels in the display window according to a defined mode
+- [x] `blendMode()` :: Blends the pixels in the display window according to a defined mode
 - [ ] `clip()` :: Limits the rendering to the boundaries of a rectangle defined by the parameters
 - [x] `createGraphics()` :: Creates and returns a new `PGraphics` object of the types P2D or P3D
 - [x] `hint()` :: This function is used to enable or disable special features that control how graphics are drawn @note(the function exists but A LOT of hints are not available)

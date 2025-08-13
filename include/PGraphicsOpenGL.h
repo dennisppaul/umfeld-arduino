@@ -250,9 +250,7 @@ namespace umfeld {
         ~PGraphicsOpenGL() override = default;
 
         void set_default_graphics_state() override {
-            glClearColor(0, 0, 0, 1);
-            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
+            impl_background(0, 0, 0, 1);
             blendMode(BLEND);
         }
 

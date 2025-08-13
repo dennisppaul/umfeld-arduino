@@ -69,7 +69,7 @@ namespace umfeld {
 
         /* --- implementation specific methods --- */
 
-        virtual void IMPL_background(float a, float b, float c, float d) = 0; // NOTE this needs to clear the color buffer and depth buffer
+        virtual void impl_background(float a, float b, float c, float d) = 0; // NOTE this needs to clear the color buffer and depth buffer
 
         virtual void render_framebuffer_to_screen(bool use_blit) { (void) use_blit; } // TODO this should probably go to PGraphicsOpenGL
         virtual bool read_framebuffer(std::vector<unsigned char>& pixels) { return false; }
@@ -197,7 +197,7 @@ namespace umfeld {
         virtual PShader* loadShader(const std::string& vertex_code, const std::string& fragment_code, const std::string& geometry_code = "") { return nullptr; };
         virtual void     resetShader() {}
         virtual void     normal(float x, float y, float z, float w = 0);
-        virtual void     blendMode(int mode) {}
+        virtual void     blendMode(int mode) {} // TODO MAYBE change parameter to `BlendMode mode`
         // virtual void     beginCamera();
         // virtual void     endCamera();
         virtual void camera();

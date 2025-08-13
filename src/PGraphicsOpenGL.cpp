@@ -97,7 +97,7 @@ namespace umfeld {
         // if (texture_id != texture_id_current) {
         //     glActiveTexture(GL_TEXTURE0 + DEFAULT_ACTIVE_TEXTURE_UNIT);
         //     glBindTexture(GL_TEXTURE_2D, texture_id);
-        //     glBindTexture(GL_TEXTURE_2D, texture_id_current); // NOTE this should be the only glBindTexture ( except for initializations )
+        //     glBindTexture(GL_TEXTURE_2D, texture_id_current);
         // }
     }
 

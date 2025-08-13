@@ -52,7 +52,7 @@ namespace umfeld {
 
     class PGraphicsStub final : public PGraphics {
     public:
-        void IMPL_background(float a, float b, float c, float d) override {}
+        void impl_background(float a, float b, float c, float d) override {}
         void IMPL_emit_shape_fill_triangles(std::vector<Vertex>& triangle_vertices) override {}
         void IMPL_emit_shape_stroke_points(std::vector<Vertex>& point_vertices, float point_size) override {}
         void IMPL_emit_shape_stroke_line_strip(std::vector<Vertex>& line_strip_vertices, bool line_strip_closed) override {}

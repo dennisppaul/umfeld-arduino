@@ -62,7 +62,7 @@ namespace umfeld {
         //      ```
 
         struct TextureBatch {
-            uint16_t            textureID{TEXTURE_NONE};
+            uint16_t            texture_id{TEXTURE_NONE};
             std::vector<Shape*> opaque_shapes;
             std::vector<Shape*> transparent_shapes;
         };
@@ -88,21 +88,23 @@ namespace umfeld {
         std::vector<Shape>            shapes;
         Shape                         currentShape;
         SHAPE_CENTER_COMPUTE_STRATEGY shape_center_compute_strategy = ZERO_CENTER;
-        std::vector<Vertex>           frameVertices;
-        std::vector<glm::mat4>        frameMatrices;
+        std::vector<Vertex>           frame_vertices;
+        std::vector<glm::mat4>        frame_matrices;
 
         //        static GLuint compileShader(const char* src, GLenum type);
         //        static GLuint createShaderProgram(const char* vsSrc, const char* fsSrc);
         static void   setupUniformBlocks(GLuint program);
         void          initShaders(const std::vector<int>& shader_programm_id);
         void          initBuffers();
-        static size_t estimateTriangleCount(const Shape& s);
-        static void   tessellateToTriangles(const Shape& s, std::vector<Vertex>& out, uint16_t transformID);
-        void          renderBatch(const std::vector<Shape*>& shapesToRender, const glm::mat4& viewProj, GLuint textureID);
+        static size_t estimate_triangle_count(const Shape& s);
+        static void   convert_shapes_to_triangles(const Shape& s, std::vector<Vertex>& out, uint16_t transformID);
+        void          render_batch(const std::vector<Shape*>& shapes_to_render, const glm::mat4& view_projection_matrix, GLuint texture_id);
         void          computeShapeCenter(Shape& s) const;
-        void          flush_sort_by_z_order(const glm::mat4& view_projection_matrix);
-        void          flush_submission_order(const glm::mat4& view_projection_matrix);
-        void          flush_immediately(const glm::mat4& view_projection_matrix);
+        void          flush_sort_by_z_order(std::vector<Shape>& shapes, const glm::mat4& view_projection_matrix);
+        void          flush_submission_order(std::vector<Shape>& shapes, const glm::mat4& view_projection_matrix);
+        void          flush_immediately(std::vector<Shape>& shapes, const glm::mat4& view_projection_matrix);
+        void          flush_processed_shapes(std::vector<Shape>& processed_shapes, const glm::mat4& view_projection_matrix);
+        void process_shapes(std::vector<Shape>& processed_shapes);
 
         static void bind_texture(const int texture_id) {
             glActiveTexture(GL_TEXTURE0 + PGraphicsOpenGL::DEFAULT_ACTIVE_TEXTURE_UNIT);

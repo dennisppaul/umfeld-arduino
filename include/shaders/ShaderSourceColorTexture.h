@@ -24,25 +24,25 @@
 namespace umfeld {
     inline ShaderSource shader_source_color_texture{
         .vertex   = R"(
-                    layout(location = 0) in vec4 aPosition;
-                    layout(location = 1) in vec4 aNormal;
-                    layout(location = 2) in vec4 aColor;
-                    layout(location = 3) in vec3 aTexCoord;
-                    layout(location = 4) in uint aTransformID;
-                    layout(location = 5) in uint aUserdata;
+layout(location = 0) in vec4 aPosition;
+layout(location = 1) in vec4 aNormal;
+layout(location = 2) in vec4 aColor;
+layout(location = 3) in vec3 aTexCoord;
+layout(location = 4) in uint aTransformID;
+layout(location = 5) in uint aUserdata;
 
-                    out vec4 vColor;
-                    out vec2 vTexCoord;
+out vec4 vColor;
+out vec2 vTexCoord;
 
-                    uniform mat4 uProjection;
-                    uniform mat4 uViewMatrix;
-                    uniform mat4 uModelMatrix;
+uniform mat4 uProjection;
+uniform mat4 uViewMatrix;
+uniform mat4 uModelMatrix;
 
-                    void main() {
-                        gl_Position = uProjection * uViewMatrix * uModelMatrix * aPosition;
-                        vColor = aColor;
-                        vTexCoord = aTexCoord.xy;
-                    }
+void main() {
+    gl_Position = uProjection * uViewMatrix * uModelMatrix * aPosition;
+    vColor      = aColor;
+    vTexCoord   = aTexCoord.xy;
+}
         )",
         .fragment = R"(
                     in vec4 vColor;

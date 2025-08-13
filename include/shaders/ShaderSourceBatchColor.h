@@ -24,16 +24,21 @@
 namespace umfeld {
     inline ShaderSource shader_source_batch_color{
         .vertex   = R"(
-layout(location=0) in vec4 aPosition;
-layout(location=1) in vec4 aNormal;
-layout(location=2) in vec4 aColor;
-layout(location=3) in vec3 aTexCoord;
-layout(location=4) in uint aTransformID;
+layout(location = 0) in vec4 aPosition;
+layout(location = 1) in vec4 aNormal;
+layout(location = 2) in vec4 aColor;
+layout(location = 3) in vec3 aTexCoord;
+layout(location = 4) in uint aTransformID;
+layout(location = 5) in uint aUserdata;
+
+out vec4 vColor;
+
 layout(std140) uniform Transforms {
     mat4 uModel[256];
 };
+
 uniform mat4 uViewProj;
-out vec4 vColor;
+
 void main() {
     mat4 M = uModel[aTransformID];
     gl_Position = uViewProj * M * aPosition;

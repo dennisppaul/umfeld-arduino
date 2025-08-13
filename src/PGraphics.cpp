@@ -87,9 +87,9 @@ void PGraphics::pixelDensity(const int density) {
 void PGraphics::stroke_properties(const float stroke_join_round_resolution,
                                   const float stroke_cap_round_resolution,
                                   const float stroke_join_miter_max_angle) {
-    this->stroke_join_round_resolution = stroke_join_round_resolution;
-    this->stroke_cap_round_resolution  = stroke_cap_round_resolution;
-    this->stroke_join_miter_max_angle  = stroke_join_miter_max_angle;
+    this->current_stroke_state.stroke_join_round_resolution = stroke_join_round_resolution;
+    this->current_stroke_state.stroke_cap_round_resolution  = stroke_cap_round_resolution;
+    this->current_stroke_state.stroke_join_miter_max_angle  = stroke_join_miter_max_angle;
 }
 
 void PGraphics::background(PImage* img) {
@@ -267,7 +267,7 @@ void PGraphics::noStroke() {
 }
 
 void PGraphics::strokeWeight(const float weight) {
-    stroke_weight = weight;
+    current_stroke_state.stroke_weight = weight;
 }
 
 /**
@@ -275,7 +275,7 @@ void PGraphics::strokeWeight(const float weight) {
  * @param join
  */
 void PGraphics::strokeJoin(const int join) {
-    stroke_join_mode = join;
+    current_stroke_state.stroke_join_mode = join;
 }
 
 /**
@@ -283,7 +283,7 @@ void PGraphics::strokeJoin(const int join) {
  * @param cap
  */
 void PGraphics::strokeCap(const int cap) {
-    stroke_cap_mode = cap;
+    current_stroke_state.stroke_cap_mode = cap;
 }
 
 void PGraphics::rectMode(const int mode) {
@@ -483,7 +483,7 @@ void PGraphics::pushStyle() {
     style_stack.push(StyleState{
         color_stroke,
         color_fill,
-        stroke_weight // assuming you have this
+        current_stroke_state.stroke_weight // assuming you have this
     });
 }
 
@@ -495,9 +495,9 @@ void PGraphics::popStyle() {
     const StyleState s = style_stack.top();
     style_stack.pop();
 
-    color_stroke  = s.stroke;
-    color_fill    = s.fill;
-    stroke_weight = s.strokeWeight;
+    color_stroke                       = s.stroke;
+    color_fill                         = s.fill;
+    current_stroke_state.stroke_weight = s.strokeWeight;
 }
 
 // TODO implement LUT similar to ellipse_points_LUT
@@ -1194,6 +1194,7 @@ static glm::vec3 world_to_screen(
 }
 
 void PGraphics::triangulate_line_strip_vertex(const std::vector<Vertex>& line_strip,
+                                              const StrokeState&         stroke,
                                               const bool                 close_shape,
                                               std::vector<Vertex>&       line_vertices) const {
     const glm::vec4        color  = line_strip[0].color;
@@ -1210,12 +1211,12 @@ void PGraphics::triangulate_line_strip_vertex(const std::vector<Vertex>& line_st
 
     triangulate_line_strip(points,
                            close_shape,
-                           stroke_weight,
-                           stroke_join_mode,
-                           stroke_cap_mode,
-                           stroke_join_round_resolution,
-                           stroke_cap_round_resolution,
-                           stroke_join_miter_max_angle,
+                           stroke.stroke_weight,
+                           stroke.stroke_join_mode,
+                           stroke.stroke_cap_mode,
+                           stroke.stroke_join_round_resolution,
+                           stroke.stroke_cap_round_resolution,
+                           stroke.stroke_join_miter_max_angle,
                            triangles);
     line_vertices.reserve(triangles.size());
     for (const auto& triangle: triangles) {
@@ -1352,10 +1353,11 @@ void PGraphics::vertex(const Vertex& v) {
     }
 }
 
-void PGraphics::submit_stroke_shape(const bool closed, bool force_transparent) {
+void PGraphics::submit_stroke_shape(const bool closed, const bool force_transparent) {
     if (!shape_stroke_vertex_buffer.empty()) {
         Shape s;
         s.mode        = static_cast<ShapeMode>(shape_mode_cache);
+        s.stroke      = current_stroke_state;
         s.filled      = false;
         s.vertices    = shape_stroke_vertex_buffer;
         s.model       = model_matrix;
@@ -1366,9 +1368,10 @@ void PGraphics::submit_stroke_shape(const bool closed, bool force_transparent) {
     }
 }
 
-void PGraphics::submit_fill_shape(const bool closed, bool force_transparent) {
-    if (!shape_fill_vertex_buffer.empty()) {
+void PGraphics::submit_fill_shape(const bool closed, const bool force_transparent) {
+    if (shape_renderer != nullptr && !shape_fill_vertex_buffer.empty()) {
         Shape s;
+        // NOTE no need to copy stroke info for filled shape
         s.mode        = static_cast<ShapeMode>(shape_mode_cache);
         s.filled      = true;
         s.vertices    = shape_fill_vertex_buffer;
@@ -1381,15 +1384,15 @@ void PGraphics::submit_fill_shape(const bool closed, bool force_transparent) {
 }
 
 void PGraphics::endShape(const bool closed) {
-    if (shape_renderer) {
+    if (shape_renderer != nullptr) {
         submit_fill_shape(closed, shape_force_transparent);
         submit_stroke_shape(closed, shape_force_transparent);
         if (render_mode == RENDER_MODE_IMMEDIATELY) {
             flush();
         }
     } else {
-        // TODO move immediate mode to dedicated file
-        process_collected_fill_vertices();
+        // REMOVE move immediate mode to dedicated file
+        // process_collected_fill_vertices();
         process_collected_stroke_vertices(closed);
     }
 
@@ -1421,7 +1424,7 @@ void PGraphics::emit_shape_stroke_line_strip(std::vector<Vertex>& line_strip_ver
     IMPL_emit_shape_stroke_line_strip(line_strip_vertices, line_strip_closed);
 }
 
-void PGraphics::emit_shape_stroke_points(std::vector<Vertex>& point_vertices, float point_size) {
+void PGraphics::emit_shape_stroke_points(std::vector<Vertex>& point_vertices, const float point_size) {
     // TODO maybe add a callback for points or send strokes with one vertex TBD?
     // if (stroke_emitter_callback) {
     //     stroke_emitter_callback(point_vertices);
@@ -1476,6 +1479,7 @@ void PGraphics::convert_stroke_shape_to_line_strip(Shape& s, std::vector<Shape>&
 
                 Shape ns{
                     .mode        = LINE_STRIP,
+                    .stroke      = s.stroke,
                     .filled      = s.filled,
                     .vertices    = std::move(vertices),
                     .model       = s.model,
@@ -1531,6 +1535,7 @@ void PGraphics::convert_stroke_shape_to_line_strip(Shape& s, std::vector<Shape>&
 }
 
 void PGraphics::convert_fill_shape_to_triangles(Shape& s) const {
+    // NOTE used by ShapeRendererOpenGL_3
     const std::vector<Vertex> shape_fill_vertex_buffer = s.vertices;
     const int                 shape_mode_cache         = s.mode;
     if (!shape_fill_vertex_buffer.empty()) {
@@ -1575,71 +1580,71 @@ void PGraphics::convert_fill_shape_to_triangles(Shape& s) const {
     }
     s.mode = TRIANGLES;
 }
-
-void PGraphics::process_collected_fill_vertices() {
-    if (!shape_fill_vertex_buffer.empty()) {
-        switch (shape_mode_cache) {
-            case POINTS:
-            case LINES:
-            case LINE_STRIP:
-                break;
-            case TRIANGLES:
-                emit_shape_fill_triangles(shape_fill_vertex_buffer);
-                break;
-            case TRIANGLE_FAN: {
-                std::vector<Vertex> vertices_fill_quads = convertTriangleFanToTriangles(shape_fill_vertex_buffer);
-                emit_shape_fill_triangles(vertices_fill_quads);
-            } break;
-            case QUAD_STRIP: // NOTE does this just work?!?
-            case TRIANGLE_STRIP: {
-                std::vector<Vertex> vertices_fill_quads = convertTriangleStripToTriangles(shape_fill_vertex_buffer);
-                emit_shape_fill_triangles(vertices_fill_quads);
-            } break;
-            case QUADS: {
-                std::vector<Vertex> vertices_fill_quads = convertQuadsToTriangles(shape_fill_vertex_buffer);
-                emit_shape_fill_triangles(vertices_fill_quads);
-            } break;
-            default:
-            case POLYGON: {
-                std::vector<Vertex> vertices_fill_polygon;
-                if (polygon_triangulation_strategy == POLYGON_TRIANGULATION_FASTER) {
-                    // EARCUT :: supports concave polygons, textures but no holes or self-intersection
-                    vertices_fill_polygon = triangulate_faster(shape_fill_vertex_buffer);
-                } else if (polygon_triangulation_strategy == POLYGON_TRIANGULATION_BETTER) {
-                    // LIBTESS2 :: supports concave polygons, textures, holes and self-intersection but no textures
-                    vertices_fill_polygon = triangulate_good(shape_fill_vertex_buffer);
-                } else if (polygon_triangulation_strategy == POLYGON_TRIANGULATION_MID) {
-                    // POLYPARTITION + CLIPPER2 // TODO maybe remove this option
-                    vertices_fill_polygon = triangulate_better_quality(shape_fill_vertex_buffer);
-                }
-                emit_shape_fill_triangles(vertices_fill_polygon);
-                // TODO what if polygon has only 3 ( triangle ) or 4 vertices ( quad )? could shortcut … here
-            } break;
-        }
-    }
-}
+//
+// void PGraphics::process_collected_fill_vertices() {
+//     if (!shape_fill_vertex_buffer.empty()) {
+//         switch (shape_mode_cache) {
+//             case POINTS:
+//             case LINES:
+//             case LINE_STRIP:
+//                 break;
+//             case TRIANGLES:
+//                 emit_shape_fill_triangles(shape_fill_vertex_buffer);
+//                 break;
+//             case TRIANGLE_FAN: {
+//                 std::vector<Vertex> vertices_fill_quads = convertTriangleFanToTriangles(shape_fill_vertex_buffer);
+//                 emit_shape_fill_triangles(vertices_fill_quads);
+//             } break;
+//             case QUAD_STRIP: // NOTE does this just work?!?
+//             case TRIANGLE_STRIP: {
+//                 std::vector<Vertex> vertices_fill_quads = convertTriangleStripToTriangles(shape_fill_vertex_buffer);
+//                 emit_shape_fill_triangles(vertices_fill_quads);
+//             } break;
+//             case QUADS: {
+//                 std::vector<Vertex> vertices_fill_quads = convertQuadsToTriangles(shape_fill_vertex_buffer);
+//                 emit_shape_fill_triangles(vertices_fill_quads);
+//             } break;
+//             default:
+//             case POLYGON: {
+//                 std::vector<Vertex> vertices_fill_polygon;
+//                 if (polygon_triangulation_strategy == POLYGON_TRIANGULATION_FASTER) {
+//                     // EARCUT :: supports concave polygons, textures but no holes or self-intersection
+//                     vertices_fill_polygon = triangulate_faster(shape_fill_vertex_buffer);
+//                 } else if (polygon_triangulation_strategy == POLYGON_TRIANGULATION_BETTER) {
+//                     // LIBTESS2 :: supports concave polygons, textures, holes and self-intersection but no textures
+//                     vertices_fill_polygon = triangulate_good(shape_fill_vertex_buffer);
+//                 } else if (polygon_triangulation_strategy == POLYGON_TRIANGULATION_MID) {
+//                     // POLYPARTITION + CLIPPER2 // TODO maybe remove this option
+//                     vertices_fill_polygon = triangulate_better_quality(shape_fill_vertex_buffer);
+//                 }
+//                 emit_shape_fill_triangles(vertices_fill_polygon);
+//                 // TODO what if polygon has only 3 ( triangle ) or 4 vertices ( quad )? could shortcut … here
+//             } break;
+//         }
+//     }
+// }
 
 void PGraphics::process_collected_stroke_vertices(const bool close_shape) {
     if (!shape_stroke_vertex_buffer.empty()) {
         const int tmp_shape_mode_cache = shape_mode_cache;
-        if (tmp_shape_mode_cache == POINTS) {
-            // TODO STROKE_RENDER_MODE_NATIVE is handled in renderer
-            // TODO decide if point is a fill shape or it s own shape
-            // if (point_render_mode == POINT_RENDER_MODE_NATIVE) {
-            //     // TODO does this still work under macOS? it renders squares … maybe texturize them
-            //     // TODO @OpenGLES3.1 replace with circle or textured quad
-            //     const float tmp_point_size = std::max(std::min(point_size, open_gl_capabilities.point_size_max), open_gl_capabilities.point_size_min);
-            //     glPointSize(tmp_point_size);
-            //     OGL_tranform_model_matrix_and_render_vertex_buffer(IM_primitive_shape, GL_POINTS, shape_stroke_vertex_buffer);
-            // }
-            if (point_render_mode == POINT_RENDER_MODE_TRIANGULATE) {
-                std::vector<Vertex> line_vertices = convertPointsToTriangles(shape_stroke_vertex_buffer, point_size);
-                emit_shape_fill_triangles(line_vertices);
-            } else if (point_render_mode == POINT_RENDER_MODE_SHADER) {
-                emit_shape_stroke_points(shape_stroke_vertex_buffer, point_size);
-            }
-            return; // NOTE strokes are rendered as points ... exit early
-        }
+        // if (tmp_shape_mode_cache == POINTS) {
+        //     // TODO STROKE_RENDER_MODE_NATIVE is handled in renderer
+        //     // TODO decide if point is a fill shape or it s own shape
+        //     // if (point_render_mode == POINT_RENDER_MODE_NATIVE) {
+        //     //     // TODO does this still work under macOS? it renders squares … maybe texturize them
+        //     //     // TODO @OpenGLES3.1 replace with circle or textured quad
+        //     //     const float tmp_point_size = std::max(std::min(point_size, open_gl_capabilities.point_size_max), open_gl_capabilities.point_size_min);
+        //     //     glPointSize(tmp_point_size);
+        //     //     OGL_tranform_model_matrix_and_render_vertex_buffer(IM_primitive_shape, GL_POINTS, shape_stroke_vertex_buffer);
+        //     // }
+        //     if (point_render_mode == POINT_RENDER_MODE_TRIANGULATE) {
+        //         std::vector<Vertex> line_vertices = convertPointsToTriangles(shape_stroke_vertex_buffer, point_size);
+        //         emit_shape_fill_triangles(line_vertices);
+        //     } else if (point_render_mode == POINT_RENDER_MODE_SHADER) {
+        //         emit_shape_stroke_points(shape_stroke_vertex_buffer, point_size);
+        //     }
+        //     return; // NOTE strokes are rendered as points ... exit early
+        // }
 
         switch (tmp_shape_mode_cache) {
             case LINES: {

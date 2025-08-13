@@ -684,6 +684,13 @@ namespace umfeld {
             v2.color = p.color;
             v3.color = p.color;
 
+            // add texture_coordinates
+
+            v0.tex_coord = {0.0f, 0.0f, 0.0f};
+            v1.tex_coord = {1.0f, 0.0f, 0.0f};
+            v2.tex_coord = {1.0f, 1.0f, 0.0f};
+            v3.tex_coord = {0.0f, 1.0f, 0.0f};
+
             // Triangle 1: v0 → v1 → v2
             triangles.emplace_back(v0);
             triangles.emplace_back(v1);

@@ -87,11 +87,11 @@ namespace umfeld {
         void     emissive(float r, float g, float b) override;
         void     shininess(float s) override;
 
-        PShader* shader_fill_texture{nullptr};
-        PShader* shader_fill_texture_lights{nullptr};
-        PShader* shader_stroke{nullptr};
-        PShader* shader_point{nullptr};
-        PShader* custom_shader{nullptr};
+        PShader* shader_fill_texture{nullptr};        // REMOVE
+        PShader* shader_fill_texture_lights{nullptr}; // REMOVE
+        PShader* shader_stroke{nullptr};              // REMOVE
+        PShader* shader_point{nullptr};               // REMOVE
+        PShader* custom_shader{nullptr};              // REMOVE
 
     private:
         struct RenderBatch {

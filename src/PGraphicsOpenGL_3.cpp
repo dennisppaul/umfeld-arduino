@@ -136,6 +136,7 @@ void PGraphicsOpenGL_3::IMPL_emit_shape_stroke_line_strip(std::vector<Vertex>& l
         if (stroke_render_mode == STROKE_RENDER_MODE_TRIANGULATE_2D) {
             std::vector<Vertex> line_vertices;
             triangulate_line_strip_vertex(line_strip_vertices,
+                                          current_stroke_state,
                                           line_strip_closed,
                                           line_vertices);
             // TODO collect `line_vertices` and render as `GL_TRIANGLES` at end of frame
@@ -153,6 +154,7 @@ void PGraphicsOpenGL_3::IMPL_emit_shape_stroke_line_strip(std::vector<Vertex>& l
         if (stroke_render_mode == STROKE_RENDER_MODE_TRIANGULATE_2D) {
             std::vector<Vertex> line_vertices;
             triangulate_line_strip_vertex(line_strip_vertices,
+                                          current_stroke_state,
                                           line_strip_closed,
                                           line_vertices);
             if (custom_shader != nullptr) {
@@ -169,7 +171,7 @@ void PGraphicsOpenGL_3::IMPL_emit_shape_stroke_line_strip(std::vector<Vertex>& l
         }
         if (stroke_render_mode == STROKE_RENDER_MODE_TUBE_3D) {
             const std::vector<Vertex> line_vertices = generate_tube_mesh(line_strip_vertices,
-                                                                         stroke_weight / 2.0f,
+                                                                         current_stroke_state.stroke_weight / 2.0f,
                                                                          line_strip_closed,
                                                                          color_stroke);
             shader_fill_texture->use();
@@ -191,7 +193,7 @@ void PGraphicsOpenGL_3::IMPL_emit_shape_stroke_line_strip(std::vector<Vertex>& l
             constexpr float scale_factor = 0.99f;
             shader_stroke->set_uniform("scale", glm::vec3(scale_factor, scale_factor, scale_factor));
 
-            const float         stroke_weight_half = stroke_weight / 2.0f;
+            const float         stroke_weight_half = current_stroke_state.stroke_weight / 2.0f;
             std::vector<Vertex> line_strip_vertices_expanded;
             for (size_t i = 0; i + 1 < line_strip_vertices.size(); i++) {
                 Vertex p0 = line_strip_vertices[i];
@@ -572,9 +574,7 @@ void PGraphicsOpenGL_3::download_texture(PImage* img) {
 #endif
 }
 
-void PGraphicsOpenGL_3::init(uint32_t* pixels,
-                             const int width,
-                             const int height) {
+void PGraphicsOpenGL_3::init(uint32_t* pixels, const int width, const int height) {
     const int msaa_samples = antialiasing; // TODO not cool to take this from Umfeld
 
     // TODO create shader system with `get_versioned_source(string)` for:
@@ -988,7 +988,6 @@ void PGraphicsOpenGL_3::update_all_shader_matrices() const {
         update_shader_matrices(shader_point);
     }
 }
-
 
 void PGraphicsOpenGL_3::camera(const float eyeX, const float eyeY, const float eyeZ, const float centerX, const float centerY, const float centerZ, const float upX, const float upY, const float upZ) {
     PGraphics::camera(eyeX, eyeY, eyeZ, centerX, centerY, centerZ, upX, upY, upZ);

@@ -210,7 +210,6 @@ namespace umfeld {
 #define warning_in_function_once(...) \
     _warning_in_function_once(__COUNTER__, __VA_ARGS__)
 
-
     inline std::string format_label(const std::string& label, const size_t width = DEFAULT_CONSOLE_LABEL_WIDTH) {
         if (label.length() >= width) {
             return label + " : "; // Ensure spacing even if label is too long
@@ -226,7 +225,8 @@ namespace umfeld {
         static Random mode = FAST;
         return mode;
     }
-    inline void   set_random_mode(Random mode) { _random_mode() = mode; }
+
+    inline void   set_random_mode(const Random mode) { _random_mode() = mode; }
     inline Random get_random_mode() { return _random_mode(); }
 
 } // namespace umfeld

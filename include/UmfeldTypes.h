@@ -22,20 +22,25 @@
 #include <glm/glm.hpp>
 
 #include "UmfeldConstants.h"
-#include "UmfeldTypes.h"
 
 namespace umfeld {
+    struct StrokeState {
+        float stroke_weight{1};
+        int   stroke_join_mode{BEVEL_FAST};
+        int   stroke_cap_mode{PROJECT};
+        float stroke_join_round_resolution{glm::radians(20.0f)};
+        float stroke_cap_round_resolution{glm::radians(20.0f)}; // // 20° resolution i.e 18 segment for whole circle
+        float stroke_join_miter_max_angle{163.0f};
+    };
 
-    struct Shape {
-        ShapeMode           mode{POLYGON};
-        StrokeState         stroke;
-        bool                filled{true};
-        std::vector<Vertex> vertices;
-        glm::mat4           model{};
-        glm::vec3           center_object_space{};
-        bool                transparent{};
-        bool                closed{false};
-        float               depth{};
-        uint16_t            texture_id{TEXTURE_NONE};
+    struct ColorState : glm::vec4 {
+        bool active = false;
+    };
+
+    struct StyleState {
+        ColorState stroke;
+        ColorState fill;
+        float      strokeWeight;
+        // TODO add style values like tint, blend mode, etc.
     };
 } // namespace umfeld

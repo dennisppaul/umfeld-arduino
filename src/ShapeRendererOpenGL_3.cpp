@@ -29,6 +29,7 @@
 #include "UmfeldFunctionsAdditional.h"
 #include "PGraphicsOpenGL.h"
 #include "ShapeRendererOpenGL_3.h"
+#include "Geometry.h"
 
 namespace umfeld {
     void ShapeRendererOpenGL_3::init(PGraphics* g, const std::vector<int> shader_programs) {
@@ -95,37 +96,122 @@ namespace umfeld {
     }
 
     void ShapeRendererOpenGL_3::flush(const glm::mat4& view_projection_matrix) {
-        if (graphics != nullptr) {
-            if (graphics->get_render_mode() == RENDER_MODE_SORTED_BY_Z_ORDER) {
-                console_once("render_mode: rendering in z-order ( + batches + depth sorted )");
-                flush_sort_by_z_order(view_projection_matrix);
-            } else if (graphics->get_render_mode() == RENDER_MODE_SORTED_BY_SUBMISSION_ORDER) {
-                console_once("render_mode: rendering in submission order");
-                flush_submission_order(view_projection_matrix);
-            } else if (graphics->get_render_mode() == RENDER_MODE_IMMEDIATELY) {
-                console_once("rendering shapes immediately");
-                flush_immediately(view_projection_matrix);
+        if (shapes.empty() || graphics == nullptr) {
+            shapes.clear();
+            return;
+        }
+
+        std::vector<Shape> processed_shapes;
+        processed_shapes.reserve(shapes.size());
+
+        process_shapes(processed_shapes);
+        flush_processed_shapes(processed_shapes, view_projection_matrix);
+
+        // reserve capacity for next frame based on current usage
+        const size_t current_size = shapes.size();
+        shapes.clear();
+        shapes.reserve(current_size);
+    }
+
+    void ShapeRendererOpenGL_3::process_shapes(std::vector<Shape>& processed_shapes) {
+        if (graphics == nullptr || shapes.empty()) { return; }
+        for (auto& s: shapes) {
+            /* convert stroke shape to line strips + triangulate stroke */
+            if (!s.filled) {
+                if (s.mode == POINTS) {
+                    if (graphics->get_point_render_mode() == POINT_RENDER_MODE_TRIANGULATE) {
+                        std::vector<Vertex> triangulated_vertices = convertPointsToTriangles(s.vertices, graphics->get_point_size());
+                        s.vertices                                = std::move(triangulated_vertices);
+                        s.filled                                  = true;
+                        s.mode                                    = TRIANGLES;
+                        processed_shapes.push_back(std::move(s));
+                    } else if (graphics->get_point_render_mode() == POINT_RENDER_MODE_NATIVE) {
+                        // TODO handle this in extra path
+                        warning_in_function_once("TODO unsupported point render mode 'POINT_RENDER_MODE_NATIVE'");
+                    } else if (graphics->get_point_render_mode() == POINT_RENDER_MODE_SHADER) {
+                        // TODO handle this in extra path
+                        // emit_shape_stroke_points(shape_stroke_vertex_buffer, point_size);
+                        // IMPL_emit_shape_stroke_points
+                        warning_in_function_once("TODO unsupported point render mode 'POINT_RENDER_MODE_SHADER'");
+                    }
+                    continue;
+                }
+                std::vector<Shape> converted_shapes;
+                converted_shapes.reserve(s.vertices.size());
+                PGraphics::convert_stroke_shape_to_line_strip(s, converted_shapes);
+                if (!converted_shapes.empty()) {
+                    if (graphics->get_stroke_render_mode() == STROKE_RENDER_MODE_TRIANGULATE_2D) {
+                        for (auto& cs: converted_shapes) {
+                            std::vector<Vertex> triangulated_vertices;
+                            graphics->triangulate_line_strip_vertex(cs.vertices,
+                                                                    cs.stroke,
+                                                                    cs.closed,
+                                                                    triangulated_vertices);
+                            cs.vertices = std::move(triangulated_vertices);
+                            cs.filled   = true;
+                            cs.mode     = TRIANGLES;
+                            processed_shapes.push_back(std::move(cs));
+                        }
+                    } else if (graphics->get_stroke_render_mode() == STROKE_RENDER_MODE_TUBE_3D) {
+                        for (auto& cs: converted_shapes) {
+                            processed_shapes.push_back(std::move(cs));
+                        }
+                        warning_in_function_once("unsupported stroke render mode 'STROKE_RENDER_MODE_TUBE_3D'");
+                    } else if (graphics->get_stroke_render_mode() == STROKE_RENDER_MODE_NATIVE) {
+                        for (auto& cs: converted_shapes) {
+                            // TODO how can i set the bin draw mode to GL_LINE_STRIP?
+                            //      close each shape by appending the last first vertex to last
+                            // OGL3_render_vertex_buffer(vertex_buffer, GL_LINE_STRIP, line_strip_vertices);
+                            processed_shapes.push_back(std::move(cs));
+                        }
+                        warning_in_function_once("unsupported stroke render mode 'STROKE_RENDER_MODE_NATIVE'");
+                    } else if (graphics->get_stroke_render_mode() == STROKE_RENDER_MODE_LINE_SHADER) {
+                        warning_in_function_once("unsupported stroke render mode 'STROKE_RENDER_MODE_LINE_SHADER'");
+                    } else if (graphics->get_stroke_render_mode() == STROKE_RENDER_MODE_BARYCENTRIC_SHADER) {
+                        warning_in_function_once("unsupported stroke render mode 'STROKE_RENDER_MODE_BARYCENTRIC_SHADER'");
+                    } else if (graphics->get_stroke_render_mode() == STROKE_RENDER_MODE_GEOMETRY_SHADER) {
+                        warning_in_function_once("unsupported stroke render mode 'STROKE_RENDER_MODE_GEOMETRY_SHADER'");
+                    } else {
+                        warning_in_function_once("unsupported stroke render mode for renderer.");
+                    }
+                }
+            }
+            /* convert filled shapes to triangles */
+            if (s.filled) {
+                graphics->convert_fill_shape_to_triangles(s);
+                s.mode = TRIANGLES;
+                processed_shapes.push_back(std::move(s));
             }
         }
     }
 
-    void ShapeRendererOpenGL_3::flush_immediately(const glm::mat4& view_projection_matrix) {
-        // TODO extract essential code from `flush_sort_by_z_order` and then remove
-        flush_sort_by_z_order(view_projection_matrix); // REMOVE replace this with a dedicated shape renderer
+    void ShapeRendererOpenGL_3::flush_processed_shapes(std::vector<Shape>& processed_shapes, const glm::mat4& view_projection_matrix) {
+        if (graphics->get_render_mode() == RENDER_MODE_SORTED_BY_Z_ORDER) {
+            console_once("render_mode: rendering in z-order ( + batches + depth sorted )");
+            flush_sort_by_z_order(processed_shapes, view_projection_matrix);
+        } else if (graphics->get_render_mode() == RENDER_MODE_SORTED_BY_SUBMISSION_ORDER) {
+            console_once("render_mode: rendering in submission order");
+            flush_submission_order(processed_shapes, view_projection_matrix);
+        } else if (graphics->get_render_mode() == RENDER_MODE_IMMEDIATELY) {
+            console_once("rendering shapes immediately");
+            flush_immediately(processed_shapes, view_projection_matrix);
+        }
     }
 
-    void ShapeRendererOpenGL_3::flush_sort_by_z_order(const glm::mat4& view_projection_matrix) {
-        if (shapes.empty()) {
-            return;
-        }
+    void ShapeRendererOpenGL_3::flush_immediately(std::vector<Shape>& shapes, const glm::mat4& view_projection_matrix) {
+        // TODO extract essential code from `flush_sort_by_z_order` and then remove
+        flush_sort_by_z_order(shapes, view_projection_matrix); // TODO replace this with a dedicated shape renderer
+    }
 
+    void ShapeRendererOpenGL_3::flush_sort_by_z_order(std::vector<Shape>& shapes, const glm::mat4& view_projection_matrix) {
         // use unordered_map for better performance with many textures
-        std::unordered_map<GLuint, TextureBatch> textureBatches;
-        textureBatches.reserve(8); // Reasonable default
+        std::unordered_map<GLuint, TextureBatch> texture_batches;
+        static constexpr int                     DEFAULT_NUM_TEXTURES = 16;
+        texture_batches.reserve(DEFAULT_NUM_TEXTURES);
 
         for (auto& s: shapes) {
-            TextureBatch& batch = textureBatches[s.texture_id];
-            batch.textureID     = s.texture_id;
+            TextureBatch& batch = texture_batches[s.texture_id];
+            batch.texture_id    = s.texture_id;
 
             if (s.transparent) {
                 batch.transparent_shapes.push_back(&s);
@@ -134,8 +220,8 @@ namespace umfeld {
             }
         }
 
-        // Compute depth and sort transparents
-        for (auto& [textureID, batch]: textureBatches) {
+        // compute depth and sort transparents
+        for (auto& [textureID, batch]: texture_batches) {
             for (auto* s: batch.transparent_shapes) {
                 const glm::vec4 center_world_space = s->model * glm::vec4(s->center_object_space, 1.0f);
                 const glm::vec4 center_view_space  = view_projection_matrix * center_world_space;
@@ -147,7 +233,7 @@ namespace umfeld {
 
         glBindVertexArray(vao);
 
-        // Opaque pass
+        // opaque pass
         if (graphics != nullptr) {
             if (graphics->hint_enable_depth_test) {
                 glEnable(GL_DEPTH_TEST);
@@ -160,28 +246,23 @@ namespace umfeld {
         glDepthFunc(GL_LEQUAL); // Allow equal depths to pass ( `GL_LESS` is default )
         glDepthMask(GL_TRUE);
         glDisable(GL_BLEND);
-        for (auto& [textureID, batch]: textureBatches) {
-            renderBatch(batch.opaque_shapes, view_projection_matrix, textureID);
+        for (auto& [texture_id, batch]: texture_batches) {
+            render_batch(batch.opaque_shapes, view_projection_matrix, texture_id);
         }
 
-        // Transparent pass
+        // transparent pass
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         glDepthMask(GL_FALSE);
-        for (auto& [textureID, batch]: textureBatches) {
-            renderBatch(batch.transparent_shapes, view_projection_matrix, textureID);
+        for (auto& [texture_id, batch]: texture_batches) {
+            render_batch(batch.transparent_shapes, view_projection_matrix, texture_id);
         }
 
         glDepthMask(GL_TRUE);
         glBindVertexArray(0);
-        shapes.clear();
     }
 
-    void ShapeRendererOpenGL_3::flush_submission_order(const glm::mat4& view_projection_matrix) {
-        if (shapes.empty()) {
-            return;
-        }
-
+    void ShapeRendererOpenGL_3::flush_submission_order(std::vector<Shape>& shapes, const glm::mat4& view_projection_matrix) {
         glBindVertexArray(vao);
 
         // Enable depth test for all shapes
@@ -217,63 +298,37 @@ namespace umfeld {
             if (shape.texture_id != currentTexture) {
                 currentTexture = shape.texture_id;
                 if (currentTexture == TEXTURE_NONE) {
-                    // Switch to untextured shader
+                    // switch to untextured shader
                     glUseProgram(untexturedShaderProgram);
                     glUniformMatrix4fv(untexturedUniforms.uViewProj, 1, GL_FALSE, &view_projection_matrix[0][0]);
                 } else {
-                    // Switch to textured shader
+                    // switch to textured shader
                     glUseProgram(texturedShaderProgram);
                     glUniformMatrix4fv(texturedUniforms.uViewProj, 1, GL_FALSE, &view_projection_matrix[0][0]);
                     bind_texture(currentTexture);
-                    // glActiveTexture(GL_TEXTURE0);
-                    // glBindTexture(GL_TEXTURE_2D, currentTexture);
                     glUniform1i(texturedUniforms.uTex, 0);
                 }
             }
 
             // Render single shape (create a vector with just this shape)
             std::vector<Shape*> singleShape = {&shape};
-            renderBatch(singleShape, view_projection_matrix, shape.texture_id);
+            TRACE_SCOPE_N("RENDER_BATCH");
+            {
+                render_batch(singleShape, view_projection_matrix, shape.texture_id);
+            }
         }
 
         // Restore default state
         glDepthMask(GL_TRUE);
         glDisable(GL_BLEND);
         glBindVertexArray(0);
-        shapes.clear();
     }
 
     void ShapeRendererOpenGL_3::submitShape(Shape& s) {
-        if (s.transparent) { // NOTE only copmute center for transparent shapes
+        if (s.transparent) { // NOTE only compute center for transparent shapes
             computeShapeCenter(s);
         }
-
-        if (graphics != nullptr) {
-            /* convert stroke shape to line strips + triangulate stroke */
-            if (!s.filled) {
-                std::vector<Shape> converted_shapes;
-                PGraphics::convert_stroke_shape_to_line_strip(s, converted_shapes);
-
-                if (!converted_shapes.empty()) {
-                    for (auto& cs: converted_shapes) {
-                        std::vector<Vertex> triangulated_vertices;
-                        graphics->triangulate_line_strip_vertex(cs.vertices,
-                                                                cs.closed,
-                                                                triangulated_vertices);
-                        cs.vertices = std::move(triangulated_vertices);
-                        cs.filled   = true;
-                        cs.mode     = TRIANGLES;
-                        shapes.push_back(std::move(cs));
-                    }
-                }
-            }
-            /* convert filled shapes to triangles */
-            if (s.filled) {
-                graphics->convert_fill_shape_to_triangles(s);
-                s.mode = TRIANGLES;
-                shapes.push_back(std::move(s));
-            }
-        }
+        shapes.push_back(std::move(s));
     }
 
     void ShapeRendererOpenGL_3::computeShapeCenter(Shape& s) const {
@@ -365,11 +420,11 @@ namespace umfeld {
         glBindVertexArray(0);
 
         // Pre-allocate frame buffers
-        frameVertices.reserve(4096); // NOTE maybe decrease this for mobile to 1024
-        frameMatrices.reserve(MAX_TRANSFORMS);
+        frame_vertices.reserve(4096); // NOTE maybe decrease this for mobile to 1024
+        frame_matrices.reserve(MAX_TRANSFORMS);
     }
 
-    size_t ShapeRendererOpenGL_3::estimateTriangleCount(const Shape& s) {
+    size_t ShapeRendererOpenGL_3::estimate_triangle_count(const Shape& s) {
         const size_t n = s.vertices.size();
         if (n < 3 || !s.filled) {
             return 0;
@@ -386,7 +441,7 @@ namespace umfeld {
         }
     }
 
-    void ShapeRendererOpenGL_3::tessellateToTriangles(const Shape& s, std::vector<Vertex>& out, const uint16_t transformID) {
+    void ShapeRendererOpenGL_3::convert_shapes_to_triangles(const Shape& s, std::vector<Vertex>& out, const uint16_t transformID) {
         const auto&  v = s.vertices;
         const size_t n = v.size();
         if (n < 3 || !s.filled) {
@@ -413,6 +468,15 @@ namespace umfeld {
                     vv.transform_id = transformID;
                     out.push_back(vv);
                 }
+                // NOTE on MacBook Pro this is approx 6 µsec faster than
+                //      ```
+                //      const size_t m = n / 3 * 3;
+                //      for (size_t i = 0; i < m; ++i) {
+                //          Vertex vv       = v[i];
+                //          vv.transform_id = transformID;
+                //          out.push_back(vv);
+                //      }
+                //      ```
                 break;
             }
             case TRIANGLE_STRIP: {
@@ -451,65 +515,59 @@ namespace umfeld {
         }
     }
 
-    void ShapeRendererOpenGL_3::renderBatch(const std::vector<Shape*>& shapesToRender, const glm::mat4& viewProj, const GLuint textureID) {
-        if (shapesToRender.empty()) {
+    void ShapeRendererOpenGL_3::render_batch(const std::vector<Shape*>& shapes_to_render, const glm::mat4& view_projection_matrix, const GLuint texture_id) {
+        if (shapes_to_render.empty()) {
             return;
         }
 
-        const GLuint          shader   = enable_lighting ? ((textureID == TEXTURE_NONE) ? untexturedLightingShaderProgram : texturedLightingShaderProgram) : ((textureID == TEXTURE_NONE) ? untexturedShaderProgram : texturedShaderProgram);
-        const ShaderUniforms& uniforms = (textureID == TEXTURE_NONE) ? untexturedUniforms : texturedUniforms;
+        const GLuint          shader   = enable_lighting ? ((texture_id == TEXTURE_NONE) ? untexturedLightingShaderProgram : texturedLightingShaderProgram) : ((texture_id == TEXTURE_NONE) ? untexturedShaderProgram : texturedShaderProgram);
+        const ShaderUniforms& uniforms = (texture_id == TEXTURE_NONE) ? untexturedUniforms : texturedUniforms;
 
         glUseProgram(shader);
-        glUniformMatrix4fv(uniforms.uViewProj, 1, GL_FALSE, &viewProj[0][0]);
+        glUniformMatrix4fv(uniforms.uViewProj, 1, GL_FALSE, &view_projection_matrix[0][0]);
 
-        if (textureID != TEXTURE_NONE) {
-            bind_texture(textureID);
-            // glActiveTexture(GL_TEXTURE0);
-            // glBindTexture(GL_TEXTURE_2D, textureID);
+        if (texture_id != TEXTURE_NONE) {
+            bind_texture(texture_id);
             glUniform1i(uniforms.uTex, 0);
         }
 
-        // Process in chunks to respect MAX_TRANSFORMS limit
-        for (size_t offset = 0; offset < shapesToRender.size(); offset += MAX_TRANSFORMS) {
-            const size_t chunkSize = std::min(static_cast<size_t>(MAX_TRANSFORMS), shapesToRender.size() - offset);
+        // process in chunks to respect MAX_TRANSFORMS limit
+        for (size_t offset = 0; offset < shapes_to_render.size(); offset += MAX_TRANSFORMS) {
+            const size_t chunkSize = std::min(static_cast<size_t>(MAX_TRANSFORMS), shapes_to_render.size() - offset);
 
-            // Upload transforms for this chunk
-            frameMatrices.clear();
-            frameMatrices.reserve(chunkSize);
+            // upload transforms for this chunk
+            frame_matrices.clear();
+            frame_matrices.reserve(chunkSize);
             for (size_t i = 0; i < chunkSize; ++i) {
-                frameMatrices.push_back(shapesToRender[offset + i]->model);
+                frame_matrices.push_back(shapes_to_render[offset + i]->model);
             }
 
             glBindBuffer(GL_UNIFORM_BUFFER, ubo);
             glBufferSubData(GL_UNIFORM_BUFFER, 0,
-                            static_cast<GLsizeiptr>(frameMatrices.size() * sizeof(glm::mat4)),
-                            frameMatrices.data());
+                            static_cast<GLsizeiptr>(frame_matrices.size() * sizeof(glm::mat4)),
+                            frame_matrices.data());
 
-            // Estimate and reserve vertex space
-            frameVertices.clear();
+            // estimate and reserve vertex space
+            frame_vertices.clear();
             size_t totalEstimate = 0;
             for (size_t i = 0; i < chunkSize; ++i) {
-                totalEstimate += estimateTriangleCount(*shapesToRender[offset + i]);
+                totalEstimate += estimate_triangle_count(*shapes_to_render[offset + i]);
             }
-            frameVertices.reserve(totalEstimate);
+            frame_vertices.reserve(totalEstimate);
 
-            // Tessellate shapes in this chunk
-            // TODO tesselation is not necessary if shape is already TRIANGLES
+            // tessellate shapes in this chunk
             for (size_t i = 0; i < chunkSize; ++i) {
-                const auto* s = shapesToRender[offset + i];
-                tessellateToTriangles(*s, frameVertices, static_cast<uint16_t>(i));
+                const auto* s = shapes_to_render[offset + i];
+                convert_shapes_to_triangles(*s, frame_vertices, static_cast<uint16_t>(i));
             }
-            // for (size_t i = chunkSize; i-- > 0;) {
-            //     const auto* s = shapesToRender[offset + i];
-            //     tessellateToTriangles(*s, frameVertices, static_cast<uint16_t>(i));
-            // }
 
-            if (!frameVertices.empty()) {
+            if (!frame_vertices.empty()) {
                 glBindBuffer(GL_ARRAY_BUFFER, vbo);
                 glBufferData(GL_ARRAY_BUFFER,
-                             static_cast<GLsizeiptr>(frameVertices.size() * sizeof(Vertex)),
-                             frameVertices.data(), GL_DYNAMIC_DRAW);
-                glDrawArrays(GL_TRIANGLES, 0, static_cast<GLsizei>(frameVertices.size()));
+                             static_cast<GLsizeiptr>(frame_vertices.size() * sizeof(Vertex)),
+                             frame_vertices.data(), GL_DYNAMIC_DRAW);
+                // glDrawArrays(GL_LINE_STRIP, 0, static_cast<GLsizei>(frame_vertices.size()));
+                glDrawArrays(GL_TRIANGLES, 0, static_cast<GLsizei>(frame_vertices.size()));
             }
         }
     }
@@ -518,7 +576,6 @@ namespace umfeld {
         // NOTE not un-/binding any textures here.
         //      this also means that custom shapes ( e.g VertexBuffer/Mesh ) would need to manually bind textures before rendering
         if (img == nullptr) {
-            // OGL_bind_texture(TEXTURE_NONE);
             return TEXTURE_NONE;
         }
 
@@ -535,11 +592,6 @@ namespace umfeld {
                 return TEXTURE_NONE;
             }
         }
-
-        // OGL_bind_texture(img->texture_id);
-        // // TODO so this is interesting: we could leave the texture bound and require the client
-        // //      to unbind it with `texture_unbind()` or should `endShape()` always reset to
-        // //      `texture_id_solid_color` with `texture_unbind()`.
 
         return img->texture_id;
     }

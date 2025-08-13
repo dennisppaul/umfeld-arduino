@@ -24,6 +24,7 @@
 #include <glm/glm.hpp>
 
 #include "UmfeldConstants.h"
+#include "UmfeldTypes.h"
 #include "UmfeldFunctionsAdditional.h"
 #include "PImage.h"
 #include "Vertex.h"
@@ -69,9 +70,9 @@ namespace umfeld {
 
         /* --- implementation specific methods --- */
 
-        virtual void impl_background(float a, float b, float c, float d) = 0; // NOTE this needs to clear the color buffer and depth buffer
+        virtual void impl_background(float a, float b, float c, float d) = 0; // NOTE required to clear color buffer and depth buffer
 
-        virtual void render_framebuffer_to_screen(bool use_blit) { (void) use_blit; } // TODO this should probably go to PGraphicsOpenGL
+        virtual void render_framebuffer_to_screen(const bool use_blit) { (void) use_blit; } // TODO this should probably go to PGraphicsOpenGL
         virtual bool read_framebuffer(std::vector<unsigned char>& pixels) { return false; }
 
         /* --- implementation specific methods ( pure virtual ) --- */
@@ -81,18 +82,18 @@ namespace umfeld {
          *        and transforming vertices needs to happen here. any drawing should use this method.
          * @param triangle_vertices
          */
-        virtual void emit_shape_fill_triangles(std::vector<Vertex>& triangle_vertices);
-        virtual void IMPL_emit_shape_fill_triangles(std::vector<Vertex>& triangle_vertices) = 0;
+        virtual void emit_shape_fill_triangles(std::vector<Vertex>& triangle_vertices);          // REMOVE asashrimp
+        virtual void IMPL_emit_shape_fill_triangles(std::vector<Vertex>& triangle_vertices) = 0; // REMOVE asashrimp
         /**
          * @brief method should emit the stroke vertices to the rendering backend. recording, collecting,
          *        and transforming vertices needs to happen here. any drawing should use this method.
          * @param line_strip_vertices
          * @param line_strip_closed
          */
-        virtual void emit_shape_stroke_line_strip(std::vector<Vertex>& line_strip_vertices, bool line_strip_closed);
-        virtual void IMPL_emit_shape_stroke_line_strip(std::vector<Vertex>& line_strip_vertices, bool line_strip_closed) = 0;
-        virtual void emit_shape_stroke_points(std::vector<Vertex>& point_vertices, float point_size);
-        virtual void IMPL_emit_shape_stroke_points(std::vector<Vertex>& point_vertices, float point_size) = 0;
+        virtual void emit_shape_stroke_line_strip(std::vector<Vertex>& line_strip_vertices, bool line_strip_closed);          // REMOVE asashrimp
+        virtual void IMPL_emit_shape_stroke_line_strip(std::vector<Vertex>& line_strip_vertices, bool line_strip_closed) = 0; // REMOVE asashrimp
+        virtual void emit_shape_stroke_points(std::vector<Vertex>& point_vertices, float point_size);                         // REMOVE asashrimp
+        virtual void IMPL_emit_shape_stroke_points(std::vector<Vertex>& point_vertices, float point_size) = 0;                // REMOVE asashrimp
         virtual void beginDraw();
         virtual void endDraw();
         virtual void reset_mvp_matrices();
@@ -159,39 +160,39 @@ namespace umfeld {
 
         // ## Structure
 
-        virtual void     pushStyle();
-        virtual void     popStyle();
-        virtual void     bezier(float x1, float y1, float x2, float y2, float x3, float y3, float x4, float y4);
-        virtual void     bezier(float x1, float y1, float z1, float x2, float y2, float z2, float x3, float y3, float z3, float x4, float y4, float z4);
-        virtual void     bezierDetail(int detail);
-        virtual void     curve(float x1, float y1, float x2, float y2, float x3, float y3, float x4, float y4);
-        virtual void     curve(float x1, float y1, float z1, float x2, float y2, float z2, float x3, float y3, float z3, float x4, float y4, float z4);
-        virtual void     curveDetail(int detail);
-        virtual void     curveTightness(float tightness);
-        virtual void     arcDetail(int detail);
-        virtual void     ellipseMode(int mode);
-        virtual void     ellipseDetail(int detail);
-        virtual void     image(PImage* img, float x, float y, float w, float h);
-        virtual void     image(PImage* img, float x, float y);
-        virtual void     texture(PImage* img = nullptr);
-        virtual void     pointSize(float size);
-        virtual void     rectMode(int mode);
-        virtual void     textFont(PFont* font);
-        virtual void     textSize(float size);
-        virtual void     text(const char* value, float x, float y, float z = 0.0f);
-        virtual float    textWidth(const std::string& text);
-        virtual void     textAlign(int alignX, int alignY = BASELINE);
-        virtual float    textAscent();
-        virtual float    textDescent();
-        virtual void     textLeading(float leading);
-        virtual PFont*   loadFont(const std::string& file, float size);
-        virtual void     box(float width, float height, float depth);
-        virtual void     box(const float size) { box(size, size, size); }
-        virtual void     sphere(float width, float height, float depth);
-        virtual void     sphere(const float size) { sphere(size, size, size); }
-        virtual void     sphereDetail(int ures, int vres);
-        virtual void     sphereDetail(const int res) { sphereDetail(res, res); }
-        void             process_collected_fill_vertices();
+        virtual void   pushStyle();
+        virtual void   popStyle();
+        virtual void   bezier(float x1, float y1, float x2, float y2, float x3, float y3, float x4, float y4);
+        virtual void   bezier(float x1, float y1, float z1, float x2, float y2, float z2, float x3, float y3, float z3, float x4, float y4, float z4);
+        virtual void   bezierDetail(int detail);
+        virtual void   curve(float x1, float y1, float x2, float y2, float x3, float y3, float x4, float y4);
+        virtual void   curve(float x1, float y1, float z1, float x2, float y2, float z2, float x3, float y3, float z3, float x4, float y4, float z4);
+        virtual void   curveDetail(int detail);
+        virtual void   curveTightness(float tightness);
+        virtual void   arcDetail(int detail);
+        virtual void   ellipseMode(int mode);
+        virtual void   ellipseDetail(int detail);
+        virtual void   image(PImage* img, float x, float y, float w, float h);
+        virtual void   image(PImage* img, float x, float y);
+        virtual void   texture(PImage* img = nullptr);
+        virtual void   pointSize(float size);
+        virtual void   rectMode(int mode);
+        virtual void   textFont(PFont* font);
+        virtual void   textSize(float size);
+        virtual void   text(const char* value, float x, float y, float z = 0.0f);
+        virtual float  textWidth(const std::string& text);
+        virtual void   textAlign(int alignX, int alignY = BASELINE);
+        virtual float  textAscent();
+        virtual float  textDescent();
+        virtual void   textLeading(float leading);
+        virtual PFont* loadFont(const std::string& file, float size);
+        virtual void   box(float width, float height, float depth);
+        virtual void   box(const float size) { box(size, size, size); }
+        virtual void   sphere(float width, float height, float depth);
+        virtual void   sphere(const float size) { sphere(size, size, size); }
+        virtual void   sphereDetail(int ures, int vres);
+        virtual void   sphereDetail(const int res) { sphereDetail(res, res); }
+        // void             process_collected_fill_vertices();
         void             process_collected_stroke_vertices(bool close_shape);
         virtual void     shader(PShader* shader) {} // TODO maybe not implement them empty like this
         virtual PShader* loadShader(const std::string& vertex_code, const std::string& fragment_code, const std::string& geometry_code = "") { return nullptr; };
@@ -238,17 +239,20 @@ namespace umfeld {
         void                linse(const float x1, const float y1, const float x2, const float y2) { line(x1, y1, x2, y2); }
         int                 getPixelDensity() const { return pixel_density; }
         void                set_point_render_mode(const int point_render_mode) { this->point_render_mode = point_render_mode; }
+        int                 get_point_render_mode() const { return point_render_mode; }
+        int                 get_point_size() const { return point_size; }
         void                set_stroke_render_mode(const int stroke_render_mode) { this->stroke_render_mode = stroke_render_mode; }
         int                 get_stroke_render_mode() const { return stroke_render_mode; }
         void                stroke_properties(float stroke_join_round_resolution, float stroke_cap_round_resolution, float stroke_join_miter_max_angle);
         void                triangulate_line_strip_vertex(const std::vector<Vertex>& line_strip,
+                                                          const StrokeState&         stroke,
                                                           bool                       close_shape,
                                                           std::vector<Vertex>&       line_vertices) const;
         virtual void        set_default_graphics_state() {}
         void                set_render_mode(const RenderMode render_mode) { this->render_mode = render_mode; }
         RenderMode          get_render_mode() const { return render_mode; }
         virtual std::string name() { return "PGraphics"; }
-        float               get_stroke_weight() const { return stroke_weight; }
+        float               get_stroke_weight() const { return current_stroke_state.stroke_weight; }
         virtual void        texture_filter(TextureFilter filter) {}
         virtual void        texture_wrap(TextureWrap wrap, glm::vec4 color_fill = glm::vec4(0.0f)) {}
         virtual void        upload_texture(PImage* img, const uint32_t* pixel_data, int width, int height, int offset_x, int offset_y) {}
@@ -270,21 +274,11 @@ namespace umfeld {
         static void                convert_stroke_shape_to_line_strip(Shape& s, std::vector<Shape>& shapes);
 
     protected:
-        struct ColorState : glm::vec4 {
-            bool active = false;
-        };
-
-        struct StyleState {
-            ColorState stroke;
-            ColorState fill;
-            float      strokeWeight;
-            // TODO add style values like tint, blend mode, etc.
-        };
-
         // const float                      DEFAULT_FOV            = 2.0f * atan(0.5f); // = 53.1301f; // P5 :: tan(PI*30.0 / 180.0);
         static constexpr uint16_t        ELLIPSE_DETAIL_MIN     = 3;
         static constexpr uint16_t        ELLIPSE_DETAIL_DEFAULT = 36;
         static constexpr uint16_t        ARC_DETAIL_DEFAULT     = 36;
+        StrokeState                      current_stroke_state;
         ShapeRenderer*                   shape_renderer{nullptr}; // TODO @maybe make this `const` and set in constructor?
         std::stack<StyleState>           style_stack;
         bool                             init_properties_locked{false};
@@ -297,7 +291,6 @@ namespace umfeld {
         int                              arc_detail{ARC_DETAIL_DEFAULT};
         std::vector<glm::vec2>           ellipse_points_LUT{};
         float                            point_size{1};
-        float                            stroke_weight{1};
         int                              bezier_detail{20};
         int                              curve_detail{20};
         float                            curve_tightness{0.0f};
@@ -307,11 +300,6 @@ namespace umfeld {
         int                              polygon_triangulation_strategy{POLYGON_TRIANGULATION_BETTER};
         int                              stroke_render_mode{STROKE_RENDER_MODE_TRIANGULATE_2D};
         int                              point_render_mode{POINT_RENDER_MODE_TRIANGULATE};
-        int                              stroke_join_mode{BEVEL_FAST};
-        int                              stroke_cap_mode{PROJECT};
-        float                            stroke_join_round_resolution{glm::radians(20.0f)}; // TODO maybe make these configurable
-        float                            stroke_cap_round_resolution{glm::radians(20.0f)};  // 20° resolution i.e 18 segment for whole circle
-        float                            stroke_join_miter_max_angle{163.0f};
         inline static const Triangulator triangulator{};
         std::vector<ColorState>          color_stroke_stack{};
         std::vector<ColorState>          color_fill_stack{};

@@ -49,6 +49,7 @@ namespace umfeld {
         void setVertices(const std::vector<Vertex>& vertices) override;
         void endShape(bool closed) override;
         void submitShape(Shape& s) override;
+        int  set_texture(PImage* img) override;
         void flush(const glm::mat4& view_projection_matrix) override;
 
     private:
@@ -87,7 +88,6 @@ namespace umfeld {
         std::vector<Shape>            shapes;
         Shape                         currentShape;
         SHAPE_CENTER_COMPUTE_STRATEGY shape_center_compute_strategy = ZERO_CENTER;
-        bool                          shapeInProgress               = false;
         std::vector<Vertex>           frameVertices;
         std::vector<glm::mat4>        frameMatrices;
 
@@ -103,5 +103,10 @@ namespace umfeld {
         void          flush_sort_by_z_order(const glm::mat4& view_projection_matrix);
         void          flush_submission_order(const glm::mat4& view_projection_matrix);
         void          flush_immediately(const glm::mat4& view_projection_matrix);
+
+        static void bind_texture(const int texture_id) {
+            glActiveTexture(GL_TEXTURE0 + PGraphicsOpenGL::DEFAULT_ACTIVE_TEXTURE_UNIT);
+            glBindTexture(GL_TEXTURE_2D, texture_id); // NOTE this should be the only glBindTexture ( except for initializations )
+        }
     };
 } // namespace umfeld

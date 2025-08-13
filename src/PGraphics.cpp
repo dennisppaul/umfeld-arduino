@@ -54,11 +54,19 @@ void PGraphics::beginDraw() {
 }
 
 void PGraphics::endDraw() {
+    flush();
+    restore_mvp_matrices();
+    /* clear texture stack */
+    texture_id_pushed = false;
+    stored_texture_id = TEXTURE_NONE;
+    /* reset shader */
+}
+
+void PGraphics::flush() {
     if (shape_renderer) {
         const glm::mat4 view_projection_matrix = projection_matrix * view_matrix;
         shape_renderer->flush(view_projection_matrix);
     }
-    restore_mvp_matrices();
 }
 
 void PGraphics::hint(const uint16_t property) {}
@@ -650,13 +658,16 @@ void PGraphics::image(PImage* img, const float x, const float y, float w, float 
         h = img->height;
     }
 
-    const bool _stroke_active = color_stroke.active;
+    const bool _stroke_active           = color_stroke.active;
+    const bool _shape_force_transparent = shape_force_transparent;
     noStroke();
     push_texture_id();
+    shape_force_transparent = true;
     texture(img);
     rect(x, y, w, h, img->flip_y_texcoords);
     pop_texture_id();
-    color_stroke.active = _stroke_active;
+    color_stroke.active     = _stroke_active;
+    shape_force_transparent = _shape_force_transparent;
 }
 
 void PGraphics::image(PImage* img, const float x, const float y) {
@@ -859,7 +870,11 @@ void PGraphics::text_str(const std::string& text, const float x, const float y, 
 }
 
 void PGraphics::texture(PImage* img) {
-    IMPL_set_texture(img);
+    if (img != nullptr && shape_renderer) {
+        texture_id_current = shape_renderer->set_texture(img);
+    } else {
+        texture_id_current = TEXTURE_NONE;
+    }
 }
 
 void PGraphics::point(const float x, const float y, const float z) {
@@ -1298,7 +1313,6 @@ void PGraphics::beginShape(const int shape) {
     shape_fill_vertex_buffer.clear();
     shape_stroke_vertex_buffer.clear();
     shape_mode_cache = shape;
-    shape_has_begun  = true;
 }
 
 void PGraphics::vertex(const float x, const float y, const float z) {
@@ -1338,38 +1352,38 @@ void PGraphics::vertex(const Vertex& v) {
     }
 }
 
-void PGraphics::submit_stroke_shape(const bool closed) {
+void PGraphics::submit_stroke_shape(const bool closed, bool force_transparent) {
     if (!shape_stroke_vertex_buffer.empty()) {
         Shape s;
         s.mode        = static_cast<ShapeMode>(shape_mode_cache);
         s.filled      = false;
         s.vertices    = shape_stroke_vertex_buffer;
         s.model       = model_matrix;
-        s.transparent = has_transparent_vertices(shape_stroke_vertex_buffer);
+        s.transparent = force_transparent ? true : has_transparent_vertices(shape_stroke_vertex_buffer);
         s.closed      = closed;
-        s.texture_id  = TEXTURE_NONE;
+        s.texture_id  = texture_id_current;
         shape_renderer->submitShape(s);
     }
 }
 
-void PGraphics::submit_fill_shape(const bool closed) {
+void PGraphics::submit_fill_shape(const bool closed, bool force_transparent) {
     if (!shape_fill_vertex_buffer.empty()) {
         Shape s;
         s.mode        = static_cast<ShapeMode>(shape_mode_cache);
         s.filled      = true;
         s.vertices    = shape_fill_vertex_buffer;
         s.model       = model_matrix;
-        s.transparent = has_transparent_vertices(shape_fill_vertex_buffer);
+        s.transparent = force_transparent ? true : has_transparent_vertices(shape_fill_vertex_buffer);
         s.closed      = closed;
-        s.texture_id  = TEXTURE_NONE;
+        s.texture_id  = texture_id_current;
         shape_renderer->submitShape(s);
     }
 }
 
 void PGraphics::endShape(const bool closed) {
     if (shape_renderer) {
-        submit_fill_shape(closed);
-        submit_stroke_shape(closed);
+        submit_fill_shape(closed, shape_force_transparent);
+        submit_stroke_shape(closed, shape_force_transparent);
         if (render_mode == RENDER_MODE_IMMEDIATELY) {
             flush();
         }
@@ -1381,7 +1395,6 @@ void PGraphics::endShape(const bool closed) {
 
     shape_fill_vertex_buffer.clear();
     shape_stroke_vertex_buffer.clear();
-    shape_has_begun = false;
 
     /*
      * OpenGL ES 3.0 is stricter:

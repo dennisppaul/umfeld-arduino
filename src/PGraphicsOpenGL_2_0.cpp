@@ -798,14 +798,14 @@ void PGraphicsOpenGL_2_0::IMPL_background(const float a, const float b, const fl
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
-void PGraphicsOpenGL_2_0::IMPL_bind_texture(const int bind_texture_id) {
-    if (bind_texture_id != texture_id_current) {
-        texture_id_current = bind_texture_id;
-        glBindTexture(GL_TEXTURE_2D, texture_id_current); // NOTE this should be the only glBindTexture ( except for initializations )
-    }
-}
+// void PGraphicsOpenGL_2_0::IMPL_bind_texture(const int bind_texture_id) {
+//     if (bind_texture_id != texture_id_current) {
+//         texture_id_current = bind_texture_id;
+//         glBindTexture(GL_TEXTURE_2D, texture_id_current); // NOTE this should be the only glBindTexture ( except for initializations )
+//     }
+// }
 
-void PGraphicsOpenGL_2_0::IMPL_set_texture(PImage* img) {
+void PGraphicsOpenGL_2_0::IMPL_set_texture(PImage* img) { // TODO needs reworking
     // if (img == nullptr) {
     //     IMPL_bind_texture(texture_id_solid_color);
     //     return;

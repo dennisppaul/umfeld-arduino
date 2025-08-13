@@ -27,6 +27,7 @@
 
 #include "UmfeldConstants.h"
 #include "UmfeldFunctionsAdditional.h"
+#include "PGraphicsOpenGL.h"
 #include "ShapeRendererOpenGL_3.h"
 
 namespace umfeld {
@@ -41,7 +42,7 @@ namespace umfeld {
                                            const bool       transparent,
                                            const uint32_t   texture_id,
                                            const glm::mat4& model_transform_matrix) {
-        if (shapeInProgress) {
+        if (shape_in_progress) {
             warning("beginShape() called while another shape is in progress");
         }
 
@@ -52,11 +53,11 @@ namespace umfeld {
         currentShape.texture_id  = texture_id;
         currentShape.model       = model_transform_matrix;
         currentShape.vertices.clear();
-        shapeInProgress = true;
+        shape_in_progress = true;
     }
 
     void ShapeRendererOpenGL_3::setVertices(std::vector<Vertex>&& vertices) {
-        if (!shapeInProgress) {
+        if (!shape_in_progress) {
             error("Error: setVertices() called without beginShape()");
             return;
         }
@@ -64,7 +65,7 @@ namespace umfeld {
     }
 
     void ShapeRendererOpenGL_3::setVertices(const std::vector<Vertex>& vertices) {
-        if (!shapeInProgress) {
+        if (!shape_in_progress) {
             error("Error: setVertices() called without beginShape()");
             return;
         }
@@ -72,7 +73,7 @@ namespace umfeld {
     }
 
     void ShapeRendererOpenGL_3::vertex(const Vertex& v) {
-        if (!shapeInProgress) {
+        if (!shape_in_progress) {
             error("Error: vertex() called without beginShape()");
             return;
         }
@@ -81,7 +82,7 @@ namespace umfeld {
 
     void ShapeRendererOpenGL_3::endShape(const bool closed) {
         (void) closed; // TODO ignored for now
-        if (!shapeInProgress) {
+        if (!shape_in_progress) {
             std::cerr << "Error: endShape() called without beginShape()" << std::endl;
             return;
         }
@@ -90,7 +91,7 @@ namespace umfeld {
         }
         currentShape.closed = closed;
         submitShape(currentShape);
-        shapeInProgress = false;
+        shape_in_progress = false;
     }
 
     void ShapeRendererOpenGL_3::flush(const glm::mat4& view_projection_matrix) {
@@ -109,7 +110,8 @@ namespace umfeld {
     }
 
     void ShapeRendererOpenGL_3::flush_immediately(const glm::mat4& view_projection_matrix) {
-        flush_sort_by_z_order(view_projection_matrix);
+        // TODO extract essential code from `flush_sort_by_z_order` and then remove
+        flush_sort_by_z_order(view_projection_matrix); // REMOVE replace this with a dedicated shape renderer
     }
 
     void ShapeRendererOpenGL_3::flush_sort_by_z_order(const glm::mat4& view_projection_matrix) {
@@ -222,8 +224,9 @@ namespace umfeld {
                     // Switch to textured shader
                     glUseProgram(texturedShaderProgram);
                     glUniformMatrix4fv(texturedUniforms.uViewProj, 1, GL_FALSE, &view_projection_matrix[0][0]);
-                    glActiveTexture(GL_TEXTURE0);
-                    glBindTexture(GL_TEXTURE_2D, currentTexture);
+                    bind_texture(currentTexture);
+                    // glActiveTexture(GL_TEXTURE0);
+                    // glBindTexture(GL_TEXTURE_2D, currentTexture);
                     glUniform1i(texturedUniforms.uTex, 0);
                 }
             }
@@ -460,8 +463,9 @@ namespace umfeld {
         glUniformMatrix4fv(uniforms.uViewProj, 1, GL_FALSE, &viewProj[0][0]);
 
         if (textureID != TEXTURE_NONE) {
-            glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, textureID);
+            bind_texture(textureID);
+            // glActiveTexture(GL_TEXTURE0);
+            // glBindTexture(GL_TEXTURE_2D, textureID);
             glUniform1i(uniforms.uTex, 0);
         }
 
@@ -508,5 +512,35 @@ namespace umfeld {
                 glDrawArrays(GL_TRIANGLES, 0, static_cast<GLsizei>(frameVertices.size()));
             }
         }
+    }
+
+    int ShapeRendererOpenGL_3::set_texture(PImage* img) {
+        // NOTE not un-/binding any textures here.
+        //      this also means that custom shapes ( e.g VertexBuffer/Mesh ) would need to manually bind textures before rendering
+        if (img == nullptr) {
+            // OGL_bind_texture(TEXTURE_NONE);
+            return TEXTURE_NONE;
+        }
+
+        if (shape_in_progress) {
+            console("`texture()` can only be called right before `beginShape(...)`. ( note, this is different from the original processing )");
+            return TEXTURE_NONE;
+        }
+
+        // TODO move this to own method and share with `texture()`
+        if (img->texture_id == TEXTURE_NOT_GENERATED) {
+            const bool success = PGraphicsOpenGL::OGL_generate_and_upload_image_as_texture(img);
+            if (!success || img->texture_id == TEXTURE_NOT_GENERATED) {
+                error_in_function("image cannot create texture.");
+                return TEXTURE_NONE;
+            }
+        }
+
+        // OGL_bind_texture(img->texture_id);
+        // // TODO so this is interesting: we could leave the texture bound and require the client
+        // //      to unbind it with `texture_unbind()` or should `endShape()` always reset to
+        // //      `texture_id_solid_color` with `texture_unbind()`.
+
+        return img->texture_id;
     }
 } // namespace umfeld

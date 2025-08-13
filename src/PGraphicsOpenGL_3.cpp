@@ -61,40 +61,31 @@ void PGraphicsOpenGL_3::IMPL_background(const float a, const float b, const floa
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
-void PGraphicsOpenGL_3::IMPL_bind_texture(const int bind_texture_id) {
-    if (bind_texture_id != texture_id_current) {
-        texture_id_current = bind_texture_id;
-        glActiveTexture(GL_TEXTURE0 + DEFAULT_ACTIVE_TEXTURE_UNIT);
-        glBindTexture(GL_TEXTURE_2D, texture_id_current); // NOTE this should be the only glBindTexture ( except for initializations )
-    }
-}
-
-void PGraphicsOpenGL_3::IMPL_set_texture(PImage* img) {
-    if (img == nullptr) {
-        IMPL_bind_texture(texture_id_solid_color);
-        return;
-    }
-    // NOTE identical >>>
-    if (shape_has_begun) {
-        console("`texture()` can only be called right before `beginShape(...)`. ( note, this is different from the original processing )");
-        return;
-    }
-
-    // TODO move this to own method and share with `texture()`
-    if (img->texture_id == TEXTURE_NOT_GENERATED) {
-        OGL_generate_and_upload_image_as_texture(img);
-        if (img->texture_id == TEXTURE_NOT_GENERATED) {
-            error_in_function("image cannot create texture.");
-            return;
-        }
-    }
-
-    IMPL_bind_texture(img->texture_id);
-    // TODO so this is interesting: we could leave the texture bound and require the client
-    //      to unbind it with `texture_unbind()` or should `endShape()` always reset to
-    //      `texture_id_solid_color` with `texture_unbind()`.
-    // NOTE identical <<<
-}
+// void PGraphicsOpenGL_3::IMPL_set_texture(PImage* img) { // REMOVE this in favour of `shape_renderer->set_texture(img)`
+// if (img == nullptr) {
+//     OGL_bind_texture(texture_id_solid_color);
+//     return;
+// }
+//
+// if (shape_has_begun) {
+//     console("`texture()` can only be called right before `beginShape(...)`. ( note, this is different from the original processing )");
+//     return;
+// }
+//
+// // TODO move this to own method and share with `texture()`
+// if (img->texture_id == TEXTURE_NOT_GENERATED) {
+//     OGL_generate_and_upload_image_as_texture(img);
+//     if (img->texture_id == TEXTURE_NOT_GENERATED) {
+//         error_in_function("image cannot create texture.");
+//         return;
+//     }
+// }
+//
+// OGL_bind_texture(img->texture_id);
+// // TODO so this is interesting: we could leave the texture bound and require the client
+// //      to unbind it with `texture_unbind()` or should `endShape()` always reset to
+// //      `texture_id_solid_color` with `texture_unbind()`.
+// }
 
 void PGraphicsOpenGL_3::add_line_quad(const Vertex& p0, const Vertex& p1, float thickness, std::vector<Vertex>& out) {
     // glm::vec3 dir = glm::normalize(p1 - p0);
@@ -350,7 +341,7 @@ void PGraphicsOpenGL_3::IMPL_emit_shape_stroke_points(std::vector<Vertex>& point
 void PGraphicsOpenGL_3::debug_text(const std::string& text, const float x, const float y) {
     const std::vector<Vertex> triangle_vertices = debug_font.generate(text, x, y, glm::vec4(color_fill));
     push_texture_id();
-    IMPL_bind_texture(debug_font.textureID);
+    OGL_bind_texture(debug_font.textureID);
     shader_fill_texture->use();
     update_shader_matrices(shader_fill_texture);
     OGL3_render_vertex_buffer(vertex_buffer, GL_TRIANGLES, triangle_vertices);
@@ -376,7 +367,7 @@ void PGraphicsOpenGL_3::beginDraw() {
     resetShader();
     PGraphicsOpenGL::beginDraw();
     texture_id_current = TEXTURE_NONE;
-    IMPL_bind_texture(texture_id_solid_color);
+    OGL_bind_texture(texture_id_solid_color);
 }
 
 void PGraphicsOpenGL_3::endDraw() {
@@ -442,10 +433,10 @@ void PGraphicsOpenGL_3::endDraw() {
         //     // Bind textures per batch
         //     glBindVertexArray(fill_VAO_xyz_rgba_uv);
         //     for (const auto& batch: renderBatches) {
-        //         glBindTexture(GL_TEXTURE_2D, batch.texture_id); // NOTE no need to use `IMPL_bind_texture()`
+        //         glBindTexture(GL_TEXTURE_2D, batch.texture_id); // NOTE no need to use `OGL_bind_texture()`
         //         glDrawArrays(GL_TRIANGLES, batch.start_index, batch.num_vertices);
         //     }
-        //     glBindTexture(GL_TEXTURE_2D, 0); // NOTE no need to use `IMPL_bind_texture()`
+        //     glBindTexture(GL_TEXTURE_2D, 0); // NOTE no need to use `OGL_bind_texture()`
         //     glBindVertexArray(0);
         //
         //     fill_vertices_xyz_rgba_uv.clear();
@@ -556,7 +547,7 @@ void PGraphicsOpenGL_3::upload_texture(PImage*         img,
     }
 
     const int tmp_bound_texture = texture_id_current;
-    IMPL_bind_texture(img->texture_id);
+    OGL_bind_texture(img->texture_id);
 
     glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
     glTexSubImage2D(GL_TEXTURE_2D,
@@ -570,7 +561,7 @@ void PGraphicsOpenGL_3::upload_texture(PImage*         img,
         glGenerateMipmap(GL_TEXTURE_2D); // NOTE this works on macOS … but might not work on all platforms
     }
 
-    IMPL_bind_texture(tmp_bound_texture);
+    OGL_bind_texture(tmp_bound_texture);
 }
 
 void PGraphicsOpenGL_3::download_texture(PImage* img) {
@@ -589,12 +580,12 @@ void PGraphicsOpenGL_3::download_texture(PImage* img) {
 
 #ifndef OPENGL_ES_3_0
     const int tmp_bound_texture = texture_id_current;
-    IMPL_bind_texture(img->texture_id);
+    OGL_bind_texture(img->texture_id);
     glGetTexImage(GL_TEXTURE_2D, 0,
                   UMFELD_DEFAULT_EXTERNAL_PIXEL_FORMAT,
                   UMFELD_DEFAULT_TEXTURE_PIXEL_TYPE,
                   img->pixels);
-    IMPL_bind_texture(tmp_bound_texture);
+    OGL_bind_texture(tmp_bound_texture);
 #else
     static bool emit_warning = true;
     if (emit_warning) {
@@ -665,7 +656,7 @@ void PGraphicsOpenGL_3::init(uint32_t* pixels,
             GLuint    msaaDepthBuffer;
             const int samples = std::min(msaa_samples, maxSamples); // Number of MSAA samples
             console(format_label("number of used MSAA samples"), samples);
-            glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, framebuffer.texture_id); // NOTE no need to use `IMPL_bind_texture()`
+            glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, framebuffer.texture_id); // NOTE no need to use `OGL_bind_texture()`
             UMFELD_PGRAPHICS_OPENGL_3_3_CORE_CHECK_ERRORS("glBindTexture");
 #ifndef OPENGL_ES_3_0
             glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE,
@@ -694,7 +685,7 @@ void PGraphicsOpenGL_3::init(uint32_t* pixels,
                                       GL_RENDERBUFFER,
                                       msaaDepthBuffer);
         } else {
-            glBindTexture(GL_TEXTURE_2D, framebuffer.texture_id); // NOTE no need to use `IMPL_bind_texture()`
+            glBindTexture(GL_TEXTURE_2D, framebuffer.texture_id); // NOTE no need to use `OGL_bind_texture()`
             glTexImage2D(GL_TEXTURE_2D,
                          0,
                          UMFELD_DEFAULT_INTERNAL_PIXEL_FORMAT,
@@ -728,15 +719,15 @@ void PGraphicsOpenGL_3::init(uint32_t* pixels,
 
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         if (framebuffer.msaa) {
-            glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, 0); // NOTE no need to use `IMPL_bind_texture()`
+            glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, 0); // NOTE no need to use `OGL_bind_texture()`
         } else {
-            glBindTexture(GL_TEXTURE_2D, 0); // NOTE no need to use `IMPL_bind_texture()`
+            glBindTexture(GL_TEXTURE_2D, 0); // NOTE no need to use `OGL_bind_texture()`
         }
         texture_id = framebuffer.texture_id; // TODO maybe get rid of one of the texture_id variables
     } else {
         GLuint _buffer_texture_id;
         glGenTextures(1, &_buffer_texture_id);
-        glBindTexture(GL_TEXTURE_2D, _buffer_texture_id); // NOTE no need to use `IMPL_bind_texture()`
+        glBindTexture(GL_TEXTURE_2D, _buffer_texture_id); // NOTE no need to use `OGL_bind_texture()`
         glTexImage2D(GL_TEXTURE_2D, 0,
                      UMFELD_DEFAULT_INTERNAL_PIXEL_FORMAT,
                      width, height,
@@ -777,7 +768,7 @@ void PGraphicsOpenGL_3::init(uint32_t* pixels,
     // >>> ShapeRendererImmediateOpenGL_3
     OGL3_create_solid_color_texture();
     texture_id_current = TEXTURE_NONE;
-    IMPL_bind_texture(texture_id_solid_color);
+    OGL_bind_texture(texture_id_solid_color);
     // <<< ShapeRendererImmediateOpenGL_3
 }
 
@@ -786,7 +777,7 @@ void PGraphicsOpenGL_3::init(uint32_t* pixels,
 void PGraphicsOpenGL_3::OGL3_create_solid_color_texture() {
     GLuint _texture_id;
     glGenTextures(1, &_texture_id);
-    glBindTexture(GL_TEXTURE_2D, _texture_id); // NOTE no need to use `IMPL_bind_texture()`
+    glBindTexture(GL_TEXTURE_2D, _texture_id); // NOTE no need to use `OGL_bind_texture()`
 
     constexpr unsigned char whitePixel[4] = {255, 255, 255, 255}; // RGBA: White
     glTexImage2D(GL_TEXTURE_2D,
@@ -801,7 +792,7 @@ void PGraphicsOpenGL_3::OGL3_create_solid_color_texture() {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-    glBindTexture(GL_TEXTURE_2D, 0); // NOTE no need to use `IMPL_bind_texture()`
+    glBindTexture(GL_TEXTURE_2D, 0); // NOTE no need to use `OGL_bind_texture()`
 
     texture_id_solid_color = _texture_id;
 }
@@ -1295,56 +1286,6 @@ void PGraphicsOpenGL_3::updateShaderLighting() const {
     UMFELD_PGRAPHICS_OPENGL_3_3_CORE_CHECK_ERRORS("updateShaderLighting");
 }
 
-void PGraphicsOpenGL_3::texture_filter(const TextureFilter filter) {
-    switch (filter) {
-        case NEAREST:
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-            break;
-        case LINEAR:
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-            break;
-        case MIPMAP:
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-            break;
-        default:
-            error_in_function("unknown texture filter type");
-            break;
-    }
-}
-
-void PGraphicsOpenGL_3::texture_wrap(const TextureWrap wrap) {
-    switch (wrap) {
-        case REPEAT:
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-            break;
-        case CLAMP_TO_EDGE:
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-            break;
-        case MIRRORED_REPEAT:
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
-            break;
-        case CLAMP_TO_BORDER:
-#ifndef OPENGL_ES_3_0
-            // NOTE this is not supported in OpenGL ES 3.0
-            {
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-                const float borderColor[] = {color_stroke.r, color_stroke.g, color_stroke.b, color_stroke.a};
-                glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
-            }
-#endif
-            break;
-        default:
-            error_in_function("unknown texture wrap type");
-            break;
-    }
-}
 
 void PGraphicsOpenGL_3::upload_colorbuffer(uint32_t* pixels) {
     if (pixels == nullptr) {
@@ -1356,7 +1297,7 @@ void PGraphicsOpenGL_3::upload_colorbuffer(uint32_t* pixels) {
         if (!framebuffer.msaa) {
             flip_pixel_buffer(pixels);
             push_texture_id();
-            IMPL_bind_texture(framebuffer.texture_id);
+            OGL_bind_texture(framebuffer.texture_id);
             glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
             glTexSubImage2D(GL_TEXTURE_2D,
                             0,
@@ -1397,7 +1338,7 @@ void PGraphicsOpenGL_3::upload_colorbuffer(uint32_t* pixels) {
             update_shader_matrices(shader_fill_texture);
 
             push_texture_id();
-            IMPL_bind_texture(tempTexture);
+            OGL_bind_texture(tempTexture);
 
             // draw fullscreen quad
             std::vector<Vertex> fullscreen_quad;
@@ -1433,7 +1374,7 @@ void PGraphicsOpenGL_3::upload_colorbuffer(uint32_t* pixels) {
         }
     } else {
         push_texture_id();
-        IMPL_bind_texture(texture_id);
+        OGL_bind_texture(texture_id);
         glTexSubImage2D(GL_TEXTURE_2D,
                         0,
                         0, 0,
@@ -1492,7 +1433,7 @@ void PGraphicsOpenGL_3::download_colorbuffer(uint32_t* pixels) {
             glGenTextures(1, &tempTex);
 
             push_texture_id();
-            IMPL_bind_texture(tempTex);
+            OGL_bind_texture(tempTex);
 
             glTexImage2D(GL_TEXTURE_2D, 0,
                          UMFELD_DEFAULT_INTERNAL_PIXEL_FORMAT,

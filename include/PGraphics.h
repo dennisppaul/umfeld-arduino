@@ -70,8 +70,6 @@ namespace umfeld {
         /* --- implementation specific methods --- */
 
         virtual void IMPL_background(float a, float b, float c, float d) = 0; // NOTE this needs to clear the color buffer and depth buffer
-        virtual void IMPL_bind_texture(int bind_texture_id)              = 0;
-        virtual void IMPL_set_texture(PImage* img)                       = 0;
 
         virtual void render_framebuffer_to_screen(bool use_blit) { (void) use_blit; } // TODO this should probably go to PGraphicsOpenGL
         virtual bool read_framebuffer(std::vector<unsigned char>& pixels) { return false; }
@@ -156,8 +154,8 @@ namespace umfeld {
         virtual void vertex(float x, float y, float z = 0.0f);
         virtual void vertex(float x, float y, float z, float u, float v);
         virtual void vertex(const Vertex& v);
-        void         submit_stroke_shape(bool closed);
-        void         submit_fill_shape(bool closed);
+        void         submit_stroke_shape(bool closed, bool force_transparent = false);
+        void         submit_fill_shape(bool closed, bool force_transparent = false);
 
         // ## Structure
 
@@ -229,7 +227,7 @@ namespace umfeld {
 
         /* --- additional --- */
 
-        virtual void        flush() {}
+        virtual void        flush();
         virtual void        mesh(VertexBuffer* mesh_shape) {}
         virtual void        lock_init_properties(const bool lock_properties) { init_properties_locked = lock_properties; }
         virtual void        hint(uint16_t property);
@@ -252,7 +250,7 @@ namespace umfeld {
         virtual std::string name() { return "PGraphics"; }
         float               get_stroke_weight() const { return stroke_weight; }
         virtual void        texture_filter(TextureFilter filter) {}
-        virtual void        texture_wrap(TextureWrap wrap) {}
+        virtual void        texture_wrap(TextureWrap wrap, glm::vec4 color_fill = glm::vec4(0.0f)) {}
         virtual void        upload_texture(PImage* img, const uint32_t* pixel_data, int width, int height, int offset_x, int offset_y) {}
         virtual void        download_texture(PImage* img) {}
         virtual void        upload_colorbuffer(uint32_t* pixels) {}
@@ -305,7 +303,7 @@ namespace umfeld {
         float                            curve_tightness{0.0f};
         uint8_t                          pixel_density{1};
         int                              texture_id_current{TEXTURE_NONE};
-        bool                             shape_has_begun{false};
+        bool                             shape_force_transparent{false};
         int                              polygon_triangulation_strategy{POLYGON_TRIANGULATION_BETTER};
         int                              stroke_render_mode{STROKE_RENDER_MODE_TRIANGULATE_2D};
         int                              point_render_mode{POINT_RENDER_MODE_TRIANGULATE};
@@ -325,12 +323,12 @@ namespace umfeld {
         static constexpr uint32_t        VBO_BUFFER_CHUNK_SIZE{1024 * 1024}; // 1MB
         std::vector<Vertex>              shape_stroke_vertex_buffer{VBO_BUFFER_CHUNK_SIZE};
         std::vector<Vertex>              shape_fill_vertex_buffer{VBO_BUFFER_CHUNK_SIZE};
-        int                              last_bound_texture_id_cache{TEXTURE_NONE};
+        int                              stored_texture_id{TEXTURE_NONE};
         bool                             model_matrix_dirty{false};
         glm::vec4                        current_normal{Vertex::DEFAULT_NORMAL};
         glm::mat4                        temp_view_matrix{};
         glm::mat4                        temp_projection_matrix{};
-        RenderMode                       render_mode{RENDER_MODE_SORTED_BY_Z_ORDER};
+        RenderMode                       render_mode{RENDER_MODE_SORTED_BY_SUBMISSION_ORDER};
         bool                             in_camera_block{false};
         void (*triangle_emitter_callback)(std::vector<Vertex>&){nullptr};
         void (*stroke_emitter_callback)(std::vector<Vertex>&, bool){nullptr};
@@ -355,8 +353,8 @@ namespace umfeld {
 
         void push_texture_id() {
             if (!texture_id_pushed) {
-                texture_id_pushed           = true;
-                last_bound_texture_id_cache = texture_id_current;
+                texture_id_pushed = true;
+                stored_texture_id = texture_id_current;
             } else {
                 warning("unbalanced texture id *push*/pop");
             }
@@ -364,9 +362,9 @@ namespace umfeld {
 
         void pop_texture_id() {
             if (texture_id_pushed) {
-                texture_id_pushed = false;
-                IMPL_bind_texture(last_bound_texture_id_cache);
-                last_bound_texture_id_cache = TEXTURE_NONE;
+                texture_id_pushed  = false;
+                texture_id_current = stored_texture_id;
+                stored_texture_id  = TEXTURE_NONE;
             } else {
                 warning("unbalanced texture id push/*pop*");
             }

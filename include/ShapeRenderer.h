@@ -21,6 +21,7 @@
 
 #include <vector>
 #include <glm/glm.hpp>
+
 #include "UmfeldConstants.h"
 #include "Vertex.h"
 #include "Shape.h"
@@ -41,16 +42,19 @@ namespace umfeld {
         virtual void setVertices(const std::vector<Vertex>& vertices)     = 0;
         virtual void endShape(bool closed)                                = 0;
         virtual void submitShape(Shape& s)                                = 0;
-        virtual void flush(const glm::mat4& view_projection_matrix)       = 0;
+        virtual int  set_texture(PImage* img)                             = 0;
+
         // NOTE `flush()` needs VP matrix and must be called to render batches at
         //      1. at end of frame
         //      2. before view or projection matrix are changed
         //      3. before downloading pixels from GPU
         //      4. before calls to `background()` ( or at least reject shapes? )
+        virtual void flush(const glm::mat4& view_projection_matrix) = 0;
 
         bool enable_lighting{false};
 
     protected:
         PGraphics* graphics{nullptr};
+        bool       shape_in_progress = false;
     };
 } // namespace umfeld

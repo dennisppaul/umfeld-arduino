@@ -34,8 +34,6 @@ namespace umfeld {
         void IMPL_emit_shape_stroke_points(std::vector<Vertex>& point_vertices, float point_size) override;
 
         void IMPL_background(float a, float b, float c, float d) override;
-        void IMPL_bind_texture(int bind_texture_id) override;
-        void IMPL_set_texture(PImage* img) override;
 
         void render_framebuffer_to_screen(bool use_blit = false) override;
         bool read_framebuffer(std::vector<unsigned char>& pixels) override;
@@ -65,8 +63,6 @@ namespace umfeld {
 
         void hint(uint16_t property) override;
         void debug_text(const std::string& text, float x, float y) override; // TODO move to PGraphics ( use glBeginShape() )
-        void texture_filter(TextureFilter filter) override;
-        void texture_wrap(TextureWrap wrap) override;
 
         /* --- standard drawing functions --- */
 
@@ -118,7 +114,6 @@ namespace umfeld {
         GLint                    previously_bound_draw_FBO = 0;
         GLint                    previous_viewport[4]{};
         GLint                    previous_shader{0};
-        int                      DEFAULT_ACTIVE_TEXTURE_UNIT = 0; // NOTE OpenGL ES 3.0 does not support multiple texture units
 
         /* --- lights --- */
 

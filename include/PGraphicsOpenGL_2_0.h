@@ -33,8 +33,6 @@ namespace umfeld {
         void IMPL_emit_shape_stroke_points(std::vector<Vertex>& point_vertices, float point_size) override;
 
         void IMPL_background(float a, float b, float c, float d) override;
-        void IMPL_bind_texture(int bind_texture_id) override;
-        void IMPL_set_texture(PImage* img) override;
 
         void render_framebuffer_to_screen(bool use_blit = false) override;
         bool read_framebuffer(std::vector<unsigned char>& pixels) override;

@@ -126,9 +126,11 @@ static const float gradients1D[16] = {
 static float grad(int32_t hash, float x) {
     const int32_t h    = hash & 0x0F;    // Convert low 4 bits of hash code
     float         grad = 1.0f + (h & 7); // Gradient value 1.0, 2.0, ..., 8.0
-    if ((h & 8) != 0) grad = -grad;      // Set a random sign for the gradient
-                                         //  float grad = gradients1D[h];    // NOTE : Test of Gradient look-up table instead of the above
-    return (grad * x);                   // Multiply the gradient with the distance
+    if ((h & 8) != 0) {
+        grad = -grad; // Set a random sign for the gradient
+                      //  float grad = gradients1D[h];    // NOTE : Test of Gradient look-up table instead of the above
+    }
+    return (grad * x); // Multiply the gradient with the distance
 }
 
 /**

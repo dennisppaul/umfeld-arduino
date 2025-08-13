@@ -72,7 +72,9 @@ void PShape::endShape() {
 }
 
 void PShape::vertex(float x, float y, float z, float r, float g, float b) {
-    if (!isRecording) return;
+    if (!isRecording) {
+        return;
+    }
     vertices.push_back(x);
     vertices.push_back(y);
     vertices.push_back(z);

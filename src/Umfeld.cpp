@@ -297,7 +297,7 @@ SDL_AppResult SDL_AppInit(void** appstate, const int argc, char* argv[]) {
                 umfeld::handle_subsystem_audio_cleanup = true;
             } else {
                 umfeld::console("no audio subsystem provided, using default ( SDL ).");
-                umfeld::subsystem_audio                = umfeld_create_subsystem_audio_sdl();
+                umfeld::subsystem_audio = umfeld_create_subsystem_audio_sdl();
                 // umfeld::console("no audio subsystem provided, using default ( PortAudio ).");
                 // umfeld::subsystem_audio                = umfeld_create_subsystem_audio_portaudio();
                 umfeld::handle_subsystem_audio_cleanup = true;

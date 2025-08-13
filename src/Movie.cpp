@@ -55,7 +55,7 @@ Movie::Movie(const std::string& filename, const int channels) {
 int Movie::init_from_file(const std::string& filename, int _channels) {
     // Open the input file
     const std::string absolute_path = resolveDataPath(filename);
-    formatContext = avformat_alloc_context();
+    formatContext                   = avformat_alloc_context();
     if (avformat_open_input(&formatContext, absolute_path.c_str(), nullptr, nullptr) != 0) {
         error("+++ Movie: ERROR: Could not open file: ", filename);
         return -1;
@@ -311,9 +311,9 @@ bool Movie::available() {
                 }
 
 #if LIBAVUTIL_VERSION_MAJOR >= 57
-                int channels    = audioCodecContext->ch_layout.nb_channels;
+                int channels = audioCodecContext->ch_layout.nb_channels;
 #else
-                int channels    = audioCodecContext->channels;
+                int channels = audioCodecContext->channels;
 #endif
                 int out_samples = av_rescale_rnd(
                     swr_get_delay(swrCtx, frame->sample_rate) + frame->nb_samples,

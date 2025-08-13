@@ -90,16 +90,22 @@ namespace umfeld {
     static void draw_pre() {}
 
     static bool get_mouse_event(int ch, int& x, int& y) {
-        if (ch != KEY_MOUSE) return false;
+        if (ch != KEY_MOUSE) {
+            return false;
+        }
 #ifdef SYSTEM_WINDOWS
         // TODO seems to be a bit broken
-        if (getmouse() == 0) return false;
+        if (getmouse() == 0) {
+            return false;
+        }
         x = mouse_event.x;
         y = mouse_event.y;
         return true;
 #else
         MEVENT e;
-        if (getmouse(&e) != OK) return false;
+        if (getmouse(&e) != OK) {
+            return false;
+        }
         x = e.x;
         y = e.y;
         return true;
@@ -116,10 +122,10 @@ namespace umfeld {
         // mvaddstr(3, 0, to_string(rows, ", ", cols).c_str());
 
         const int ch = getch();
-        int mx, my;
+        int       mx, my;
         if (get_mouse_event(ch, mx, my)) {
-            mouseX = (float)mx;
-            mouseY = (float)my;
+            mouseX = (float) mx;
+            mouseY = (float) my;
         }
 
         if (use_esc_key_to_quit) {

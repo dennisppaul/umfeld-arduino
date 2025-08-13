@@ -597,7 +597,7 @@ namespace umfeld {
     }
 
     bool Capture::read(PGraphics* graphics) {
-        (void)graphics;
+        (void) graphics;
         return false;
     }
 
@@ -606,7 +606,7 @@ namespace umfeld {
     void Capture::stop() {}
 
     void Capture::reload(PGraphics* graphics) {
-        (void)graphics;
+        (void) graphics;
     }
 
     Capture::~Capture() = default;

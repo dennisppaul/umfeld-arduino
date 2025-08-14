@@ -126,7 +126,7 @@ namespace umfeld {
         return img->texture_id;
     }
 
-    void ShapeRendererOpenGL_3::flush(const glm::mat4& view_projection_matrix) {
+    void ShapeRendererOpenGL_3::flush(const glm::mat4& view_matrix, const glm::mat4& projection_matrix) {
         if (shapes.empty() || graphics == nullptr) {
             shape_in_progress = false;
             shapes.clear();
@@ -145,7 +145,8 @@ namespace umfeld {
         flush_processed_shapes(processed_point_shapes,
                                processed_line_shapes,
                                processed_triangle_shapes,
-                               view_projection_matrix);
+                               view_matrix,
+                               projection_matrix);
 
         // reserve capacity for next frame based on current usage
         const size_t current_size = shapes.size();
@@ -324,12 +325,35 @@ namespace umfeld {
         setupUniformBlocks(shader_programm_color);
 
         // cache uniform locations
-        untexturedUniforms.uViewProj = glGetUniformLocation(shader_programm_color, "uViewProj");
-        texturedUniforms.uViewProj   = glGetUniformLocation(shader_programm_texture, "uViewProj");
-        texturedUniforms.uTexture    = glGetUniformLocation(shader_programm_texture, "uTexture");
+        shader_uniforms_color.uViewProj = glGetUniformLocation(shader_programm_color, "uViewProj");
+        evaluate_shader_uniforms("color", shader_uniforms_color);
 
-        evaluate_shader_uniforms("color", untexturedUniforms);
-        evaluate_shader_uniforms("texture", texturedUniforms);
+        shader_uniforms_texture.uViewProj = glGetUniformLocation(shader_programm_texture, "uViewProj");
+        shader_uniforms_texture.uTexture  = glGetUniformLocation(shader_programm_texture, "uTexture");
+        evaluate_shader_uniforms("texture", shader_uniforms_texture);
+
+        // TODO add lighting shader uniforms
+        //      PGraphicsOpenGL_3::updateShaderLighting()
+        // uniform mat4 uViewProj;
+        // uniform mat4 uView;
+        // uniform mat3 normalMatrix;
+        //
+        // uniform vec4 ambient;
+        // uniform vec4 specular;
+        // uniform vec4 emissive;
+        // uniform float shininess;
+        //
+        // uniform int lightCount;
+        // uniform vec4 lightPosition[8];
+        // uniform vec3 lightNormal[8];
+        // uniform vec3 lightAmbient[8];
+        // uniform vec3 lightDiffuse[8];
+        // uniform vec3 lightSpecular[8];
+        // uniform vec3 lightFalloff[8];
+        // uniform vec2 lightSpot[8];
+        //
+        // shader_uniforms_color_lights;
+        // shader_uniforms_texture_lights;
     }
 
     void ShapeRendererOpenGL_3::initBuffers() {
@@ -461,10 +485,34 @@ namespace umfeld {
         }
 
         const GLuint          shader   = enable_lighting ? ((texture_id == TEXTURE_NONE) ? shader_programm_color_lights : shader_programm_texture_lights) : ((texture_id == TEXTURE_NONE) ? shader_programm_color : shader_programm_texture);
-        const ShaderUniforms& uniforms = (texture_id == TEXTURE_NONE) ? untexturedUniforms : texturedUniforms;
+        const ShaderUniforms& uniforms = enable_lighting ? ((texture_id == TEXTURE_NONE) ? shader_uniforms_color_lights : shader_uniforms_texture_lights) : ((texture_id == TEXTURE_NONE) ? shader_uniforms_color : shader_uniforms_texture);
 
         glUseProgram(shader);
         glUniformMatrix4fv(uniforms.uViewProj, 1, GL_FALSE, &view_projection_matrix[0][0]);
+
+        if (enable_lighting) {
+            warning_in_function_once("TODO set lighting specific uniforms here");
+            warning_in_function_once(
+                R"(
+```
+uniform mat4 uView;
+uniform mat3 normalMatrix;
+
+uniform vec4 ambient;
+uniform vec4 specular;
+uniform vec4 emissive;
+uniform float shininess;
+
+uniform int lightCount;
+uniform vec4 lightPosition[8];
+uniform vec3 lightNormal[8];
+uniform vec3 lightAmbient[8];
+uniform vec3 lightDiffuse[8];
+uniform vec3 lightSpecular[8];
+uniform vec3 lightFalloff[8];
+uniform vec2 lightSpot[8];
+```)");
+        }
 
         if (texture_id != TEXTURE_NONE) {
             bind_texture(texture_id);
@@ -505,7 +553,8 @@ namespace umfeld {
                 glBindBuffer(GL_ARRAY_BUFFER, vbo);
                 glBufferData(GL_ARRAY_BUFFER,
                              static_cast<GLsizeiptr>(frame_vertices.size() * sizeof(Vertex)),
-                             frame_vertices.data(), GL_DYNAMIC_DRAW);
+                             frame_vertices.data(),
+                             GL_DYNAMIC_DRAW);
                 // glDrawArrays(GL_LINE_STRIP, 0, static_cast<GLsizei>(frame_vertices.size()));
                 glDrawArrays(GL_TRIANGLES, 0, static_cast<GLsizei>(frame_vertices.size()));
             }
@@ -544,7 +593,11 @@ namespace umfeld {
         }
     }
 
-    void ShapeRendererOpenGL_3::flush_sort_by_z_order(std::vector<Shape>& shapes, const glm::mat4& view_projection_matrix) {
+    void ShapeRendererOpenGL_3::flush_sort_by_z_order(std::vector<Shape>& shapes,
+                                                      const glm::mat4&    view_matrix,
+                                                      const glm::mat4&    projection_matrix) {
+        const glm::mat4 view_projection_matrix = projection_matrix * view_matrix;
+
         // use unordered_map for better performance with many textures
         std::unordered_map<GLuint, TextureBatch> texture_batches;
         static constexpr int                     DEFAULT_NUM_TEXTURES = 16;
@@ -603,7 +656,11 @@ namespace umfeld {
         glBindVertexArray(0);
     }
 
-    void ShapeRendererOpenGL_3::flush_submission_order(std::vector<Shape>& shapes, const glm::mat4& view_projection_matrix) {
+    void ShapeRendererOpenGL_3::flush_submission_order(std::vector<Shape>& shapes,
+                                                       const glm::mat4&    view_matrix,
+                                                       const glm::mat4&    projection_matrix) {
+        const glm::mat4 view_projection_matrix = projection_matrix * view_matrix;
+
         glBindVertexArray(vao);
 
         // enable depth test for all shapes
@@ -641,13 +698,13 @@ namespace umfeld {
                 if (currentTexture == TEXTURE_NONE) {
                     // switch to untextured shader
                     glUseProgram(shader_programm_color);
-                    glUniformMatrix4fv(untexturedUniforms.uViewProj, 1, GL_FALSE, &view_projection_matrix[0][0]);
+                    glUniformMatrix4fv(shader_uniforms_color.uViewProj, 1, GL_FALSE, &view_projection_matrix[0][0]);
                 } else {
                     // switch to textured shader
                     glUseProgram(shader_programm_texture);
-                    glUniformMatrix4fv(texturedUniforms.uViewProj, 1, GL_FALSE, &view_projection_matrix[0][0]);
+                    glUniformMatrix4fv(shader_uniforms_texture.uViewProj, 1, GL_FALSE, &view_projection_matrix[0][0]);
                     bind_texture(currentTexture);
-                    glUniform1i(texturedUniforms.uTexture, 0);
+                    glUniform1i(shader_uniforms_texture.uTexture, 0);
                 }
             }
 
@@ -665,27 +722,30 @@ namespace umfeld {
         glBindVertexArray(0);
     }
 
-    void ShapeRendererOpenGL_3::flush_immediately(std::vector<Shape>& shapes, const glm::mat4& view_projection_matrix) {
+    void ShapeRendererOpenGL_3::flush_immediately(std::vector<Shape>& shapes,
+                                                  const glm::mat4&    view_matrix,
+                                                  const glm::mat4&    projection_matrix) {
         // TODO extract essential code from `flush_sort_by_z_order` and then remove
-        flush_sort_by_z_order(shapes, view_projection_matrix); // TODO replace this with a dedicated shape renderer
+        flush_sort_by_z_order(shapes, view_matrix, projection_matrix); // TODO replace this with a dedicated shape renderer
     }
 
     void ShapeRendererOpenGL_3::flush_processed_shapes(std::vector<Shape>& processed_point_shapes,
                                                        std::vector<Shape>& processed_line_shapes,
                                                        std::vector<Shape>& processed_triangle_shapes,
-                                                       const glm::mat4&    view_projection_matrix) {
+                                                       const glm::mat4&    view_matrix,
+                                                       const glm::mat4&    projection_matrix) {
         if (!processed_point_shapes.empty() || !processed_line_shapes.empty()) {
             warning_in_function_once("TODO alternative render paths for points and lines are currently not implemented");
         }
         if (graphics->get_render_mode() == RENDER_MODE_SORTED_BY_Z_ORDER) {
-            console_once("render_mode: rendering in z-order ( + batches + depth sorted )");
-            flush_sort_by_z_order(processed_triangle_shapes, view_projection_matrix);
+            console_once(format_label("render_mode"), "RENDER_MODE_SORTED_BY_Z_ORDER ( rendering shapes in z-order and in batches )");
+            flush_sort_by_z_order(processed_triangle_shapes, view_matrix, projection_matrix);
         } else if (graphics->get_render_mode() == RENDER_MODE_SORTED_BY_SUBMISSION_ORDER) {
-            console_once("render_mode: rendering in submission order");
-            flush_submission_order(processed_triangle_shapes, view_projection_matrix);
+            console_once(format_label("render_mode"), "RENDER_MODE_SORTED_BY_SUBMISSION_ORDER ( rendering shapes in submission order )");
+            flush_submission_order(processed_triangle_shapes, view_matrix, projection_matrix);
         } else if (graphics->get_render_mode() == RENDER_MODE_IMMEDIATELY) {
-            console_once("rendering shapes immediately");
-            flush_immediately(processed_triangle_shapes, view_projection_matrix);
+            console_once(format_label("render_mode"), "RENDER_MODE_IMMEDIATELY ( rendering shapes immediately )");
+            flush_immediately(processed_triangle_shapes, view_matrix, projection_matrix);
         }
     }
 

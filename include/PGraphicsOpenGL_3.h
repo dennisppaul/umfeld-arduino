@@ -143,6 +143,7 @@ namespace umfeld {
         float     currentLightFalloffQuadratic = 0.0f;
 
         void enableLighting();
+        void disableLighting();
         void setLightPosition(int num, float x, float y, float z, bool directional);
         void setLightNormal(int num, float dx, float dy, float dz);
         void setLightAmbient(int num, float r, float g, float b);

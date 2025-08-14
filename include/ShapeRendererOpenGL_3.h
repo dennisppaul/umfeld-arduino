@@ -50,7 +50,7 @@ namespace umfeld {
         void endShape(bool closed) override;
         void submitShape(Shape& s) override;
         int  set_texture(PImage* img) override;
-        void flush(const glm::mat4& view_projection_matrix) override;
+        void flush(const glm::mat4& view_matrix, const glm::mat4& projection_matrix) override;
         void handle_point_shape(std::vector<Shape>& processed_triangle_shapes, std::vector<Shape>& processed_point_shapes, Shape& point_shape) const;
         void handle_stroke_shape(std::vector<Shape>& processed_triangle_shapes, std::vector<Shape>& processed_line_shapes, Shape& stroke_shape) const;
 
@@ -81,17 +81,19 @@ namespace umfeld {
         };
 
         // TODO implement for lighting, point and line shader
-        ShaderUniforms                texturedUniforms;
-        ShaderUniforms                untexturedUniforms;
-        GLuint                        vbo                             = 0;
-        GLuint                        ubo                             = 0;
-        GLuint                        vao                             = 0;
-        GLuint                        shader_programm_texture           = 0;
-        GLuint                        shader_programm_color         = 0;
-        GLuint                        shader_programm_texture_lights   = 0; // TODO implement
-        GLuint                        shader_programm_color_lights = 0; // TODO implement
-        GLuint                        pointShaderProgram              = 0; // TODO implement
-        GLuint                        lineShaderProgram               = 0; // TODO implement
+        ShaderUniforms                shader_uniforms_color;
+        ShaderUniforms                shader_uniforms_texture;
+        ShaderUniforms                shader_uniforms_color_lights;
+        ShaderUniforms                shader_uniforms_texture_lights;
+        GLuint                        vbo                            = 0;
+        GLuint                        ubo                            = 0;
+        GLuint                        vao                            = 0;
+        GLuint                        shader_programm_texture        = 0;
+        GLuint                        shader_programm_color          = 0;
+        GLuint                        shader_programm_texture_lights = 0; // TODO implement
+        GLuint                        shader_programm_color_lights   = 0; // TODO implement
+        GLuint                        pointShaderProgram             = 0; // TODO implement
+        GLuint                        lineShaderProgram              = 0; // TODO implement
         std::vector<Shape>            shapes;
         Shape                         currentShape;
         SHAPE_CENTER_COMPUTE_STRATEGY shape_center_compute_strategy = ZERO_CENTER;
@@ -108,10 +110,16 @@ namespace umfeld {
         static void   convert_shapes_to_triangles(const Shape& s, std::vector<Vertex>& out, uint16_t transformID);
         void          render_batch(const std::vector<Shape*>& shapes_to_render, const glm::mat4& view_projection_matrix, GLuint texture_id);
         void          computeShapeCenter(Shape& s) const;
-        void          flush_sort_by_z_order(std::vector<Shape>& shapes, const glm::mat4& view_projection_matrix);
-        void          flush_submission_order(std::vector<Shape>& shapes, const glm::mat4& view_projection_matrix);
-        void          flush_immediately(std::vector<Shape>& shapes, const glm::mat4& view_projection_matrix);
-        void          flush_processed_shapes(std::vector<Shape>& processed_point_shapes, std::vector<Shape>& processed_line_shapes, std::vector<Shape>& processed_triangle_shapes, const glm::mat4& view_projection_matrix);
+        void          flush_sort_by_z_order(std::vector<Shape>& shapes,
+                                                       const glm::mat4&    view_matrix,
+                                                       const glm::mat4&    projection_matrix);
+        void          flush_submission_order(std::vector<Shape>& shapes,
+                                                       const glm::mat4&    view_matrix,
+                                                       const glm::mat4&    projection_matrix);
+        void          flush_immediately(std::vector<Shape>& shapes,
+                                                       const glm::mat4&    view_matrix,
+                                                       const glm::mat4&    projection_matrix);
+        void          flush_processed_shapes(std::vector<Shape>& processed_point_shapes, std::vector<Shape>& processed_line_shapes, std::vector<Shape>& processed_triangle_shapes, const glm::mat4& view_matrix, const glm::mat4& projection_matrix);
         void          process_shapes(std::vector<Shape>& processed_point_shapes, std::vector<Shape>& processed_line_shapes, std::vector<Shape>& processed_triangle_shapes);
 
         static void bind_texture(const int texture_id) {

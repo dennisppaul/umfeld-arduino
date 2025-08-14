@@ -1020,6 +1020,7 @@ void PGraphicsOpenGL_3::noLights() {
     currentLightFalloffLinear    = 0.0f;
     currentLightFalloffQuadratic = 0.0f;
     resetShader();
+    disableLighting();
 }
 
 void PGraphicsOpenGL_3::lights() {
@@ -1179,6 +1180,16 @@ void PGraphicsOpenGL_3::shininess(const float s) {
 
 void PGraphicsOpenGL_3::enableLighting() {
     shader(shader_fill_texture_lights);
+    if (shape_renderer != nullptr) {
+        shape_renderer->enable_lighting = true;
+    }
+}
+
+void PGraphicsOpenGL_3::disableLighting() {
+    shader(shader_fill_texture_lights);
+    if (shape_renderer != nullptr) {
+        shape_renderer->enable_lighting = false;
+    }
 }
 
 void PGraphicsOpenGL_3::setLightPosition(const int num, const float x, const float y, const float z, const bool directional) {

@@ -64,8 +64,7 @@ void PGraphics::endDraw() {
 
 void PGraphics::flush() {
     if (shape_renderer) {
-        const glm::mat4 view_projection_matrix = projection_matrix * view_matrix;
-        shape_renderer->flush(view_projection_matrix);
+        shape_renderer->flush(view_matrix, projection_matrix);
     }
 }
 

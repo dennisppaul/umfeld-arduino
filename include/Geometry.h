@@ -816,11 +816,9 @@ namespace umfeld {
         }
     }
 
-    inline std::vector<Vertex> generate_tube_mesh(
-        const std::vector<Vertex>& points,
-        float                      radius = 0.05f,
-        bool                       closed = false,
-        const glm::aligned_vec4&   color  = glm::aligned_vec4(1.0f)) {
+    inline std::vector<Vertex> generate_tube_mesh(const std::vector<Vertex>& points,
+                                                  float                      radius = 0.05f,
+                                                  bool                       closed = false) {
 
         std::vector<Vertex> tubeVertices;
         size_t              n = points.size();
@@ -881,7 +879,7 @@ namespace umfeld {
                 glm::vec3 pos   = pi + dir * radius;
 
                 ring[j] = Vertex{pos,
-                                 color,
+                                 points[i].color,
                                  glm::vec3(j / static_cast<float>(sides), i / static_cast<float>(n), 0.0f),
                                  glm::aligned_vec4(glm::normalize(dir), 0.0f)};
             }

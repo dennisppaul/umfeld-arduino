@@ -27,13 +27,13 @@
 namespace umfeld {
     class ShapeRendererOpenGL_3 final : public ShapeRenderer {
     public:
-        static constexpr uint16_t SHADER_PROGRAM_UNTEXTURED       = 0;
-        static constexpr uint16_t SHADER_PROGRAM_TEXTURED         = 1;
-        static constexpr uint16_t SHADER_PROGRAM_UNTEXTURED_LIGHT = 2; // TODO implement
-        static constexpr uint16_t SHADER_PROGRAM_TEXTURED_LIGHT   = 3; // TODO implement
-        static constexpr uint16_t SHADER_PROGRAM_POINT            = 4; // TODO implement
-        static constexpr uint16_t SHADER_PROGRAM_LINE             = 5; // TODO implement
-        static constexpr uint16_t NUM_SHADER_PROGRAMS             = 6;
+        static constexpr uint16_t SHADER_PROGRAM_COLOR          = 0;
+        static constexpr uint16_t SHADER_PROGRAM_TEXTURE        = 1;
+        static constexpr uint16_t SHADER_PROGRAM_COLOR_LIGHTS   = 2;
+        static constexpr uint16_t SHADER_PROGRAM_TEXTURE_LIGHTS = 3;
+        static constexpr uint16_t SHADER_PROGRAM_POINT          = 4; // TODO implement
+        static constexpr uint16_t SHADER_PROGRAM_LINE           = 5; // TODO implement
+        static constexpr uint16_t NUM_SHADER_PROGRAMS           = 6;
 
         enum SHAPE_CENTER_COMPUTE_STRATEGY {
             ZERO_CENTER,
@@ -51,6 +51,8 @@ namespace umfeld {
         void submitShape(Shape& s) override;
         int  set_texture(PImage* img) override;
         void flush(const glm::mat4& view_projection_matrix) override;
+        void handle_point_shape(std::vector<Shape>& processed_triangle_shapes, std::vector<Shape>& processed_point_shapes, Shape& point_shape) const;
+        void handle_stroke_shape(std::vector<Shape>& processed_triangle_shapes, std::vector<Shape>& processed_line_shapes, Shape& stroke_shape) const;
 
     private:
         static constexpr uint16_t MAX_TRANSFORMS = 256;
@@ -67,10 +69,15 @@ namespace umfeld {
             std::vector<Shape*> transparent_shapes;
         };
 
-        // Cached uniform locations (avoid glGetUniformLocation every frame)
+        // cached uniform locations
         struct ShaderUniforms {
-            GLint uViewProj = -1;
-            GLint uTex      = -1;
+            enum UNIFORM_LOCATION_STATE {
+                UNINITIALIZED = -2,
+                NOT_FOUND     = -1, // NOTE result delivered by OpenGL s `glGetUniformLocation()`
+                INITIALIZED   = 0,
+            };
+            GLint uViewProj = UNINITIALIZED;
+            GLint uTexture  = UNINITIALIZED;
         };
 
         // TODO implement for lighting, point and line shader
@@ -79,10 +86,10 @@ namespace umfeld {
         GLuint                        vbo                             = 0;
         GLuint                        ubo                             = 0;
         GLuint                        vao                             = 0;
-        GLuint                        texturedShaderProgram           = 0;
-        GLuint                        untexturedShaderProgram         = 0;
-        GLuint                        texturedLightingShaderProgram   = 0; // TODO implement
-        GLuint                        untexturedLightingShaderProgram = 0; // TODO implement
+        GLuint                        shader_programm_texture           = 0;
+        GLuint                        shader_programm_color         = 0;
+        GLuint                        shader_programm_texture_lights   = 0; // TODO implement
+        GLuint                        shader_programm_color_lights = 0; // TODO implement
         GLuint                        pointShaderProgram              = 0; // TODO implement
         GLuint                        lineShaderProgram               = 0; // TODO implement
         std::vector<Shape>            shapes;
@@ -94,6 +101,7 @@ namespace umfeld {
         //        static GLuint compileShader(const char* src, GLenum type);
         //        static GLuint createShaderProgram(const char* vsSrc, const char* fsSrc);
         static void   setupUniformBlocks(GLuint program);
+        static bool   evaluate_shader_uniforms(const std::string& shader_name, const ShaderUniforms& uniforms);
         void          initShaders(const std::vector<int>& shader_programm_id);
         void          initBuffers();
         static size_t estimate_triangle_count(const Shape& s);
@@ -103,8 +111,8 @@ namespace umfeld {
         void          flush_sort_by_z_order(std::vector<Shape>& shapes, const glm::mat4& view_projection_matrix);
         void          flush_submission_order(std::vector<Shape>& shapes, const glm::mat4& view_projection_matrix);
         void          flush_immediately(std::vector<Shape>& shapes, const glm::mat4& view_projection_matrix);
-        void          flush_processed_shapes(std::vector<Shape>& processed_shapes, const glm::mat4& view_projection_matrix);
-        void process_shapes(std::vector<Shape>& processed_shapes);
+        void          flush_processed_shapes(std::vector<Shape>& processed_point_shapes, std::vector<Shape>& processed_line_shapes, std::vector<Shape>& processed_triangle_shapes, const glm::mat4& view_projection_matrix);
+        void          process_shapes(std::vector<Shape>& processed_point_shapes, std::vector<Shape>& processed_line_shapes, std::vector<Shape>& processed_triangle_shapes);
 
         static void bind_texture(const int texture_id) {
             glActiveTexture(GL_TEXTURE0 + PGraphicsOpenGL::DEFAULT_ACTIVE_TEXTURE_UNIT);

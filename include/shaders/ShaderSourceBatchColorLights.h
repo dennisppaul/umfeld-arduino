@@ -1,5 +1,5 @@
 /*
- * Umfeld
+* Umfeld
  *
  * This file is part of the *Umfeld* library (https://github.com/dennisppaul/umfeld).
  * Copyright (c) 2025 Dennis P Paul.
@@ -22,7 +22,7 @@
 #include "ShaderSource.h"
 
 namespace umfeld {
-    inline ShaderSource shader_source_batch_color_texture{
+    inline ShaderSource shader_source_batch_color_lights{
         .vertex   = R"(
 layout(location = 0) in vec4 aPosition;
 layout(location = 1) in vec4 aNormal;
@@ -32,7 +32,6 @@ layout(location = 4) in uint aTransformID;
 layout(location = 5) in uint aUserdata;
 
 out vec4 vColor;
-out vec2 vTexCoord;
 
 layout(std140) uniform Transforms {
     mat4 uModel[256];
@@ -41,22 +40,17 @@ layout(std140) uniform Transforms {
 uniform mat4 uViewProj;
 
 void main() {
-    mat4 M      = uModel[aTransformID];
+    mat4 M = uModel[aTransformID];
     gl_Position = uViewProj * M * aPosition;
-    vTexCoord   = aTexCoord.xy;
-    vColor      = aColor;
+    vColor = aColor;
 }
         )",
         .fragment = R"(
 in vec4 vColor;
-in vec2 vTexCoord;
-
-out vec4 FragColor;
-
-uniform sampler2D uTexture;
-
+out vec4 fragColor;
 void main() {
-    FragColor = texture(uTexture, vTexCoord) * vColor;
+    fragColor = vColor;
 }
-        )"};
+        )",
+        .geometry = ""};
 }

@@ -37,7 +37,9 @@
 #include "ShaderSourceLine.h"
 #include "ShaderSourcePoint.h"
 #include "ShaderSourceBatchColor.h"
-#include "ShaderSourceBatchColorTexture.h"
+#include "ShaderSourceBatchColorLights.h"
+#include "ShaderSourceBatchTexture.h"
+#include "ShaderSourceBatchTextureLights.h"
 #include "ShapeRendererOpenGL_3.h"
 
 #ifdef UMFELD_PGRAPHICS_OPENGL_3_3_CORE_ERRORS
@@ -115,7 +117,7 @@ void PGraphicsOpenGL_3::add_line_quad(const Vertex& p0, const Vertex& p1, float 
  * @param line_strip_closed
  */
 void PGraphicsOpenGL_3::IMPL_emit_shape_stroke_line_strip(std::vector<Vertex>& line_strip_vertices, const bool line_strip_closed) {
-    // REMOVE this as soon as the shape renderer is done
+    // REMOVE this as soon as the shape renderer is done … READY TO BE REMOVED
     // NOTE relevant information for this method
     //     - closed
     //     - stroke_weight
@@ -152,6 +154,7 @@ void PGraphicsOpenGL_3::IMPL_emit_shape_stroke_line_strip(std::vector<Vertex>& l
         //      - STROKE_RENDER_MODE_BARYCENTRIC_SHADER
         //      - STROKE_RENDER_MODE_GEOMETRY_SHADER
         if (stroke_render_mode == STROKE_RENDER_MODE_TRIANGULATE_2D) {
+            // REMOVE moved to shape renderer
             std::vector<Vertex> line_vertices;
             triangulate_line_strip_vertex(line_strip_vertices,
                                           current_stroke_state,
@@ -166,14 +169,14 @@ void PGraphicsOpenGL_3::IMPL_emit_shape_stroke_line_strip(std::vector<Vertex>& l
             OGL3_render_vertex_buffer(vertex_buffer, GL_TRIANGLES, line_vertices);
         }
         if (stroke_render_mode == STROKE_RENDER_MODE_NATIVE) {
+            // REMOVE moved to shape renderer
             shader_fill_texture->use();
             OGL3_render_vertex_buffer(vertex_buffer, GL_LINE_STRIP, line_strip_vertices);
         }
         if (stroke_render_mode == STROKE_RENDER_MODE_TUBE_3D) {
             const std::vector<Vertex> line_vertices = generate_tube_mesh(line_strip_vertices,
                                                                          current_stroke_state.stroke_weight / 2.0f,
-                                                                         line_strip_closed,
-                                                                         color_stroke);
+                                                                         line_strip_closed);
             shader_fill_texture->use();
             OGL3_render_vertex_buffer(vertex_buffer, GL_TRIANGLES, line_vertices);
         }
@@ -185,6 +188,7 @@ void PGraphicsOpenGL_3::IMPL_emit_shape_stroke_line_strip(std::vector<Vertex>& l
             }
         }
         if (stroke_render_mode == STROKE_RENDER_MODE_LINE_SHADER) {
+            // REMOVE >>> moved to shape renderer
             // TODO this MUST be optimized! it is not efficient to update all uniforms every time
             shader_stroke->use();
             update_shader_matrices(shader_stroke);
@@ -316,11 +320,12 @@ void PGraphicsOpenGL_3::IMPL_emit_shape_stroke_points(std::vector<Vertex>& point
     }
 }
 
-// TODO could move this to a shared method in `PGraphics` and use beginShape(TRIANGLES)
+// TODO must be move to a shared method in `PGraphics` and use beginShape(TRIANGLES)
+// TODO must be changed to use begin-end-shape()
 void PGraphicsOpenGL_3::debug_text(const std::string& text, const float x, const float y) {
     const std::vector<Vertex> triangle_vertices = debug_font.generate(text, x, y, glm::vec4(color_fill));
     push_texture_id();
-    OGL_bind_texture(debug_font.textureID);
+    OGL_bind_texture(debug_font.texture_id);
     shader_fill_texture->use();
     update_shader_matrices(shader_fill_texture);
     OGL3_render_vertex_buffer(vertex_buffer, GL_TRIANGLES, triangle_vertices);
@@ -350,8 +355,7 @@ void PGraphicsOpenGL_3::beginDraw() {
 }
 
 void PGraphicsOpenGL_3::endDraw() {
-    if (render_mode == RENDER_MODE_DEPRECATED_BUFFERED) {
-        // TODO flush collected vertices
+    if (render_mode == RENDER_MODE_DEPRECATED_BUFFERED) { // REMOVE asap
         // RM_flush_fill();
         // RM_flush_stroke();
         // void PGraphicsOpenGL_3::RM_flush_stroke() {
@@ -378,7 +382,6 @@ void PGraphicsOpenGL_3::endDraw() {
         //     const GLint matrixLoc = glGetUniformLocation(stroke_shader_program, SHADER_UNIFORM_MODEL_MATRIX);
         //     glUniformMatrix4fv(matrixLoc, 1, GL_FALSE, glm::value_ptr(glm::mat4(1.0f)));
         //
-        //     glBindVertexArray(stroke_VAO_xyz_rgba);
         //     glDrawArrays(GL_LINES, 0, static_cast<GLsizei>(stroke_vertices_xyz_rgba.size()) / NUM_STROKE_VERTEX_ATTRIBUTES_XYZ_RGBA);
         //     glBindVertexArray(0);
         //
@@ -725,12 +728,11 @@ void PGraphicsOpenGL_3::init(uint32_t* pixels, const int width, const int height
     // TODO this should be configurable. alternative might be `ShapeRendererImmediateOpenGL_3`
     const auto       shape_renderer_ogl3 = new ShapeRendererOpenGL_3();
     std::vector<int> shader_batch_programs(ShapeRendererOpenGL_3::NUM_SHADER_PROGRAMS);
-    shader_batch_programs[ShapeRendererOpenGL_3::SHADER_PROGRAM_UNTEXTURED] = loadShader(shader_source_batch_color.get_vertex_source(), shader_source_batch_color.get_fragment_source())->get_program_id();
-    shader_batch_programs[ShapeRendererOpenGL_3::SHADER_PROGRAM_TEXTURED]   = loadShader(shader_source_batch_color_texture.get_vertex_source(), shader_source_batch_color_texture.get_fragment_source())->get_program_id();
+    shader_batch_programs[ShapeRendererOpenGL_3::SHADER_PROGRAM_COLOR]          = loadShader(shader_source_batch_color.get_vertex_source(), shader_source_batch_color.get_fragment_source())->get_program_id();
+    shader_batch_programs[ShapeRendererOpenGL_3::SHADER_PROGRAM_TEXTURE]        = loadShader(shader_source_batch_texture.get_vertex_source(), shader_source_batch_texture.get_fragment_source())->get_program_id();
+    shader_batch_programs[ShapeRendererOpenGL_3::SHADER_PROGRAM_COLOR_LIGHTS]   = loadShader(shader_source_batch_color_lights.get_vertex_source(), shader_source_batch_color_lights.get_fragment_source())->get_program_id();
+    shader_batch_programs[ShapeRendererOpenGL_3::SHADER_PROGRAM_TEXTURE_LIGHTS] = loadShader(shader_source_batch_texture_lights.get_vertex_source(), shader_source_batch_texture_lights.get_fragment_source())->get_program_id();
     // TODO add shader programms
-    //      SHADER_PROGRAM_UNTEXTURED_LIGHT
-    //      SHADER_PROGRAM_TEXTURED_LIGHT
-    //      SHADER_PROGRAM_UNTEXTURED_LIGHT
     //      SHADER_PROGRAM_POINT
     //      SHADER_PROGRAM_LINE
     shape_renderer_ogl3->init(this, shader_batch_programs);
@@ -742,7 +744,7 @@ void PGraphicsOpenGL_3::init(uint32_t* pixels, const int width, const int height
         warning("Vertex struct must be 64 bytes");
     }
 
-    // >>> ShapeRendererImmediateOpenGL_3
+    // REMOVE >>> ShapeRendererImmediateOpenGL_3
     OGL3_create_solid_color_texture();
     texture_id_current = TEXTURE_NONE;
     OGL_bind_texture(texture_id_solid_color);
@@ -1249,7 +1251,6 @@ void PGraphicsOpenGL_3::updateShaderLighting() const {
     // update all light uniforms for the current lights
     for (int i = 0; i < lightCount; i++) {
         std::string indexStr = "[" + std::to_string(i) + "]";
-
         shader_fill_texture_lights->set_uniform("lightPosition" + indexStr, lightPositions[i]);
         shader_fill_texture_lights->set_uniform("lightNormal" + indexStr, lightNormals[i]);
         shader_fill_texture_lights->set_uniform("lightAmbient" + indexStr, lightAmbientColors[i]);

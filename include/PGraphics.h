@@ -193,7 +193,7 @@ namespace umfeld {
         virtual void   sphereDetail(int ures, int vres);
         virtual void   sphereDetail(const int res) { sphereDetail(res, res); }
         // void             process_collected_fill_vertices();
-        void             process_collected_stroke_vertices(bool close_shape);
+        // void             process_collected_stroke_vertices(bool close_shape);
         virtual void     shader(PShader* shader) {} // TODO maybe not implement them empty like this
         virtual PShader* loadShader(const std::string& vertex_code, const std::string& fragment_code, const std::string& geometry_code = "") { return nullptr; };
         virtual void     resetShader() {}

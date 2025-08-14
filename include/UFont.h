@@ -30,8 +30,8 @@ namespace umfeld {
 
     class UFont {
         // NOTE used for debug text ;)
-        static constexpr int _CHAR_WIDTH        = 8;
-        static constexpr int _CHAR_HEIGHT       = 12;
+        static constexpr int _CHAR_WIDTH       = 8;
+        static constexpr int _CHAR_HEIGHT      = 12;
         static constexpr int ATLAS_COLS        = 16;
         static constexpr int ATLAS_ROWS        = 8;
         static constexpr int FONT_ATLAS_WIDTH  = _CHAR_WIDTH * ATLAS_COLS;
@@ -56,8 +56,8 @@ namespace umfeld {
                 }
             }
 
-            glGenTextures(1, &textureID);
-            glBindTexture(GL_TEXTURE_2D, textureID);
+            glGenTextures(1, &texture_id);
+            glBindTexture(GL_TEXTURE_2D, texture_id);
             glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
             glTexImage2D(GL_TEXTURE_2D,
                          0,
@@ -76,7 +76,7 @@ namespace umfeld {
             generateFontAtlas();
         }
 
-        GLuint textureID;
+        uint32_t texture_id;
 
         std::vector<Vertex> generate(const std::string& text, const float startX, const float startY, glm::vec4 color) const {
             std::vector<Vertex> vertices;

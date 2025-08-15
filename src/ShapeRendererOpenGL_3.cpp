@@ -296,16 +296,84 @@ namespace umfeld {
     }
 
     bool ShapeRendererOpenGL_3::evaluate_shader_uniforms(const std::string& shader_name, const ShapeRendererOpenGL_3::ShaderUniforms& uniforms) {
+        bool valid = true;
+
         if (uniforms.uViewProj == ShaderUniforms::NOT_FOUND) {
             warning(shader_name, ": uniform 'uViewProj' not found");
-            return false;
+            valid = false;
         }
-        if (uniforms.uTexture == ShaderUniforms::NOT_FOUND) {
-            warning(shader_name, ": uniform 'uTexture' not found");
-            return false;
+
+        // Only check uTexture for texture shaders
+        if (shader_name.find("texture") != std::string::npos) {
+            if (uniforms.uTexture == ShaderUniforms::NOT_FOUND) {
+                warning(shader_name, ": uniform 'uTexture' not found");
+                valid = false;
+            }
         }
-        return true;
+
+        // Only check lighting uniforms for lighting shaders
+        if (shader_name.find("lights") != std::string::npos) {
+            if (uniforms.uView == ShaderUniforms::NOT_FOUND) {
+                warning(shader_name, ": uniform 'uView' not found");
+                valid = false;
+            }
+            if (uniforms.normalMatrix == ShaderUniforms::NOT_FOUND) {
+                warning(shader_name, ": uniform 'normalMatrix' not found");
+                valid = false;
+            }
+            if (uniforms.ambient == ShaderUniforms::NOT_FOUND) {
+                warning(shader_name, ": uniform 'ambient' not found");
+                valid = false;
+            }
+            if (uniforms.specular == ShaderUniforms::NOT_FOUND) {
+                warning(shader_name, ": uniform 'specular' not found");
+                valid = false;
+            }
+            if (uniforms.emissive == ShaderUniforms::NOT_FOUND) {
+                warning(shader_name, ": uniform 'emissive' not found");
+                valid = false;
+            }
+            if (uniforms.shininess == ShaderUniforms::NOT_FOUND) {
+                warning(shader_name, ": uniform 'shininess' not found");
+                valid = false;
+            }
+            if (uniforms.lightCount == ShaderUniforms::NOT_FOUND) {
+                warning(shader_name, ": uniform 'lightCount' not found");
+                valid = false;
+            }
+            if (uniforms.lightPosition == ShaderUniforms::NOT_FOUND) {
+                warning(shader_name, ": uniform 'lightPosition' not found");
+                valid = false;
+            }
+            if (uniforms.lightNormal == ShaderUniforms::NOT_FOUND) {
+                warning(shader_name, ": uniform 'lightNormal' not found");
+                valid = false;
+            }
+            if (uniforms.lightAmbient == ShaderUniforms::NOT_FOUND) {
+                warning(shader_name, ": uniform 'lightAmbient' not found");
+                valid = false;
+            }
+            if (uniforms.lightDiffuse == ShaderUniforms::NOT_FOUND) {
+                warning(shader_name, ": uniform 'lightDiffuse' not found");
+                valid = false;
+            }
+            if (uniforms.lightSpecular == ShaderUniforms::NOT_FOUND) {
+                warning(shader_name, ": uniform 'lightSpecular' not found");
+                valid = false;
+            }
+            if (uniforms.lightFalloff == ShaderUniforms::NOT_FOUND) {
+                warning(shader_name, ": uniform 'lightFalloff' not found");
+                valid = false;
+            }
+            if (uniforms.lightSpot == ShaderUniforms::NOT_FOUND) {
+                warning(shader_name, ": uniform 'lightSpot' not found");
+                valid = false;
+            }
+        }
+
+        return valid;
     }
+
     void ShapeRendererOpenGL_3::initShaders(const std::vector<int>& shader_programm_id) {
         // NOTE for OpenGL ES 3.0 create shader source with dynamic array size
         //      ```c
@@ -321,8 +389,10 @@ namespace umfeld {
         //      pointShaderProgram              = shader_programm_id[SHADER_PROGRAM_POINT];
         //      lineShaderProgram               = shader_programm_id[SHADER_PROGRAM_LINE];
 
-        setupUniformBlocks(shader_programm_texture);
         setupUniformBlocks(shader_programm_color);
+        setupUniformBlocks(shader_programm_texture);
+        setupUniformBlocks(shader_programm_color_lights);
+        setupUniformBlocks(shader_programm_texture_lights);
 
         // cache uniform locations
         shader_uniforms_color.uViewProj = glGetUniformLocation(shader_programm_color, "uViewProj");
@@ -331,6 +401,42 @@ namespace umfeld {
         shader_uniforms_texture.uViewProj = glGetUniformLocation(shader_programm_texture, "uViewProj");
         shader_uniforms_texture.uTexture  = glGetUniformLocation(shader_programm_texture, "uTexture");
         evaluate_shader_uniforms("texture", shader_uniforms_texture);
+
+        // cache lighting shader uniform locations
+        shader_uniforms_color_lights.uViewProj     = glGetUniformLocation(shader_programm_color_lights, "uViewProj");
+        shader_uniforms_color_lights.uView         = glGetUniformLocation(shader_programm_color_lights, "uView");
+        shader_uniforms_color_lights.normalMatrix  = glGetUniformLocation(shader_programm_color_lights, "normalMatrix");
+        shader_uniforms_color_lights.ambient       = glGetUniformLocation(shader_programm_color_lights, "ambient");
+        shader_uniforms_color_lights.specular      = glGetUniformLocation(shader_programm_color_lights, "specular");
+        shader_uniforms_color_lights.emissive      = glGetUniformLocation(shader_programm_color_lights, "emissive");
+        shader_uniforms_color_lights.shininess     = glGetUniformLocation(shader_programm_color_lights, "shininess");
+        shader_uniforms_color_lights.lightCount    = glGetUniformLocation(shader_programm_color_lights, "lightCount");
+        shader_uniforms_color_lights.lightPosition = glGetUniformLocation(shader_programm_color_lights, "lightPosition");
+        shader_uniforms_color_lights.lightNormal   = glGetUniformLocation(shader_programm_color_lights, "lightNormal");
+        shader_uniforms_color_lights.lightAmbient  = glGetUniformLocation(shader_programm_color_lights, "lightAmbient");
+        shader_uniforms_color_lights.lightDiffuse  = glGetUniformLocation(shader_programm_color_lights, "lightDiffuse");
+        shader_uniforms_color_lights.lightSpecular = glGetUniformLocation(shader_programm_color_lights, "lightSpecular");
+        shader_uniforms_color_lights.lightFalloff  = glGetUniformLocation(shader_programm_color_lights, "lightFalloff");
+        shader_uniforms_color_lights.lightSpot     = glGetUniformLocation(shader_programm_color_lights, "lightSpot");
+        evaluate_shader_uniforms("color_lights", shader_uniforms_color_lights);
+
+        shader_uniforms_texture_lights.uViewProj     = glGetUniformLocation(shader_programm_texture_lights, "uViewProj");
+        shader_uniforms_texture_lights.uTexture      = glGetUniformLocation(shader_programm_texture_lights, "uTexture");
+        shader_uniforms_texture_lights.uView         = glGetUniformLocation(shader_programm_texture_lights, "uView");
+        shader_uniforms_texture_lights.normalMatrix  = glGetUniformLocation(shader_programm_texture_lights, "normalMatrix");
+        shader_uniforms_texture_lights.ambient       = glGetUniformLocation(shader_programm_texture_lights, "ambient");
+        shader_uniforms_texture_lights.specular      = glGetUniformLocation(shader_programm_texture_lights, "specular");
+        shader_uniforms_texture_lights.emissive      = glGetUniformLocation(shader_programm_texture_lights, "emissive");
+        shader_uniforms_texture_lights.shininess     = glGetUniformLocation(shader_programm_texture_lights, "shininess");
+        shader_uniforms_texture_lights.lightCount    = glGetUniformLocation(shader_programm_texture_lights, "lightCount");
+        shader_uniforms_texture_lights.lightPosition = glGetUniformLocation(shader_programm_texture_lights, "lightPosition");
+        shader_uniforms_texture_lights.lightNormal   = glGetUniformLocation(shader_programm_texture_lights, "lightNormal");
+        shader_uniforms_texture_lights.lightAmbient  = glGetUniformLocation(shader_programm_texture_lights, "lightAmbient");
+        shader_uniforms_texture_lights.lightDiffuse  = glGetUniformLocation(shader_programm_texture_lights, "lightDiffuse");
+        shader_uniforms_texture_lights.lightSpecular = glGetUniformLocation(shader_programm_texture_lights, "lightSpecular");
+        shader_uniforms_texture_lights.lightFalloff  = glGetUniformLocation(shader_programm_texture_lights, "lightFalloff");
+        shader_uniforms_texture_lights.lightSpot     = glGetUniformLocation(shader_programm_texture_lights, "lightSpot");
+        evaluate_shader_uniforms("texture_lights", shader_uniforms_texture_lights);
 
         // TODO add lighting shader uniforms
         //      PGraphicsOpenGL_3::updateShaderLighting()

@@ -78,6 +78,22 @@ namespace umfeld {
             };
             GLint uViewProj = UNINITIALIZED;
             GLint uTexture  = UNINITIALIZED;
+
+            // Lighting uniforms
+            GLint uView         = UNINITIALIZED;
+            GLint normalMatrix  = UNINITIALIZED;
+            GLint ambient       = UNINITIALIZED;
+            GLint specular      = UNINITIALIZED;
+            GLint emissive      = UNINITIALIZED;
+            GLint shininess     = UNINITIALIZED;
+            GLint lightCount    = UNINITIALIZED;
+            GLint lightPosition = UNINITIALIZED;
+            GLint lightNormal   = UNINITIALIZED;
+            GLint lightAmbient  = UNINITIALIZED;
+            GLint lightDiffuse  = UNINITIALIZED;
+            GLint lightSpecular = UNINITIALIZED;
+            GLint lightFalloff  = UNINITIALIZED;
+            GLint lightSpot     = UNINITIALIZED;
         };
 
         // TODO implement for lighting, point and line shader
@@ -111,14 +127,14 @@ namespace umfeld {
         void          render_batch(const std::vector<Shape*>& shapes_to_render, const glm::mat4& view_projection_matrix, GLuint texture_id);
         void          computeShapeCenter(Shape& s) const;
         void          flush_sort_by_z_order(std::vector<Shape>& shapes,
-                                                       const glm::mat4&    view_matrix,
-                                                       const glm::mat4&    projection_matrix);
+                                            const glm::mat4&    view_matrix,
+                                            const glm::mat4&    projection_matrix);
         void          flush_submission_order(std::vector<Shape>& shapes,
-                                                       const glm::mat4&    view_matrix,
-                                                       const glm::mat4&    projection_matrix);
+                                             const glm::mat4&    view_matrix,
+                                             const glm::mat4&    projection_matrix);
         void          flush_immediately(std::vector<Shape>& shapes,
-                                                       const glm::mat4&    view_matrix,
-                                                       const glm::mat4&    projection_matrix);
+                                        const glm::mat4&    view_matrix,
+                                        const glm::mat4&    projection_matrix);
         void          flush_processed_shapes(std::vector<Shape>& processed_point_shapes, std::vector<Shape>& processed_line_shapes, std::vector<Shape>& processed_triangle_shapes, const glm::mat4& view_matrix, const glm::mat4& projection_matrix);
         void          process_shapes(std::vector<Shape>& processed_point_shapes, std::vector<Shape>& processed_line_shapes, std::vector<Shape>& processed_triangle_shapes);
 

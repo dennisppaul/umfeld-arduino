@@ -82,18 +82,18 @@ namespace umfeld {
          *        and transforming vertices needs to happen here. any drawing should use this method.
          * @param triangle_vertices
          */
-        virtual void emit_shape_fill_triangles(std::vector<Vertex>& triangle_vertices);          // REMOVE asashrimp
-        virtual void IMPL_emit_shape_fill_triangles(std::vector<Vertex>& triangle_vertices) = 0; // REMOVE asashrimp
+        virtual void emit_shape_fill_triangles(std::vector<Vertex>& triangle_vertices); // REMOVE asashrimp
+        // virtual void IMPL_emit_shape_fill_triangles(std::vector<Vertex>& triangle_vertices) = 0; // REMOVE asashrimp
         /**
          * @brief method should emit the stroke vertices to the rendering backend. recording, collecting,
          *        and transforming vertices needs to happen here. any drawing should use this method.
          * @param line_strip_vertices
          * @param line_strip_closed
          */
-        virtual void emit_shape_stroke_line_strip(std::vector<Vertex>& line_strip_vertices, bool line_strip_closed);          // REMOVE asashrimp
-        virtual void IMPL_emit_shape_stroke_line_strip(std::vector<Vertex>& line_strip_vertices, bool line_strip_closed) = 0; // REMOVE asashrimp
-        virtual void emit_shape_stroke_points(std::vector<Vertex>& point_vertices, float point_size);                         // REMOVE asashrimp
-        virtual void IMPL_emit_shape_stroke_points(std::vector<Vertex>& point_vertices, float point_size) = 0;                // REMOVE asashrimp
+        virtual void emit_shape_stroke_line_strip(std::vector<Vertex>& line_strip_vertices, bool line_strip_closed); // REMOVE asashrimp
+        // virtual void IMPL_emit_shape_stroke_line_strip(std::vector<Vertex>& line_strip_vertices, bool line_strip_closed) = 0; // REMOVE asashrimp
+        virtual void emit_shape_stroke_points(std::vector<Vertex>& point_vertices, float point_size); // REMOVE asashrimp
+        // virtual void IMPL_emit_shape_stroke_points(std::vector<Vertex>& point_vertices, float point_size) = 0;                // REMOVE asashrimp
         virtual void beginDraw();
         virtual void endDraw();
         virtual void reset_mvp_matrices();
@@ -281,6 +281,8 @@ namespace umfeld {
         StrokeState                      current_stroke_state;
         ShapeRenderer*                   shape_renderer{nullptr}; // TODO @maybe make this `const` and set in constructor?
         std::stack<StyleState>           style_stack;
+        LightingState                    lightingState;
+        bool                             lights_enabled{false};
         bool                             init_properties_locked{false};
         PFont*                           current_font{nullptr};
         ColorState                       color_stroke{};
@@ -316,7 +318,7 @@ namespace umfeld {
         glm::vec4                        current_normal{Vertex::DEFAULT_NORMAL};
         glm::mat4                        temp_view_matrix{};
         glm::mat4                        temp_projection_matrix{};
-        RenderMode                       render_mode{RENDER_MODE_SORTED_BY_SUBMISSION_ORDER};
+        RenderMode                       render_mode{RENDER_MODE_SORTED_BY_Z_ORDER};
         bool                             in_camera_block{false};
         void (*triangle_emitter_callback)(std::vector<Vertex>&){nullptr};
         void (*stroke_emitter_callback)(std::vector<Vertex>&, bool){nullptr};

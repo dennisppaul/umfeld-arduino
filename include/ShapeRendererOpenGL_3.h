@@ -67,6 +67,7 @@ namespace umfeld {
             uint16_t            texture_id{TEXTURE_NONE};
             std::vector<Shape*> opaque_shapes;
             std::vector<Shape*> transparent_shapes;
+            std::vector<Shape*> light_shapes;
         };
 
         // cached uniform locations
@@ -124,8 +125,10 @@ namespace umfeld {
         void          initBuffers();
         static size_t estimate_triangle_count(const Shape& s);
         static void   convert_shapes_to_triangles(const Shape& s, std::vector<Vertex>& out, uint16_t transformID);
-        void          render_batch(const std::vector<Shape*>& shapes_to_render, const glm::mat4& view_projection_matrix, GLuint texture_id);
+        void          render_batch(const std::vector<Shape*>& shapes_to_render, GLuint texture_id);
         void          computeShapeCenter(Shape& s) const;
+        void          enable_depth_testing() const;
+        static void   disable_depth_testing();
         void          flush_sort_by_z_order(std::vector<Shape>& shapes,
                                             const glm::mat4&    view_matrix,
                                             const glm::mat4&    projection_matrix);
@@ -137,6 +140,7 @@ namespace umfeld {
                                         const glm::mat4&    projection_matrix);
         void          flush_processed_shapes(std::vector<Shape>& processed_point_shapes, std::vector<Shape>& processed_line_shapes, std::vector<Shape>& processed_triangle_shapes, const glm::mat4& view_matrix, const glm::mat4& projection_matrix);
         void          process_shapes(std::vector<Shape>& processed_point_shapes, std::vector<Shape>& processed_line_shapes, std::vector<Shape>& processed_triangle_shapes);
+        void          updateShaderLighting() const;
 
         static void bind_texture(const int texture_id) {
             glActiveTexture(GL_TEXTURE0 + PGraphicsOpenGL::DEFAULT_ACTIVE_TEXTURE_UNIT);

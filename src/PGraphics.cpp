@@ -56,6 +56,7 @@ void PGraphics::beginDraw() {
 void PGraphics::endDraw() {
     flush();
     restore_mvp_matrices();
+    lights_enabled = false;
     /* clear texture stack */
     texture_id_pushed = false;
     stored_texture_id = TEXTURE_NONE;
@@ -1201,7 +1202,7 @@ void PGraphics::triangulate_line_strip_vertex(const std::vector<Vertex>& line_st
     std::vector<glm::vec2> points(line_strip.size());
     std::vector<glm::vec2> triangles;
 
-    const glm::mat4 mvp = projection_matrix * view_matrix * model_matrix;
+    const glm::mat4 mvp = projection_matrix * view_matrix * model_matrix; // OPTIMIZE this and store MVP ( and variants ) globally
     for (int i = 0; i < line_strip.size(); ++i) {
         // glm::vec3 _position = line_strip[i].position;
         // to_screen_space(_position);
@@ -1371,13 +1372,17 @@ void PGraphics::submit_fill_shape(const bool closed, const bool force_transparen
     if (shape_renderer != nullptr && !shape_fill_vertex_buffer.empty()) {
         Shape s;
         // NOTE no need to copy stroke info for filled shape
-        s.mode        = static_cast<ShapeMode>(shape_mode_cache);
-        s.filled      = true;
-        s.vertices    = shape_fill_vertex_buffer;
-        s.model       = model_matrix;
-        s.transparent = force_transparent ? true : has_transparent_vertices(shape_fill_vertex_buffer);
-        s.closed      = closed;
-        s.texture_id  = texture_id_current;
+        s.mode          = static_cast<ShapeMode>(shape_mode_cache);
+        s.filled        = true;
+        s.vertices      = shape_fill_vertex_buffer;
+        s.model         = model_matrix;
+        s.transparent   = force_transparent ? true : has_transparent_vertices(shape_fill_vertex_buffer);
+        s.closed        = closed;
+        s.texture_id    = texture_id_current;
+        s.light_enabled = lights_enabled;
+        if (lights_enabled) {
+            s.lighting = lightingState; // NOTE only copy lighting state if lights are enabled
+        }
         shape_renderer->submitShape(s);
     }
 }
@@ -1413,25 +1418,26 @@ void PGraphics::emit_shape_fill_triangles(std::vector<Vertex>& triangle_vertices
     if (triangle_emitter_callback) {
         triangle_emitter_callback(triangle_vertices);
     }
-    IMPL_emit_shape_fill_triangles(triangle_vertices);
+    // IMPL_emit_shape_fill_triangles(triangle_vertices);
 }
 
 void PGraphics::emit_shape_stroke_line_strip(std::vector<Vertex>& line_strip_vertices, const bool line_strip_closed) {
     if (stroke_emitter_callback) {
         stroke_emitter_callback(line_strip_vertices, line_strip_closed);
     }
-    IMPL_emit_shape_stroke_line_strip(line_strip_vertices, line_strip_closed);
+    // IMPL_emit_shape_stroke_line_strip(line_strip_vertices, line_strip_closed);
 }
 
 void PGraphics::emit_shape_stroke_points(std::vector<Vertex>& point_vertices, const float point_size) {
+    warning_in_function_once("emit_shape_stroke_points() is not implemented yet!");
     // TODO maybe add a callback for points or send strokes with one vertex TBD?
-    // if (stroke_emitter_callback) {
-    //     stroke_emitter_callback(point_vertices);
+    // if (point_emitter_callback) {
+    //     point_emitter_callback(point_vertices);
     // }
-    IMPL_emit_shape_stroke_points(point_vertices, point_size);
+    // IMPL_emit_shape_stroke_points(point_vertices, point_size);
 }
 
-
+// NOTE this is required by `ShapeRendererOpenGL_3::handle_stroke_shape`
 void PGraphics::convert_stroke_shape_to_line_strip(Shape& s, std::vector<Shape>& shapes) {
     std::vector<Vertex> shape_stroke_vertex_buffer = s.vertices;
     const int           shape_mode_cache           = s.mode;
@@ -1559,7 +1565,7 @@ void PGraphics::convert_fill_shape_to_triangles(Shape& s) const {
     }
     s.mode = TRIANGLES;
 }
-//
+
 // void PGraphics::process_collected_fill_vertices() {
 //     if (!shape_fill_vertex_buffer.empty()) {
 //         switch (shape_mode_cache) {

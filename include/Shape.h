@@ -37,5 +37,7 @@ namespace umfeld {
         bool                closed{false};
         float               depth{};
         uint16_t            texture_id{TEXTURE_NONE};
+        bool                light_enabled{false};
+        LightingState       lighting;
     };
 } // namespace umfeld

@@ -43,4 +43,41 @@ namespace umfeld {
         float      strokeWeight;
         // TODO add style values like tint, blend mode, etc.
     };
+
+    struct LightingState {
+        // Light type constants
+        static constexpr int MAX_LIGHTS  = 8;
+        static constexpr int AMBIENT     = 0;
+        static constexpr int DIRECTIONAL = 1;
+        static constexpr int POINT       = 2;
+        static constexpr int SPOT        = 3;
+
+        // Light arrays
+        int       lightType[MAX_LIGHTS]{};
+        glm::vec4 lightPositions[MAX_LIGHTS]{};
+        glm::vec3 lightNormals[MAX_LIGHTS]{};
+        glm::vec3 lightAmbientColors[MAX_LIGHTS]{};
+        glm::vec3 lightDiffuseColors[MAX_LIGHTS]{};
+        glm::vec3 lightSpecularColors[MAX_LIGHTS]{};
+        glm::vec3 lightFalloffCoeffs[MAX_LIGHTS]{};
+        glm::vec2 lightSpotParams[MAX_LIGHTS]{};
+
+        // Current light settings
+        glm::vec3 currentLightSpecular         = glm::vec3(0.0f);
+        float     currentLightFalloffConstant  = 1.0f;
+        float     currentLightFalloffLinear    = 0.0f;
+        float     currentLightFalloffQuadratic = 0.0f;
+
+        // Lighting state
+        int lightCount = 0;
+
+        // Shader uniforms (for convenience, can be set directly)
+        glm::mat3 normalMatrix = glm::mat3(1.0f);
+        glm::mat4 texMatrix    = glm::mat4(1.0f);
+
+        glm::vec4 ambient   = glm::vec4(0.5f, 0.5f, 0.5f, 1.0f);
+        glm::vec4 specular  = glm::vec4(0.5f, 0.5f, 0.5f, 1.0f);
+        glm::vec4 emissive  = glm::vec4(0.1f, 0.1f, 0.1f, 1.0f);
+        float     shininess = 64.0f;
+    };
 } // namespace umfeld

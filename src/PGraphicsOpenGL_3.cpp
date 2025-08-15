@@ -104,221 +104,221 @@ void PGraphicsOpenGL_3::add_line_quad(const Vertex& p0, const Vertex& p1, float 
     out.push_back(v3);
 }
 
-/**
- * implement this method for respective renderer e.g
- *
- * - OpenGL_3_3_core + OpenGL_ES_3_0 ( shader based, buffered mode, vertex array objects )
- * - OpenGL_2_0 ( fixed function pipeline, immediate mode, vertex buffer arrays )
- * - SDL2
- *
- * and maybe later vulkan, metal, etc.
- *
- * @param line_strip_vertices
- * @param line_strip_closed
- */
-void PGraphicsOpenGL_3::IMPL_emit_shape_stroke_line_strip(std::vector<Vertex>& line_strip_vertices, const bool line_strip_closed) {
-    // REMOVE this as soon as the shape renderer is done … READY TO BE REMOVED
-    // NOTE relevant information for this method
-    //     - closed
-    //     - stroke_weight
-    //     - stroke_join
-    //     - stroke_cap
-    //     - (shader_id)
-    //     - (texture_id)
+// /**
+//  * implement this method for respective renderer e.g
+//  *
+//  * - OpenGL_3_3_core + OpenGL_ES_3_0 ( shader based, buffered mode, vertex array objects )
+//  * - OpenGL_2_0 ( fixed function pipeline, immediate mode, vertex buffer arrays )
+//  * - SDL2
+//  *
+//  * and maybe later vulkan, metal, etc.
+//  *
+//  * @param line_strip_vertices
+//  * @param line_strip_closed
+//  */
+// void PGraphicsOpenGL_3::IMPL_emit_shape_stroke_line_strip(std::vector<Vertex>& line_strip_vertices, const bool line_strip_closed) {
+//     // REMOVE this as soon as the shape renderer is done … READY TO BE REMOVED
+//     // NOTE relevant information for this method
+//     //     - closed
+//     //     - stroke_weight
+//     //     - stroke_join
+//     //     - stroke_cap
+//     //     - (shader_id)
+//     //     - (texture_id)
+//
+//     // NOTE this is a very central method! up until here everything should have been done in generic PGraphics.
+//     //      - vertices are in model space
+//     //      - vertices are in line strip channels ( i.e not triangulated or anything yet )
+//     //      - decide on rendering mode ( triangulated, native, etcetera )
+//     //      - this method is usually accessed from `endShape()`
+//
+//     // TODO maybe add stroke recorder here ( need to transform vertices to world space )
+//
+//     if (render_mode == RENDER_MODE_DEPRECATED_BUFFERED) {
+//         if (stroke_render_mode == STROKE_RENDER_MODE_TRIANGULATE_2D) {
+//             std::vector<Vertex> line_vertices;
+//             triangulate_line_strip_vertex(line_strip_vertices,
+//                                           current_stroke_state,
+//                                           line_strip_closed,
+//                                           line_vertices);
+//             // TODO collect `line_vertices` and render as `GL_TRIANGLES` at end of frame
+//         }
+//         if (stroke_render_mode == STROKE_RENDER_MODE_NATIVE) {
+//             // TODO collect `line_strip_vertices` and render as `GL_LINE_STRIP` at end of frame
+//         }
+//     }
+//
+//     if (render_mode == RENDER_MODE_DEPRECATED_IMMEDIATE) {
+//         // TODO add other render modes:
+//         //      - STROKE_RENDER_MODE_TUBE_3D
+//         //      - STROKE_RENDER_MODE_BARYCENTRIC_SHADER
+//         //      - STROKE_RENDER_MODE_GEOMETRY_SHADER
+//         if (stroke_render_mode == STROKE_RENDER_MODE_TRIANGULATE_2D) {
+//             // REMOVE moved to shape renderer
+//             std::vector<Vertex> line_vertices;
+//             triangulate_line_strip_vertex(line_strip_vertices,
+//                                           current_stroke_state,
+//                                           line_strip_closed,
+//                                           line_vertices);
+//             if (custom_shader != nullptr) {
+//                 warning_in_function_once("strokes with render mode 'STROKE_RENDER_MODE_TRIANGULATE_2D' are not supported with custom shaders");
+//             }
+//             // NOTE not happy about this hack … but `triangulate_line_strip_vertex` already applies model matrix
+//             shader_fill_texture->use();
+//             shader_fill_texture->set_uniform(SHADER_UNIFORM_MODEL_MATRIX, glm::mat4(1.0f));
+//             OGL3_render_vertex_buffer(vertex_buffer, GL_TRIANGLES, line_vertices);
+//         }
+//         if (stroke_render_mode == STROKE_RENDER_MODE_NATIVE) {
+//             // REMOVE moved to shape renderer
+//             shader_fill_texture->use();
+//             OGL3_render_vertex_buffer(vertex_buffer, GL_LINE_STRIP, line_strip_vertices);
+//         }
+//         if (stroke_render_mode == STROKE_RENDER_MODE_TUBE_3D) {
+//             const std::vector<Vertex> line_vertices = generate_tube_mesh(line_strip_vertices,
+//                                                                          current_stroke_state.stroke_weight / 2.0f,
+//                                                                          line_strip_closed);
+//             shader_fill_texture->use();
+//             OGL3_render_vertex_buffer(vertex_buffer, GL_TRIANGLES, line_vertices);
+//         }
+//         if (stroke_render_mode == STROKE_RENDER_MODE_GEOMETRY_SHADER) {
+//             static bool emit_warning = true;
+//             if (emit_warning) {
+//                 emit_warning = false;
+//                 warning("STROKE_RENDER_MODE_GEOMETRY_SHADER is not implemented yet.");
+//             }
+//         }
+//         if (stroke_render_mode == STROKE_RENDER_MODE_LINE_SHADER) {
+//             // REMOVE >>> moved to shape renderer
+//             // TODO this MUST be optimized! it is not efficient to update all uniforms every time
+//             shader_stroke->use();
+//             update_shader_matrices(shader_stroke);
+//             shader_stroke->set_uniform("viewport", glm::vec4(0, 0, width, height));
+//             shader_stroke->set_uniform("perspective", 1);
+//             constexpr float scale_factor = 0.99f;
+//             shader_stroke->set_uniform("scale", glm::vec3(scale_factor, scale_factor, scale_factor));
+//
+//             const float         stroke_weight_half = current_stroke_state.stroke_weight / 2.0f;
+//             std::vector<Vertex> line_strip_vertices_expanded;
+//             for (size_t i = 0; i + 1 < line_strip_vertices.size(); i++) {
+//                 Vertex p0 = line_strip_vertices[i];
+//                 Vertex p1 = line_strip_vertices[i + 1];
+//                 add_line_quad(p0, p1, stroke_weight_half, line_strip_vertices_expanded);
+//             }
+//             if (line_strip_closed) {
+//                 Vertex p0 = line_strip_vertices.back();
+//                 Vertex p1 = line_strip_vertices.front();
+//                 add_line_quad(p0, p1, stroke_weight_half, line_strip_vertices_expanded);
+//             }
+//             OGL3_render_vertex_buffer(vertex_buffer, GL_TRIANGLES, line_strip_vertices_expanded);
+//         }
+//     }
+//
+//     /*
+//      * OpenGL ES 3.1 is stricter:
+//      *
+//      * 1. No GL_LINES, GL_LINE_STRIP, or GL_LINE_LOOP support in core spec!
+//      * 2. No glLineWidth support at all.
+//      * 3. Only GL_TRIANGLES, GL_TRIANGLE_STRIP, and GL_TRIANGLE_FAN are guaranteed.
+//      *
+//      * i.e GL_LINES + GL_LINE_STRIP must be emulated
+//      */
+// }
 
-    // NOTE this is a very central method! up until here everything should have been done in generic PGraphics.
-    //      - vertices are in model space
-    //      - vertices are in line strip channels ( i.e not triangulated or anything yet )
-    //      - decide on rendering mode ( triangulated, native, etcetera )
-    //      - this method is usually accessed from `endShape()`
+// void PGraphicsOpenGL_3::IMPL_emit_shape_fill_triangles(std::vector<Vertex>& triangle_vertices) {
+//     // REMOVE this as soon as the shape renderer is done
+//     // NOTE relevant information for this method
+//     //     - vertex ( i.e position, normal, color, tex_coord )
+//     //     - textured_id ( current id or solid color )
+//     //     - shader_id ( default or no shader )
+//
+//     // NOTE this is a very central method! up until here everything should have been done in generic PGraphics.
+//     //      - vertices are in model space
+//     //      ```C
+//     //      const glm::mat4 modelview = model_matrix;
+//     //      for (auto& p: transformed_vertices) {
+//     //          p.position = glm::vec4(modelview * p.position);
+//     //      }
+//     //      ```
+//
+//     // NOTE this is the magic place. here we can do everything we want with the triangle_vertices
+//     //      e.g export to PDF or SVG, or even do some post processing.
+//     //      ideally up until here everything could stay in PGraphics i.e all client side drawing
+//     //      like point, line, rect, ellipse and begin-end-shape
+//
+//     // TODO maybe add triangle recorder here ( need to transform vertices to world space )
+//
+//     if (render_mode == RENDER_MODE_DEPRECATED_BUFFERED) {
+//         // TODO collect recorded_triangles and current texture information for retained mode here.
+//         //      - maybe sort by transparency ( and by depth )
+//         //      - maybe sort transparent recorded_triangles by depth
+//         //      - maybe sort by fill and stroke
+//         //      ```C
+//         //      add_stroke_vertex_xyz_rgba(position, color, tex_coord); // applies transformation
+//         //      ... // add more triangle_vertices … maybe optimize by adding multiple triangle_vertices at once
+//         //      RM_add_texture_id_to_render_batch(triangle_vertices,num_vertices,batch_texture_id);
+//         //      ```
+//     }
+//     if (render_mode == RENDER_MODE_DEPRECATED_IMMEDIATE) {
+//         if (custom_shader != nullptr) {
+//             custom_shader->use();
+//             update_shader_matrices(custom_shader);
+//             // TODO this is very hack-ish ...
+//             if (custom_shader == shader_fill_texture_lights) {
+//                 shader_fill_texture_lights->set_uniform("normalMatrix", glm::mat3(glm::transpose(glm::inverse(view_matrix * model_matrix))));
+//             }
+//         } else {
+//             shader_fill_texture->use();
+//             update_shader_matrices(shader_fill_texture);
+//         }
+//         OGL3_render_vertex_buffer(vertex_buffer, GL_TRIANGLES, triangle_vertices);
+//     }
+// }
 
-    // TODO maybe add stroke recorder here ( need to transform vertices to world space )
-
-    if (render_mode == RENDER_MODE_DEPRECATED_BUFFERED) {
-        if (stroke_render_mode == STROKE_RENDER_MODE_TRIANGULATE_2D) {
-            std::vector<Vertex> line_vertices;
-            triangulate_line_strip_vertex(line_strip_vertices,
-                                          current_stroke_state,
-                                          line_strip_closed,
-                                          line_vertices);
-            // TODO collect `line_vertices` and render as `GL_TRIANGLES` at end of frame
-        }
-        if (stroke_render_mode == STROKE_RENDER_MODE_NATIVE) {
-            // TODO collect `line_strip_vertices` and render as `GL_LINE_STRIP` at end of frame
-        }
-    }
-
-    if (render_mode == RENDER_MODE_DEPRECATED_IMMEDIATE) {
-        // TODO add other render modes:
-        //      - STROKE_RENDER_MODE_TUBE_3D
-        //      - STROKE_RENDER_MODE_BARYCENTRIC_SHADER
-        //      - STROKE_RENDER_MODE_GEOMETRY_SHADER
-        if (stroke_render_mode == STROKE_RENDER_MODE_TRIANGULATE_2D) {
-            // REMOVE moved to shape renderer
-            std::vector<Vertex> line_vertices;
-            triangulate_line_strip_vertex(line_strip_vertices,
-                                          current_stroke_state,
-                                          line_strip_closed,
-                                          line_vertices);
-            if (custom_shader != nullptr) {
-                warning_in_function_once("strokes with render mode 'STROKE_RENDER_MODE_TRIANGULATE_2D' are not supported with custom shaders");
-            }
-            // NOTE not happy about this hack … but `triangulate_line_strip_vertex` already applies model matrix
-            shader_fill_texture->use();
-            shader_fill_texture->set_uniform(SHADER_UNIFORM_MODEL_MATRIX, glm::mat4(1.0f));
-            OGL3_render_vertex_buffer(vertex_buffer, GL_TRIANGLES, line_vertices);
-        }
-        if (stroke_render_mode == STROKE_RENDER_MODE_NATIVE) {
-            // REMOVE moved to shape renderer
-            shader_fill_texture->use();
-            OGL3_render_vertex_buffer(vertex_buffer, GL_LINE_STRIP, line_strip_vertices);
-        }
-        if (stroke_render_mode == STROKE_RENDER_MODE_TUBE_3D) {
-            const std::vector<Vertex> line_vertices = generate_tube_mesh(line_strip_vertices,
-                                                                         current_stroke_state.stroke_weight / 2.0f,
-                                                                         line_strip_closed);
-            shader_fill_texture->use();
-            OGL3_render_vertex_buffer(vertex_buffer, GL_TRIANGLES, line_vertices);
-        }
-        if (stroke_render_mode == STROKE_RENDER_MODE_GEOMETRY_SHADER) {
-            static bool emit_warning = true;
-            if (emit_warning) {
-                emit_warning = false;
-                warning("STROKE_RENDER_MODE_GEOMETRY_SHADER is not implemented yet.");
-            }
-        }
-        if (stroke_render_mode == STROKE_RENDER_MODE_LINE_SHADER) {
-            // REMOVE >>> moved to shape renderer
-            // TODO this MUST be optimized! it is not efficient to update all uniforms every time
-            shader_stroke->use();
-            update_shader_matrices(shader_stroke);
-            shader_stroke->set_uniform("viewport", glm::vec4(0, 0, width, height));
-            shader_stroke->set_uniform("perspective", 1);
-            constexpr float scale_factor = 0.99f;
-            shader_stroke->set_uniform("scale", glm::vec3(scale_factor, scale_factor, scale_factor));
-
-            const float         stroke_weight_half = current_stroke_state.stroke_weight / 2.0f;
-            std::vector<Vertex> line_strip_vertices_expanded;
-            for (size_t i = 0; i + 1 < line_strip_vertices.size(); i++) {
-                Vertex p0 = line_strip_vertices[i];
-                Vertex p1 = line_strip_vertices[i + 1];
-                add_line_quad(p0, p1, stroke_weight_half, line_strip_vertices_expanded);
-            }
-            if (line_strip_closed) {
-                Vertex p0 = line_strip_vertices.back();
-                Vertex p1 = line_strip_vertices.front();
-                add_line_quad(p0, p1, stroke_weight_half, line_strip_vertices_expanded);
-            }
-            OGL3_render_vertex_buffer(vertex_buffer, GL_TRIANGLES, line_strip_vertices_expanded);
-        }
-    }
-
-    /*
-     * OpenGL ES 3.1 is stricter:
-     *
-     * 1. No GL_LINES, GL_LINE_STRIP, or GL_LINE_LOOP support in core spec!
-     * 2. No glLineWidth support at all.
-     * 3. Only GL_TRIANGLES, GL_TRIANGLE_STRIP, and GL_TRIANGLE_FAN are guaranteed.
-     *
-     * i.e GL_LINES + GL_LINE_STRIP must be emulated
-     */
-}
-
-void PGraphicsOpenGL_3::IMPL_emit_shape_fill_triangles(std::vector<Vertex>& triangle_vertices) {
-    // REMOVE this as soon as the shape renderer is done
-    // NOTE relevant information for this method
-    //     - vertex ( i.e position, normal, color, tex_coord )
-    //     - textured_id ( current id or solid color )
-    //     - shader_id ( default or no shader )
-
-    // NOTE this is a very central method! up until here everything should have been done in generic PGraphics.
-    //      - vertices are in model space
-    //      ```C
-    //      const glm::mat4 modelview = model_matrix;
-    //      for (auto& p: transformed_vertices) {
-    //          p.position = glm::vec4(modelview * p.position);
-    //      }
-    //      ```
-
-    // NOTE this is the magic place. here we can do everything we want with the triangle_vertices
-    //      e.g export to PDF or SVG, or even do some post processing.
-    //      ideally up until here everything could stay in PGraphics i.e all client side drawing
-    //      like point, line, rect, ellipse and begin-end-shape
-
-    // TODO maybe add triangle recorder here ( need to transform vertices to world space )
-
-    if (render_mode == RENDER_MODE_DEPRECATED_BUFFERED) {
-        // TODO collect recorded_triangles and current texture information for retained mode here.
-        //      - maybe sort by transparency ( and by depth )
-        //      - maybe sort transparent recorded_triangles by depth
-        //      - maybe sort by fill and stroke
-        //      ```C
-        //      add_stroke_vertex_xyz_rgba(position, color, tex_coord); // applies transformation
-        //      ... // add more triangle_vertices … maybe optimize by adding multiple triangle_vertices at once
-        //      RM_add_texture_id_to_render_batch(triangle_vertices,num_vertices,batch_texture_id);
-        //      ```
-    }
-    if (render_mode == RENDER_MODE_DEPRECATED_IMMEDIATE) {
-        if (custom_shader != nullptr) {
-            custom_shader->use();
-            update_shader_matrices(custom_shader);
-            // TODO this is very hack-ish ...
-            if (custom_shader == shader_fill_texture_lights) {
-                shader_fill_texture_lights->set_uniform("normalMatrix", glm::mat3(glm::transpose(glm::inverse(view_matrix * model_matrix))));
-            }
-        } else {
-            shader_fill_texture->use();
-            update_shader_matrices(shader_fill_texture);
-        }
-        OGL3_render_vertex_buffer(vertex_buffer, GL_TRIANGLES, triangle_vertices);
-    }
-}
-
-void PGraphicsOpenGL_3::IMPL_emit_shape_stroke_points(std::vector<Vertex>& point_vertices, float point_size) {
-    // REMOVE this as soon as the shape renderer is done
-    if (render_mode == RENDER_MODE_DEPRECATED_BUFFERED) {
-    }
-    if (render_mode == RENDER_MODE_DEPRECATED_IMMEDIATE) {
-        if (point_render_mode == POINT_RENDER_MODE_SHADER) {
-            shader_point->use();
-            update_shader_matrices(shader_point);
-            // TODO this MUST be optimized! it is not efficient to update all uniforms every time
-            shader_point->set_uniform("viewport", glm::vec4(0, 0, width, height));
-            shader_point->set_uniform("perspective", 1);
-            std::vector<Vertex> point_vertices_expanded;
-
-            for (size_t i = 0; i < point_vertices.size(); i++) {
-                Vertex v0, v1, v2, v3;
-
-                v0 = point_vertices[i];
-                v1 = point_vertices[i];
-                v2 = point_vertices[i];
-                v3 = point_vertices[i];
-
-                v0.normal.x = 0;
-                v0.normal.y = 0;
-
-                v1.normal.x = point_size;
-                v1.normal.y = 0;
-
-                v2.normal.x = point_size;
-                v2.normal.y = point_size;
-
-                v3.normal.x = 0;
-                v3.normal.y = point_size;
-
-                point_vertices_expanded.push_back(v0);
-                point_vertices_expanded.push_back(v1);
-                point_vertices_expanded.push_back(v2);
-
-                point_vertices_expanded.push_back(v0);
-                point_vertices_expanded.push_back(v2);
-                point_vertices_expanded.push_back(v3);
-            }
-            OGL3_render_vertex_buffer(vertex_buffer, GL_TRIANGLES, point_vertices_expanded);
-        }
-    }
-}
+// void PGraphicsOpenGL_3::IMPL_emit_shape_stroke_points(std::vector<Vertex>& point_vertices, float point_size) {
+//     // REMOVE this as soon as the shape renderer is done
+//     if (render_mode == RENDER_MODE_DEPRECATED_BUFFERED) {
+//     }
+//     if (render_mode == RENDER_MODE_DEPRECATED_IMMEDIATE) {
+//         if (point_render_mode == POINT_RENDER_MODE_SHADER) {
+//             shader_point->use();
+//             update_shader_matrices(shader_point);
+//             // TODO this MUST be optimized! it is not efficient to update all uniforms every time
+//             shader_point->set_uniform("viewport", glm::vec4(0, 0, width, height));
+//             shader_point->set_uniform("perspective", 1);
+//             std::vector<Vertex> point_vertices_expanded;
+//
+//             for (size_t i = 0; i < point_vertices.size(); i++) {
+//                 Vertex v0, v1, v2, v3;
+//
+//                 v0 = point_vertices[i];
+//                 v1 = point_vertices[i];
+//                 v2 = point_vertices[i];
+//                 v3 = point_vertices[i];
+//
+//                 v0.normal.x = 0;
+//                 v0.normal.y = 0;
+//
+//                 v1.normal.x = point_size;
+//                 v1.normal.y = 0;
+//
+//                 v2.normal.x = point_size;
+//                 v2.normal.y = point_size;
+//
+//                 v3.normal.x = 0;
+//                 v3.normal.y = point_size;
+//
+//                 point_vertices_expanded.push_back(v0);
+//                 point_vertices_expanded.push_back(v1);
+//                 point_vertices_expanded.push_back(v2);
+//
+//                 point_vertices_expanded.push_back(v0);
+//                 point_vertices_expanded.push_back(v2);
+//                 point_vertices_expanded.push_back(v3);
+//             }
+//             OGL3_render_vertex_buffer(vertex_buffer, GL_TRIANGLES, point_vertices_expanded);
+//         }
+//     }
+// }
 
 // TODO must be move to a shared method in `PGraphics` and use beginShape(TRIANGLES)
 // TODO must be changed to use begin-end-shape()
@@ -587,17 +587,17 @@ void PGraphicsOpenGL_3::init(uint32_t* pixels, const int width, const int height
     //     - @maybe triangle shader ( without texture )
     //     maybe remove "transform on CPU" and use vertex shader for this
 
-    shader_fill_texture        = loadShader(shader_source_color_texture.get_vertex_source(), shader_source_color_texture.get_fragment_source());
-    shader_fill_texture_lights = loadShader(shader_source_color_texture_lights.get_vertex_source(), shader_source_color_texture_lights.get_fragment_source());
-    shader_stroke              = loadShader(shader_source_line.get_vertex_source(), shader_source_line.get_fragment_source());
-    shader_point               = loadShader(shader_source_point.get_vertex_source(), shader_source_point.get_fragment_source());
+    shader_fill_texture = loadShader(shader_source_color_texture.get_vertex_source(), shader_source_color_texture.get_fragment_source());
+    // shader_fill_texture_lights = loadShader(shader_source_color_texture_lights.get_vertex_source(), shader_source_color_texture_lights.get_fragment_source());
+    shader_stroke = loadShader(shader_source_line.get_vertex_source(), shader_source_line.get_fragment_source());
+    shader_point  = loadShader(shader_source_point.get_vertex_source(), shader_source_point.get_fragment_source());
 
     if (shader_fill_texture == nullptr) {
         error_in_function("failed to load default fill shader.");
     }
-    if (shader_fill_texture_lights == nullptr) {
-        error_in_function("failed to load default light shader.");
-    }
+    // if (shader_fill_texture_lights == nullptr) {
+    //     error_in_function("failed to load default light shader.");
+    // }
     if (shader_stroke == nullptr) {
         error_in_function("failed to load default stroke shader.");
     } else {
@@ -982,8 +982,8 @@ void PGraphicsOpenGL_3::update_all_shader_matrices() const {
     } else {
         shader_fill_texture->use();
         update_shader_matrices(shader_fill_texture);
-        shader_fill_texture_lights->use();
-        update_shader_matrices(shader_fill_texture_lights);
+        // shader_fill_texture_lights->use();
+        // update_shader_matrices(shader_fill_texture_lights);
         shader_stroke->use();
         update_shader_matrices(shader_stroke);
         shader_point->use();
@@ -1014,17 +1014,17 @@ void PGraphicsOpenGL_3::perspective(const float fovy, const float aspect, const 
 /* --- LIGHTS --- */
 
 void PGraphicsOpenGL_3::noLights() {
-    lightCount                   = 0;
-    currentLightSpecular         = glm::vec3(0.0f);
-    currentLightFalloffConstant  = 1.0f;
-    currentLightFalloffLinear    = 0.0f;
-    currentLightFalloffQuadratic = 0.0f;
+    lights_enabled                             = false;
+    lightingState.lightCount                   = 0;
+    lightingState.currentLightSpecular         = glm::vec3(0.0f);
+    lightingState.currentLightFalloffConstant  = 1.0f;
+    lightingState.currentLightFalloffLinear    = 0.0f;
+    lightingState.currentLightFalloffQuadratic = 0.0f;
     resetShader();
-    disableLighting();
 }
 
 void PGraphicsOpenGL_3::lights() {
-    enableLighting();
+    lights_enabled = true;
 
     // shader_fill_texture_lights->set_uniform(SHADER_UNIFORM_MODEL_MATRIX, g->model_matrix);
     // shader_fill_texture_lights->set_uniform(SHADER_UNIFORM_VIEW_MATRIX, g->view_matrix);
@@ -1046,156 +1046,136 @@ void PGraphicsOpenGL_3::lights() {
 }
 
 void PGraphicsOpenGL_3::ambientLight(const float r, const float g, const float b, const float x, const float y, const float z) {
-    enableLighting();
-    if (lightCount >= MAX_LIGHTS) {
+    lights_enabled = true;
+    if (lightingState.lightCount >= lightingState.MAX_LIGHTS) {
         return;
     }
 
-    lightType[lightCount] = AMBIENT;
+    lightingState.lightType[lightingState.lightCount] = LightingState::AMBIENT;
 
-    setLightPosition(lightCount, x, y, z, false);
-    setLightNormal(lightCount, 0, 0, 0);
+    setLightPosition(lightingState.lightCount, x, y, z, false);
+    setLightNormal(lightingState.lightCount, 0, 0, 0);
 
-    setLightAmbient(lightCount, r, g, b);
-    setNoLightDiffuse(lightCount);
-    setNoLightSpecular(lightCount);
-    setNoLightSpot(lightCount);
-    setLightFalloff(lightCount, currentLightFalloffConstant,
-                    currentLightFalloffLinear,
-                    currentLightFalloffQuadratic);
+    setLightAmbient(lightingState.lightCount, r, g, b);
+    setNoLightDiffuse(lightingState.lightCount);
+    setNoLightSpecular(lightingState.lightCount);
+    setNoLightSpot(lightingState.lightCount);
+    setLightFalloff(lightingState.lightCount, lightingState.currentLightFalloffConstant,
+                    lightingState.currentLightFalloffLinear,
+                    lightingState.currentLightFalloffQuadratic);
 
-    lightCount++;
-    updateShaderLighting();
+    lightingState.lightCount++;
 }
 
 void PGraphicsOpenGL_3::directionalLight(const float r, const float g, const float b, const float nx, const float ny, const float nz) {
-    enableLighting();
-    if (lightCount >= MAX_LIGHTS) {
+    lights_enabled = true;
+    if (lightingState.lightCount >= lightingState.MAX_LIGHTS) {
         return;
     }
 
-    lightType[lightCount] = DIRECTIONAL;
+    lightingState.lightType[lightingState.lightCount] = LightingState::DIRECTIONAL;
 
-    setLightPosition(lightCount, 0, 0, 0, true); // directional = true
-    setLightNormal(lightCount, nx, ny, nz);
+    setLightPosition(lightingState.lightCount, 0, 0, 0, true); // directional = true
+    setLightNormal(lightingState.lightCount, nx, ny, nz);
 
-    setNoLightAmbient(lightCount);
-    setLightDiffuse(lightCount, r, g, b);
-    setLightSpecular(lightCount, currentLightSpecular.r,
-                     currentLightSpecular.g,
-                     currentLightSpecular.b);
-    setNoLightSpot(lightCount);
-    setNoLightFalloff(lightCount);
+    setNoLightAmbient(lightingState.lightCount);
+    setLightDiffuse(lightingState.lightCount, r, g, b);
+    setLightSpecular(lightingState.lightCount,
+                     lightingState.currentLightSpecular.r,
+                     lightingState.currentLightSpecular.g,
+                     lightingState.currentLightSpecular.b);
+    setNoLightSpot(lightingState.lightCount);
+    setNoLightFalloff(lightingState.lightCount);
 
-    lightCount++;
-    updateShaderLighting();
+    lightingState.lightCount++;
+    // updateShaderLighting();
 }
 
 void PGraphicsOpenGL_3::pointLight(const float r, const float g, const float b, const float x, const float y, const float z) {
-    enableLighting();
-    if (lightCount >= MAX_LIGHTS) {
+    lights_enabled = true;
+    if (lightingState.lightCount >= lightingState.MAX_LIGHTS) {
         return;
     }
 
-    lightType[lightCount] = POINT;
+    lightingState.lightType[lightingState.lightCount] = LightingState::POINT;
 
-    setLightPosition(lightCount, x, y, z, false);
-    setLightNormal(lightCount, 0, 0, 0);
+    setLightPosition(lightingState.lightCount, x, y, z, false);
+    setLightNormal(lightingState.lightCount, 0, 0, 0);
 
-    setNoLightAmbient(lightCount);
-    setLightDiffuse(lightCount, r, g, b);
-    setLightSpecular(lightCount,
-                     currentLightSpecular.r,
-                     currentLightSpecular.g,
-                     currentLightSpecular.b);
-    setNoLightSpot(lightCount);
-    setLightFalloff(lightCount,
-                    currentLightFalloffConstant,
-                    currentLightFalloffLinear,
-                    currentLightFalloffQuadratic);
+    setNoLightAmbient(lightingState.lightCount);
+    setLightDiffuse(lightingState.lightCount, r, g, b);
+    setLightSpecular(lightingState.lightCount,
+                     lightingState.currentLightSpecular.r,
+                     lightingState.currentLightSpecular.g,
+                     lightingState.currentLightSpecular.b);
+    setNoLightSpot(lightingState.lightCount);
+    setLightFalloff(lightingState.lightCount,
+                    lightingState.currentLightFalloffConstant,
+                    lightingState.currentLightFalloffLinear,
+                    lightingState.currentLightFalloffQuadratic);
 
-    lightCount++;
-    updateShaderLighting();
+    lightingState.lightCount++;
+    // updateShaderLighting();
 }
 
 void PGraphicsOpenGL_3::spotLight(const float r, const float g, const float b, const float x, const float y, const float z,
                                   const float nx, const float ny, const float nz, const float angle, const float concentration) {
-    enableLighting();
-    if (lightCount >= MAX_LIGHTS) {
+    lights_enabled = true;
+    if (lightingState.lightCount >= lightingState.MAX_LIGHTS) {
         return;
     }
 
-    lightType[lightCount] = SPOT;
+    lightingState.lightType[lightingState.lightCount] = LightingState::SPOT;
 
-    setLightPosition(lightCount, x, y, z, false);
-    setLightNormal(lightCount, nx, ny, nz);
+    setLightPosition(lightingState.lightCount, x, y, z, false);
+    setLightNormal(lightingState.lightCount, nx, ny, nz);
 
-    setNoLightAmbient(lightCount);
-    setLightDiffuse(lightCount, r, g, b);
-    setLightSpecular(lightCount, currentLightSpecular.r,
-                     currentLightSpecular.g,
-                     currentLightSpecular.b);
-    setLightSpot(lightCount, angle, concentration);
-    setLightFalloff(lightCount, currentLightFalloffConstant,
-                    currentLightFalloffLinear,
-                    currentLightFalloffQuadratic);
+    setNoLightAmbient(lightingState.lightCount);
+    setLightDiffuse(lightingState.lightCount, r, g, b);
+    setLightSpecular(lightingState.lightCount,
+                     lightingState.currentLightSpecular.r,
+                     lightingState.currentLightSpecular.g,
+                     lightingState.currentLightSpecular.b);
+    setLightSpot(lightingState.lightCount, angle, concentration);
+    setLightFalloff(lightingState.lightCount,
+                    lightingState.currentLightFalloffConstant,
+                    lightingState.currentLightFalloffLinear,
+                    lightingState.currentLightFalloffQuadratic);
 
-    lightCount++;
-    updateShaderLighting();
+    lightingState.lightCount++;
+    // updateShaderLighting();
 }
 
 void PGraphicsOpenGL_3::lightFalloff(const float constant, const float linear, const float quadratic) {
-    currentLightFalloffConstant  = constant;
-    currentLightFalloffLinear    = linear;
-    currentLightFalloffQuadratic = quadratic;
+    lightingState.currentLightFalloffConstant  = constant;
+    lightingState.currentLightFalloffLinear    = linear;
+    lightingState.currentLightFalloffQuadratic = quadratic;
 }
 
 void PGraphicsOpenGL_3::lightSpecular(const float r, const float g, const float b) {
-    currentLightSpecular = glm::vec3(r, g, b);
+    lightingState.currentLightSpecular = glm::vec3(r, g, b);
 }
 
 void PGraphicsOpenGL_3::ambient(const float r, const float g, const float b) {
-    if (shader_fill_texture_lights) {
-        shader_fill_texture_lights->set_uniform("ambient", glm::vec4(r, g, b, 1.0f));
-    }
+    lightingState.ambient = glm::vec4(r, g, b, 1.0f);
 }
 
 void PGraphicsOpenGL_3::specular(const float r, const float g, const float b) {
-    if (shader_fill_texture_lights) {
-        shader_fill_texture_lights->set_uniform("specular", glm::vec4(r, g, b, 1.0f));
-    }
+    lightingState.specular = glm::vec4(r, g, b, 1.0f);
 }
 
 void PGraphicsOpenGL_3::emissive(const float r, const float g, const float b) {
-    if (shader_fill_texture_lights) {
-        shader_fill_texture_lights->set_uniform("emissive", glm::vec4(r, g, b, 1.0f));
-    }
+    lightingState.emissive = glm::vec4(r, g, b, 1.0f);
 }
 
 void PGraphicsOpenGL_3::shininess(const float s) {
-    if (shader_fill_texture_lights) {
-        shader_fill_texture_lights->set_uniform("shininess", s);
-    }
-}
-
-void PGraphicsOpenGL_3::enableLighting() {
-    shader(shader_fill_texture_lights);
-    if (shape_renderer != nullptr) {
-        shape_renderer->enable_lighting = true;
-    }
-}
-
-void PGraphicsOpenGL_3::disableLighting() {
-    shader(shader_fill_texture_lights);
-    if (shape_renderer != nullptr) {
-        shape_renderer->enable_lighting = false;
-    }
+    lightingState.shininess = s;
 }
 
 void PGraphicsOpenGL_3::setLightPosition(const int num, const float x, const float y, const float z, const bool directional) {
     // TODO Transform position by current modelview matrix
     //      For now, assuming world space coordinates
-    lightPositions[num] = glm::vec4(x, y, z, directional ? 0.0f : 1.0f);
+    lightingState.lightPositions[num] = glm::vec4(x, y, z, directional ? 0.0f : 1.0f);
 }
 
 void PGraphicsOpenGL_3::setLightNormal(const int num, const float dx, const float dy, const float dz) {
@@ -1204,76 +1184,48 @@ void PGraphicsOpenGL_3::setLightNormal(const int num, const float dx, const floa
     if (glm::length(normal) > 0.0f) {
         normal = glm::normalize(normal);
     }
-    lightNormals[num] = normal;
+    lightingState.lightNormals[num] = normal;
 }
 
 void PGraphicsOpenGL_3::setLightAmbient(const int num, const float r, const float g, const float b) {
-    lightAmbientColors[num] = glm::vec3(r, g, b);
+    lightingState.lightAmbientColors[num] = glm::vec3(r, g, b);
 }
 
 void PGraphicsOpenGL_3::setNoLightAmbient(const int num) {
-    lightAmbientColors[num] = glm::vec3(0.0f);
+    lightingState.lightAmbientColors[num] = glm::vec3(0.0f);
 }
 
 void PGraphicsOpenGL_3::setLightDiffuse(const int num, const float r, const float g, const float b) {
-    lightDiffuseColors[num] = glm::vec3(r, g, b);
+    lightingState.lightDiffuseColors[num] = glm::vec3(r, g, b);
 }
 
 void PGraphicsOpenGL_3::setNoLightDiffuse(const int num) {
-    lightDiffuseColors[num] = glm::vec3(0.0f);
+    lightingState.lightDiffuseColors[num] = glm::vec3(0.0f);
 }
 
 void PGraphicsOpenGL_3::setLightSpecular(const int num, const float r, const float g, const float b) {
-    lightSpecularColors[num] = glm::vec3(r, g, b);
+    lightingState.lightSpecularColors[num] = glm::vec3(r, g, b);
 }
 
 void PGraphicsOpenGL_3::setNoLightSpecular(const int num) {
-    lightSpecularColors[num] = glm::vec3(0.0f);
+    lightingState.lightSpecularColors[num] = glm::vec3(0.0f);
 }
 
 void PGraphicsOpenGL_3::setLightFalloff(const int num, const float constant, const float linear, const float quadratic) {
-    lightFalloffCoeffs[num] = glm::vec3(constant, linear, quadratic);
+    lightingState.lightFalloffCoeffs[num] = glm::vec3(constant, linear, quadratic);
 }
 
 void PGraphicsOpenGL_3::setNoLightFalloff(const int num) {
-    lightFalloffCoeffs[num] = glm::vec3(1.0f, 0.0f, 0.0f);
+    lightingState.lightFalloffCoeffs[num] = glm::vec3(1.0f, 0.0f, 0.0f);
 }
 
 void PGraphicsOpenGL_3::setLightSpot(const int num, const float angle, const float concentration) {
-    lightSpotParams[num] = glm::vec2(std::max(0.0f, std::cos(angle)), concentration);
+    lightingState.lightSpotParams[num] = glm::vec2(std::max(0.0f, std::cos(angle)), concentration);
 }
 
 void PGraphicsOpenGL_3::setNoLightSpot(const int num) {
-    lightSpotParams[num] = glm::vec2(-1.0f, 0.0f); // -1 disables spotlight
+    lightingState.lightSpotParams[num] = glm::vec2(-1.0f, 0.0f); // -1 disables spotlight
 }
-
-void PGraphicsOpenGL_3::updateShaderLighting() const {
-    if (!shader_fill_texture_lights) {
-        return;
-    }
-
-    // TODO check if this is the best place to update the shader matrices
-    shader_fill_texture_lights->set_uniform("normalMatrix", glm::mat3(glm::transpose(glm::inverse(view_matrix * model_matrix))));
-    shader_fill_texture_lights->set_uniform("texMatrix", glm::mat4(1.0f)); // or a real matrix if you’re transforming texCoords
-
-    // update light count
-    shader_fill_texture_lights->set_uniform("lightCount", lightCount);
-
-    // update all light uniforms for the current lights
-    for (int i = 0; i < lightCount; i++) {
-        std::string indexStr = "[" + std::to_string(i) + "]";
-        shader_fill_texture_lights->set_uniform("lightPosition" + indexStr, lightPositions[i]);
-        shader_fill_texture_lights->set_uniform("lightNormal" + indexStr, lightNormals[i]);
-        shader_fill_texture_lights->set_uniform("lightAmbient" + indexStr, lightAmbientColors[i]);
-        shader_fill_texture_lights->set_uniform("lightDiffuse" + indexStr, lightDiffuseColors[i]);
-        shader_fill_texture_lights->set_uniform("lightSpecular" + indexStr, lightSpecularColors[i]);
-        shader_fill_texture_lights->set_uniform("lightFalloff" + indexStr, lightFalloffCoeffs[i]);
-        shader_fill_texture_lights->set_uniform("lightSpot" + indexStr, lightSpotParams[i]);
-    }
-
-    UMFELD_PGRAPHICS_OPENGL_3_3_CORE_CHECK_ERRORS("updateShaderLighting");
-}
-
 
 void PGraphicsOpenGL_3::upload_colorbuffer(uint32_t* pixels) {
     if (pixels == nullptr) {

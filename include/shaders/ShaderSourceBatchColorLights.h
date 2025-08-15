@@ -40,7 +40,7 @@ layout(std140) uniform Transforms {
 
 uniform mat4 uViewProj;
 uniform mat4 uView;
-uniform mat3 normalMatrix;
+// uniform mat3 normalMatrix; // TODO "normalMatrix as Transform" add it via Transform block later
 
 uniform vec4 ambient;
 uniform vec4 specular;
@@ -89,6 +89,8 @@ void main() {
     mat4 M = uModel[aTransformID];
     mat4 mv = uView * M;
     gl_Position = uViewProj * M * aPosition;
+
+    mat3 normalMatrix = mat3(transpose(inverse(uView * uModel[gl_InstanceID]))); // TODO "normalMatrix as Transform" better get this from transform
 
     vec3 ecVertex = vec3(mv * aPosition);
     vec3 ecNormal = normalize(normalMatrix * aNormal.xyz);

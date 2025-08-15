@@ -29,9 +29,9 @@ namespace umfeld {
 
         /* --- OpenGL 3.3 specific implementation of shared methods --- */
 
-        void IMPL_emit_shape_stroke_line_strip(std::vector<Vertex>& line_strip_vertices, bool line_strip_closed) override;
-        void IMPL_emit_shape_fill_triangles(std::vector<Vertex>& triangle_vertices) override;
-        void IMPL_emit_shape_stroke_points(std::vector<Vertex>& point_vertices, float point_size) override;
+        // void IMPL_emit_shape_stroke_line_strip(std::vector<Vertex>& line_strip_vertices, bool line_strip_closed) override;
+        // void IMPL_emit_shape_fill_triangles(std::vector<Vertex>& triangle_vertices) override;
+        // void IMPL_emit_shape_stroke_points(std::vector<Vertex>& point_vertices, float point_size) override;
 
         void impl_background(float a, float b, float c, float d) override;
 
@@ -88,7 +88,7 @@ namespace umfeld {
         void     shininess(float s) override;
 
         PShader* shader_fill_texture{nullptr};        // REMOVE
-        PShader* shader_fill_texture_lights{nullptr}; // REMOVE
+        // PShader* shader_fill_texture_lights{nullptr}; // REMOVE
         PShader* shader_stroke{nullptr};              // REMOVE
         PShader* shader_point{nullptr};               // REMOVE
         PShader* custom_shader{nullptr};              // REMOVE
@@ -117,33 +117,6 @@ namespace umfeld {
 
         /* --- lights --- */
 
-        int                  lightCount = 0;
-        static constexpr int MAX_LIGHTS = 8; // or whatever your PGL.MAX_LIGHTS equivalent is
-
-        // Light type constants
-        static constexpr int AMBIENT     = 0;
-        static constexpr int DIRECTIONAL = 1;
-        static constexpr int POINT       = 2;
-        static constexpr int SPOT        = 3;
-
-        // Light arrays
-        int       lightType[MAX_LIGHTS]{};
-        glm::vec4 lightPositions[MAX_LIGHTS]{};
-        glm::vec3 lightNormals[MAX_LIGHTS]{};
-        glm::vec3 lightAmbientColors[MAX_LIGHTS]{};
-        glm::vec3 lightDiffuseColors[MAX_LIGHTS]{};
-        glm::vec3 lightSpecularColors[MAX_LIGHTS]{};
-        glm::vec3 lightFalloffCoeffs[MAX_LIGHTS]{};
-        glm::vec2 lightSpotParams[MAX_LIGHTS]{};
-
-        // Current light settings
-        glm::vec3 currentLightSpecular         = glm::vec3(0.0f);
-        float     currentLightFalloffConstant  = 1.0f;
-        float     currentLightFalloffLinear    = 0.0f;
-        float     currentLightFalloffQuadratic = 0.0f;
-
-        void enableLighting();
-        void disableLighting();
         void setLightPosition(int num, float x, float y, float z, bool directional);
         void setLightNormal(int num, float dx, float dy, float dz);
         void setLightAmbient(int num, float r, float g, float b);
@@ -156,7 +129,6 @@ namespace umfeld {
         void setNoLightFalloff(int num);
         void setLightSpot(int num, float angle, float concentration);
         void setNoLightSpot(int num);
-        void updateShaderLighting() const;
 
         /* --- OpenGL 3.3 specific methods --- */
 

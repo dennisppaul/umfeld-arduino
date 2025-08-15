@@ -51,8 +51,6 @@ namespace umfeld {
         //      4. before calls to `background()` ( or at least reject shapes? )
         virtual void flush(const glm::mat4& view_matrix, const glm::mat4& projection_matrix) = 0;
 
-        bool enable_lighting{false};
-
     protected:
         PGraphics* graphics{nullptr};
         bool       shape_in_progress = false;

@@ -1320,6 +1320,12 @@ void PGraphics::vertex(const float x, const float y, const float z) {
     vertex(x, y, z, 0, 0);
 }
 
+static bool shape_can_have_fill(const int shape_mode) {
+    return shape_mode != POINTS &&
+           shape_mode != LINES &&
+           shape_mode != LINE_STRIP;
+}
+
 void PGraphics::vertex(const float x, const float y, const float z, const float u, const float v) {
     if (!color_stroke.active && !color_fill.active) {
         return;
@@ -1332,7 +1338,7 @@ void PGraphics::vertex(const float x, const float y, const float z, const float 
         shape_stroke_vertex_buffer.emplace_back(position, as_vec4(color_stroke), tex_coord, current_normal);
     }
 
-    if (color_fill.active) {
+    if (color_fill.active && shape_can_have_fill(shape_mode_cache)) {
         shape_fill_vertex_buffer.emplace_back(position, as_vec4(color_fill), tex_coord, current_normal);
     }
 }
@@ -1346,7 +1352,7 @@ void PGraphics::vertex(const Vertex& v) {
         shape_stroke_vertex_buffer.emplace_back(v.position, as_vec4(color_stroke), v.tex_coord, v.normal);
     }
 
-    if (color_fill.active) {
+    if (color_fill.active && shape_can_have_fill(shape_mode_cache)) {
         // TODO maybe use v.color instead of color_fill?
         //      shape_fill_vertex_buffer.emplace_back(v);
         shape_fill_vertex_buffer.emplace_back(v.position, as_vec4(color_fill), v.tex_coord, v.normal);

@@ -580,6 +580,7 @@ void PGraphicsOpenGL_3::download_texture(PImage* img) {
 void PGraphicsOpenGL_3::init(uint32_t* pixels, const int width, const int height) {
     const int msaa_samples = antialiasing; // TODO not cool to take this from Umfeld
 
+    // REMOVE all of this once shape renderer is done
     // TODO create shader system with `get_versioned_source(string)` for:
     //     - point shader
     //     - line shader
@@ -592,22 +593,22 @@ void PGraphicsOpenGL_3::init(uint32_t* pixels, const int width, const int height
     shader_stroke = loadShader(shader_source_line.get_vertex_source(), shader_source_line.get_fragment_source());
     shader_point  = loadShader(shader_source_point.get_vertex_source(), shader_source_point.get_fragment_source());
 
-    if (shader_fill_texture == nullptr) {
-        error_in_function("failed to load default fill shader.");
-    }
-    // if (shader_fill_texture_lights == nullptr) {
-    //     error_in_function("failed to load default light shader.");
+    // if (shader_fill_texture == nullptr) {
+    //     error_in_function("failed to load default fill shader.");
     // }
-    if (shader_stroke == nullptr) {
-        error_in_function("failed to load default stroke shader.");
-    } else {
-        set_stroke_render_mode(STROKE_RENDER_MODE_LINE_SHADER);
-    }
-    if (shader_point == nullptr) {
-        error_in_function("failed to load default point shader.");
-    } else {
-        set_point_render_mode(POINT_RENDER_MODE_SHADER);
-    }
+    // // if (shader_fill_texture_lights == nullptr) {
+    // //     error_in_function("failed to load default light shader.");
+    // // }
+    // if (shader_stroke == nullptr) {
+    //     error_in_function("failed to load default stroke shader.");
+    // } else {
+    //     set_stroke_render_mode(STROKE_RENDER_MODE_LINE_SHADER);
+    // }
+    // if (shader_point == nullptr) {
+    //     error_in_function("failed to load default point shader.");
+    // } else {
+    //     set_point_render_mode(POINT_RENDER_MODE_SHADER);
+    // }
 
     this->width        = width;
     this->height       = height;

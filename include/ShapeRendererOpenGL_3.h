@@ -64,10 +64,11 @@ namespace umfeld {
         //      ```
 
         struct TextureBatch {
-            uint16_t            texture_id{TEXTURE_NONE};
             std::vector<Shape*> opaque_shapes;
             std::vector<Shape*> transparent_shapes;
             std::vector<Shape*> light_shapes;
+            uint32_t            max_vertices{0};
+            uint16_t            texture_id{TEXTURE_NONE};
         };
 
         // cached uniform locations
@@ -116,6 +117,8 @@ namespace umfeld {
         SHAPE_CENTER_COMPUTE_STRATEGY shape_center_compute_strategy = ZERO_CENTER;
         std::vector<Vertex>           frame_vertices;
         std::vector<glm::mat4>        frame_matrices;
+        uint32_t                      max_vertices_per_batch{0};
+        bool                          initialize_vbo_buffer{false};
 
         //        static GLuint compileShader(const char* src, GLenum type);
         //        static GLuint createShaderProgram(const char* vsSrc, const char* fsSrc);

@@ -113,6 +113,7 @@ namespace umfeld {
     enum StrokeCap {
         SQUARE = 0x40,
         PROJECT,
+        // ROUND,
         POINTED
     };
     enum StrokeRenderMode {

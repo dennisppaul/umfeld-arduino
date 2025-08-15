@@ -623,7 +623,7 @@ namespace umfeld {
         const ShaderUniforms& uniforms = texture_id == TEXTURE_NONE ? shader_uniforms_color : shader_uniforms_texture;
 
         glUseProgram(shader);
-        // NOTE moved to glUniformMatrix4fv(uniforms.uViewProj, 1, GL_FALSE, &view_projection_matrix[0][0]);
+        // NOTE moved `glUniformMatrix4fv(uniforms.uViewProj, 1, GL_FALSE, &view_projection_matrix[0][0]);` to calling method
 
         if (texture_id != TEXTURE_NONE) {
             bind_texture(texture_id);
@@ -660,14 +660,29 @@ namespace umfeld {
                 convert_shapes_to_triangles(*s, frame_vertices, static_cast<uint16_t>(i));
             }
 
-            if (!frame_vertices.empty()) {
+            if (frame_vertices.size() > max_vertices_per_batch) {
+                error("number of batch vertices exceeded buffer");
+            } else if (!frame_vertices.empty()) {
                 glBindBuffer(GL_ARRAY_BUFFER, vbo);
-                glBufferData(GL_ARRAY_BUFFER,
-                             static_cast<GLsizeiptr>(frame_vertices.size() * sizeof(Vertex)),
-                             frame_vertices.data(),
-                             GL_DYNAMIC_DRAW);
-                // glDrawArrays(GL_LINE_STRIP, 0, static_cast<GLsizei>(frame_vertices.size()));
-                glDrawArrays(GL_TRIANGLES, 0, static_cast<GLsizei>(frame_vertices.size()));
+                // OPTIMIZE optimizing upload here … use `max_vertices_per_batch` to create buffer once and then `glBufferSubData`?
+                // glBufferData(GL_ARRAY_BUFFER,
+                //              static_cast<GLsizeiptr>(frame_vertices.size() * sizeof(Vertex)),
+                //              frame_vertices.data(),
+                //              GL_DYNAMIC_DRAW);
+                if (!initialize_vbo_buffer) {
+                    initialize_vbo_buffer = true;
+                    glBufferData(GL_ARRAY_BUFFER,
+                                 static_cast<GLsizeiptr>(max_vertices_per_batch * sizeof(Vertex)),
+                                 nullptr,
+                                 GL_DYNAMIC_DRAW);
+                }
+                glBufferSubData(GL_ARRAY_BUFFER,
+                                0, frame_vertices.size() * sizeof(Vertex),
+                                frame_vertices.data());
+                glDrawArrays(GL_TRIANGLES,
+                             // GL_LINE_STRIP,
+                             0,
+                             static_cast<GLsizei>(frame_vertices.size()));
             }
         }
     }
@@ -733,8 +748,9 @@ namespace umfeld {
         const glm::mat4 view_projection_matrix = projection_matrix * view_matrix;
 
         // use unordered_map for better performance with many textures
-        static constexpr int                     DEFAULT_NUM_TEXTURES = 16;
         std::unordered_map<GLuint, TextureBatch> texture_batches;
+        // TODO make default number of textures dynamic depending on last frame
+        static constexpr int DEFAULT_NUM_TEXTURES = 32;
         texture_batches.reserve(DEFAULT_NUM_TEXTURES);
 
         int frame_has_light_shapes       = 0;
@@ -755,10 +771,16 @@ namespace umfeld {
                     frame_has_opaque_shapes++;
                 }
             }
+            batch.max_vertices += s.vertices.size();
         }
 
-        // compute depth and sort transparents
+        max_vertices_per_batch = 0;
+        initialize_vbo_buffer  = false;
         for (auto& [textureID, batch]: texture_batches) {
+            if (batch.max_vertices > max_vertices_per_batch) {
+                max_vertices_per_batch = batch.max_vertices;
+            }
+            // compute depth and sort transparents
             for (auto* s: batch.transparent_shapes) {
                 const glm::vec4 center_world_space = s->model * glm::vec4(s->center_object_space, 1.0f);
                 const glm::vec4 center_view_space  = view_projection_matrix * center_world_space;
@@ -767,6 +789,8 @@ namespace umfeld {
             std::sort(batch.transparent_shapes.begin(), batch.transparent_shapes.end(),
                       [](const Shape* A, const Shape* B) { return A->depth > B->depth; }); // Back to front
         }
+        warning_in_function_once("max_vertices_per_batch: ", max_vertices_per_batch);
+        // TODO allocate VBO once with `max_vertices_per_batch`
 
         glBindVertexArray(vao);
 
@@ -791,7 +815,7 @@ namespace umfeld {
                 enable_depth_testing();
             }
 
-// TODO add shader path to `render_batch` for normal rendering, light renderering, etcetera.
+            // TODO add shader path to `render_batch` for normal rendering, light renderering, etcetera.
 
             warning_in_function_once("frame_has_light_shapes: ", frame_has_light_shapes);
             for (auto& [texture_id, batch]: texture_batches) {
@@ -878,7 +902,7 @@ namespace umfeld {
             std::vector<Shape*> singleShape = {&shape};
             TRACE_SCOPE_N("RENDER_BATCH");
             {
-                render_batch(singleShape, view_projection_matrix, shape.texture_id);
+                render_batch(singleShape, shape.texture_id);
             }
         }
 

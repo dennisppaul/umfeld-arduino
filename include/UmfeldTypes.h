@@ -27,7 +27,7 @@ namespace umfeld {
     struct StrokeState {
         float stroke_weight{1};
         int   stroke_join_mode{BEVEL_FAST};
-        int   stroke_cap_mode{PROJECT};
+        int   stroke_cap_mode{SQUARE};
         float stroke_join_round_resolution{glm::radians(20.0f)};
         float stroke_cap_round_resolution{glm::radians(20.0f)}; // // 20° resolution i.e 18 segment for whole circle
         float stroke_join_miter_max_angle{163.0f};

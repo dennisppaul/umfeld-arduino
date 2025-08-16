@@ -22,7 +22,9 @@
 #include "UmfeldSDLOpenGL.h"
 #include "ShapeRenderer.h"
 #include "Shape.h"
+#include "PShader.h"
 #include "PGraphics.h"
+#include "UmfeldFunctionsGraphics.h"
 
 namespace umfeld {
     class ShapeRendererOpenGL_3 final : public ShapeRenderer {
@@ -35,7 +37,7 @@ namespace umfeld {
         static constexpr uint16_t SHADER_PROGRAM_LINE           = 5; // TODO implement
         static constexpr uint16_t NUM_SHADER_PROGRAMS           = 6;
 
-        enum SHAPE_CENTER_COMPUTE_STRATEGY {
+        enum ShapeCenterComputeStrategy {
             ZERO_CENTER,
             AXIS_ALIGNED_BOUNDING_BOX,
             CENTER_OF_MASS,
@@ -53,6 +55,7 @@ namespace umfeld {
         void flush(const glm::mat4& view_matrix, const glm::mat4& projection_matrix) override;
         void handle_point_shape(std::vector<Shape>& processed_triangle_shapes, std::vector<Shape>& processed_point_shapes, Shape& point_shape) const;
         void handle_stroke_shape(std::vector<Shape>& processed_triangle_shapes, std::vector<Shape>& processed_line_shapes, Shape& stroke_shape) const;
+        void set_custom_shader(PShader* shader = nullptr) { custom_shader = shader; }
 
     private:
         static constexpr uint16_t MAX_TRANSFORMS = 256;
@@ -99,29 +102,28 @@ namespace umfeld {
         };
 
         // TODO implement for lighting, point and line shader
-        ShaderUniforms                shader_uniforms_color;
-        ShaderUniforms                shader_uniforms_texture;
-        ShaderUniforms                shader_uniforms_color_lights;
-        ShaderUniforms                shader_uniforms_texture_lights;
-        GLuint                        vbo                            = 0;
-        GLuint                        ubo                            = 0;
-        GLuint                        vao                            = 0;
-        GLuint                        shader_programm_texture        = 0;
-        GLuint                        shader_programm_color          = 0;
-        GLuint                        shader_programm_texture_lights = 0; // TODO implement
-        GLuint                        shader_programm_color_lights   = 0; // TODO implement
-        GLuint                        pointShaderProgram             = 0; // TODO implement
-        GLuint                        lineShaderProgram              = 0; // TODO implement
-        std::vector<Shape>            shapes;
-        Shape                         currentShape;
-        SHAPE_CENTER_COMPUTE_STRATEGY shape_center_compute_strategy = ZERO_CENTER;
-        std::vector<Vertex>           frame_vertices;
-        std::vector<glm::mat4>        frame_matrices;
-        uint32_t                      max_vertices_per_batch{0};
-        bool                          initialize_vbo_buffer{false};
+        ShaderUniforms             shader_uniforms_color;
+        ShaderUniforms             shader_uniforms_texture;
+        ShaderUniforms             shader_uniforms_color_lights;
+        ShaderUniforms             shader_uniforms_texture_lights;
+        GLuint                     vbo                            = 0;
+        GLuint                     ubo                            = 0;
+        GLuint                     vao                            = 0;
+        GLuint                     shader_programm_texture        = 0;
+        GLuint                     shader_programm_color          = 0;
+        GLuint                     shader_programm_texture_lights = 0; // TODO implement
+        GLuint                     shader_programm_color_lights   = 0; // TODO implement
+        GLuint                     point_shader_program           = 0; // TODO implement
+        GLuint                     line_shader_program            = 0; // TODO implement
+        std::vector<Shape>         shapes;
+        Shape                      current_shape;
+        ShapeCenterComputeStrategy shape_center_compute_strategy = ZERO_CENTER;
+        std::vector<Vertex>        flush_frame_vertices;
+        std::vector<glm::mat4>     flush_frame_matrices;
+        uint32_t                   max_vertices_per_batch{0};
+        bool                       initialized_vbo_buffer{false};
+        PShader*                   custom_shader{nullptr};
 
-        //        static GLuint compileShader(const char* src, GLenum type);
-        //        static GLuint createShaderProgram(const char* vsSrc, const char* fsSrc);
         static void   setupUniformBlocks(GLuint program);
         static bool   evaluate_shader_uniforms(const std::string& shader_name, const ShaderUniforms& uniforms);
         void          initShaders(const std::vector<int>& shader_programm_id);

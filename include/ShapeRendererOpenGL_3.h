@@ -45,21 +45,17 @@ namespace umfeld {
 
         ~ShapeRendererOpenGL_3() override {}
         void init(PGraphics* g, std::vector<int> shader_programs) override;
-        // void beginShape(ShapeMode mode, bool filled, bool transparent, uint32_t texture_id, const glm::mat4& model_transform_matrix) override;
-        // void vertex(const Vertex& v) override;
-        // void setVertices(std::vector<Vertex>&& vertices) override;
-        // void setVertices(const std::vector<Vertex>& vertices) override;
-        // void endShape(bool closed) override;
         void submitShape(Shape& s) override;
-        int  set_texture(PImage* img) override;
-        void flush(const glm::mat4& view_matrix, const glm::mat4& projection_matrix) override;
         void handle_point_shape(std::vector<Shape>& processed_triangle_shapes, std::vector<Shape>& processed_point_shapes, Shape& point_shape) const;
         void handle_stroke_shape(std::vector<Shape>& processed_triangle_shapes, std::vector<Shape>& processed_line_shapes, Shape& stroke_shape) const;
+        int  set_texture(PImage* img) override;
         void set_custom_shader(PShader* shader) override { custom_shader = shader; }
+        void flush(const glm::mat4& view_matrix, const glm::mat4& projection_matrix) override;
 
     private:
-        static constexpr uint32_t NO_SHADER_PROGRAM = -1;
-        static constexpr uint16_t MAX_TRANSFORMS    = 256;
+        static constexpr int      DEFAULT_NUM_TEXTURES = 64;
+        static constexpr uint32_t NO_SHADER_PROGRAM    = -1;
+        static constexpr uint16_t MAX_TRANSFORMS       = 256;
         // NOTE check `GL_MAX_UNIFORM_BLOCK_SIZE`
         //      ```c
         //      GLuint maxUBOSize;
@@ -84,8 +80,7 @@ namespace umfeld {
             };
             GLuint uViewProj = UNINITIALIZED;
             GLuint uTexture  = UNINITIALIZED;
-
-            // Lighting uniforms
+            // lighting uniforms
             GLuint uView         = UNINITIALIZED;
             GLuint normalMatrix  = UNINITIALIZED;
             GLuint ambient       = UNINITIALIZED;
@@ -102,23 +97,22 @@ namespace umfeld {
             GLuint lightSpot     = UNINITIALIZED;
         };
 
-        ShaderUniforms     shader_uniforms_color;
-        ShaderUniforms     shader_uniforms_texture;
-        ShaderUniforms     shader_uniforms_color_lights;
-        ShaderUniforms     shader_uniforms_texture_lights;
-        ShaderUniforms     shader_uniforms_point; // TODO implement
-        ShaderUniforms     shader_uniforms_line;  // TODO implement
-        GLuint             vbo                            = 0;
-        GLuint             ubo                            = 0;
-        GLuint             vao                            = 0;
-        GLuint             shader_programm_texture        = 0;
-        GLuint             shader_programm_color          = 0;
-        GLuint             shader_programm_texture_lights = 0;
-        GLuint             shader_programm_color_lights   = 0;
-        GLuint             point_shader_program           = 0; // TODO implement
-        GLuint             line_shader_program            = 0; // TODO implement
-        std::vector<Shape> shapes;
-        // Shape                      current_shape;
+        ShaderUniforms             shader_uniforms_color;
+        ShaderUniforms             shader_uniforms_texture;
+        ShaderUniforms             shader_uniforms_color_lights;
+        ShaderUniforms             shader_uniforms_texture_lights;
+        ShaderUniforms             shader_uniforms_point; // TODO implement
+        ShaderUniforms             shader_uniforms_line;  // TODO implement
+        GLuint                     vbo                            = 0;
+        GLuint                     ubo                            = 0;
+        GLuint                     vao                            = 0;
+        GLuint                     shader_programm_texture        = 0;
+        GLuint                     shader_programm_color          = 0;
+        GLuint                     shader_programm_texture_lights = 0;
+        GLuint                     shader_programm_color_lights   = 0;
+        GLuint                     point_shader_program           = 0; // TODO implement
+        GLuint                     line_shader_program            = 0; // TODO implement
+        std::vector<Shape>         shapes;
         ShapeCenterComputeStrategy shape_center_compute_strategy = ZERO_CENTER;
         std::vector<Vertex>        flush_frame_vertices;
         std::vector<glm::mat4>     flush_frame_matrices;
@@ -139,29 +133,16 @@ namespace umfeld {
         void          computeShapeCenter(Shape& s) const;
         void          enable_depth_testing() const;
         static void   disable_depth_testing();
-        void          flush_sort_by_z_order(std::vector<Shape>& shapes,
-                                            const glm::mat4&    view_matrix,
-                                            const glm::mat4&    projection_matrix);
-        void          flush_submission_order(std::vector<Shape>& shapes,
-                                             const glm::mat4&    view_matrix,
-                                             const glm::mat4&    projection_matrix);
-        void          flush_immediately(std::vector<Shape>& shapes,
-                                        const glm::mat4&    view_matrix,
-                                        const glm::mat4&    projection_matrix);
+        void          flush_sort_by_z_order(std::vector<Shape>& shapes, const glm::mat4& view_matrix, const glm::mat4& projection_matrix);
+        void          flush_submission_order(std::vector<Shape>& shapes, const glm::mat4& view_matrix, const glm::mat4& projection_matrix);
+        void          flush_immediately(std::vector<Shape>& shapes, const glm::mat4& view_matrix, const glm::mat4& projection_matrix);
         void          flush_processed_shapes(const std::vector<Shape>& processed_point_shapes, const std::vector<Shape>& processed_line_shapes, std::vector<Shape>& processed_triangle_shapes, const glm::mat4& view_matrix, const glm::mat4& projection_matrix);
         void          reset_flush_frame();
         void          process_shapes(std::vector<Shape>& processed_point_shapes, std::vector<Shape>& processed_line_shapes, std::vector<Shape>& processed_triangle_shapes);
-        static void   updateShaderLighting();
         void          set_per_frame_shader_uniforms(const glm::mat4& view_projection_matrix, int frame_has_light_shapes, int frame_has_transparent_shapes, int frame_has_opaque_shapes) const;
-        void          enable_default_shader(unsigned texture_id) const;
-        void          enable_light_shader(unsigned texture_id) const;
+        void          enable_default_shader_and_bind_texture(unsigned texture_id) const;
+        void          enable_light_shader_and_bind_texture(unsigned texture_id) const;
         static bool   uniform_exists(const GLuint loc) { return loc != ShaderUniforms::NOT_FOUND; }
         static void   set_light_uniforms(const ShaderUniforms& uniforms, const LightingState& lighting);
-
-        static void bind_texture(const int texture_id) {
-            // TODO check if `glActiveTexture` needs to be done every time
-            glActiveTexture(GL_TEXTURE0 + PGraphicsOpenGL::DEFAULT_ACTIVE_TEXTURE_UNIT);
-            glBindTexture(GL_TEXTURE_2D, texture_id); // NOTE this should be the only glBindTexture ( except for initializations )
-        }
     };
 } // namespace umfeld

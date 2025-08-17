@@ -41,7 +41,7 @@ layout(std140) uniform Transforms {
 
 uniform mat4 uViewProj;
 uniform mat4 uView;
-uniform mat3 normalMatrix;
+// uniform mat3 normalMatrix; // TODO "normalMatrix as Transform" add it via Transform block later
 
 uniform vec4 ambient;
 uniform vec4 specular;
@@ -88,10 +88,14 @@ float blinnPhongFactor(vec3 lightDir, vec3 vertPos, vec3 vecNormal, float shine)
 
 void main() {
     mat4 M = uModel[aTransformID];
-    mat4 mv = uView * M;
+    mat4 MV = uView * M;
     gl_Position = uViewProj * M * aPosition;
 
-    vec3 ecVertex = vec3(mv * aPosition);
+    // TODO "normalMatrix as Transform" better get this from transform
+    mat3 normalMatrix = mat3(transpose(inverse(uView * uModel[aTransformID])));
+    // mat3 normalMatrix = mat3(uView * MV);
+
+    vec3 ecVertex = vec3(MV * aPosition);
     vec3 ecNormal = normalize(normalMatrix * aNormal.xyz);
     vec3 ecNormalInv = -ecNormal;
 

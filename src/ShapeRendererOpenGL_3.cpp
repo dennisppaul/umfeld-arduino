@@ -38,64 +38,6 @@ namespace umfeld {
         initBuffers();
     }
 
-    // REMOVE >>>
-    // void ShapeRendererOpenGL_3::beginShape(const ShapeMode  mode,
-    //                                        const bool       filled,
-    //                                        const bool       transparent,
-    //                                        const uint32_t   texture_id,
-    //                                        const glm::mat4& model_transform_matrix) {
-    //     if (shape_in_progress) {
-    //         warning("beginShape() called while another shape is in progress");
-    //     }
-    //
-    //     current_shape             = Shape{};
-    //     current_shape.mode        = mode;
-    //     current_shape.filled      = filled;
-    //     current_shape.transparent = transparent;
-    //     current_shape.texture_id  = texture_id;
-    //     current_shape.model       = model_transform_matrix;
-    //     current_shape.vertices.clear();
-    //     shape_in_progress = true;
-    // }
-    //
-    // void ShapeRendererOpenGL_3::vertex(const Vertex& v) {
-    //     if (!shape_in_progress) {
-    //         error("Error: vertex() called without beginShape()");
-    //         return;
-    //     }
-    //     current_shape.vertices.push_back(v);
-    // }
-    //
-    // void ShapeRendererOpenGL_3::setVertices(std::vector<Vertex>&& vertices) {
-    //     if (!shape_in_progress) {
-    //         error("Error: setVertices() called without beginShape()");
-    //         return;
-    //     }
-    //     current_shape.vertices = std::move(vertices);
-    // }
-    //
-    // void ShapeRendererOpenGL_3::setVertices(const std::vector<Vertex>& vertices) {
-    //     if (!shape_in_progress) {
-    //         error("Error: setVertices() called without beginShape()");
-    //         return;
-    //     }
-    //     current_shape.vertices = vertices;
-    // }
-    //
-    // void ShapeRendererOpenGL_3::endShape(const bool closed) {
-    //     if (!shape_in_progress) {
-    //         // warning("Error: endShape() called without beginShape()");
-    //         return;
-    //     }
-    //     // if (current_shape.vertices.empty()) {
-    //     //     warning("Warning: endShape() called with no vertices");
-    //     // }
-    //     current_shape.closed = closed;
-    //     submitShape(current_shape);
-    //     shape_in_progress = false;
-    // }
-    // REMOVE <<<
-
     void ShapeRendererOpenGL_3::submitShape(Shape& s) {
         // NOTE only compute center for transparent shapes
         if (s.light_enabled) {
@@ -114,17 +56,12 @@ namespace umfeld {
 
     int ShapeRendererOpenGL_3::set_texture(PImage* img) {
         // NOTE not un-/binding any textures here.
-        //      this also means that custom shapes ( e.g VertexBuffer/Mesh ) would need to manually bind textures before rendering
+        //      this also means that custom shapes ( e.g VertexBuffer/Mesh )
+        //      would need to manually bind textures before rendering
         if (img == nullptr) {
             return TEXTURE_NONE;
         }
 
-        // if (shape_in_progress) {
-        //     console("`texture()` can only be called right before `beginShape(...)`. ( note, this is different from the original processing )");
-        //     return TEXTURE_NONE;
-        // }
-
-        // TODO move this to own method and share with `texture()`
         if (img->texture_id == TEXTURE_NOT_GENERATED) {
             const bool success = PGraphicsOpenGL::OGL_generate_and_upload_image_as_texture(img);
             if (!success || img->texture_id == TEXTURE_NOT_GENERATED) {
@@ -378,7 +315,7 @@ namespace umfeld {
             }
         }
 
-        // Only check lighting uniforms for lighting shaders
+        // only check lighting uniforms for lighting shaders
         if (shader_name.find("lights") != std::string::npos) {
             if (uniforms.uView == ShaderUniforms::NOT_FOUND) {
                 warning(shader_name, ": uniform 'uView' not found");
@@ -534,8 +471,7 @@ namespace umfeld {
 
         glBindVertexArray(0);
 
-        // Pre-allocate frame buffers
-        flush_frame_vertices.reserve(4096); // NOTE maybe decrease this for mobile to 1024
+        // pre-allocate frame buffers
         flush_frame_matrices.reserve(MAX_TRANSFORMS);
     }
 
@@ -633,24 +569,9 @@ namespace umfeld {
     void ShapeRendererOpenGL_3::render_batch(const std::vector<Shape*>& shapes_to_render) {
         // NOTE assumes that shader is already in use and texture is already bound
 
-        // TODO not very happy about `use_lighting` and the use of `glUseProgram` in this method in general.
-        //      maybe it would be better to either split `render_batch` up into dedicated methods ...
         if (shapes_to_render.empty()) {
             return;
         }
-
-        // if (custom_shader == nullptr) {
-        //     // const GLuint          shader   = use_lighting ? (texture_id == TEXTURE_NONE ? shader_programm_color_lights : shader_programm_texture_lights) : (texture_id == TEXTURE_NONE ? shader_programm_color : shader_programm_texture);
-        //     // const ShaderUniforms& uniforms = texture_id == TEXTURE_NONE ? shader_uniforms_color : shader_uniforms_texture;
-        //     // REMOVE might be removed ^^^
-        //     // glUseProgram(shader);
-        //     // if (texture_id != TEXTURE_NONE) {
-        //     //     bind_texture(texture_id);
-        //     // }
-        // } else {
-        //     warning_in_function_once("custom_shader: set shader uniforms per batch?");
-        //     glUseProgram(custom_shader->get_program_id());
-        // }
 
         // process in chunks to respect MAX_TRANSFORMS limit
         for (size_t offset = 0; offset < shapes_to_render.size(); offset += MAX_TRANSFORMS) {
@@ -679,7 +600,6 @@ namespace umfeld {
             for (size_t i = 0; i < chunkSize; ++i) {
                 const auto* s = shapes_to_render[offset + i];
                 if (s->light_enabled) {
-                    // OPTIMIZE only update uniforms that are dirty
                     if (s->texture_id == TEXTURE_NONE) {
                         set_light_uniforms(shader_uniforms_color_lights, s->lighting);
                     } else {
@@ -757,7 +677,7 @@ namespace umfeld {
         } else {
             glEnable(GL_DEPTH_TEST);
         }
-        glDepthFunc(GL_LEQUAL); // Allow equal depths to pass ( `GL_LESS` is default )
+        glDepthFunc(GL_LEQUAL); // allow equal depths to pass ( `GL_LESS` is default )
         glDepthMask(GL_TRUE);
         glDisable(GL_BLEND);
     }
@@ -793,21 +713,21 @@ namespace umfeld {
         }
     }
 
-    void ShapeRendererOpenGL_3::enable_default_shader(const unsigned texture_id) const {
+    void ShapeRendererOpenGL_3::enable_default_shader_and_bind_texture(const unsigned texture_id) const {
         if (texture_id == TEXTURE_NONE) {
             glUseProgram(shader_programm_color);
         } else {
             glUseProgram(shader_programm_texture);
-            bind_texture(texture_id);
+            PGraphicsOpenGL::OGL_bind_texture(texture_id);
         }
     }
 
-    void ShapeRendererOpenGL_3::enable_light_shader(const unsigned texture_id) const {
+    void ShapeRendererOpenGL_3::enable_light_shader_and_bind_texture(const unsigned texture_id) const {
         if (texture_id == TEXTURE_NONE) {
             glUseProgram(shader_programm_color_lights);
         } else {
             glUseProgram(shader_programm_texture_lights);
-            bind_texture(texture_id);
+            PGraphicsOpenGL::OGL_bind_texture(texture_id);
         }
     }
 
@@ -832,7 +752,6 @@ namespace umfeld {
         // use unordered_map for better performance with many textures
         std::unordered_map<GLuint, TextureBatch> texture_batches;
         // TODO make default number of textures dynamic depending on last frame
-        static constexpr int DEFAULT_NUM_TEXTURES = 32;
         texture_batches.reserve(DEFAULT_NUM_TEXTURES);
 
         for (auto& s: shapes) {
@@ -874,37 +793,32 @@ namespace umfeld {
         } else {
             warning_in_function_once("custom_shader: preset uniforms?");
         }
-
         // opaque pass
         if (frame_opaque_shapes_count > 0) {
             enable_depth_testing();
             warning_in_function_once("frame_opaque_shapes_count: ", frame_opaque_shapes_count);
             for (auto& [texture_id, batch]: texture_batches) {
-                enable_default_shader(texture_id);
+                enable_default_shader_and_bind_texture(texture_id);
                 render_batch(batch.opaque_shapes);
             }
         }
-
         // light pass
-        // TODO this is WIP
         if (frame_light_shapes_count > 0) {
             if (frame_opaque_shapes_count > 0) {
                 enable_depth_testing();
             }
-            // TODO figure out how to set light uniforms
             warning_in_function_once("frame_light_shapes_count: ", frame_light_shapes_count);
             for (auto& [texture_id, batch]: texture_batches) {
-                enable_light_shader(texture_id);
+                enable_light_shader_and_bind_texture(texture_id);
                 render_batch(batch.light_shapes);
             }
         }
-
         // transparent pass
         if (frame_transparent_shapes_count > 0) {
             disable_depth_testing();
             warning_in_function_once("frame_transparent_shapes_count: ", frame_transparent_shapes_count);
             for (auto& [texture_id, batch]: texture_batches) {
-                enable_default_shader(texture_id);
+                enable_default_shader_and_bind_texture(texture_id);
                 render_batch(batch.transparent_shapes);
             }
         }
@@ -914,6 +828,7 @@ namespace umfeld {
     }
 
     void ShapeRendererOpenGL_3::set_light_uniforms(const ShaderUniforms& uniforms, const LightingState& lighting) {
+        // OPTIMIZE only update uniforms that are dirty
         if (uniform_exists(uniforms.ambient)) {
             glUniform4fv(uniforms.ambient, 1, &lighting.ambient[0]);
         }
@@ -1032,20 +947,11 @@ namespace umfeld {
                 //      - model, view, projection matrices
                 //      - light uniforms
             }
-            // bind texture
-            // if (shape.texture_id != TEXTURE_NONE) {
-            //     bind_texture(shape.texture_id); // NOTE no need to `unbind` texture here
-            // }
-            // // set light uniforms
-            // if (shape.light_enabled) {
-            //     // NOTE uniforms are now moved to `render_batch()`
-            //     set_light_uniforms(cached_shader_program_id, shape.lighting);
-            // }
             // handle texture changes
             if (shape.texture_id != currentTexture) {
                 currentTexture = shape.texture_id;
                 if (currentTexture != TEXTURE_NONE) {
-                    bind_texture(currentTexture);
+                    PGraphicsOpenGL::OGL_bind_texture(currentTexture);
                 }
             }
             // adapt buffer size if necessary
@@ -1061,7 +967,7 @@ namespace umfeld {
             }
         }
 
-        // Restore default state
+        // restore default state
         glDepthMask(GL_TRUE);
         glDisable(GL_BLEND);
         glBindVertexArray(0);
@@ -1135,37 +1041,5 @@ namespace umfeld {
                 processed_triangle_shapes.push_back(std::move(s));
             }
         }
-    }
-
-#ifdef UMFELD_PGRAPHICS_OPENGL_3_3_CORE_ERRORS
-#define UMFELD_PGRAPHICS_OPENGL_3_3_CORE_CHECK_ERRORS(msg) \
-    do {                                                   \
-        checkOpenGLError(msg);                             \
-    } while (0)
-#else
-#define UMFELD_PGRAPHICS_OPENGL_3_3_CORE_CHECK_ERRORS(msg)
-#endif
-
-    void ShapeRendererOpenGL_3::updateShaderLighting() {
-        // // TODO check if this is the best place to update the shader matrices
-        // shader_fill_texture_lights->set_uniform("normalMatrix", glm::mat3(glm::transpose(glm::inverse(view_matrix * model_matrix))));
-        // shader_fill_texture_lights->set_uniform("texMatrix", glm::mat4(1.0f)); // or a real matrix if you’re transforming texCoords
-        //
-        // // update light count
-        // shader_fill_texture_lights->set_uniform("lightCount", lightingState.lightCount);
-        //
-        // // update all light uniforms for the current lights
-        // for (int i = 0; i < lightingState.lightCount; i++) {
-        //     std::string indexStr = "[" + std::to_string(i) + "]";
-        //     shader_fill_texture_lights->set_uniform("lightPosition" + indexStr, lightingState.lightPositions[i]);
-        //     shader_fill_texture_lights->set_uniform("lightNormal" + indexStr, lightingState.lightNormals[i]);
-        //     shader_fill_texture_lights->set_uniform("lightAmbient" + indexStr, lightingState.lightAmbientColors[i]);
-        //     shader_fill_texture_lights->set_uniform("lightDiffuse" + indexStr, lightingState.lightDiffuseColors[i]);
-        //     shader_fill_texture_lights->set_uniform("lightSpecular" + indexStr, lightingState.lightSpecularColors[i]);
-        //     shader_fill_texture_lights->set_uniform("lightFalloff" + indexStr, lightingState.lightFalloffCoeffs[i]);
-        //     shader_fill_texture_lights->set_uniform("lightSpot" + indexStr, lightingState.lightSpotParams[i]);
-        // }
-
-        UMFELD_PGRAPHICS_OPENGL_3_3_CORE_CHECK_ERRORS("updateShaderLighting");
     }
 } // namespace umfeld

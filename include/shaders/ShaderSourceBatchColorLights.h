@@ -87,12 +87,14 @@ float blinnPhongFactor(vec3 lightDir, vec3 vertPos, vec3 vecNormal, float shine)
 
 void main() {
     mat4 M = uModel[aTransformID];
-    mat4 mv = uView * M;
+    mat4 MV = uView * M;
     gl_Position = uViewProj * M * aPosition;
 
-    mat3 normalMatrix = mat3(transpose(inverse(uView * uModel[gl_InstanceID]))); // TODO "normalMatrix as Transform" better get this from transform
+    // TODO "normalMatrix as Transform" better get this from transform
+    mat3 normalMatrix = mat3(transpose(inverse(uView * uModel[aTransformID])));
+    // mat3 normalMatrix = mat3(uView * MV);
 
-    vec3 ecVertex = vec3(mv * aPosition);
+    vec3 ecVertex = vec3(MV * aPosition);
     vec3 ecNormal = normalize(normalMatrix * aNormal.xyz);
     vec3 ecNormalInv = -ecNormal;
 
@@ -155,10 +157,10 @@ void main() {
 in vec4 vColor;
 in vec4 vBackColor;
 
-out vec4 fragColor;
+out vec4 FragColor;
 
 void main() {
-    fragColor = gl_FrontFacing ? vColor : vBackColor;
+    FragColor = gl_FrontFacing ? vColor : vBackColor;
 }
         )",
         .geometry = ""};

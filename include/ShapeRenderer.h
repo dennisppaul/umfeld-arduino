@@ -32,15 +32,15 @@ namespace umfeld {
     public:
         virtual ~ShapeRenderer()                                          = default;
         virtual void init(PGraphics* g, std::vector<int> shader_programs) = 0; // NOTE init shaders + buffers
-        virtual void beginShape(ShapeMode        mode,
-                                bool             filled,
-                                bool             transparent,
-                                uint32_t         texture_id,
-                                const glm::mat4& model_transform_matrix)  = 0;
-        virtual void vertex(const Vertex& v)                              = 0;
-        virtual void setVertices(std::vector<Vertex>&& vertices)          = 0;
-        virtual void setVertices(const std::vector<Vertex>& vertices)     = 0;
-        virtual void endShape(bool closed)                                = 0;
+        // virtual void beginShape(ShapeMode        mode,
+        //                         bool             filled,
+        //                         bool             transparent,
+        //                         uint32_t         texture_id,
+        //                         const glm::mat4& model_transform_matrix)  = 0;
+        // virtual void vertex(const Vertex& v)                              = 0;
+        // virtual void setVertices(std::vector<Vertex>&& vertices)          = 0;
+        // virtual void setVertices(const std::vector<Vertex>& vertices)     = 0;
+        // virtual void endShape(bool closed)                                = 0;
         virtual void submitShape(Shape& s)                                = 0;
         virtual int  set_texture(PImage* img)                             = 0;
         virtual void set_custom_shader(PShader* shader)                   = 0;
@@ -54,6 +54,6 @@ namespace umfeld {
 
     protected:
         PGraphics* graphics{nullptr};
-        bool       shape_in_progress = false;
+        // bool       shape_in_progress = false;
     };
 } // namespace umfeld

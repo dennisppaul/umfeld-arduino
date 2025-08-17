@@ -45,11 +45,11 @@ namespace umfeld {
 
         ~ShapeRendererOpenGL_3() override {}
         void init(PGraphics* g, std::vector<int> shader_programs) override;
-        void beginShape(ShapeMode mode, bool filled, bool transparent, uint32_t texture_id, const glm::mat4& model_transform_matrix) override;
-        void vertex(const Vertex& v) override;
-        void setVertices(std::vector<Vertex>&& vertices) override;
-        void setVertices(const std::vector<Vertex>& vertices) override;
-        void endShape(bool closed) override;
+        // void beginShape(ShapeMode mode, bool filled, bool transparent, uint32_t texture_id, const glm::mat4& model_transform_matrix) override;
+        // void vertex(const Vertex& v) override;
+        // void setVertices(std::vector<Vertex>&& vertices) override;
+        // void setVertices(const std::vector<Vertex>& vertices) override;
+        // void endShape(bool closed) override;
         void submitShape(Shape& s) override;
         int  set_texture(PImage* img) override;
         void flush(const glm::mat4& view_matrix, const glm::mat4& projection_matrix) override;
@@ -58,10 +58,11 @@ namespace umfeld {
         void set_custom_shader(PShader* shader) override { custom_shader = shader; }
 
     private:
-        static constexpr uint16_t MAX_TRANSFORMS = 256;
+        static constexpr uint32_t NO_SHADER_PROGRAM = -1;
+        static constexpr uint16_t MAX_TRANSFORMS    = 256;
         // NOTE check `GL_MAX_UNIFORM_BLOCK_SIZE`
         //      ```c
-        //      GLint maxUBOSize;
+        //      GLuint maxUBOSize;
         //      glGetIntegerv(GL_MAX_UNIFORM_BLOCK_SIZE, &maxUBOSize);
         //      static constexpr uint16_t MAX_TRANSFORMS = std::min(1024, maxUBOSize / (int)sizeof(glm::mat4));
         //      ```
@@ -76,47 +77,48 @@ namespace umfeld {
 
         // cached uniform locations
         struct ShaderUniforms {
-            enum UNIFORM_LOCATION_STATE {
-                UNINITIALIZED = -2,
-                NOT_FOUND     = -1, // NOTE result delivered by OpenGL s `glGetUniformLocation()`
-                INITIALIZED   = 0,
+            enum UNIFORM_LOCATION_STATE : GLuint {
+                UNINITIALIZED = static_cast<GLuint>(-2),
+                NOT_FOUND     = GL_INVALID_INDEX, // NOTE result delivered by OpenGL s `glGetUniformLocation()`
+                INITIALIZED   = 0,                // NOTE `0` is the first valid value
             };
-            GLint uViewProj = UNINITIALIZED;
-            GLint uTexture  = UNINITIALIZED;
+            GLuint uViewProj = UNINITIALIZED;
+            GLuint uTexture  = UNINITIALIZED;
 
             // Lighting uniforms
-            GLint uView         = UNINITIALIZED;
-            GLint normalMatrix  = UNINITIALIZED;
-            GLint ambient       = UNINITIALIZED;
-            GLint specular      = UNINITIALIZED;
-            GLint emissive      = UNINITIALIZED;
-            GLint shininess     = UNINITIALIZED;
-            GLint lightCount    = UNINITIALIZED;
-            GLint lightPosition = UNINITIALIZED;
-            GLint lightNormal   = UNINITIALIZED;
-            GLint lightAmbient  = UNINITIALIZED;
-            GLint lightDiffuse  = UNINITIALIZED;
-            GLint lightSpecular = UNINITIALIZED;
-            GLint lightFalloff  = UNINITIALIZED;
-            GLint lightSpot     = UNINITIALIZED;
+            GLuint uView         = UNINITIALIZED;
+            GLuint normalMatrix  = UNINITIALIZED;
+            GLuint ambient       = UNINITIALIZED;
+            GLuint specular      = UNINITIALIZED;
+            GLuint emissive      = UNINITIALIZED;
+            GLuint shininess     = UNINITIALIZED;
+            GLuint lightCount    = UNINITIALIZED;
+            GLuint lightPosition = UNINITIALIZED;
+            GLuint lightNormal   = UNINITIALIZED;
+            GLuint lightAmbient  = UNINITIALIZED;
+            GLuint lightDiffuse  = UNINITIALIZED;
+            GLuint lightSpecular = UNINITIALIZED;
+            GLuint lightFalloff  = UNINITIALIZED;
+            GLuint lightSpot     = UNINITIALIZED;
         };
 
-        // TODO implement for lighting, point and line shader
-        ShaderUniforms             shader_uniforms_color;
-        ShaderUniforms             shader_uniforms_texture;
-        ShaderUniforms             shader_uniforms_color_lights;
-        ShaderUniforms             shader_uniforms_texture_lights;
-        GLuint                     vbo                            = 0;
-        GLuint                     ubo                            = 0;
-        GLuint                     vao                            = 0;
-        GLuint                     shader_programm_texture        = 0;
-        GLuint                     shader_programm_color          = 0;
-        GLuint                     shader_programm_texture_lights = 0;
-        GLuint                     shader_programm_color_lights   = 0;
-        GLuint                     point_shader_program           = 0; // TODO implement
-        GLuint                     line_shader_program            = 0; // TODO implement
-        std::vector<Shape>         shapes;
-        Shape                      current_shape;
+        ShaderUniforms     shader_uniforms_color;
+        ShaderUniforms     shader_uniforms_texture;
+        ShaderUniforms     shader_uniforms_color_lights;
+        ShaderUniforms     shader_uniforms_texture_lights;
+        ShaderUniforms     shader_uniforms_point; // TODO implement
+        ShaderUniforms     shader_uniforms_line;  // TODO implement
+        GLuint             vbo                            = 0;
+        GLuint             ubo                            = 0;
+        GLuint             vao                            = 0;
+        GLuint             shader_programm_texture        = 0;
+        GLuint             shader_programm_color          = 0;
+        GLuint             shader_programm_texture_lights = 0;
+        GLuint             shader_programm_color_lights   = 0;
+        GLuint             point_shader_program           = 0; // TODO implement
+        GLuint             line_shader_program            = 0; // TODO implement
+        std::vector<Shape> shapes;
+        // Shape                      current_shape;
         ShapeCenterComputeStrategy shape_center_compute_strategy = ZERO_CENTER;
         std::vector<Vertex>        flush_frame_vertices;
         std::vector<glm::mat4>     flush_frame_matrices;
@@ -127,7 +129,7 @@ namespace umfeld {
         int                        frame_transparent_shapes_count{0};
         int                        frame_opaque_shapes_count{0};
 
-        static void   setupUniformBlocks(GLuint program);
+        static void   setup_uniform_blocks(const std::string& shader_name, GLuint program);
         static bool   evaluate_shader_uniforms(const std::string& shader_name, const ShaderUniforms& uniforms);
         void          initShaders(const std::vector<int>& shader_programm_id);
         void          initBuffers();
@@ -146,18 +148,18 @@ namespace umfeld {
         void          flush_immediately(std::vector<Shape>& shapes,
                                         const glm::mat4&    view_matrix,
                                         const glm::mat4&    projection_matrix);
-        void          flush_processed_shapes(std::vector<Shape>& processed_point_shapes, std::vector<Shape>& processed_line_shapes, std::vector<Shape>& processed_triangle_shapes, const glm::mat4& view_matrix, const glm::mat4& projection_matrix);
+        void          flush_processed_shapes(const std::vector<Shape>& processed_point_shapes, const std::vector<Shape>& processed_line_shapes, std::vector<Shape>& processed_triangle_shapes, const glm::mat4& view_matrix, const glm::mat4& projection_matrix);
         void          reset_flush_frame();
         void          process_shapes(std::vector<Shape>& processed_point_shapes, std::vector<Shape>& processed_line_shapes, std::vector<Shape>& processed_triangle_shapes);
-        void          updateShaderLighting() const;
+        static void   updateShaderLighting();
         void          set_per_frame_shader_uniforms(const glm::mat4& view_projection_matrix, int frame_has_light_shapes, int frame_has_transparent_shapes, int frame_has_opaque_shapes) const;
         void          enable_default_shader(unsigned texture_id) const;
         void          enable_light_shader(unsigned texture_id) const;
-        static bool   uniform_exists(const GLint loc) { return loc != ShaderUniforms::NOT_FOUND; }
-        void          set_light_uniforms(GLuint program, const LightingState& lighting) const;
+        static bool   uniform_exists(const GLuint loc) { return loc != ShaderUniforms::NOT_FOUND; }
+        static void   set_light_uniforms(const ShaderUniforms& uniforms, const LightingState& lighting);
 
         static void bind_texture(const int texture_id) {
-            // TODO check if this needs to be done every time
+            // TODO check if `glActiveTexture` needs to be done every time
             glActiveTexture(GL_TEXTURE0 + PGraphicsOpenGL::DEFAULT_ACTIVE_TEXTURE_UNIT);
             glBindTexture(GL_TEXTURE_2D, texture_id); // NOTE this should be the only glBindTexture ( except for initializations )
         }

@@ -30,6 +30,7 @@
 #include "Vertex.h"
 #include "Shape.h"
 #include "Triangulator.h"
+#include "UFont.h"
 
 namespace umfeld {
     class PFont;
@@ -233,9 +234,9 @@ namespace umfeld {
         virtual void        lock_init_properties(const bool lock_properties) { init_properties_locked = lock_properties; }
         virtual void        hint(uint16_t property);
         virtual void        text_str(const std::string& text, float x, float y, float z = 0.0f); // TODO maybe make this private?
-        virtual void        debug_text(const std::string& text, float x, float y) {}             // TODO implement this in derived PGraphics
-        void                to_screen_space(glm::vec3& model_position) const;                    // NOTE: convert from model space to screen space
-        void                to_world_space(glm::vec3& model_position) const;                     // NOTE: convert from model space to works space
+        virtual void        debug_text(const std::string& text, float x, float y);
+        void                to_screen_space(glm::vec3& model_position) const; // NOTE: convert from model space to screen space
+        void                to_world_space(glm::vec3& model_position) const;  // NOTE: convert from model space to works space
         void                linse(const float x1, const float y1, const float x2, const float y2) { line(x1, y1, x2, y2); }
         int                 getPixelDensity() const { return pixel_density; }
         void                set_point_render_mode(const int point_render_mode) { this->point_render_mode = point_render_mode; }
@@ -297,7 +298,8 @@ namespace umfeld {
         int                              curve_detail{20};
         float                            curve_tightness{0.0f};
         uint8_t                          pixel_density{1};
-        int                              texture_id_current{TEXTURE_NONE}; // REMOVE
+        PImage*                          current_texture{nullptr};
+        PImage*                          stored_texture{nullptr};
         bool                             shape_force_transparent{false};
         int                              polygon_triangulation_strategy{POLYGON_TRIANGULATION_BETTER};
         int                              stroke_render_mode{STROKE_RENDER_MODE_TRIANGULATE_2D};
@@ -313,16 +315,16 @@ namespace umfeld {
         static constexpr uint32_t        VBO_BUFFER_CHUNK_SIZE{1024 * 1024}; // 1MB
         std::vector<Vertex>              shape_stroke_vertex_buffer{VBO_BUFFER_CHUNK_SIZE};
         std::vector<Vertex>              shape_fill_vertex_buffer{VBO_BUFFER_CHUNK_SIZE};
-        int                              stored_texture_id{TEXTURE_NONE};
         bool                             model_matrix_dirty{false};
         glm::vec4                        current_normal{Vertex::DEFAULT_NORMAL};
         glm::mat4                        temp_view_matrix{};
         glm::mat4                        temp_projection_matrix{};
         RenderMode                       render_mode{RENDER_MODE_SORTED_BY_Z_ORDER};
         bool                             in_camera_block{false};
+        bool                             texture_id_pushed{false};
+        const UFont*                     debug_font{nullptr};
         void (*triangle_emitter_callback)(std::vector<Vertex>&){nullptr};
         void (*stroke_emitter_callback)(std::vector<Vertex>&, bool){nullptr};
-        bool texture_id_pushed{false};
 
     public:
         glm::mat4              model_matrix{};
@@ -332,6 +334,8 @@ namespace umfeld {
         bool                   hint_enable_depth_test{false};
 
     protected:
+        int get_current_texture_id() const;
+
         static bool has_transparent_vertices(const std::vector<Vertex>& vertices) {
             for (auto& v: vertices) {
                 if (v.color.a < 1.0f) {
@@ -344,7 +348,7 @@ namespace umfeld {
         void push_texture_id() {
             if (!texture_id_pushed) {
                 texture_id_pushed = true;
-                stored_texture_id = texture_id_current;
+                stored_texture    = current_texture;
             } else {
                 warning("unbalanced texture id *push*/pop");
             }
@@ -352,9 +356,9 @@ namespace umfeld {
 
         void pop_texture_id() {
             if (texture_id_pushed) {
-                texture_id_pushed  = false;
-                texture_id_current = stored_texture_id;
-                stored_texture_id  = TEXTURE_NONE;
+                texture_id_pushed = false;
+                current_texture   = stored_texture;
+                stored_texture    = nullptr;
             } else {
                 warning("unbalanced texture id push/*pop*");
             }

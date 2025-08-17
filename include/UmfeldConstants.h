@@ -163,12 +163,12 @@ namespace umfeld {
         MIRRORED_REPEAT  // mirrored repeat
     };
     enum RenderMode {
-        RENDER_MODE_DEPRECATED_IMMEDIATE = 0x90, // tries to render immediately, but may buffer vertices
-        RENDER_MODE_DEPRECATED_BUFFERED,         // buffers vertices and renders them at the end of the frame
-        RENDER_MODE_DEPRECATED_SHAPE,            // renders shapes immediately, but via `beginShape()` and `endShape()` ( only for OpenGL 2.0 )
-        RENDER_MODE_SORTED_BY_Z_ORDER,           // render sorted by z-order in batches ( fast, transparent shapes are sorted, textured are rendered in batches )
-        RENDER_MODE_SORTED_BY_SUBMISSION_ORDER,  // render sorted by submission order ( slow, good for 2D, shapes are renderered one by one )
-        RENDER_MODE_IMMEDIATELY                  // render immediately ( slowest, shapes are rendered at call to `endShape()` )
+        // RENDER_MODE_DEPRECATED_IMMEDIATE = 0x90, // tries to render immediately, but may buffer vertices
+        // RENDER_MODE_DEPRECATED_BUFFERED,         // buffers vertices and renders them at the end of the frame
+        // RENDER_MODE_DEPRECATED_SHAPE,            // renders shapes immediately, but via `beginShape()` and `endShape()` ( only for OpenGL 2.0 )
+        RENDER_MODE_SORTED_BY_Z_ORDER = 0x90,   // render sorted by z-order in batches ( fast, transparent shapes are sorted, textured are rendered in batches )
+        RENDER_MODE_SORTED_BY_SUBMISSION_ORDER, // render sorted by submission order ( slow, good for 2D, shapes are renderered one by one )
+        RENDER_MODE_IMMEDIATELY                 // render immediately ( slowest, shapes are rendered at call to `endShape()` )
     };
     enum Hint {
         ENABLE_SMOOTH_LINES = 0xA0,

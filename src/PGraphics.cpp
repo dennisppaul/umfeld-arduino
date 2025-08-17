@@ -39,7 +39,7 @@
 
 using namespace umfeld;
 
-PGraphics::PGraphics() : PImage(0, 0) {
+PGraphics::PGraphics() : PImage(0, 0), debug_font(new UFont()) {
     flip_y_texcoords = true;
     PGraphics::fill(1.0f);
     PGraphics::stroke(0.0f);
@@ -59,7 +59,7 @@ void PGraphics::endDraw() {
     lights_enabled = false;
     /* clear texture stack */
     texture_id_pushed = false;
-    stored_texture_id = TEXTURE_NONE;
+    stored_texture    = nullptr;
     /* reset shader */
     resetShader();
 }
@@ -871,10 +871,16 @@ void PGraphics::text_str(const std::string& text, const float x, const float y, 
 }
 
 void PGraphics::texture(PImage* img) {
-    if (img != nullptr && shape_renderer) {
-        texture_id_current = shape_renderer->set_texture(img);
+    if (img != nullptr) {
+        current_texture = img;
+        if (shape_renderer) {
+            shape_renderer->set_texture(img);
+        }
     } else {
-        texture_id_current = TEXTURE_NONE;
+        current_texture = nullptr;
+        if (shape_renderer) {
+            shape_renderer->set_texture(nullptr);
+        }
     }
 }
 
@@ -1360,6 +1366,8 @@ void PGraphics::vertex(const Vertex& v) {
     }
 }
 
+int PGraphics::get_current_texture_id() const { return current_texture == nullptr ? TEXTURE_NONE : current_texture->texture_id; }
+
 void PGraphics::submit_stroke_shape(const bool closed, const bool force_transparent) {
     if (!shape_stroke_vertex_buffer.empty()) {
         Shape s;
@@ -1370,7 +1378,7 @@ void PGraphics::submit_stroke_shape(const bool closed, const bool force_transpar
         s.model       = model_matrix;
         s.transparent = force_transparent ? true : has_transparent_vertices(shape_stroke_vertex_buffer);
         s.closed      = closed;
-        s.texture_id  = texture_id_current;
+        s.texture_id  = get_current_texture_id();
         shape_renderer->submitShape(s);
     }
 }
@@ -1385,7 +1393,7 @@ void PGraphics::submit_fill_shape(const bool closed, const bool force_transparen
         s.model         = model_matrix;
         s.transparent   = force_transparent ? true : has_transparent_vertices(shape_fill_vertex_buffer);
         s.closed        = closed;
-        s.texture_id    = texture_id_current;
+        s.texture_id    = get_current_texture_id();
         s.light_enabled = lights_enabled;
         if (lights_enabled) {
             s.lighting = lightingState; // NOTE only copy lighting state if lights are enabled
@@ -1419,6 +1427,22 @@ void PGraphics::endShape(const bool closed) {
      *
      * i.e GL_LINES + GL_LINE_STRIP must be emulated
      */
+}
+
+void PGraphics::debug_text(const std::string& text, const float x, const float y) {
+    if (shape_renderer != nullptr && debug_font != nullptr) {
+        Shape s;
+        s.mode   = TRIANGLES;
+        s.filled = true;
+        s.vertices.reserve(text.size() * 6);
+        debug_font->generate(s.vertices, text, x, y, glm::vec4(color_fill));
+        s.model         = model_matrix;
+        s.transparent   = true;
+        s.closed        = false;
+        s.texture_id    = shape_renderer->set_texture(debug_font->atlas());
+        s.light_enabled = false;
+        shape_renderer->submitShape(s);
+    }
 }
 
 void PGraphics::emit_shape_fill_triangles(std::vector<Vertex>& triangle_vertices) {

@@ -21,6 +21,7 @@
 
 #include "Umfeld.h"
 #include "UmfeldFunctionsGraphics.h"
+#include "PGraphicsOpenGLConstants.h"
 
 namespace umfeld {
     void PGraphicsOpenGL::blendMode(const int mode) {

@@ -120,6 +120,8 @@ namespace umfeld {
         return oss.str();
     }
 
+    /* --- logging --- */
+
     template<typename... Args>
     void error(const Args&... args) {
 #if (UMFELD_PRINT_ERRORS)
@@ -220,6 +222,17 @@ namespace umfeld {
     inline std::string separator(const bool equal_sign = true, const std::size_t length = DEFAULT_CONSOLE_WIDTH) {
         return std::string(length, equal_sign ? '=' : '-');
     }
+
+#define run_once(code)             \
+    do {                           \
+        static bool _done = false; \
+        if (!_done) {              \
+            _done = true;          \
+            code                   \
+        }                          \
+    } while (false)
+
+    /* --- random --- */
 
     inline Random& _random_mode() {
         static Random mode = FAST;

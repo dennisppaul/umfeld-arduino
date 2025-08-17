@@ -20,16 +20,13 @@
 #pragma once
 
 #include <vector>
-#include "UmfeldSDLOpenGL.h" // TODO move to cpp implementation
 
 #include "Vertex.h"
-#include "PGraphicsOpenGLConstants.h"
 #include "UFontPixels.h"
 
 namespace umfeld {
 
     class UFont {
-        // NOTE used for debug text ;)
         static constexpr int _CHAR_WIDTH       = 8;
         static constexpr int _CHAR_HEIGHT      = 12;
         static constexpr int ATLAS_COLS        = 16;
@@ -37,38 +34,33 @@ namespace umfeld {
         static constexpr int FONT_ATLAS_WIDTH  = _CHAR_WIDTH * ATLAS_COLS;
         static constexpr int FONT_ATLAS_HEIGHT = _CHAR_HEIGHT * ATLAS_ROWS;
 
+        std::unique_ptr<PImage> font_atlas;
+
         void generateFontAtlas() {
-            uint8_t pixelData[FONT_ATLAS_HEIGHT][FONT_ATLAS_WIDTH][4] = {};
+            font_atlas = std::make_unique<PImage>(FONT_ATLAS_WIDTH, FONT_ATLAS_HEIGHT);
+            if (!font_atlas->pixels) {
+                return;
+            }
+
             for (uint32_t ascii_char = 32; ascii_char < 128; ++ascii_char) {
                 const int charX = ((ascii_char - 32) % ATLAS_COLS) * _CHAR_WIDTH;
                 const int charY = ((ascii_char - 32) / ATLAS_COLS) * _CHAR_HEIGHT;
-                for (uint32_t i = 0; i < Font_7x10.height; i++) {
-                    const uint16_t b = Font_7x10.data[(ascii_char - 32) * Font_7x10.height + i];
-                    for (uint32_t j = 0; j < Font_7x10.width; j++) {
-                        const bool pixelSet  = (b << j) & 0x8000;
-                        const int  px        = charX + j;
-                        const int  py        = charY + i;
-                        pixelData[py][px][0] = pixelSet ? 255 : 0;
-                        pixelData[py][px][1] = pixelSet ? 255 : 0;
-                        pixelData[py][px][2] = pixelSet ? 255 : 0;
-                        pixelData[py][px][3] = pixelSet ? 255 : 0;
+                for (uint32_t row = 0; row < Font_7x10.height; row++) {
+                    const uint16_t bits = Font_7x10.data[(ascii_char - 32) * Font_7x10.height + row];
+                    for (uint32_t col = 0; col < Font_7x10.width; col++) {
+                        const bool set = (bits << col) & 0x8000;
+                        const int  px  = charX + col;
+                        const int  py  = charY + row;
+                        if (px >= FONT_ATLAS_WIDTH || py >= FONT_ATLAS_HEIGHT) {
+                            continue;
+                        }
+                        // White glyph pixel or transparent; 0xAARRGGBB assumed
+                        font_atlas->set(static_cast<uint16_t>(px),
+                                        static_cast<uint16_t>(py),
+                                        set ? 0xFFFFFFFFu : 0x00000000u);
                     }
                 }
             }
-
-            glGenTextures(1, &texture_id);
-            glBindTexture(GL_TEXTURE_2D, texture_id);
-            glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-            glTexImage2D(GL_TEXTURE_2D,
-                         0,
-                         UMFELD_DEFAULT_INTERNAL_PIXEL_FORMAT,
-                         FONT_ATLAS_WIDTH,
-                         FONT_ATLAS_HEIGHT, 0,
-                         UMFELD_DEFAULT_EXTERNAL_PIXEL_FORMAT,
-                         UMFELD_DEFAULT_TEXTURE_PIXEL_TYPE,
-                         pixelData);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         }
 
     public:
@@ -76,11 +68,10 @@ namespace umfeld {
             generateFontAtlas();
         }
 
-        uint32_t texture_id;
+        PImage* atlas() const { return font_atlas.get(); }
 
-        std::vector<Vertex> generate(const std::string& text, const float startX, const float startY, glm::vec4 color) const {
-            std::vector<Vertex> vertices;
-            float               x = startX, y = startY;
+        static std::vector<Vertex> generate(std::vector<Vertex>& vertices, const std::string& text, const float startX, const float startY, glm::vec4 color) {
+            float x = startX, y = startY;
             for (const char c: text) {
                 const int       index = static_cast<unsigned char>(c) - 32;
                 float           u     = (index % ATLAS_COLS) * (1.0f / ATLAS_COLS);

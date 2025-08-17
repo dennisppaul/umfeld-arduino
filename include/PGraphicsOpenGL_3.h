@@ -29,10 +29,6 @@ namespace umfeld {
 
         /* --- OpenGL 3.3 specific implementation of shared methods --- */
 
-        // void IMPL_emit_shape_stroke_line_strip(std::vector<Vertex>& line_strip_vertices, bool line_strip_closed) override;
-        // void IMPL_emit_shape_fill_triangles(std::vector<Vertex>& triangle_vertices) override;
-        // void IMPL_emit_shape_stroke_points(std::vector<Vertex>& point_vertices, float point_size) override;
-
         void impl_background(float a, float b, float c, float d) override;
 
         void render_framebuffer_to_screen(bool use_blit = false) override;
@@ -62,7 +58,6 @@ namespace umfeld {
         }
 
         void hint(uint16_t property) override;
-        void debug_text(const std::string& text, float x, float y) override; // TODO move to PGraphics ( use glBeginShape() )
 
         /* --- standard drawing functions --- */
 
@@ -74,24 +69,20 @@ namespace umfeld {
         // void     frustum(float left, float right, float bottom, float top, float near, float far) override;
         // void     ortho(float left, float right, float bottom, float top, float near, float far) override;
         // void     perspective(float fovy, float aspect, float near, float far) override;
-        void     lights() override;
-        void     noLights() override;
-        void     ambientLight(float r, float g, float b, float x = 0, float y = 0, float z = 0) override;
-        void     directionalLight(float r, float g, float b, float nx, float ny, float nz) override;
-        void     pointLight(float r, float g, float b, float x, float y, float z) override;
-        void     spotLight(float r, float g, float b, float x, float y, float z, float nx, float ny, float nz, float angle, float concentration) override;
-        void     lightFalloff(float constant, float linear, float quadratic) override;
-        void     lightSpecular(float r, float g, float b) override;
-        void     ambient(float r, float g, float b) override;
-        void     specular(float r, float g, float b) override;
-        void     emissive(float r, float g, float b) override;
-        void     shininess(float s) override;
+        void lights() override;
+        void noLights() override;
+        void ambientLight(float r, float g, float b, float x = 0, float y = 0, float z = 0) override;
+        void directionalLight(float r, float g, float b, float nx, float ny, float nz) override;
+        void pointLight(float r, float g, float b, float x, float y, float z) override;
+        void spotLight(float r, float g, float b, float x, float y, float z, float nx, float ny, float nz, float angle, float concentration) override;
+        void lightFalloff(float constant, float linear, float quadratic) override;
+        void lightSpecular(float r, float g, float b) override;
+        void ambient(float r, float g, float b) override;
+        void specular(float r, float g, float b) override;
+        void emissive(float r, float g, float b) override;
+        void shininess(float s) override;
 
-        PShader* shader_fill_texture{nullptr};        // REMOVE
-        // PShader* shader_fill_texture_lights{nullptr}; // REMOVE
-        PShader* shader_stroke{nullptr};              // REMOVE
-        PShader* shader_point{nullptr};               // REMOVE
-        PShader* custom_shader{nullptr};              // REMOVE
+        PShader* shader_fill_texture{nullptr}; // REMOVE
 
     private:
         struct RenderBatch {
@@ -107,9 +98,7 @@ namespace umfeld {
         static constexpr bool    RENDER_PRIMITVES_AS_SHAPES             = true;
         static constexpr uint8_t NUM_FILL_VERTEX_ATTRIBUTES_XYZ_RGBA_UV = 9;
         static constexpr uint8_t NUM_STROKE_VERTEX_ATTRIBUTES_XYZ_RGBA  = 7;
-        GLuint                   texture_id_solid_color{};
         VertexBuffer             vertex_buffer{};
-        std::vector<RenderBatch> renderBatches; // TODO revive for buffered mode
         GLint                    previously_bound_read_FBO = 0;
         GLint                    previously_bound_draw_FBO = 0;
         GLint                    previous_viewport[4]{};
@@ -132,10 +121,7 @@ namespace umfeld {
 
         /* --- OpenGL 3.3 specific methods --- */
 
-        // void        OGL3_tranform_model_matrix_and_render_vertex_buffer(VertexBuffer& vertex_buffer, GLenum primitive_mode, const std::vector<Vertex>& shape_vertices) const;
         static void OGL3_render_vertex_buffer(VertexBuffer& vertex_buffer, GLenum primitive_mode, const std::vector<Vertex>& shape_vertices);
-        void        OGL3_create_solid_color_texture(); // REMOVE this as soon as the shape renderer is done
-        // void        update_all_shader_matrices() const;
         void        update_shader_matrices(PShader* shader) const;
         static void reset_shader_matrices(PShader* shader);
         static void add_line_quad(const Vertex& p0, const Vertex& p1, float thickness, std::vector<Vertex>& out);

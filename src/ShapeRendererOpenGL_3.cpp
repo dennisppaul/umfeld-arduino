@@ -50,7 +50,6 @@ namespace umfeld {
                 frame_opaque_shapes_count++;
             }
         }
-
         shapes.push_back(std::move(s));
     }
 
@@ -59,6 +58,7 @@ namespace umfeld {
         //      this also means that custom shapes ( e.g VertexBuffer/Mesh )
         //      would need to manually bind textures before rendering
         if (img == nullptr) {
+            PGraphicsOpenGL::OGL_bind_texture(TEXTURE_NONE);
             return TEXTURE_NONE;
         }
 
@@ -66,10 +66,12 @@ namespace umfeld {
             const bool success = PGraphicsOpenGL::OGL_generate_and_upload_image_as_texture(img);
             if (!success || img->texture_id == TEXTURE_NOT_GENERATED) {
                 error_in_function("cannot create texture from image.");
+                PGraphicsOpenGL::OGL_bind_texture(TEXTURE_NONE);
                 return TEXTURE_NONE;
             }
         }
 
+        PGraphicsOpenGL::OGL_bind_texture(img->texture_id);
         return img->texture_id;
     }
 
@@ -84,6 +86,36 @@ namespace umfeld {
         frame_opaque_shapes_count      = 0;
     }
 
+    void ShapeRendererOpenGL_3::print_frame_info(const std::vector<Shape>& processed_point_shapes, const std::vector<Shape>& processed_line_shapes, const std::vector<Shape>& processed_triangle_shapes) const {
+        // console("\n\t",
+        //         "-----------------------", "\n\t",
+        //         "FRAME_INFO", "\n\t",
+        //         "-----------------------", "\n\t",
+        //         "SHAPES SUBMITTED     ", "\n\t",
+        //         "opaque_shapes      : ", frame_opaque_shapes_count, "\n\t",
+        //         "light_shapes       : ", frame_light_shapes_count, "\n\t",
+        //         "transparent_shapes : ", frame_transparent_shapes_count, "\n\t",
+        //         "-----------------------", "\n\t",
+        //         "SHAPES PROCESSED     ", "\n\t",
+        //         "point_shapes       : ", processed_point_shapes.size(), "\n\t",
+        //         "line_shapes        : ", processed_line_shapes.size(), "\n\t",
+        //         "triangle_shapes    : ", processed_triangle_shapes.size(), "\n\t",
+        //         "-----------------------");
+        static constexpr int format_gap = 22;
+        console("----------------------------");
+        console("FRAME_INFO");
+        console("----------------------------");
+        console("SHAPES SUBMITTED");
+        console(format_label("opaque_shapes", format_gap), frame_opaque_shapes_count);
+        console(format_label("light_shapes", format_gap), frame_light_shapes_count);
+        console(format_label("transparent_shapes", format_gap), frame_transparent_shapes_count);
+        console("----------------------------");
+        console("SHAPES PROCESSED");
+        console(format_label("point_shapes", format_gap), processed_point_shapes.size());
+        console(format_label("line_shapes", format_gap), processed_line_shapes.size());
+        console(format_label("triangle_shapes", format_gap), processed_triangle_shapes.size());
+        console("----------------------------");
+    }
     void ShapeRendererOpenGL_3::flush(const glm::mat4& view_matrix, const glm::mat4& projection_matrix) {
         if (shapes.empty() || graphics == nullptr) {
             reset_flush_frame();
@@ -116,20 +148,7 @@ namespace umfeld {
                                view_matrix,
                                projection_matrix);
 
-        console_once("\n\t",
-                     "-----------------------", "\n\t",
-                     "FRAME_INFO", "\n\t",
-                     "-----------------------", "\n\t",
-                     "SHAPES SUBMITTED     ", "\n\t",
-                     "opaque_shapes      : ", frame_opaque_shapes_count, "\n\t",
-                     "light_shapes       : ", frame_light_shapes_count, "\n\t",
-                     "transparent_shapes : ", frame_transparent_shapes_count, "\n\t",
-                     "-----------------------", "\n\t",
-                     "SHAPES PROCESSED     ", "\n\t",
-                     "point_shapes       : ", processed_point_shapes.size(), "\n\t",
-                     "line_shapes        : ", processed_line_shapes.size(), "\n\t",
-                     "triangle_shapes    : ", processed_triangle_shapes.size(), "\n\t",
-                     "-----------------------");
+        run_once({ print_frame_info(processed_point_shapes, processed_line_shapes, processed_triangle_shapes); });
 
         // reserve capacity for next frame based on current usage
         reset_flush_frame();

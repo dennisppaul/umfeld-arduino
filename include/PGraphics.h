@@ -297,7 +297,7 @@ namespace umfeld {
         int                              curve_detail{20};
         float                            curve_tightness{0.0f};
         uint8_t                          pixel_density{1};
-        int                              texture_id_current{TEXTURE_NONE};
+        int                              texture_id_current{TEXTURE_NONE}; // REMOVE
         bool                             shape_force_transparent{false};
         int                              polygon_triangulation_strategy{POLYGON_TRIANGULATION_BETTER};
         int                              stroke_render_mode{STROKE_RENDER_MODE_TRIANGULATE_2D};

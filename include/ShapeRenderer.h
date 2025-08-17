@@ -43,6 +43,7 @@ namespace umfeld {
         virtual void endShape(bool closed)                                = 0;
         virtual void submitShape(Shape& s)                                = 0;
         virtual int  set_texture(PImage* img)                             = 0;
+        virtual void set_custom_shader(PShader* shader)                   = 0;
 
         // NOTE `flush()` needs VP matrix and must be called to render batches at
         //      1. at end of frame

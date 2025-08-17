@@ -61,6 +61,7 @@ void PGraphics::endDraw() {
     texture_id_pushed = false;
     stored_texture_id = TEXTURE_NONE;
     /* reset shader */
+    resetShader();
 }
 
 void PGraphics::flush() {

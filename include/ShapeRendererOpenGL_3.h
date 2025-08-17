@@ -55,7 +55,7 @@ namespace umfeld {
         void flush(const glm::mat4& view_matrix, const glm::mat4& projection_matrix) override;
         void handle_point_shape(std::vector<Shape>& processed_triangle_shapes, std::vector<Shape>& processed_point_shapes, Shape& point_shape) const;
         void handle_stroke_shape(std::vector<Shape>& processed_triangle_shapes, std::vector<Shape>& processed_line_shapes, Shape& stroke_shape) const;
-        void set_custom_shader(PShader* shader = nullptr) { custom_shader = shader; }
+        void set_custom_shader(PShader* shader) override { custom_shader = shader; }
 
     private:
         static constexpr uint16_t MAX_TRANSFORMS = 256;
@@ -111,8 +111,8 @@ namespace umfeld {
         GLuint                     vao                            = 0;
         GLuint                     shader_programm_texture        = 0;
         GLuint                     shader_programm_color          = 0;
-        GLuint                     shader_programm_texture_lights = 0; // TODO implement
-        GLuint                     shader_programm_color_lights   = 0; // TODO implement
+        GLuint                     shader_programm_texture_lights = 0;
+        GLuint                     shader_programm_color_lights   = 0;
         GLuint                     point_shader_program           = 0; // TODO implement
         GLuint                     line_shader_program            = 0; // TODO implement
         std::vector<Shape>         shapes;
@@ -123,6 +123,9 @@ namespace umfeld {
         uint32_t                   max_vertices_per_batch{0};
         bool                       initialized_vbo_buffer{false};
         PShader*                   custom_shader{nullptr};
+        int                        frame_light_shapes_count{0};
+        int                        frame_transparent_shapes_count{0};
+        int                        frame_opaque_shapes_count{0};
 
         static void   setupUniformBlocks(GLuint program);
         static bool   evaluate_shader_uniforms(const std::string& shader_name, const ShaderUniforms& uniforms);
@@ -130,7 +133,7 @@ namespace umfeld {
         void          initBuffers();
         static size_t estimate_triangle_count(const Shape& s);
         static void   convert_shapes_to_triangles(const Shape& s, std::vector<Vertex>& out, uint16_t transformID);
-        void          render_batch(const std::vector<Shape*>& shapes_to_render, GLuint texture_id);
+        void          render_batch(const std::vector<Shape*>& shapes_to_render);
         void          computeShapeCenter(Shape& s) const;
         void          enable_depth_testing() const;
         static void   disable_depth_testing();
@@ -144,10 +147,17 @@ namespace umfeld {
                                         const glm::mat4&    view_matrix,
                                         const glm::mat4&    projection_matrix);
         void          flush_processed_shapes(std::vector<Shape>& processed_point_shapes, std::vector<Shape>& processed_line_shapes, std::vector<Shape>& processed_triangle_shapes, const glm::mat4& view_matrix, const glm::mat4& projection_matrix);
+        void          reset_flush_frame();
         void          process_shapes(std::vector<Shape>& processed_point_shapes, std::vector<Shape>& processed_line_shapes, std::vector<Shape>& processed_triangle_shapes);
         void          updateShaderLighting() const;
+        void          set_per_frame_shader_uniforms(const glm::mat4& view_projection_matrix, int frame_has_light_shapes, int frame_has_transparent_shapes, int frame_has_opaque_shapes) const;
+        void          enable_default_shader(unsigned texture_id) const;
+        void          enable_light_shader(unsigned texture_id) const;
+        static bool   uniform_exists(const GLint loc) { return loc != ShaderUniforms::NOT_FOUND; }
+        void          set_light_uniforms(GLuint program, const LightingState& lighting) const;
 
         static void bind_texture(const int texture_id) {
+            // TODO check if this needs to be done every time
             glActiveTexture(GL_TEXTURE0 + PGraphicsOpenGL::DEFAULT_ACTIVE_TEXTURE_UNIT);
             glBindTexture(GL_TEXTURE_2D, texture_id); // NOTE this should be the only glBindTexture ( except for initializations )
         }

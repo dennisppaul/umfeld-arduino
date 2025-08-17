@@ -749,7 +749,7 @@ void PGraphicsOpenGL_3::init(uint32_t* pixels, const int width, const int height
     OGL3_create_solid_color_texture();
     texture_id_current = TEXTURE_NONE;
     OGL_bind_texture(texture_id_solid_color);
-    // <<< ShapeRendererImmediateOpenGL_3
+    // REMOVE <<< ShapeRendererImmediateOpenGL_3
 }
 
 /* additional */
@@ -911,12 +911,18 @@ void PGraphicsOpenGL_3::shader(PShader* shader) {
         resetShader();
         return;
     }
+    if (shape_renderer != nullptr) {
+        shape_renderer->set_custom_shader(custom_shader);
+    }
     custom_shader = shader;
     custom_shader->use();
     update_shader_matrices(custom_shader);
 }
 
 void PGraphicsOpenGL_3::resetShader() {
+    if (shape_renderer != nullptr) {
+        shape_renderer->set_custom_shader(custom_shader);
+    }
     custom_shader = nullptr;
     // update_all_shader_matrices();
 }
@@ -976,6 +982,7 @@ void PGraphicsOpenGL_3::restore_fbo_state() {
     }
 }
 
+// REMOVE asap
 void PGraphicsOpenGL_3::update_all_shader_matrices() const {
     if (custom_shader != nullptr) {
         custom_shader->use();

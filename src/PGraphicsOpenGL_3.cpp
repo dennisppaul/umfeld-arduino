@@ -777,60 +777,6 @@ void PGraphicsOpenGL_3::OGL3_create_solid_color_texture() {
     texture_id_solid_color = _texture_id;
 }
 
-// void PGraphicsOpenGL_3::OGL3_tranform_model_matrix_and_render_vertex_buffer(VertexBuffer&              vertex_buffer,
-//                                                                                    const GLenum               primitive_mode,
-//                                                                                    const std::vector<Vertex>& shape_vertices) const {
-//     static bool _emit_warning_only_once = false;
-//     if (primitive_mode != GL_TRIANGLES && primitive_mode != GL_LINE_STRIP) {
-//         if (!_emit_warning_only_once) {
-//             warning("this test is just for development purposes: only GL_TRIANGLES and GL_LINE_STRIP are supposed to be used atm.");
-//             warning("( warning only once )");
-//             _emit_warning_only_once = true;
-//         }
-//     }
-//
-//     if (shape_vertices.empty()) {
-//         return;
-//     }
-//
-// #ifdef VERTICES_CLIENT_SIDE_TRANSFORM
-//     // NOTE depending on the number of vertices transformation are handle on the GPU
-//     //      i.e all shapes *up to* quads are transformed on CPU
-//     static constexpr int MAX_NUM_VERTICES_CLIENT_SIDE_TRANSFORM = 0;
-//     bool                 mModelMatrixTransformOnGPU             = false;
-//     std::vector<Vertex>  transformed_vertices                   = shape_vertices; // NOTE make copy
-//     if (model_matrix_dirty) {
-//         if (shape_vertices.size() <= MAX_NUM_VERTICES_CLIENT_SIDE_TRANSFORM) {
-//             const glm::mat4 modelview = model_matrix;
-//             for (auto& p: transformed_vertices) {
-//                 p.position = glm::vec4(modelview * p.position);
-//             }
-//             console("transforming model matrix on CPU for ", shape_vertices.size(), " vertices.");
-//         } else {
-//             mModelMatrixTransformOnGPU = true;
-//         }
-//     }
-//     if (mModelMatrixTransformOnGPU) {
-//         update_shader_matrices(current_shader);
-//     }
-//     OGL3_render_vertex_buffer(vertex_buffer, primitive_mode, transformed_vertices);
-// #else
-// #ifdef UMFELD_OGL33_RESET_MATRICES_ON_SHADER
-//     if (mModelMatrixTransformOnGPU) {
-//         reset_shader_matrices(current_shader);
-//     }
-// #endif // UMFELD_OGL33_RESET_MATRICES_ON_SHADER
-//     // TODO check if it is necessary to update *all* shader matrices here ( i.e model, view, projection )
-//     //      `update_shader_matrices(current_shader);`
-//     shader_fill_texture->use();
-//     if (shader_fill_texture->has_model_matrix) {
-//         shader_fill_texture->set_uniform(SHADER_UNIFORM_MODEL_MATRIX, model_matrix);
-//     }
-//
-//     OGL3_render_vertex_buffer(vertex_buffer, primitive_mode, shape_vertices);
-// #endif // VERTICES_CLIENT_SIDE_TRANSFORM
-// }
-
 void PGraphicsOpenGL_3::OGL3_render_vertex_buffer(VertexBuffer& vertex_buffer, const GLenum primitive_mode, const std::vector<Vertex>& shape_vertices) {
     if (shape_vertices.empty()) {
         return;
@@ -982,42 +928,42 @@ void PGraphicsOpenGL_3::restore_fbo_state() {
     }
 }
 
-// REMOVE asap
-void PGraphicsOpenGL_3::update_all_shader_matrices() const {
-    if (custom_shader != nullptr) {
-        custom_shader->use();
-        update_shader_matrices(custom_shader);
-    } else {
-        shader_fill_texture->use();
-        update_shader_matrices(shader_fill_texture);
-        // shader_fill_texture_lights->use();
-        // update_shader_matrices(shader_fill_texture_lights);
-        shader_stroke->use();
-        update_shader_matrices(shader_stroke);
-        shader_point->use();
-        update_shader_matrices(shader_point);
-    }
-}
+// // REMOVE asap
+// void PGraphicsOpenGL_3::update_all_shader_matrices() const {
+//     if (custom_shader != nullptr) {
+//         custom_shader->use();
+//         update_shader_matrices(custom_shader);
+//     } else {
+//         shader_fill_texture->use();
+//         update_shader_matrices(shader_fill_texture);
+//         // shader_fill_texture_lights->use();
+//         // update_shader_matrices(shader_fill_texture_lights);
+//         shader_stroke->use();
+//         update_shader_matrices(shader_stroke);
+//         shader_point->use();
+//         update_shader_matrices(shader_point);
+//     }
+// }
 
-void PGraphicsOpenGL_3::camera(const float eyeX, const float eyeY, const float eyeZ, const float centerX, const float centerY, const float centerZ, const float upX, const float upY, const float upZ) {
-    PGraphics::camera(eyeX, eyeY, eyeZ, centerX, centerY, centerZ, upX, upY, upZ);
-    update_all_shader_matrices();
-}
-
-void PGraphicsOpenGL_3::frustum(const float left, const float right, const float bottom, const float top, const float near, const float far) {
-    PGraphics::frustum(left, right, bottom, top, near, far);
-    update_all_shader_matrices();
-}
-
-void PGraphicsOpenGL_3::ortho(const float left, const float right, const float bottom, const float top, const float near, const float far) {
-    PGraphics::ortho(left, right, bottom, top, near, far);
-    update_all_shader_matrices();
-}
-
-void PGraphicsOpenGL_3::perspective(const float fovy, const float aspect, const float near, const float far) {
-    PGraphics::perspective(fovy, aspect, near, far);
-    update_all_shader_matrices();
-}
+// void PGraphicsOpenGL_3::camera(const float eyeX, const float eyeY, const float eyeZ, const float centerX, const float centerY, const float centerZ, const float upX, const float upY, const float upZ) {
+//     PGraphics::camera(eyeX, eyeY, eyeZ, centerX, centerY, centerZ, upX, upY, upZ);
+//     update_all_shader_matrices();
+// }
+//
+// void PGraphicsOpenGL_3::frustum(const float left, const float right, const float bottom, const float top, const float near, const float far) {
+//     PGraphics::frustum(left, right, bottom, top, near, far);
+//     update_all_shader_matrices();
+// }
+//
+// void PGraphicsOpenGL_3::ortho(const float left, const float right, const float bottom, const float top, const float near, const float far) {
+//     PGraphics::ortho(left, right, bottom, top, near, far);
+//     update_all_shader_matrices();
+// }
+//
+// void PGraphicsOpenGL_3::perspective(const float fovy, const float aspect, const float near, const float far) {
+//     PGraphics::perspective(fovy, aspect, near, far);
+//     update_all_shader_matrices();
+// }
 
 /* --- LIGHTS --- */
 
@@ -1033,14 +979,6 @@ void PGraphicsOpenGL_3::noLights() {
 
 void PGraphicsOpenGL_3::lights() {
     lights_enabled = true;
-
-    // shader_fill_texture_lights->set_uniform(SHADER_UNIFORM_MODEL_MATRIX, g->model_matrix);
-    // shader_fill_texture_lights->set_uniform(SHADER_UNIFORM_VIEW_MATRIX, g->view_matrix);
-    // shader_fill_texture_lights->set_uniform(SHADER_UNIFORM_PROJECTION_MATRIX, g->projection_matrix);
-    // shader_fill_texture_lights->set_uniform(SHADER_UNIFORM_TEXTURE_UNIT, 0);
-    // shader_fill_texture_lights->set_uniform("normalMatrix", glm::mat3(glm::transpose(glm::inverse(g->view_matrix * g->model_matrix))));
-    // NOTE ^^^ this is done in `IMPL_emit_shape_fill_triangles`
-    // shader_fill_texture_lights->set_uniform("texMatrix", glm::mat4(1.0f)); // or a real matrix if you’re transforming texCoords
 
     ambient(0.5f, 0.5f, 0.5f);
     specular(0.5f, 0.5f, 0.5f);
@@ -1096,7 +1034,6 @@ void PGraphicsOpenGL_3::directionalLight(const float r, const float g, const flo
     setNoLightFalloff(lightingState.lightCount);
 
     lightingState.lightCount++;
-    // updateShaderLighting();
 }
 
 void PGraphicsOpenGL_3::pointLight(const float r, const float g, const float b, const float x, const float y, const float z) {
@@ -1123,7 +1060,6 @@ void PGraphicsOpenGL_3::pointLight(const float r, const float g, const float b, 
                     lightingState.currentLightFalloffQuadratic);
 
     lightingState.lightCount++;
-    // updateShaderLighting();
 }
 
 void PGraphicsOpenGL_3::spotLight(const float r, const float g, const float b, const float x, const float y, const float z,
@@ -1151,7 +1087,6 @@ void PGraphicsOpenGL_3::spotLight(const float r, const float g, const float b, c
                     lightingState.currentLightFalloffQuadratic);
 
     lightingState.lightCount++;
-    // updateShaderLighting();
 }
 
 void PGraphicsOpenGL_3::lightFalloff(const float constant, const float linear, const float quadratic) {
@@ -1339,8 +1274,9 @@ void PGraphicsOpenGL_3::upload_colorbuffer(uint32_t* pixels) {
         constexpr glm::vec4 color(1.0f, 1.0f, 1.0f, 1.0f);
         const int           width  = this->width;
         const int           height = this->height;
-        // TODO there is room for optimization below this line ...
-        //      i.e do not create a new vector every time and maybe create a dedicated vertex buffer for fullscreen quads
+        // OPTIMIZE there is room for optimization below this line ...
+        //          i.e do not create a new vector every time
+        //          and maybe create a dedicated vertex buffer for fullscreen quads
         fullscreen_quad.emplace_back(0, 0, 0,
                                      color.r, color.g, color.b, color.a,
                                      0, 0);

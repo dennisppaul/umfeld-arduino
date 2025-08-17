@@ -70,10 +70,10 @@ namespace umfeld {
         void     shader(PShader* shader) override;
         PShader* loadShader(const std::string& vertex_code, const std::string& fragment_code, const std::string& geometry_code = "") override;
         void     resetShader() override;
-        void     camera(float eyeX, float eyeY, float eyeZ, float centerX, float centerY, float centerZ, float upX, float upY, float upZ) override;
-        void     frustum(float left, float right, float bottom, float top, float near, float far) override;
-        void     ortho(float left, float right, float bottom, float top, float near, float far) override;
-        void     perspective(float fovy, float aspect, float near, float far) override;
+        // void     camera(float eyeX, float eyeY, float eyeZ, float centerX, float centerY, float centerZ, float upX, float upY, float upZ) override;
+        // void     frustum(float left, float right, float bottom, float top, float near, float far) override;
+        // void     ortho(float left, float right, float bottom, float top, float near, float far) override;
+        // void     perspective(float fovy, float aspect, float near, float far) override;
         void     lights() override;
         void     noLights() override;
         void     ambientLight(float r, float g, float b, float x = 0, float y = 0, float z = 0) override;
@@ -135,7 +135,7 @@ namespace umfeld {
         // void        OGL3_tranform_model_matrix_and_render_vertex_buffer(VertexBuffer& vertex_buffer, GLenum primitive_mode, const std::vector<Vertex>& shape_vertices) const;
         static void OGL3_render_vertex_buffer(VertexBuffer& vertex_buffer, GLenum primitive_mode, const std::vector<Vertex>& shape_vertices);
         void        OGL3_create_solid_color_texture(); // REMOVE this as soon as the shape renderer is done
-        void        update_all_shader_matrices() const;
+        // void        update_all_shader_matrices() const;
         void        update_shader_matrices(PShader* shader) const;
         static void reset_shader_matrices(PShader* shader);
         static void add_line_quad(const Vertex& p0, const Vertex& p1, float thickness, std::vector<Vertex>& out);

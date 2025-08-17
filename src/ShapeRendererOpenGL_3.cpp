@@ -299,7 +299,7 @@ namespace umfeld {
         }
     }
 
-    bool ShapeRendererOpenGL_3::evaluate_shader_uniforms(const std::string& shader_name, const ShapeRendererOpenGL_3::ShaderUniforms& uniforms) {
+    bool ShapeRendererOpenGL_3::evaluate_shader_uniforms(const std::string& shader_name, const ShaderUniforms& uniforms) {
         bool valid = true;
 
         if (uniforms.uViewProj == ShaderUniforms::NOT_FOUND) {

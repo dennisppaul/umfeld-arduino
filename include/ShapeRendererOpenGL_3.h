@@ -27,6 +27,32 @@
 #include "UmfeldFunctionsGraphics.h"
 
 namespace umfeld {
+    // cached uniform locations
+    struct ShaderUniforms {
+        enum UNIFORM_LOCATION_STATE : GLuint {
+            UNINITIALIZED = static_cast<GLuint>(-2),
+            NOT_FOUND     = GL_INVALID_INDEX, // NOTE result delivered by OpenGL s `glGetUniformLocation()`
+            INITIALIZED   = 0,                // NOTE `0` is the first valid value
+        };
+        GLuint uViewProj = UNINITIALIZED;
+        GLuint uTexture  = UNINITIALIZED;
+        // lighting uniforms
+        GLuint uView         = UNINITIALIZED;
+        GLuint normalMatrix  = UNINITIALIZED;
+        GLuint ambient       = UNINITIALIZED;
+        GLuint specular      = UNINITIALIZED;
+        GLuint emissive      = UNINITIALIZED;
+        GLuint shininess     = UNINITIALIZED;
+        GLuint lightCount    = UNINITIALIZED;
+        GLuint lightPosition = UNINITIALIZED;
+        GLuint lightNormal   = UNINITIALIZED;
+        GLuint lightAmbient  = UNINITIALIZED;
+        GLuint lightDiffuse  = UNINITIALIZED;
+        GLuint lightSpecular = UNINITIALIZED;
+        GLuint lightFalloff  = UNINITIALIZED;
+        GLuint lightSpot     = UNINITIALIZED;
+    };
+
     class ShapeRendererOpenGL_3 final : public ShapeRenderer {
     public:
         static constexpr uint16_t SHADER_PROGRAM_COLOR          = 0;
@@ -69,32 +95,6 @@ namespace umfeld {
             std::vector<Shape*> light_shapes;
             uint32_t            max_vertices{0};
             uint16_t            texture_id{TEXTURE_NONE};
-        };
-
-        // cached uniform locations
-        struct ShaderUniforms {
-            enum UNIFORM_LOCATION_STATE : GLuint {
-                UNINITIALIZED = static_cast<GLuint>(-2),
-                NOT_FOUND     = GL_INVALID_INDEX, // NOTE result delivered by OpenGL s `glGetUniformLocation()`
-                INITIALIZED   = 0,                // NOTE `0` is the first valid value
-            };
-            GLuint uViewProj = UNINITIALIZED;
-            GLuint uTexture  = UNINITIALIZED;
-            // lighting uniforms
-            GLuint uView         = UNINITIALIZED;
-            GLuint normalMatrix  = UNINITIALIZED;
-            GLuint ambient       = UNINITIALIZED;
-            GLuint specular      = UNINITIALIZED;
-            GLuint emissive      = UNINITIALIZED;
-            GLuint shininess     = UNINITIALIZED;
-            GLuint lightCount    = UNINITIALIZED;
-            GLuint lightPosition = UNINITIALIZED;
-            GLuint lightNormal   = UNINITIALIZED;
-            GLuint lightAmbient  = UNINITIALIZED;
-            GLuint lightDiffuse  = UNINITIALIZED;
-            GLuint lightSpecular = UNINITIALIZED;
-            GLuint lightFalloff  = UNINITIALIZED;
-            GLuint lightSpot     = UNINITIALIZED;
         };
 
         ShaderUniforms             shader_uniforms_color;

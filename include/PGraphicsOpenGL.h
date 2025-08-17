@@ -276,7 +276,7 @@ namespace umfeld {
             }
         }
 
-        // Common method to bind a framebuffer texture
+        // common method to bind a framebuffer texture
         void bind_framebuffer_texture() const {
             glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_2D, framebuffer.texture_id);

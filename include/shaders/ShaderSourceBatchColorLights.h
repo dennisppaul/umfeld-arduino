@@ -91,11 +91,15 @@ void main() {
     gl_Position = uViewProj * M * aPosition;
 
     // TODO "normalMatrix as Transform" better get this from transform
-    mat3 normalMatrix = mat3(transpose(inverse(uView * uModel[aTransformID])));
-    // mat3 normalMatrix = mat3(uView * MV);
+    // mat3 normalMatrix = mat3(transpose(inverse(MV)));
+    mat3 normalMatrix = mat3(MV);
+    vec3 n = normalMatrix * aNormal.xyz;
+    if (length(n) < 1e-6) {
+        n = aNormal.xyz;
+    }
 
     vec3 ecVertex = vec3(MV * aPosition);
-    vec3 ecNormal = normalize(normalMatrix * aNormal.xyz);
+    vec3 ecNormal = normalize(n);
     vec3 ecNormalInv = -ecNormal;
 
     vec3 totalAmbient = vec3(0.0);

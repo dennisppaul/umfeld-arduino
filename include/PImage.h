@@ -19,10 +19,7 @@
 
 #pragma once
 
-#include <cstring>
-#include <cstdint>
 #include <SDL3/SDL.h>
-
 #include "UmfeldConstants.h"
 
 namespace umfeld {
@@ -37,6 +34,20 @@ namespace umfeld {
         PImage();
         virtual ~PImage();
 
+        explicit PImage(const PImage* other);
+
+        // Deep copy constructor
+        PImage(const PImage& other);
+        // Deep copy assignment
+        PImage& operator=(const PImage& other);
+        // Move constructor
+        PImage(PImage&& other) noexcept;
+        // Move assignment
+        PImage& operator=(PImage&& other) noexcept;
+
+        // explicit deep copy helper
+        PImage copy() const { return PImage(*this); }
+
         virtual void loadPixels(PGraphics* graphics);
         virtual void init(uint32_t* pixels, int width, int height);
 
@@ -46,8 +57,7 @@ namespace umfeld {
         void update(PGraphics* graphics, const uint32_t* pixel_data, int width, int height, int offset_x, int offset_y);
         void update(PGraphics* graphics, const float* pixel_data, int width, int height, int offset_x, int offset_y);
 
-        // ReSharper disable once CppMemberFunctionMayBeConst
-        void set(const uint16_t x, const uint16_t y, const uint32_t c) {
+        void set(const uint16_t x, const uint16_t y, const uint32_t c) const {
             if (x >= static_cast<uint16_t>(width) || y >= static_cast<uint16_t>(height)) {
                 return;
             }
@@ -62,66 +72,49 @@ namespace umfeld {
             return c;
         }
 
-        void set_auto_generate_mipmap(const bool generate_mipmap) { auto_generate_mipmap = generate_mipmap; }
+        void set_auto_generate_mipmap(bool generate_mipmap) { auto_generate_mipmap = generate_mipmap; }
         bool get_auto_generate_mipmap() const { return auto_generate_mipmap; }
+
+        void set_texture_wrap(TextureWrap wrap) {
+            if (wrap != texture_wrap) {
+                texture_wrap       = wrap;
+                texture_wrap_dirty = true;
+            }
+        }
+        TextureWrap get_texture_wrap() const { return texture_wrap; }
+        bool        is_texture_wrap_dirty() const { return texture_wrap_dirty; }
+        void        set_texture_wrap_clean() { texture_wrap_dirty = false; }
+
+        void set_texture_filter(TextureFilter filter) {
+            if (filter != texture_filter) {
+                texture_filter       = filter;
+                texture_filter_dirty = true;
+            }
+        }
+        TextureFilter get_texture_filter() const { return texture_filter; }
+        bool          is_texture_filter_dirty() const { return texture_filter_dirty; }
+        void          set_texture_filter_clean() { texture_filter_dirty = false; }
 
         float                    width;
         float                    height;
         uint32_t*                pixels;
-        static constexpr uint8_t channels         = DEFAULT_BYTES_PER_PIXELS; // TODO might make this configurable in the future
+        static constexpr uint8_t channels         = DEFAULT_BYTES_PER_PIXELS;
         bool                     flip_y_texcoords = false;
         int                      texture_id       = TEXTURE_NOT_GENERATED;
-        SDL_Texture*             sdl_texture      = nullptr; // TODO is this still neeeded or used?
 
     protected:
-        bool auto_generate_mipmap  = false;
-        bool clean_up_pixel_buffer = false;
+        bool          auto_generate_mipmap{false};
+        bool          clean_up_pixel_buffer{false};
+        TextureWrap   texture_wrap{CLAMP_TO_EDGE};
+        bool          texture_wrap_dirty{true};
+        TextureFilter texture_filter{LINEAR};
+        bool          texture_filter_dirty{true};
 
         void update_full_internal(PGraphics* graphics);
 
     public:
-        static uint32_t* convert_bytes_to_pixels(int width, int height, int channels, const unsigned char* data);
-        static PImage    convert_SDL_Surface_to_PImage(SDL_Surface* surface) {
-            if (!surface) {
-                return PImage(); // Return empty image if surface is null
-            }
-
-            const int width  = surface->w;
-            const int height = surface->h;
-            // constexpr int format = 4; // TODO used to be 'SDL_PIXELFORMAT_RGBA8888;' but needs to be '4' // Assuming default RGBA channels
-
-            PImage image(width, height);
-
-            // Convert surface to the correct channels if necessary
-            SDL_Surface* convertedSurface = SDL_ConvertSurface(surface, SDL_PIXELFORMAT_RGBA8888);
-            if (!convertedSurface) {
-                return PImage(); // Conversion failed, return empty image
-            }
-
-            // Copy pixels
-            image.pixels = new uint32_t[width * height];
-            std::memcpy(image.pixels, convertedSurface->pixels, width * height * sizeof(uint32_t));
-
-            SDL_DestroySurface(convertedSurface); // Clean up converted surface
-
-            return image;
-        }
-
-        static SDL_Surface* convert_PImage_to_SDL_Surface(const PImage& image) {
-            if (!image.pixels || image.width <= 0 || image.height <= 0) {
-                return nullptr;
-            }
-
-            // Create SDL surface with the correct channels
-            SDL_Surface* surface = SDL_CreateSurface(image.width, image.height, SDL_PIXELFORMAT_RGBA8888);
-            if (!surface) {
-                return nullptr;
-            }
-
-            // Copy pixel data into the surface
-            std::memcpy(surface->pixels, image.pixels, image.width * image.height * sizeof(uint32_t));
-
-            return surface;
-        }
+        static uint32_t*    convert_bytes_to_pixels(int width, int height, int channels, const unsigned char* data);
+        static PImage       convert_SDL_Surface_to_PImage(SDL_Surface* surface);
+        static SDL_Surface* convert_PImage_to_SDL_Surface(const PImage& image);
     };
 } // namespace umfeld

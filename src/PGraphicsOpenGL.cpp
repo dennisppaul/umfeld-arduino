@@ -22,6 +22,7 @@
 #include "Umfeld.h"
 #include "UmfeldFunctionsGraphics.h"
 #include "PGraphicsOpenGLConstants.h"
+#include "ShapeRenderer.h"
 
 namespace umfeld {
     void PGraphicsOpenGL::blendMode(const int mode) {
@@ -224,10 +225,26 @@ namespace umfeld {
     }
 
     void PGraphicsOpenGL::texture_filter(const TextureFilter filter) {
-        OGL_texture_filter(filter);
+        if (current_texture != nullptr) {
+            if (shape_renderer) {
+                shape_renderer->set_texture(current_texture);
+            }
+            current_texture->set_texture_filter(filter);
+            OGL_texture_filter(filter);
+            current_texture->set_texture_filter_clean();
+        }
     }
 
     void PGraphicsOpenGL::texture_wrap(const TextureWrap wrap, const glm::vec4 color_stroke) {
-        OGL_texture_wrap(wrap, color_stroke);
+        if (current_texture != nullptr) {
+            // TODO `color_stroke` is only known in `PGraphicsOpenGL` … move function to `PGraphicsOpenGL`
+            // PGraphicsOpenGL::OGL_texture_wrap(img->get_texture_wrap(), color_stroke);
+            if (shape_renderer) {
+                shape_renderer->set_texture(current_texture);
+            }
+            current_texture->set_texture_wrap(wrap);
+            OGL_texture_wrap(wrap, color_stroke);
+            current_texture->set_texture_wrap_clean();
+        }
     }
 } // namespace umfeld

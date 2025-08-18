@@ -279,13 +279,15 @@ namespace umfeld {
         static constexpr uint16_t        ELLIPSE_DETAIL_MIN     = 3;
         static constexpr uint16_t        ELLIPSE_DETAIL_DEFAULT = 36;
         static constexpr uint16_t        ARC_DETAIL_DEFAULT     = 36;
-        StrokeState                      current_stroke_state;
         ShapeRenderer*                   shape_renderer{nullptr}; // TODO @maybe make this `const` and set in constructor?
+        PFont*                           current_font{nullptr};
+        PImage*                          current_texture{nullptr};
+        PImage*                          stored_texture{nullptr};
+        StrokeState                      current_stroke_state;
         std::stack<StyleState>           style_stack;
         LightingState                    lightingState;
         bool                             lights_enabled{false};
         bool                             init_properties_locked{false};
-        PFont*                           current_font{nullptr};
         ColorState                       color_stroke{};
         ColorState                       color_fill{};
         int                              rect_mode{CORNER};
@@ -298,8 +300,6 @@ namespace umfeld {
         int                              curve_detail{20};
         float                            curve_tightness{0.0f};
         uint8_t                          pixel_density{1};
-        PImage*                          current_texture{nullptr};
-        PImage*                          stored_texture{nullptr};
         bool                             shape_force_transparent{false};
         int                              polygon_triangulation_strategy{POLYGON_TRIANGULATION_BETTER};
         int                              stroke_render_mode{STROKE_RENDER_MODE_TRIANGULATE_2D};

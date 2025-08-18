@@ -54,14 +54,12 @@ namespace umfeld {
     }
 
     int ShapeRendererOpenGL_3::set_texture(PImage* img) {
-        // NOTE not un-/binding any textures here.
-        //      this also means that custom shapes ( e.g VertexBuffer/Mesh )
-        //      would need to manually bind textures before rendering
+        // NOTE maybe this should live in `PGraphicsOpenGL`
         if (img == nullptr) {
             PGraphicsOpenGL::OGL_bind_texture(TEXTURE_NONE);
             return TEXTURE_NONE;
         }
-
+        /* upload and bind texture */
         if (img->texture_id == TEXTURE_NOT_GENERATED) {
             const bool success = PGraphicsOpenGL::OGL_generate_and_upload_image_as_texture(img);
             if (!success || img->texture_id == TEXTURE_NOT_GENERATED) {
@@ -69,9 +67,22 @@ namespace umfeld {
                 PGraphicsOpenGL::OGL_bind_texture(TEXTURE_NONE);
                 return TEXTURE_NONE;
             }
+        } else {
+            PGraphicsOpenGL::OGL_bind_texture(img->texture_id);
+        }
+        /* filter */
+        if (img->is_texture_filter_dirty()) {
+            img->set_texture_filter_clean();
+            PGraphicsOpenGL::OGL_texture_filter(img->get_texture_filter());
+        }
+        /* wrap */
+        if (img->is_texture_wrap_dirty()) {
+            img->set_texture_wrap_clean();
+            // TODO `color_stroke` is only known in `PGraphicsOpenGL` … move function to `PGraphicsOpenGL`
+            // PGraphicsOpenGL::OGL_texture_wrap(img->get_texture_wrap(), color_stroke);
+            PGraphicsOpenGL::OGL_texture_wrap(img->get_texture_wrap(), glm::vec4(0, 0, 0, 1));
         }
 
-        PGraphicsOpenGL::OGL_bind_texture(img->texture_id);
         return img->texture_id;
     }
 
@@ -732,20 +743,32 @@ namespace umfeld {
         }
     }
 
-    void ShapeRendererOpenGL_3::enable_default_shader_and_bind_texture(const unsigned texture_id) const {
+    void ShapeRendererOpenGL_3::enable_flat_shaders_and_bind_texture(GLuint& current_shader_program_id, const unsigned texture_id) const {
         if (texture_id == TEXTURE_NONE) {
-            glUseProgram(shader_programm_color);
+            if (current_shader_program_id != shader_programm_color) {
+                current_shader_program_id = shader_programm_color;
+                glUseProgram(current_shader_program_id);
+            }
         } else {
-            glUseProgram(shader_programm_texture);
+            if (current_shader_program_id != shader_programm_texture) {
+                current_shader_program_id = shader_programm_texture;
+                glUseProgram(current_shader_program_id);
+            }
             PGraphicsOpenGL::OGL_bind_texture(texture_id);
         }
     }
 
-    void ShapeRendererOpenGL_3::enable_light_shader_and_bind_texture(const unsigned texture_id) const {
+    void ShapeRendererOpenGL_3::enable_light_shaders_and_bind_texture(GLuint& current_shader_program_id, const unsigned texture_id) const {
         if (texture_id == TEXTURE_NONE) {
-            glUseProgram(shader_programm_color_lights);
+            if (current_shader_program_id != shader_programm_color_lights) {
+                current_shader_program_id = shader_programm_color_lights;
+                glUseProgram(current_shader_program_id);
+            }
         } else {
-            glUseProgram(shader_programm_texture_lights);
+            if (current_shader_program_id != shader_programm_texture_lights) {
+                current_shader_program_id = shader_programm_texture_lights;
+                glUseProgram(current_shader_program_id);
+            }
             PGraphicsOpenGL::OGL_bind_texture(texture_id);
         }
     }
@@ -806,18 +829,19 @@ namespace umfeld {
 
         glBindVertexArray(vao);
 
+        GLuint cached_shader_program_id = NO_SHADER_PROGRAM;
         if (custom_shader == nullptr) {
             // NOTE set shader program uniforms ... only once
             set_per_frame_shader_uniforms(view_projection_matrix, frame_light_shapes_count, frame_transparent_shapes_count, frame_opaque_shapes_count);
         } else {
-            warning_in_function_once("custom_shader: preset uniforms?");
+            warning_in_function_once("custom_shader: set_per_frame_shader_uniforms");
         }
+
         // opaque pass
         if (frame_opaque_shapes_count > 0) {
             enable_depth_testing();
-            warning_in_function_once("frame_opaque_shapes_count: ", frame_opaque_shapes_count);
             for (auto& [texture_id, batch]: texture_batches) {
-                enable_default_shader_and_bind_texture(texture_id);
+                enable_flat_shaders_and_bind_texture(cached_shader_program_id, texture_id);
                 render_batch(batch.opaque_shapes);
             }
         }
@@ -826,18 +850,16 @@ namespace umfeld {
             if (frame_opaque_shapes_count > 0) {
                 enable_depth_testing();
             }
-            warning_in_function_once("frame_light_shapes_count: ", frame_light_shapes_count);
             for (auto& [texture_id, batch]: texture_batches) {
-                enable_light_shader_and_bind_texture(texture_id);
+                enable_light_shaders_and_bind_texture(cached_shader_program_id, texture_id);
                 render_batch(batch.light_shapes);
             }
         }
         // transparent pass
         if (frame_transparent_shapes_count > 0) {
             disable_depth_testing();
-            warning_in_function_once("frame_transparent_shapes_count: ", frame_transparent_shapes_count);
             for (auto& [texture_id, batch]: texture_batches) {
-                enable_default_shader_and_bind_texture(texture_id);
+                enable_flat_shaders_and_bind_texture(cached_shader_program_id, texture_id);
                 render_batch(batch.transparent_shapes);
             }
         }
@@ -920,8 +942,8 @@ namespace umfeld {
         }
         glDepthFunc(GL_LEQUAL);
 
-        GLuint currentTexture = UINT32_MAX; // force initial texture bind
-        bool   blendEnabled   = false;
+        GLuint current_texture = UINT32_MAX; // force initial texture bind
+        bool   blendEnabled    = false;
 
         if (custom_shader == nullptr) {
             // NOTE set shader program uniforms ... only once
@@ -951,26 +973,30 @@ namespace umfeld {
                 glDepthMask(GL_TRUE); // Enable depth writes for opaque
                 blendEnabled = false;
             }
-            // switch program ... if necessary
+            //  switch ( if necessary ) shader program
             if (custom_shader == nullptr) {
                 const GLuint required_shader_program_id = shape.light_enabled ? (shape.texture_id == TEXTURE_NONE ? shader_programm_color_lights : shader_programm_texture_lights) : (shape.texture_id == TEXTURE_NONE ? shader_programm_color : shader_programm_texture);
                 if (required_shader_program_id != cached_shader_program_id) {
-                    glUseProgram(required_shader_program_id);
                     cached_shader_program_id = required_shader_program_id;
+                    glUseProgram(cached_shader_program_id);
                 }
             } else {
                 warning_in_function_once("custom_shader: set shader uniforms per shape");
-                glUseProgram(custom_shader->get_program_id());
                 // custom_shader->update_uniforms(shape);
                 // TODO implement an option that TRIES to set the *known* uniforms:
                 //      - model, view, projection matrices
                 //      - light uniforms
+                if (custom_shader->get_program_id() != cached_shader_program_id) {
+                    cached_shader_program_id = custom_shader->get_program_id();
+                    glUseProgram(cached_shader_program_id);
+                }
+                // NOTE skipping light uniforms for now
             }
             // handle texture changes
-            if (shape.texture_id != currentTexture) {
-                currentTexture = shape.texture_id;
-                if (currentTexture != TEXTURE_NONE) {
-                    PGraphicsOpenGL::OGL_bind_texture(currentTexture);
+            if (shape.texture_id != current_texture) {
+                current_texture = shape.texture_id;
+                if (current_texture != TEXTURE_NONE) {
+                    PGraphicsOpenGL::OGL_bind_texture(current_texture);
                 }
             }
             // adapt buffer size if necessary

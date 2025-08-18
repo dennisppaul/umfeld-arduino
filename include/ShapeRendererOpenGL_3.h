@@ -141,8 +141,8 @@ namespace umfeld {
         void          print_frame_info(const std::vector<Shape>& processed_point_shapes, const std::vector<Shape>& processed_line_shapes, const std::vector<Shape>& processed_triangle_shapes) const;
         void          process_shapes(std::vector<Shape>& processed_point_shapes, std::vector<Shape>& processed_line_shapes, std::vector<Shape>& processed_triangle_shapes);
         void          set_per_frame_shader_uniforms(const glm::mat4& view_projection_matrix, int frame_has_light_shapes, int frame_has_transparent_shapes, int frame_has_opaque_shapes) const;
-        void          enable_default_shader_and_bind_texture(unsigned texture_id) const;
-        void          enable_light_shader_and_bind_texture(unsigned texture_id) const;
+        void          enable_flat_shaders_and_bind_texture(GLuint& current_shader_program_id, unsigned texture_id) const;
+        void          enable_light_shaders_and_bind_texture(GLuint& current_shader_program_id, unsigned texture_id) const;
         static bool   uniform_exists(const GLuint loc) { return loc != ShaderUniforms::NOT_FOUND; }
         static void   set_light_uniforms(const ShaderUniforms& uniforms, const LightingState& lighting);
     };

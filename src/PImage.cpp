@@ -26,6 +26,104 @@
 
 using namespace umfeld;
 
+/* deep copy constructor */
+PImage::PImage(const PImage& other)
+    : width(other.width),
+      height(other.height),
+      pixels(nullptr),
+      auto_generate_mipmap(other.auto_generate_mipmap),
+      clean_up_pixel_buffer(true), // we allocate our own buffer
+      texture_wrap(other.texture_wrap),
+      texture_wrap_dirty(other.texture_wrap_dirty),
+      texture_filter(other.texture_filter),
+      texture_filter_dirty(other.texture_filter_dirty),
+      flip_y_texcoords(other.flip_y_texcoords),
+      texture_id(TEXTURE_NOT_GENERATED) { // do not copy GPU handle
+    const int len = static_cast<int>(width * height);
+    if (other.pixels && len > 0) {
+        pixels = new uint32_t[len];
+        std::memcpy(pixels, other.pixels, len * sizeof(uint32_t));
+    }
+}
+
+PImage::PImage(const PImage* other) : PImage(other ? *other : PImage()) {}
+
+// Deep copy assignment
+PImage& PImage::operator=(const PImage& other) {
+    if (this == &other) {
+        return *this;
+    }
+    // Release current
+    if (pixels && clean_up_pixel_buffer) {
+        delete[] pixels;
+    }
+    width  = other.width;
+    height = other.height;
+
+    const int len = static_cast<int>(width * height);
+    pixels        = nullptr;
+    if (other.pixels && len > 0) {
+        pixels = new uint32_t[len];
+        std::memcpy(pixels, other.pixels, len * sizeof(uint32_t));
+    }
+
+    auto_generate_mipmap  = other.auto_generate_mipmap;
+    clean_up_pixel_buffer = true;
+    texture_wrap          = other.texture_wrap;
+    texture_wrap_dirty    = other.texture_wrap_dirty;
+    texture_filter        = other.texture_filter;
+    texture_filter_dirty  = other.texture_filter_dirty;
+    flip_y_texcoords      = other.flip_y_texcoords;
+    texture_id            = TEXTURE_NOT_GENERATED; // force re-upload if needed
+    return *this;
+}
+
+// Move constructor
+PImage::PImage(PImage&& other) noexcept
+    : width(other.width),
+      height(other.height),
+      pixels(other.pixels),
+      auto_generate_mipmap(other.auto_generate_mipmap),
+      clean_up_pixel_buffer(other.clean_up_pixel_buffer),
+      texture_wrap(other.texture_wrap),
+      texture_wrap_dirty(other.texture_wrap_dirty),
+      texture_filter(other.texture_filter),
+      texture_filter_dirty(other.texture_filter_dirty),
+      flip_y_texcoords(other.flip_y_texcoords),
+      texture_id(other.texture_id) {
+    other.width = other.height  = 0;
+    other.pixels                = nullptr;
+    other.clean_up_pixel_buffer = false;
+    other.texture_id            = TEXTURE_NOT_GENERATED;
+}
+
+// Move assignment
+PImage& PImage::operator=(PImage&& other) noexcept {
+    if (this == &other) {
+        return *this;
+    }
+    if (pixels && clean_up_pixel_buffer) {
+        delete[] pixels;
+    }
+    width                 = other.width;
+    height                = other.height;
+    pixels                = other.pixels;
+    auto_generate_mipmap  = other.auto_generate_mipmap;
+    clean_up_pixel_buffer = other.clean_up_pixel_buffer;
+    texture_wrap          = other.texture_wrap;
+    texture_wrap_dirty    = other.texture_wrap_dirty;
+    texture_filter        = other.texture_filter;
+    texture_filter_dirty  = other.texture_filter_dirty;
+    flip_y_texcoords      = other.flip_y_texcoords;
+    texture_id            = other.texture_id;
+
+    other.width = other.height  = 0;
+    other.pixels                = nullptr;
+    other.clean_up_pixel_buffer = false;
+    other.texture_id            = TEXTURE_NOT_GENERATED;
+    return *this;
+}
+
 /**
 * @brief minimal constructor for PImage. does not initialize any data.
 */
@@ -109,10 +207,10 @@ PImage::~PImage() {
         delete[] pixels;
         pixels = nullptr;
     }
-    if (sdl_texture != nullptr) {
-        SDL_DestroyTexture(sdl_texture);
-        sdl_texture = nullptr;
-    }
+    // if (sdl_texture != nullptr) {
+    //     SDL_DestroyTexture(sdl_texture);
+    //     sdl_texture = nullptr;
+    // }
     texture_id = TEXTURE_NOT_GENERATED; // reset texture ID
 }
 
@@ -247,4 +345,47 @@ void PImage::update(PGraphics*      graphics,
     }
 
     graphics->upload_texture(this, pixel_data, width, height, offset_x, offset_y);
+}
+
+PImage PImage::convert_SDL_Surface_to_PImage(SDL_Surface* surface) {
+    if (!surface) {
+        return PImage(); // Return empty image if surface is null
+    }
+
+    const int width  = surface->w;
+    const int height = surface->h;
+    // constexpr int format = 4; // TODO used to be 'SDL_PIXELFORMAT_RGBA8888;' but needs to be '4' // Assuming default RGBA channels
+
+    PImage image(width, height);
+
+    // Convert surface to the correct channels if necessary
+    SDL_Surface* convertedSurface = SDL_ConvertSurface(surface, SDL_PIXELFORMAT_RGBA8888);
+    if (!convertedSurface) {
+        return PImage(); // Conversion failed, return empty image
+    }
+
+    // Copy pixels
+    image.pixels = new uint32_t[width * height];
+    std::memcpy(image.pixels, convertedSurface->pixels, width * height * sizeof(uint32_t));
+
+    SDL_DestroySurface(convertedSurface); // Clean up converted surface
+
+    return image;
+}
+
+SDL_Surface* PImage::convert_PImage_to_SDL_Surface(const PImage& image) {
+    if (!image.pixels || image.width <= 0 || image.height <= 0) {
+        return nullptr;
+    }
+
+    // Create SDL surface with the correct channels
+    SDL_Surface* surface = SDL_CreateSurface(image.width, image.height, SDL_PIXELFORMAT_RGBA8888);
+    if (!surface) {
+        return nullptr;
+    }
+
+    // Copy pixel data into the surface
+    std::memcpy(surface->pixels, image.pixels, image.width * image.height * sizeof(uint32_t));
+
+    return surface;
 }

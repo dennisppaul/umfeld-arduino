@@ -251,7 +251,7 @@ void PGraphicsOpenGL_3::download_texture(PImage* img) {
     }
 
 #ifndef OPENGL_ES_3_0
-    const int tmp_bound_texture = texture_id_current;
+    const int tmp_bound_texture = get_current_texture_id();
     OGL_bind_texture(img->texture_id);
     glGetTexImage(GL_TEXTURE_2D, 0,
                   UMFELD_DEFAULT_EXTERNAL_PIXEL_FORMAT,

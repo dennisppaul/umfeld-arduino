@@ -31,46 +31,47 @@ namespace umfeld {
 #else
     static constexpr auto DEFAULT_WINDOW_TITLE = UMFELD_APP_NAME;
 #endif
-    static constexpr int   DEFAULT                       = -1;
-    static constexpr int   NOT_INITIALIZED               = -1;
-    static constexpr int   DISPLAY_WIDTH                 = -1;
-    static constexpr int   DISPLAY_HEIGHT                = -1;
-    static constexpr int   DEFAULT_CONSOLE_WIDTH         = 78;
-    static constexpr int   DEFAULT_CONSOLE_LABEL_WIDTH   = 39;
-    static constexpr int   DEFAULT_WINDOW_WIDTH          = 1024;
-    static constexpr int   DEFAULT_WINDOW_HEIGHT         = 768;
-    static constexpr int   DEFAULT_PIXEL_FORMAT_RGBA     = 0;
-    static constexpr int   DEFAULT_FRAME_RATE            = 60;
-    static constexpr float DEFAULT_CAMERA_FOV_RADIANS    = 1.04719755f; // glm::radians(60.f));
-    static constexpr int   DEFAULT_AUDIO_DEVICE          = -1;
-    static constexpr auto  DEFAULT_AUDIO_DEVICE_NAME     = "";
-    static constexpr auto  DEFAULT_AUDIO_DEVICE_NOT_USED = "NOOP";
-    static constexpr int   DEFAULT_SAMPLE_RATE           = 48000;
-    static constexpr int   DEFAULT_AUDIO_BUFFER_SIZE     = 2048;
-    static constexpr int   DEFAULT_INPUT_CHANNELS        = 1;
-    static constexpr int   DEFAULT_OUTPUT_CHANNELS       = 2;
-    static constexpr bool  DEFAULT_AUDIO_RUN_IN_THREAD   = false;
-    static constexpr int   DEFAULT_BYTES_PER_PIXELS      = 4;
-    static constexpr int   DEFAULT_SPHERE_RESOLUTION     = 15;
-    static constexpr int   AUDIO_DEVICE_FIND_BY_NAME     = -2;
-    static constexpr int   AUDIO_DEVICE_NOT_FOUND        = -3;
-    static constexpr int   AUDIO_UNIT_NOT_INITIALIZED    = -4;
-    static constexpr int   BUFFER_SIZE_UNDEFINED         = -1;
-    static constexpr int   TEXTURE_NOT_GENERATED         = -1;
-    static constexpr int   TEXTURE_NOT_UPDATED           = -2;
-    static constexpr int   TEXTURE_VALID_ID              = 1;
-    static constexpr int   TEXTURE_NONE                  = 0;
-    static constexpr float PI                            = 3.14159265358979323846f;
-    static constexpr float HALF_PI                       = PI / 2;
-    static constexpr float QUARTER_PI                    = PI / 4;
-    static constexpr float TWO_PI                        = PI * 2;
-    static constexpr float TAU                           = TWO_PI;
-    static constexpr bool  CLOSE                         = true;
-    static constexpr bool  NOT_CLOSED                    = false;
-    static constexpr int   LEFT                          = 0x01; // shared constants
-    static constexpr int   RIGHT                         = 0x02;
-    static constexpr int   MIDDLE                        = 0x03;
-    static constexpr int   CENTER                        = 0x04;
+    static constexpr int      DEFAULT                       = -1;
+    static constexpr int      NOT_INITIALIZED               = -1;
+    static constexpr int      DISPLAY_WIDTH                 = -1;
+    static constexpr int      DISPLAY_HEIGHT                = -1;
+    static constexpr int      DEFAULT_CONSOLE_WIDTH         = 78;
+    static constexpr int      DEFAULT_CONSOLE_LABEL_WIDTH   = 39;
+    static constexpr int      DEFAULT_WINDOW_WIDTH          = 1024;
+    static constexpr int      DEFAULT_WINDOW_HEIGHT         = 768;
+    static constexpr int      DEFAULT_PIXEL_FORMAT_RGBA     = 0;
+    static constexpr int      DEFAULT_FRAME_RATE            = 60;
+    static constexpr float    DEFAULT_CAMERA_FOV_RADIANS    = 1.04719755f; // glm::radians(60.f));
+    static constexpr int      DEFAULT_AUDIO_DEVICE          = -1;
+    static constexpr auto     DEFAULT_AUDIO_DEVICE_NAME     = "";
+    static constexpr auto     DEFAULT_AUDIO_DEVICE_NOT_USED = "NOOP";
+    static constexpr int      DEFAULT_SAMPLE_RATE           = 48000;
+    static constexpr int      DEFAULT_AUDIO_BUFFER_SIZE     = 2048;
+    static constexpr int      DEFAULT_INPUT_CHANNELS        = 1;
+    static constexpr int      DEFAULT_OUTPUT_CHANNELS       = 2;
+    static constexpr bool     DEFAULT_AUDIO_RUN_IN_THREAD   = false;
+    static constexpr int      DEFAULT_BYTES_PER_PIXELS      = 4;
+    static constexpr int      DEFAULT_SPHERE_RESOLUTION     = 15;
+    static constexpr int      AUDIO_DEVICE_FIND_BY_NAME     = -2;
+    static constexpr int      AUDIO_DEVICE_NOT_FOUND        = -3;
+    static constexpr int      AUDIO_UNIT_NOT_INITIALIZED    = -4;
+    static constexpr int      BUFFER_SIZE_UNDEFINED         = -1;
+    static constexpr uint32_t TEXTURE_PROPERTY_UNDEFINED    = -1;
+    static constexpr int      TEXTURE_NOT_GENERATED         = -1;
+    static constexpr int      TEXTURE_NOT_UPDATED           = -2;
+    static constexpr int      TEXTURE_VALID_ID              = 1;
+    static constexpr int      TEXTURE_NONE                  = 0;
+    static constexpr float    PI                            = 3.14159265358979323846f;
+    static constexpr float    HALF_PI                       = PI / 2;
+    static constexpr float    QUARTER_PI                    = PI / 4;
+    static constexpr float    TWO_PI                        = PI * 2;
+    static constexpr float    TAU                           = TWO_PI;
+    static constexpr bool     CLOSE                         = true;
+    static constexpr bool     NOT_CLOSED                    = false;
+    static constexpr int      LEFT                          = 0x01; // shared constants
+    static constexpr int      RIGHT                         = 0x02;
+    static constexpr int      MIDDLE                        = 0x03;
+    static constexpr int      CENTER                        = 0x04;
     enum ShapeMode {
         TRIANGLES = 0x10,
         TRIANGLE_STRIP,
@@ -163,9 +164,6 @@ namespace umfeld {
         MIRRORED_REPEAT  // mirrored repeat
     };
     enum RenderMode {
-        // RENDER_MODE_DEPRECATED_IMMEDIATE = 0x90, // tries to render immediately, but may buffer vertices
-        // RENDER_MODE_DEPRECATED_BUFFERED,         // buffers vertices and renders them at the end of the frame
-        // RENDER_MODE_DEPRECATED_SHAPE,            // renders shapes immediately, but via `beginShape()` and `endShape()` ( only for OpenGL 2.0 )
         RENDER_MODE_SORTED_BY_Z_ORDER = 0x90,   // render sorted by z-order in batches ( fast, transparent shapes are sorted, textured are rendered in batches )
         RENDER_MODE_SORTED_BY_SUBMISSION_ORDER, // render sorted by submission order ( slow, good for 2D, shapes are renderered one by one )
         RENDER_MODE_IMMEDIATELY                 // render immediately ( slowest, shapes are rendered at call to `endShape()` )

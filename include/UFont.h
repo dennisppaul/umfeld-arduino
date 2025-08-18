@@ -61,6 +61,9 @@ namespace umfeld {
                     }
                 }
             }
+
+            font_atlas->set_texture_filter(NEAREST);
+            font_atlas->set_texture_wrap(CLAMP_TO_EDGE);
         }
 
     public:

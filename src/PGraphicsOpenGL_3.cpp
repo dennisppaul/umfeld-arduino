@@ -33,13 +33,13 @@
 #include "Geometry.h"
 #include "VertexBuffer.h"
 #include "PShader.h"
-#include "ShaderSourceColorTexture.h"
-#include "ShaderSourceColorTextureLights.h"
 #include "ShaderSourceColor.h"
 #include "ShaderSourceColorLights.h"
 #include "ShaderSourceTexture.h"
 #include "ShaderSourceTextureLights.h"
 #include "ShapeRendererOpenGL_3.h"
+
+#include "ShaderSourceColorTexture.h" // REMOVE <<<
 
 #ifdef UMFELD_PGRAPHICS_OPENGL_3_3_CORE_ERRORS
 #define UMFELD_PGRAPHICS_OPENGL_3_3_CORE_CHECK_ERRORS(msg) \
@@ -64,7 +64,7 @@ void PGraphicsOpenGL_3::impl_background(const float a, const float b, const floa
 
 void PGraphicsOpenGL_3::add_line_quad(const Vertex& p0, const Vertex& p1, float thickness, std::vector<Vertex>& out) {
     // glm::vec3 dir = glm::normalize(p1 - p0);
-    glm::vec3 dir = p1.position - p0.position; // NOTE no need to noralize, the shader will do it
+    glm::vec3 dir = p1.position - p0.position; // NOTE no need to normalize, the shader will do it
 
     // The shader will use this direction to compute screen-space offset
     glm::aligned_vec4 normal(dir, thickness);

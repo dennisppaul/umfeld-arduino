@@ -28,17 +28,22 @@ layout(location = 0) in vec4 aPosition;
 layout(location = 1) in vec4 aNormal;
 layout(location = 2) in vec4 aColor;
 
+layout(std140) uniform Transforms {
+    mat4 uModel[256];
+};
+
 out vec4 vColor;
 
 uniform mat4 uProjection;
 uniform mat4 uViewMatrix;
-uniform mat4 model_matrix;
+//uniform mat4 model_matrix;
 
 uniform vec4 viewport;
 uniform int perspective;
 uniform vec3 scale;
 
 void main() {
+  mat4 model_matrix = uModel[aTransformID];
   mat4 modelviewMatrix =  uViewMatrix * model_matrix;
   mat4 projectionMatrix = uProjection;
   vec4 direction = aNormal;

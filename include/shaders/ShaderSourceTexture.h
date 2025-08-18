@@ -22,7 +22,7 @@
 #include "ShaderSource.h"
 
 namespace umfeld {
-    inline ShaderSource shader_source_batch_color{
+    inline ShaderSource shader_source_texture{
         .vertex   = R"(
 layout(location = 0) in vec4 aPosition;
 layout(location = 1) in vec4 aNormal;
@@ -31,26 +31,32 @@ layout(location = 3) in vec3 aTexCoord;
 layout(location = 4) in uint aTransformID;
 layout(location = 5) in uint aUserdata;
 
-out vec4 vColor;
-
 layout(std140) uniform Transforms {
     mat4 uModel[256];
 };
 
+out vec4 vColor;
+out vec2 vTexCoord;
+
 uniform mat4 uViewProj;
 
 void main() {
-    mat4 M = uModel[aTransformID];
+    mat4 M      = uModel[aTransformID];
     gl_Position = uViewProj * M * aPosition;
-    vColor = aColor;
+    vTexCoord   = aTexCoord.xy;
+    vColor      = aColor;
 }
         )",
         .fragment = R"(
 in vec4 vColor;
-out vec4 fragColor;
+in vec2 vTexCoord;
+
+out vec4 FragColor;
+
+uniform sampler2D uTexture;
+
 void main() {
-    fragColor = vColor;
+    FragColor = texture(uTexture, vTexCoord) * vColor;
 }
-        )",
-        .geometry = ""};
+        )"};
 }

@@ -22,7 +22,7 @@
 #include "ShaderSource.h"
 
 namespace umfeld {
-    inline ShaderSource shader_source_color_texture_lights{
+    inline ShaderSource shader_source_color_lights{
         .vertex   = R"(
 layout(location = 0) in vec4 aPosition;
 layout(location = 1) in vec4 aNormal;
@@ -31,12 +31,16 @@ layout(location = 3) in vec3 aTexCoord;
 layout(location = 4) in uint aTransformID;
 layout(location = 5) in uint aUserdata;
 
-uniform mat4 uProjection;
-uniform mat4 uViewMatrix;
-uniform mat4 model_matrix;
+layout(std140) uniform Transforms {
+    mat4 uModel[256];
+};
 
-uniform mat4 texMatrix;
-uniform mat3 normalMatrix;
+out vec4 vColor;
+out vec4 vBackColor;
+
+uniform mat4 uViewProj;
+uniform mat4 uView;
+// uniform mat3 normalMatrix; // TODO "normalMatrix as Transform" add it via Transform block later
 
 uniform vec4 ambient;
 uniform vec4 specular;
@@ -51,10 +55,6 @@ uniform vec3 lightDiffuse[8];
 uniform vec3 lightSpecular[8];
 uniform vec3 lightFalloff[8];
 uniform vec2 lightSpot[8];
-
-out vec4 vertColor;
-out vec4 backVertColor;
-out vec4 vertTexCoord;
 
 const float zero_float = 0.0;
 const float one_float = 1.0;
@@ -86,12 +86,20 @@ float blinnPhongFactor(vec3 lightDir, vec3 vertPos, vec3 vecNormal, float shine)
 }
 
 void main() {
-    mat4 mv = uViewMatrix * model_matrix;
-    mat4 mvp = uProjection * mv;
-    gl_Position = mvp * aPosition;
+    mat4 M = uModel[aTransformID];
+    mat4 MV = uView * M;
+    gl_Position = uViewProj * M * aPosition;
 
-    vec3 ecVertex = vec3(mv * aPosition);
-    vec3 ecNormal = normalize(normalMatrix * aNormal.xyz);
+    // TODO "normalMatrix as Transform" better get this from transform
+    // mat3 normalMatrix = mat3(transpose(inverse(MV)));
+    mat3 normalMatrix = mat3(MV);
+    vec3 n = normalMatrix * aNormal.xyz;
+    if (length(n) < 1e-6) {
+        n = aNormal.xyz;
+    }
+
+    vec3 ecVertex = vec3(MV * aPosition);
+    vec3 ecNormal = normalize(n);
     vec3 ecNormalInv = -ecNormal;
 
     vec3 totalAmbient = vec3(0.0);
@@ -138,31 +146,26 @@ void main() {
         }
     }
 
-    vertColor = vec4(totalAmbient, 0.0) * ambient +
-                vec4(totalFrontDiffuse, 1.0) * aColor +
-                vec4(totalFrontSpecular, 0.0) * specular +
-                vec4(emissive.rgb, 0.0);
+    vColor = vec4(totalAmbient, 0.0) * ambient +
+             vec4(totalFrontDiffuse, 1.0) * aColor +
+             vec4(totalFrontSpecular, 0.0) * specular +
+             vec4(emissive.rgb, 0.0);
 
-    backVertColor = vec4(totalAmbient, 0.0) * ambient +
-                    vec4(totalBackDiffuse, 1.0) * aColor +
-                    vec4(totalBackSpecular, 0.0) * specular +
-                    vec4(emissive.rgb, 0.0);
-
-    vertTexCoord = texMatrix * vec4(aTexCoord, 1.0);
+    vBackColor = vec4(totalAmbient, 0.0) * ambient +
+                 vec4(totalBackDiffuse, 1.0) * aColor +
+                 vec4(totalBackSpecular, 0.0) * specular +
+                 vec4(emissive.rgb, 0.0);
 }
         )",
         .fragment = R"(
-in vec4 vertColor;
-in vec4 backVertColor;
-in vec4 vertTexCoord;
+in vec4 vColor;
+in vec4 vBackColor;
 
 out vec4 FragColor;
 
-uniform sampler2D uTexture;
-
 void main() {
-    vec4 tex = texture(uTexture, vertTexCoord.st);
-    FragColor = tex * (gl_FrontFacing ? vertColor : backVertColor);
+    FragColor = gl_FrontFacing ? vColor : vBackColor;
 }
-        )"};
+        )",
+        .geometry = ""};
 }

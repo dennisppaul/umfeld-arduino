@@ -22,7 +22,7 @@
 #include "ShaderSource.h"
 
 namespace umfeld {
-    inline ShaderSource shader_source_color_texture{
+    inline ShaderSource shader_source_color{
         .vertex   = R"(
 layout(location = 0) in vec4 aPosition;
 layout(location = 1) in vec4 aNormal;
@@ -31,29 +31,26 @@ layout(location = 3) in vec3 aTexCoord;
 layout(location = 4) in uint aTransformID;
 layout(location = 5) in uint aUserdata;
 
-out vec4 vColor;
-out vec2 vTexCoord;
+layout(std140) uniform Transforms {
+    mat4 uModel[256];
+};
 
-uniform mat4 uProjection;
-uniform mat4 uViewMatrix;
-uniform mat4 model_matrix;
+out vec4 vColor;
+
+uniform mat4 uViewProj;
 
 void main() {
-    gl_Position = uProjection * uViewMatrix * model_matrix * aPosition;
-    vColor      = aColor;
-    vTexCoord   = aTexCoord.xy;
+    mat4 M = uModel[aTransformID];
+    gl_Position = uViewProj * M * aPosition;
+    vColor = aColor;
 }
         )",
         .fragment = R"(
-                    in vec4 vColor;
-                    in vec2 vTexCoord;
-
-                    out vec4 FragColor;
-
-                    uniform sampler2D uTexture;
-
-                    void main() {
-                        FragColor = texture(uTexture, vTexCoord) * vColor;
-                    }
-        )"};
+in vec4 vColor;
+out vec4 fragColor;
+void main() {
+    fragColor = vColor;
+}
+        )",
+        .geometry = ""};
 }

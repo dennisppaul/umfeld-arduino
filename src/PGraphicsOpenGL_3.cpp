@@ -35,10 +35,10 @@
 #include "PShader.h"
 #include "ShaderSourceColorTexture.h"
 #include "ShaderSourceColorTextureLights.h"
-#include "ShaderSourceBatchColor.h"
-#include "ShaderSourceBatchColorLights.h"
-#include "ShaderSourceBatchTexture.h"
-#include "ShaderSourceBatchTextureLights.h"
+#include "ShaderSourceColor.h"
+#include "ShaderSourceColorLights.h"
+#include "ShaderSourceTexture.h"
+#include "ShaderSourceTextureLights.h"
 #include "ShapeRendererOpenGL_3.h"
 
 #ifdef UMFELD_PGRAPHICS_OPENGL_3_3_CORE_ERRORS
@@ -389,10 +389,10 @@ void PGraphicsOpenGL_3::init(uint32_t* pixels, const int width, const int height
     // TODO this should be configurable. alternative might be `ShapeRendererImmediateOpenGL_3`
     const auto       shape_renderer_ogl3 = new ShapeRendererOpenGL_3();
     std::vector<int> shader_batch_programs(ShapeRendererOpenGL_3::NUM_SHADER_PROGRAMS);
-    shader_batch_programs[ShapeRendererOpenGL_3::SHADER_PROGRAM_COLOR]          = loadShader(shader_source_batch_color.get_vertex_source(), shader_source_batch_color.get_fragment_source())->get_program_id();
-    shader_batch_programs[ShapeRendererOpenGL_3::SHADER_PROGRAM_TEXTURE]        = loadShader(shader_source_batch_texture.get_vertex_source(), shader_source_batch_texture.get_fragment_source())->get_program_id();
-    shader_batch_programs[ShapeRendererOpenGL_3::SHADER_PROGRAM_COLOR_LIGHTS]   = loadShader(shader_source_batch_color_lights.get_vertex_source(), shader_source_batch_color_lights.get_fragment_source())->get_program_id();
-    shader_batch_programs[ShapeRendererOpenGL_3::SHADER_PROGRAM_TEXTURE_LIGHTS] = loadShader(shader_source_batch_texture_lights.get_vertex_source(), shader_source_batch_texture_lights.get_fragment_source())->get_program_id();
+    shader_batch_programs[ShapeRendererOpenGL_3::SHADER_PROGRAM_COLOR]          = loadShader(shader_source_color.get_vertex_source(), shader_source_color.get_fragment_source())->get_program_id();
+    shader_batch_programs[ShapeRendererOpenGL_3::SHADER_PROGRAM_TEXTURE]        = loadShader(shader_source_texture.get_vertex_source(), shader_source_texture.get_fragment_source())->get_program_id();
+    shader_batch_programs[ShapeRendererOpenGL_3::SHADER_PROGRAM_COLOR_LIGHTS]   = loadShader(shader_source_color_lights.get_vertex_source(), shader_source_color_lights.get_fragment_source())->get_program_id();
+    shader_batch_programs[ShapeRendererOpenGL_3::SHADER_PROGRAM_TEXTURE_LIGHTS] = loadShader(shader_source_texture_lights.get_vertex_source(), shader_source_texture_lights.get_fragment_source())->get_program_id();
     // TODO add shader programms
     //      SHADER_PROGRAM_POINT
     //      SHADER_PROGRAM_LINE

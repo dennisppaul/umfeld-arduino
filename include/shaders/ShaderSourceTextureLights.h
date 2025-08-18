@@ -22,7 +22,7 @@
 #include "ShaderSource.h"
 
 namespace umfeld {
-    inline ShaderSource shader_source_batch_color_lights{
+    inline ShaderSource shader_source_texture_lights{
         .vertex   = R"(
 layout(location = 0) in vec4 aPosition;
 layout(location = 1) in vec4 aNormal;
@@ -31,12 +31,13 @@ layout(location = 3) in vec3 aTexCoord;
 layout(location = 4) in uint aTransformID;
 layout(location = 5) in uint aUserdata;
 
-out vec4 vColor;
-out vec4 vBackColor;
-
 layout(std140) uniform Transforms {
     mat4 uModel[256];
 };
+
+out vec4 vColor;
+out vec4 vBackColor;
+out vec2 vTexCoord;
 
 uniform mat4 uViewProj;
 uniform mat4 uView;
@@ -155,17 +156,22 @@ void main() {
                  vec4(totalBackDiffuse, 1.0) * aColor +
                  vec4(totalBackSpecular, 0.0) * specular +
                  vec4(emissive.rgb, 0.0);
+
+    vTexCoord = aTexCoord.xy;
 }
         )",
         .fragment = R"(
 in vec4 vColor;
 in vec4 vBackColor;
+in vec2 vTexCoord;
 
 out vec4 FragColor;
 
+uniform sampler2D uTexture;
+
 void main() {
-    FragColor = gl_FrontFacing ? vColor : vBackColor;
+    vec4 tex = texture(uTexture, vTexCoord);
+    FragColor = tex * (gl_FrontFacing ? vColor : vBackColor);
 }
-        )",
-        .geometry = ""};
+        )"};
 }

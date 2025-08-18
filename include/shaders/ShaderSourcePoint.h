@@ -34,13 +34,13 @@ namespace umfeld {
 
                 uniform mat4 uProjection;
                 uniform mat4 uViewMatrix;
-                uniform mat4 uModelMatrix;
+                uniform mat4 model_matrix;
 
                 uniform vec4 viewport;
                 uniform int perspective;
 
                 void main() {
-                  mat4 modelviewMatrix =  uViewMatrix * uModelMatrix;
+                  mat4 modelviewMatrix =  uViewMatrix * model_matrix;
                   mat4 projectionMatrix = uProjection;
                   vec2 offset = aNormal.xy;
 

@@ -33,7 +33,7 @@ layout(location = 5) in uint aUserdata;
 
 uniform mat4 uProjection;
 uniform mat4 uViewMatrix;
-uniform mat4 uModelMatrix;
+uniform mat4 model_matrix;
 
 uniform mat4 texMatrix;
 uniform mat3 normalMatrix;
@@ -86,7 +86,7 @@ float blinnPhongFactor(vec3 lightDir, vec3 vertPos, vec3 vecNormal, float shine)
 }
 
 void main() {
-    mat4 mv = uViewMatrix * uModelMatrix;
+    mat4 mv = uViewMatrix * model_matrix;
     mat4 mvp = uProjection * mv;
     gl_Position = mvp * aPosition;
 

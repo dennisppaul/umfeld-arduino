@@ -614,10 +614,13 @@ namespace umfeld {
                 flush_frame_matrices.push_back(shapes_to_render[offset + i]->model);
             }
 
-            glBindBuffer(GL_UNIFORM_BUFFER, ubo);
-            glBufferSubData(GL_UNIFORM_BUFFER, 0,
-                            static_cast<GLsizeiptr>(flush_frame_matrices.size() * sizeof(glm::mat4)),
-                            flush_frame_matrices.data());
+            if (custom_shader == nullptr || custom_shader->has_transform_block()) {
+                // TODO what if custom_shader does not implement the transform block?
+                glBindBuffer(GL_UNIFORM_BUFFER, ubo);
+                glBufferSubData(GL_UNIFORM_BUFFER, 0,
+                                static_cast<GLsizeiptr>(flush_frame_matrices.size() * sizeof(glm::mat4)),
+                                flush_frame_matrices.data());
+            }
 
             // estimate and reserve vertex space
             flush_frame_vertices.clear();
@@ -830,11 +833,18 @@ namespace umfeld {
         glBindVertexArray(vao);
 
         GLuint cached_shader_program_id = NO_SHADER_PROGRAM;
+        // NOTE some uniforms only need to be set once per (flush) frame
         if (custom_shader == nullptr) {
-            // NOTE set shader program uniforms ... only once
             set_per_frame_shader_uniforms(view_projection_matrix, frame_light_shapes_count, frame_transparent_shapes_count, frame_opaque_shapes_count);
         } else {
-            warning_in_function_once("custom_shader: set_per_frame_shader_uniforms");
+            warning_in_function_once("custom_shader: set shader uniforms once per FRAME");
+            if (cached_shader_program_id != custom_shader->get_program_id()) {
+                cached_shader_program_id = custom_shader->get_program_id();
+                glUseProgram(cached_shader_program_id);
+            }
+            custom_shader->set_uniform("uViewProj", view_projection_matrix); // glUniformMatrix4fv
+            custom_shader->set_uniform("uTexture", 0);                       // glUniform1i
+            // TODO maybe better separate matrices into `projection_matrix` and `view_matrix`
         }
 
         // opaque pass
@@ -945,15 +955,17 @@ namespace umfeld {
         GLuint current_texture = UINT32_MAX; // force initial texture bind
         bool   blendEnabled    = false;
 
+        // NOTE some uniforms only need to be set once per (flush) frame
         if (custom_shader == nullptr) {
-            // NOTE set shader program uniforms ... only once
             set_per_frame_shader_uniforms(view_projection_matrix, frame_light_shapes_count, frame_transparent_shapes_count, frame_opaque_shapes_count);
         } else {
-            warning_in_function_once("custom_shader: set shader uniforms once?");
-            // TODO implement an option that TRIES to set the *known* uniforms:
-            //      - texture unit
-            //      - model, view, projection matrices
-            //      - light uniforms
+            warning_in_function_once("custom_shader: set shader uniforms once per FRAME");
+            glUseProgram(custom_shader->get_program_id());
+            // TODO maybe better separate matrices into `projection_matrix` and `view_matrix`
+            custom_shader->set_uniform("projection_matrix", projection_matrix); // glUniformMatrix4fv
+            custom_shader->set_uniform("view_matrix", view_matrix);             // glUniformMatrix4fv
+            custom_shader->set_uniform("uViewProj", view_projection_matrix);    // glUniformMatrix4fv
+            custom_shader->set_uniform("uTexture", 0);                          // glUniform1i
         }
 
         max_vertices_per_batch          = 0;
@@ -973,7 +985,7 @@ namespace umfeld {
                 glDepthMask(GL_TRUE); // Enable depth writes for opaque
                 blendEnabled = false;
             }
-            //  switch ( if necessary ) shader program
+            //  switch shader program ( if necessary )
             if (custom_shader == nullptr) {
                 const GLuint required_shader_program_id = shape.light_enabled ? (shape.texture_id == TEXTURE_NONE ? shader_programm_color_lights : shader_programm_texture_lights) : (shape.texture_id == TEXTURE_NONE ? shader_programm_color : shader_programm_texture);
                 if (required_shader_program_id != cached_shader_program_id) {
@@ -981,14 +993,18 @@ namespace umfeld {
                     glUseProgram(cached_shader_program_id);
                 }
             } else {
-                warning_in_function_once("custom_shader: set shader uniforms per shape");
+                warning_in_function_once("custom_shader: set shader uniforms per SHAPE");
+                if (custom_shader->get_program_id() != cached_shader_program_id) {
+                    cached_shader_program_id = custom_shader->get_program_id();
+                    glUseProgram(cached_shader_program_id);
+                }
+                // NOTE update uniforms per shape
                 // custom_shader->update_uniforms(shape);
                 // TODO implement an option that TRIES to set the *known* uniforms:
                 //      - model, view, projection matrices
                 //      - light uniforms
-                if (custom_shader->get_program_id() != cached_shader_program_id) {
-                    cached_shader_program_id = custom_shader->get_program_id();
-                    glUseProgram(cached_shader_program_id);
+                if (!custom_shader->has_transform_block() && custom_shader->has_model_matrix) {
+                    custom_shader->set_uniform(SHADER_UNIFORM_MODEL_MATRIX, shape.model); // glUniformMatrix4fv
                 }
                 // NOTE skipping light uniforms for now
             }

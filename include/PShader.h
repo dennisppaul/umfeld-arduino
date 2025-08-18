@@ -41,6 +41,7 @@ namespace umfeld {
         void set_uniform(const std::string& name, const glm::mat4& value);
         void check_uniform_location(const std::string& name) const;
         void check_for_matrix_uniforms();
+        bool has_transform_block() const { return has_tranform_block; }
 
         // TODO maybe move these to implementation
         bool   load(const std::string& vertex_code, const std::string& fragment_code, const std::string& geometry_code = "");
@@ -54,6 +55,7 @@ namespace umfeld {
         bool has_view_matrix        = false;
         bool has_projection_matrix  = false;
         bool has_texture_unit       = false;
+        bool has_tranform_block     = false;
 
     private:
         GLuint                                 programID;

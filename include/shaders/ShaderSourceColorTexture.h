@@ -36,10 +36,10 @@ out vec2 vTexCoord;
 
 uniform mat4 uProjection;
 uniform mat4 uViewMatrix;
-uniform mat4 uModelMatrix;
+uniform mat4 model_matrix;
 
 void main() {
-    gl_Position = uProjection * uViewMatrix * uModelMatrix * aPosition;
+    gl_Position = uProjection * uViewMatrix * model_matrix * aPosition;
     vColor      = aColor;
     vTexCoord   = aTexCoord.xy;
 }

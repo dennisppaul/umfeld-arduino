@@ -71,6 +71,8 @@ void PShader::check_for_matrix_uniforms() {
     has_projection_matrix = location != -1;
     location              = glGetUniformLocation(programID, SHADER_UNIFORM_TEXTURE_UNIT.c_str());
     has_texture_unit      = location != -1;
+    location              = glGetUniformBlockIndex(programID, SHADER_UNIFORM_TRANFORM_BLOCK.c_str());
+    has_tranform_block    = location != GL_INVALID_INDEX;
 }
 
 GLuint PShader::compileShader(const std::string& source, const GLenum type) {

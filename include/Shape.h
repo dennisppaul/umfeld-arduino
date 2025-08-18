@@ -23,6 +23,7 @@
 
 #include "UmfeldConstants.h"
 #include "UmfeldTypes.h"
+#include "VertexBuffer.h"
 
 namespace umfeld {
 
@@ -39,5 +40,9 @@ namespace umfeld {
         uint16_t            texture_id{TEXTURE_NONE};
         bool                light_enabled{false};
         LightingState       lighting;
+        VertexBuffer*       byovbo{nullptr}; // NOTE this allows a shape to supply a dedicated vertex buffer i.e
+                                             //      - `vertices` should be empty and will be ignored
+                                             //      - all shapes are considered fill shape
+                                             //      - only certain modes are allowed or supported ( e.g POINTS, LINES, LINE_LOOP, LINE_STRIP, TRIANGLES, TRIANGLE_STRIP, TRIANGLE_FAN  )
     };
 } // namespace umfeld

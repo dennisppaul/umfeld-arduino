@@ -208,6 +208,7 @@ void VertexBuffer::draw() {
 
     const int mode = native_opengl_shape;
 
+    // TODO consider a version with glDraw
     if (vao_supported) {
         if (vao == 0) { return; }
         glBindVertexArray(vao);
@@ -318,6 +319,27 @@ void VertexBuffer::enable_vertex_attributes() const {
         return;
     }
 
+    OGL3_enable_vertex_attributes();
+}
+
+void VertexBuffer::disable_vertex_attributes() {
+    OGL3_disable_vertex_attributes();
+}
+
+// Check if OpenGL context is valid
+bool VertexBuffer::isContextValid() {
+    // Check if we can make basic OpenGL calls
+    GLenum error = glGetError();
+    if (error == GL_INVALID_OPERATION) {
+        return false; // No context or invalid context
+    }
+
+    // Try to get OpenGL version - this will fail if no context
+    const GLubyte* version = glGetString(GL_VERSION);
+    return version != nullptr;
+}
+
+void VertexBuffer::OGL3_enable_vertex_attributes() {
     glEnableVertexAttribArray(Vertex::ATTRIBUTE_LOCATION_POSITION);
     glVertexAttribPointer(Vertex::ATTRIBUTE_LOCATION_POSITION, Vertex::ATTRIBUTE_SIZE_POSITION, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(offsetof(Vertex, position)));
     glEnableVertexAttribArray(Vertex::ATTRIBUTE_LOCATION_NORMAL);
@@ -332,24 +354,11 @@ void VertexBuffer::enable_vertex_attributes() const {
     glVertexAttribIPointer(Vertex::ATTRIBUTE_LOCATION_USERDATA, Vertex::ATTRIBUTE_SIZE_USERDATA, GL_UNSIGNED_SHORT, sizeof(Vertex), reinterpret_cast<void*>(offsetof(Vertex, userdata)));
 }
 
-void VertexBuffer::disable_vertex_attributes() {
+void VertexBuffer::OGL3_disable_vertex_attributes() {
     glDisableVertexAttribArray(Vertex::ATTRIBUTE_LOCATION_POSITION);
     glDisableVertexAttribArray(Vertex::ATTRIBUTE_LOCATION_NORMAL);
     glDisableVertexAttribArray(Vertex::ATTRIBUTE_LOCATION_COLOR);
     glDisableVertexAttribArray(Vertex::ATTRIBUTE_LOCATION_TEXCOORD);
     glDisableVertexAttribArray(Vertex::ATTRIBUTE_LOCATION_TRANSFORM_ID);
     glDisableVertexAttribArray(Vertex::ATTRIBUTE_LOCATION_USERDATA);
-}
-
-// Check if OpenGL context is valid
-bool VertexBuffer::isContextValid() {
-    // Check if we can make basic OpenGL calls
-    GLenum error = glGetError();
-    if (error == GL_INVALID_OPERATION) {
-        return false; // No context or invalid context
-    }
-
-    // Try to get OpenGL version - this will fail if no context
-    const GLubyte* version = glGetString(GL_VERSION);
-    return version != nullptr;
 }

@@ -64,5 +64,9 @@ namespace umfeld {
         bool        needs_buffer_resize(size_t current_size) const;
         bool        needs_buffer_shrink(size_t current_size) const;
         void        upload_with_resize(size_t current_size, size_t required_bytes);
+
+        // TODO move to OGL3 collection and share with shape renderer
+        static void OGL3_disable_vertex_attributes();
+        static void OGL3_enable_vertex_attributes();
     };
 } // namespace umfeld

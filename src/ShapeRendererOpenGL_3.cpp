@@ -644,6 +644,9 @@ namespace umfeld {
             for (size_t i = 0; i < chunkSize; ++i) {
                 const auto* s = shapes_to_render[offset + i];
                 convert_shapes_to_triangles(*s, flush_frame_vertices, static_cast<uint16_t>(i));
+                if (s->byovbo != nullptr) {
+                    warning("ShapeRendererOpenGL_3::render_batch", ": byovbo not supported yet … this shape needs to a/ trigger it s own render call and b/ handle the transform_id gracefully");
+                }
             }
             if (flush_frame_vertices.size() > max_vertices_per_batch) {
                 // TODO ... ok an now what? add some *coping* strategy

@@ -193,6 +193,16 @@ namespace umfeld {
     }
 
     inline GLint get_draw_mode(const int shape) {
+        // primitives supported in OpenGL ES 3.0:
+        //
+        // GL_POINTS - Individual points
+        // GL_LINES - Pairs of vertices forming line segments
+        // GL_LINE_STRIP - Connected line segments
+        // GL_LINE_LOOP - Connected line segments forming a closed loop
+        // GL_TRIANGLES - Groups of 3 vertices forming triangles
+        // GL_TRIANGLE_STRIP - Connected triangles sharing vertices
+        // GL_TRIANGLE_FAN - Triangles sharing a common vertex
+
         // TODO separate between client-side data storage ( vertices, native_opengl_shape etcetera ) and OpenGL implementation ( maybe create a vertex_buffer class )
         // TODO add shapes drawing
         int _shape = shape;

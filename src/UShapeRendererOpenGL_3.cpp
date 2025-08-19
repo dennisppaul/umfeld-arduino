@@ -595,7 +595,7 @@ namespace umfeld {
 
         // handle custom vertex buffer
         if (s.vertex_buffer != nullptr) {
-            // TODO somehow set the transformID attribute
+            warning_in_function_once("custom vertex buffers do not receive model matrix yet"); // TODO somehow set the transformID attribute
             s.vertex_buffer->draw();
             bind_default_vertex_buffer(); // TODO this is a bit hack-ish but required because 's.vertex_buffer->draw()' switches VBO/VAOs
         } else {
@@ -728,6 +728,7 @@ namespace umfeld {
                             s->model[0][3]);
                 }
             }
+            warning_in_function_once("custom vertex buffers do not receive model matrix yet");
             // TODO somehow set the transformID in shader `static_cast<uint16_t>(i)`
             bind_default_vertex_buffer(); // TODO this is a bit hack-ish but required because 's.vertex_buffer->draw()' switches VBO/VAOs
         }

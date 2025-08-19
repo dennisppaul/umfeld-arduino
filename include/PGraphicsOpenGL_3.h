@@ -21,8 +21,6 @@
 
 #include "PGraphicsOpenGL.h"
 
-#define USE_DRAW_FULLSCREEN_WITH_SHADER
-
 namespace umfeld {
     class VertexBuffer;
     class PGraphicsOpenGL_3 final : public PGraphicsOpenGL {
@@ -62,7 +60,7 @@ namespace umfeld {
 
         /* --- standard drawing functions --- */
 
-        void     mesh(VertexBuffer* mesh_shape) override;
+        // void     mesh(VertexBuffer* mesh_shape) override;
         void     shader(PShader* shader) override;
         PShader* loadShader(const std::string& vertex_code, const std::string& fragment_code, const std::string& geometry_code = "") override;
         void     resetShader() override;

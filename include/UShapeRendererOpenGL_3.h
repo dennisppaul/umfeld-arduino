@@ -20,8 +20,8 @@
 #pragma once
 
 #include "UmfeldSDLOpenGL.h"
-#include "UShapeRenderer.h"
 #include "UShape.h"
+#include "UShapeRenderer.h"
 #include "PShader.h"
 #include "PGraphics.h"
 #include "UmfeldFunctionsGraphics.h"
@@ -93,8 +93,8 @@ namespace umfeld {
             std::vector<UShape*> opaque_shapes;
             std::vector<UShape*> transparent_shapes;
             std::vector<UShape*> light_shapes;
-            uint32_t            max_vertices{0};
-            uint16_t            texture_id{TEXTURE_NONE};
+            uint32_t             max_vertices{0};
+            uint16_t             texture_id{TEXTURE_NONE};
         };
 
         ShaderUniforms             shader_uniforms_color;
@@ -112,16 +112,16 @@ namespace umfeld {
         GLuint                     shader_programm_color_lights   = 0;
         GLuint                     point_shader_program           = 0; // TODO implement
         GLuint                     line_shader_program            = 0; // TODO implement
-        std::vector<UShape>         shapes;
+        std::vector<UShape>        shapes;
         ShapeCenterComputeStrategy shape_center_compute_strategy = ZERO_CENTER;
         std::vector<Vertex>        flush_frame_vertices;
         std::vector<glm::mat4>     flush_frame_matrices;
         uint32_t                   max_vertices_per_batch{0};
-        bool                       initialized_vbo_buffer{false};
+        bool                       require_vbo_resize{false};
         // PShader*                   custom_shader{nullptr};
-        int                        frame_light_shapes_count{0};
-        int                        frame_transparent_shapes_count{0};
-        int                        frame_opaque_shapes_count{0};
+        int frame_light_shapes_count{0};
+        int frame_transparent_shapes_count{0};
+        int frame_opaque_shapes_count{0};
 
         static void   setup_uniform_blocks(const std::string& shader_name, GLuint program);
         static bool   evaluate_shader_uniforms(const std::string& shader_name, const ShaderUniforms& uniforms);
@@ -141,12 +141,13 @@ namespace umfeld {
         void          reset_flush_frame();
         void          print_frame_info(const std::vector<UShape>& processed_point_shapes, const std::vector<UShape>& processed_line_shapes, const std::vector<UShape>& processed_triangle_shapes) const;
         void          process_shapes(std::vector<UShape>& processed_point_shapes, std::vector<UShape>& processed_line_shapes, std::vector<UShape>& processed_triangle_shapes);
-        void          set_per_frame_shader_uniforms(const glm::mat4& view_projection_matrix, int frame_has_light_shapes, int frame_has_transparent_shapes, int frame_has_opaque_shapes) const;
+        void          set_per_frame_default_shader_uniforms(const glm::mat4& view_projection_matrix, int frame_has_light_shapes, int frame_has_transparent_shapes, int frame_has_opaque_shapes) const;
         void          enable_flat_shaders_and_bind_texture(GLuint& current_shader_program_id, unsigned texture_id) const;
         void          enable_light_shaders_and_bind_texture(GLuint& current_shader_program_id, unsigned texture_id) const;
         void          bind_default_vertex_buffer() const;
-        static void          unbind_default_vertex_buffer();
+        static void   unbind_default_vertex_buffer();
         static bool   uniform_exists(const GLuint loc) { return loc != ShaderUniforms::NOT_FOUND; }
         static void   set_light_uniforms(const ShaderUniforms& uniforms, const LightingState& lighting);
+        static bool   use_shader_program_cached(GLuint& cached_shader_program_id, GLuint required_shader_program_id);
     };
 } // namespace umfeld

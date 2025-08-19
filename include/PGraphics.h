@@ -228,7 +228,7 @@ namespace umfeld {
         /* --- additional --- */
 
         virtual void        flush();
-        virtual void        mesh(VertexBuffer* mesh_shape) {}
+        virtual void        mesh(VertexBuffer* mesh_shape);
         virtual void        lock_init_properties(const bool lock_properties) { init_properties_locked = lock_properties; }
         virtual void        hint(uint16_t property);
         virtual void        text_str(const std::string& text, float x, float y, float z = 0.0f); // TODO maybe make this private?

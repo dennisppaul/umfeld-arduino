@@ -443,18 +443,18 @@ void PGraphicsOpenGL_3::OGL3_reset_shader_matrices(PShader* shader) {
     }
 }
 
-void PGraphicsOpenGL_3::mesh(VertexBuffer* mesh_shape) {
-    UMFELD_PGRAPHICS_OPENGL_3_3_CORE_CHECK_ERRORS("mesh() begin");
-    if (mesh_shape == nullptr) {
-        return;
-    }
-    warning_in_function_once("NOTE shader values are not properly set ATM");
-    mesh_shape->draw();
-    UMFELD_PGRAPHICS_OPENGL_3_3_CORE_CHECK_ERRORS("mesh() end");
-#ifdef UMFELD_OGL33_RESET_MATRICES_ON_SHADER
-    OGL3_reset_shader_matrices(current_custom_shader);
-#endif
-}
+// void PGraphicsOpenGL_3::mesh(VertexBuffer* mesh_shape) {
+//     UMFELD_PGRAPHICS_OPENGL_3_3_CORE_CHECK_ERRORS("mesh() begin");
+//     if (mesh_shape == nullptr) {
+//         return;
+//     }
+//     warning_in_function_once("NOTE shader values are not properly set ATM");
+//     mesh_shape->draw();
+//     UMFELD_PGRAPHICS_OPENGL_3_3_CORE_CHECK_ERRORS("mesh() end");
+// #ifdef UMFELD_OGL33_RESET_MATRICES_ON_SHADER
+//     OGL3_reset_shader_matrices(current_custom_shader);
+// #endif
+// }
 
 PShader* PGraphicsOpenGL_3::loadShader(const std::string& vertex_code, const std::string& fragment_code, const std::string& geometry_code) {
     const auto shader = new PShader();

@@ -33,7 +33,7 @@ using namespace umfeld;
 #ifdef UMFELD_VERTEX_BUFFER_DEBUG_OPENGL_ERRORS
 #define UMFELD_VERTEX_BUFFER_CHECK_ERROR(msg) \
     do {                                      \
-        OGL_check_error(msg);                \
+        OGL_check_error(msg);                 \
     } while (0)
 #else
 #define UMFELD_VERTEX_BUFFER_CHECK_ERROR(msg)
@@ -53,6 +53,7 @@ VertexBuffer::VertexBuffer(VertexBuffer&& other) noexcept
     other.initial_upload      = false;
     other.server_buffer_size  = 0;
     other.native_opengl_shape = PGraphicsOpenGL::OGL_get_draw_mode(TRIANGLES);
+    other.transparent         = false;
 }
 
 // Move assignment operator
@@ -78,6 +79,7 @@ VertexBuffer& VertexBuffer::operator=(VertexBuffer&& other) noexcept {
         initial_upload      = other.initial_upload;
         server_buffer_size  = other.server_buffer_size;
         native_opengl_shape = other.native_opengl_shape;
+        transparent         = other.transparent;
 
         // Reset the moved-from object
         other.vbo                 = 0;
@@ -88,6 +90,7 @@ VertexBuffer& VertexBuffer::operator=(VertexBuffer&& other) noexcept {
         other.initial_upload      = false;
         other.server_buffer_size  = 0;
         other.native_opengl_shape = PGraphicsOpenGL::OGL_get_draw_mode(TRIANGLES);
+        other.transparent         = false;
     }
     return *this;
 }

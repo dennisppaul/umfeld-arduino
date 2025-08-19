@@ -34,7 +34,6 @@ namespace umfeld {
 
         VertexBuffer();
         ~VertexBuffer();
-
         void                 add_vertex(const Vertex& vertex);
         void                 add_vertices(const std::vector<Vertex>& new_vertices);
         void                 draw();
@@ -44,6 +43,8 @@ namespace umfeld {
         void                 init();
         void                 set_shape(int shape, bool map_to_opengl_draw_mode = true);
         int                  get_shape() const { return native_opengl_shape; }
+
+        bool transparent{false};
 
     private:
         const int           VBO_BUFFER_CHUNK_SIZE_BYTES = 1024 * 16 * sizeof(Vertex);

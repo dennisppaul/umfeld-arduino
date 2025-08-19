@@ -80,6 +80,26 @@ void PGraphics::flush() {
     }
 }
 
+void PGraphics::mesh(VertexBuffer* mesh_shape) {
+    if (shape_renderer != nullptr && mesh_shape != nullptr) {
+        UShape s;
+        // NOTE ignore 'mode'
+        s.filled = true;
+        // NOTE ignore 'vertices'
+        s.model       = model_matrix;
+        s.transparent = false; // TODO see if this is a good idea
+        // NOTE ignore 'closed'
+        s.texture_id    = get_current_texture_id();
+        s.light_enabled = lights_enabled; // TODO not properly supported WIP
+        if (lights_enabled) {
+            s.lighting = lightingState;
+        }
+        s.shader        = current_custom_shader;
+        s.vertex_buffer = mesh_shape;
+        shape_renderer->submit_shape(s);
+    }
+}
+
 void PGraphics::hint(const uint16_t property) {}
 
 int PGraphics::displayDensity() {
@@ -1420,7 +1440,8 @@ void PGraphics::endShape(const bool closed) {
 void PGraphics::debug_text(const std::string& text, const float x, const float y) {
     if (shape_renderer != nullptr && debug_font != nullptr) {
         UShape s;
-        s.mode   = TRIANGLES;
+        s.mode = TRIANGLES;
+        // NOTE ignore 'stroke'
         s.filled = true;
         s.vertices.reserve(text.size() * 6);
         debug_font->generate(s.vertices, text, x, y, glm::vec4(color_fill));
@@ -1429,6 +1450,9 @@ void PGraphics::debug_text(const std::string& text, const float x, const float y
         s.closed        = false;
         s.texture_id    = texture_update_and_bind(debug_font->atlas());
         s.light_enabled = false;
+        // NOTE ignore 'lighting'
+        // NOTE ignore 'shader'
+        // NOTE ignore 'vertex_buffer'
         shape_renderer->submit_shape(s);
     }
 }

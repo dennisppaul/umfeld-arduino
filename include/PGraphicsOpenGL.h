@@ -29,7 +29,7 @@ namespace umfeld {
 #ifndef PGRAPHICS_OPENGL_DO_NOT_CHECK_ERRORS
 #define GL_CALL(func) \
     func;             \
-    OGL_check_error(#func)
+    PGraphicsOpenGL::OGL_check_error(#func)
 #else
 #define GL_CALL(func) func;
 #endif

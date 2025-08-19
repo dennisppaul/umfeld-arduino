@@ -20,18 +20,16 @@
 #pragma once
 
 #include "PGraphicsOpenGL.h"
-#include "VertexBuffer.h"
 
 #define USE_DRAW_FULLSCREEN_WITH_SHADER
 
 namespace umfeld {
+    class VertexBuffer;
     class PGraphicsOpenGL_3 final : public PGraphicsOpenGL {
     public:
         explicit PGraphicsOpenGL_3(bool render_to_offscreen);
 
         /* --- OpenGL 3.3 specific implementation of shared methods --- */
-
-        void impl_background(float a, float b, float c, float d) override;
 
         void render_framebuffer_to_screen(bool use_blit = false) override;
         bool read_framebuffer(std::vector<unsigned char>& pixels) override;
@@ -47,6 +45,7 @@ namespace umfeld {
 
         void beginDraw() override;
         void endDraw() override;
+        void texture(PImage* img) override;
 
         void        init(uint32_t* pixels, int width, int height) override;
         std::string name() override {
@@ -67,22 +66,18 @@ namespace umfeld {
         void     shader(PShader* shader) override;
         PShader* loadShader(const std::string& vertex_code, const std::string& fragment_code, const std::string& geometry_code = "") override;
         void     resetShader() override;
-        // void     camera(float eyeX, float eyeY, float eyeZ, float centerX, float centerY, float centerZ, float upX, float upY, float upZ) override;
-        // void     frustum(float left, float right, float bottom, float top, float near, float far) override;
-        // void     ortho(float left, float right, float bottom, float top, float near, float far) override;
-        // void     perspective(float fovy, float aspect, float near, float far) override;
-        void lights() override;
-        void noLights() override;
-        void ambientLight(float r, float g, float b, float x = 0, float y = 0, float z = 0) override;
-        void directionalLight(float r, float g, float b, float nx, float ny, float nz) override;
-        void pointLight(float r, float g, float b, float x, float y, float z) override;
-        void spotLight(float r, float g, float b, float x, float y, float z, float nx, float ny, float nz, float angle, float concentration) override;
-        void lightFalloff(float constant, float linear, float quadratic) override;
-        void lightSpecular(float r, float g, float b) override;
-        void ambient(float r, float g, float b) override;
-        void specular(float r, float g, float b) override;
-        void emissive(float r, float g, float b) override;
-        void shininess(float s) override;
+        void     lights() override;
+        void     noLights() override;
+        void     ambientLight(float r, float g, float b, float x = 0, float y = 0, float z = 0) override;
+        void     directionalLight(float r, float g, float b, float nx, float ny, float nz) override;
+        void     pointLight(float r, float g, float b, float x, float y, float z) override;
+        void     spotLight(float r, float g, float b, float x, float y, float z, float nx, float ny, float nz, float angle, float concentration) override;
+        void     lightFalloff(float constant, float linear, float quadratic) override;
+        void     lightSpecular(float r, float g, float b) override;
+        void     ambient(float r, float g, float b) override;
+        void     specular(float r, float g, float b) override;
+        void     emissive(float r, float g, float b) override;
+        void     shininess(float s) override;
 
 
     private:
@@ -100,9 +95,6 @@ namespace umfeld {
         static constexpr uint8_t NUM_FILL_VERTEX_ATTRIBUTES_XYZ_RGBA_UV = 9;
         static constexpr uint8_t NUM_STROKE_VERTEX_ATTRIBUTES_XYZ_RGBA  = 7;
         PShader*                 shader_fullscreen_texture{nullptr};
-#ifndef USE_DRAW_FULLSCREEN_WITH_SHADER
-        VertexBuffer             vertex_buffer{}; // REMOVE <<< and all the related code
-#endif
         GLint                    previously_bound_read_FBO = 0;
         GLint                    previously_bound_draw_FBO = 0;
         GLint                    previous_viewport[4]{};
@@ -124,13 +116,11 @@ namespace umfeld {
         void setNoLightSpot(int num);
 
         /* --- OpenGL 3.3 specific methods --- */
-#ifndef USE_DRAW_FULLSCREEN_WITH_SHADER
-        static void OGL3_render_vertex_buffer(VertexBuffer& vertex_buffer, GLenum primitive_mode, const std::vector<Vertex>& shape_vertices);
-#endif
-        void        update_shader_matrices(PShader* shader) const;
-        static void reset_shader_matrices(PShader* shader);
-        static void add_line_quad(const Vertex& p0, const Vertex& p1, float thickness, std::vector<Vertex>& out);
-        void        flip_pixel_buffer(uint32_t* pixels);
-        void        draw_fullscreen_texture(GLuint texture_id) const;
+
+        void        OGL3_update_shader_matrices(PShader* shader) const;
+        static void OGL3_reset_shader_matrices(PShader* shader);
+        static void OGL3_add_line_quad(const Vertex& p0, const Vertex& p1, float thickness, std::vector<Vertex>& out);
+        void        OGL3_flip_pixel_buffer(uint32_t* pixels);
+        void        OGL3_draw_fullscreen_texture(GLuint texture_id) const;
     };
 } // namespace umfeld

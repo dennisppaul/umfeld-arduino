@@ -17,6 +17,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+// TODO PSHape is a work in progress and does not work at all ATM
+
 #include <iostream>
 #include "PShape.h"
 
@@ -96,7 +98,7 @@ void PShape::draw() {
     //    glBindVertexArray(vertexArray);
     //    glDrawArrays(GL_TRIANGLES, 0, fVerticesSize / 6);  // TODO implement different shapes
     //    glBindVertexArray(0);
-    int mShape = get_draw_mode(fShape);
+    int mShape = PGraphicsOpenGL::OGL_get_draw_mode(fShape);
     // switch (fShape) {
     //     case TRIANGLES:
     //         mShape = GL_TRIANGLES;

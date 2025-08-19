@@ -33,13 +33,13 @@ using namespace umfeld;
 #ifdef UMFELD_VERTEX_BUFFER_DEBUG_OPENGL_ERRORS
 #define UMFELD_VERTEX_BUFFER_CHECK_ERROR(msg) \
     do {                                      \
-        checkOpenGLError(msg);                \
+        OGL_check_error(msg);                \
     } while (0)
 #else
 #define UMFELD_VERTEX_BUFFER_CHECK_ERROR(msg)
 #endif
 
-VertexBuffer::VertexBuffer() : native_opengl_shape(get_draw_mode(TRIANGLES)) {}
+VertexBuffer::VertexBuffer() : native_opengl_shape(PGraphicsOpenGL::OGL_get_draw_mode(TRIANGLES)) {}
 
 // Move constructor
 VertexBuffer::VertexBuffer(VertexBuffer&& other) noexcept
@@ -52,7 +52,7 @@ VertexBuffer::VertexBuffer(VertexBuffer&& other) noexcept
     other.dirty               = false;
     other.initial_upload      = false;
     other.server_buffer_size  = 0;
-    other.native_opengl_shape = get_draw_mode(TRIANGLES);
+    other.native_opengl_shape = PGraphicsOpenGL::OGL_get_draw_mode(TRIANGLES);
 }
 
 // Move assignment operator
@@ -87,7 +87,7 @@ VertexBuffer& VertexBuffer::operator=(VertexBuffer&& other) noexcept {
         other.dirty               = false;
         other.initial_upload      = false;
         other.server_buffer_size  = 0;
-        other.native_opengl_shape = get_draw_mode(TRIANGLES);
+        other.native_opengl_shape = PGraphicsOpenGL::OGL_get_draw_mode(TRIANGLES);
     }
     return *this;
 }
@@ -157,7 +157,7 @@ VertexBuffer::~VertexBuffer() {
 
 void VertexBuffer::checkVAOSupport() {
     int major = 0, minor = 0;
-    get_OpenGL_version(major, minor);
+    PGraphicsOpenGL::OGL_get_version(major, minor);
 
     if ((major > 3) || (major == 3 && minor >= 3)) {
         vao_supported = true; // OpenGL 3.3+ supports VAOs
@@ -186,7 +186,7 @@ void VertexBuffer::clear() {
 }
 
 void VertexBuffer::set_shape(const int shape, const bool map_to_opengl_draw_mode) {
-    this->native_opengl_shape = map_to_opengl_draw_mode ? get_draw_mode(shape) : shape;
+    this->native_opengl_shape = map_to_opengl_draw_mode ? PGraphicsOpenGL::OGL_get_draw_mode(shape) : shape;
 }
 
 void VertexBuffer::draw() {

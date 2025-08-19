@@ -29,19 +29,22 @@ namespace umfeld {
     class VertexBuffer;
     class PShader;
 
-    struct Shape {
+    struct UShape {
         ShapeMode           mode{POLYGON};
         StrokeState         stroke;
         bool                filled{true};
         std::vector<Vertex> vertices;
         glm::mat4           model{};
-        glm::vec3           center_object_space{};
         bool                transparent{};
         bool                closed{false};
-        float               depth{};
         uint16_t            texture_id{TEXTURE_NONE};
         bool                light_enabled{false};
         LightingState       lighting;
+        /**
+         * a shape can supply a custom shader.
+         * - shader
+         */
+        PShader* shader{nullptr};
         /**
          * a shape can supply a custom vertex buffer.
          * - vertex buffer must be initialized and valid
@@ -49,10 +52,9 @@ namespace umfeld {
          * - shapes are ( maybe ) rendered in a dedicated path
          */
         VertexBuffer* vertex_buffer{nullptr};
-        /**
-         * a shape can supply a custom shader.
-         * - shader
-         */
-        PShader* shader{nullptr};
+
+        // NOTE these are only used in shape renderer
+        glm::vec3 center_object_space{};
+        float     depth{};
     };
 } // namespace umfeld

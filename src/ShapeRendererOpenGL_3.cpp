@@ -30,15 +30,17 @@
 #include "PGraphicsOpenGL.h"
 #include "ShapeRendererOpenGL_3.h"
 #include "Geometry.h"
+#include "VertexBuffer.h"
 
 namespace umfeld {
     void ShapeRendererOpenGL_3::init(PGraphics* g, const std::vector<PShader*> shader_programs) {
-        graphics = g;
-        initShaders(shader_programs);
-        initBuffers();
+        graphics                = g;
+        default_shader_programs = shader_programs;
+        init_shaders(shader_programs);
+        init_buffers();
     }
 
-    void ShapeRendererOpenGL_3::submitShape(Shape& s) {
+    void ShapeRendererOpenGL_3::submit_shape(UShape& s) {
         // NOTE only compute center for transparent shapes
         if (s.light_enabled) {
             frame_light_shapes_count++;
@@ -53,39 +55,6 @@ namespace umfeld {
         shapes.push_back(std::move(s));
     }
 
-    int ShapeRendererOpenGL_3::set_texture(PImage* img) {
-        // NOTE maybe this should live in `PGraphicsOpenGL`
-        if (img == nullptr) {
-            PGraphicsOpenGL::OGL_bind_texture(TEXTURE_NONE);
-            return TEXTURE_NONE;
-        }
-        /* upload and bind texture */
-        if (img->texture_id == TEXTURE_NOT_GENERATED) {
-            const bool success = PGraphicsOpenGL::OGL_generate_and_upload_image_as_texture(img);
-            if (!success || img->texture_id == TEXTURE_NOT_GENERATED) {
-                error_in_function("cannot create texture from image.");
-                PGraphicsOpenGL::OGL_bind_texture(TEXTURE_NONE);
-                return TEXTURE_NONE;
-            }
-        } else {
-            PGraphicsOpenGL::OGL_bind_texture(img->texture_id);
-        }
-        /* filter */
-        if (img->is_texture_filter_dirty()) {
-            img->set_texture_filter_clean();
-            PGraphicsOpenGL::OGL_texture_filter(img->get_texture_filter());
-        }
-        /* wrap */
-        if (img->is_texture_wrap_dirty()) {
-            img->set_texture_wrap_clean();
-            // TODO `color_stroke` is only known in `PGraphicsOpenGL` … move function to `PGraphicsOpenGL`
-            // PGraphicsOpenGL::OGL_texture_wrap(img->get_texture_wrap(), color_stroke);
-            PGraphicsOpenGL::OGL_texture_wrap(img->get_texture_wrap(), glm::vec4(0, 0, 0, 1));
-        }
-
-        return img->texture_id;
-    }
-
     void ShapeRendererOpenGL_3::reset_flush_frame() {
         const size_t current_size = shapes.size();
         shapes.clear();
@@ -97,7 +66,7 @@ namespace umfeld {
         frame_opaque_shapes_count      = 0;
     }
 
-    void ShapeRendererOpenGL_3::print_frame_info(const std::vector<Shape>& processed_point_shapes, const std::vector<Shape>& processed_line_shapes, const std::vector<Shape>& processed_triangle_shapes) const {
+    void ShapeRendererOpenGL_3::print_frame_info(const std::vector<UShape>& processed_point_shapes, const std::vector<UShape>& processed_line_shapes, const std::vector<UShape>& processed_triangle_shapes) const {
         // console("\n\t",
         //         "-----------------------", "\n\t",
         //         "FRAME_INFO", "\n\t",
@@ -147,15 +116,16 @@ namespace umfeld {
          *     └── batched by texture IDs ( including solid color )
          */
 
-        std::vector<Shape> processed_point_shapes;
+        std::vector<UShape> processed_point_shapes;
+        std::vector<UShape> processed_line_shapes;
+        std::vector<UShape> processed_triangle_shapes;
         processed_point_shapes.reserve(shapes.size());
-        std::vector<Shape> processed_line_shapes;
         processed_line_shapes.reserve(shapes.size());
-        std::vector<Shape> processed_triangle_shapes;
         processed_triangle_shapes.reserve(shapes.size());
-        // NOTE `processed_triangle_shapes` converts all shapes to TRIANGLES with
-        //      the exception of POINTS and LINE* shapes that may be deferred to
-        //      separate render passes ( i.e `processed_point_shapes` or `processed_line_shapes` )
+        // NOTE `process_shapes` converts all shapes to TRIANGLES with the exception of
+        //      POINTS and LINE* shapes that may be deferred to separate render passes
+        //      ( i.e `processed_point_shapes` and `processed_line_shapes` ) where they
+        //      may be handle differently ( e.g rendered with point shader or in natively )
         process_shapes(processed_point_shapes, processed_line_shapes, processed_triangle_shapes);
         // NOTE `flush_processed_shapes` renders shapes according to the current render mode.
         flush_processed_shapes(processed_point_shapes,
@@ -179,7 +149,7 @@ namespace umfeld {
         return false;
     }
 
-    void ShapeRendererOpenGL_3::handle_point_shape(std::vector<Shape>& processed_triangle_shapes, std::vector<Shape>& processed_point_shapes, Shape& point_shape) const {
+    void ShapeRendererOpenGL_3::handle_point_shape(std::vector<UShape>& processed_triangle_shapes, std::vector<UShape>& processed_point_shapes, UShape& point_shape) const {
         // NOTE this is required by `process_shapes`
         if (graphics->get_point_render_mode() == POINT_RENDER_MODE_TRIANGULATE) {
             std::vector<Vertex> triangulated_vertices = convertPointsToTriangles(point_shape.vertices, graphics->get_point_size());
@@ -238,12 +208,12 @@ namespace umfeld {
     }
 
     // NOTE this is required by `process_shapes`
-    void ShapeRendererOpenGL_3::handle_stroke_shape(std::vector<Shape>& processed_triangle_shapes,
-                                                    std::vector<Shape>& processed_line_shapes,
-                                                    Shape&              stroke_shape) const {
+    void ShapeRendererOpenGL_3::handle_stroke_shape(std::vector<UShape>& processed_triangle_shapes,
+                                                    std::vector<UShape>& processed_line_shapes,
+                                                    UShape&              stroke_shape) const {
         /* convert stroke shape to line strips */
-        const bool         shape_has_transparent_vertices = has_transparent_vertices(stroke_shape.vertices);
-        std::vector<Shape> converted_shapes;
+        const bool          shape_has_transparent_vertices = has_transparent_vertices(stroke_shape.vertices);
+        std::vector<UShape> converted_shapes;
         converted_shapes.reserve(stroke_shape.vertices.size());
         PGraphics::convert_stroke_shape_to_line_strip(stroke_shape, converted_shapes);
         /* triangulate line strips */
@@ -414,20 +384,20 @@ namespace umfeld {
         return valid;
     }
 
-    void ShapeRendererOpenGL_3::initShaders(const std::vector<PShader*>& shader_programm_id) {
+    void ShapeRendererOpenGL_3::init_shaders(const std::vector<PShader*>& shader_programms) {
         // NOTE for OpenGL ES 3.0 create shader source with dynamic array size
         //      ```c
         //      std::string transformsDefine = "#define MAX_TRANSFORMS " + std::to_string(MAX_TRANSFORMS) + "\n";
         //      const auto texturedVS = transformsDefine + R"(#version 330 core
         //      ```
 
-        shader_programm_color          = shader_programm_id[SHADER_PROGRAM_COLOR]->get_program_id();
-        shader_programm_texture        = shader_programm_id[SHADER_PROGRAM_TEXTURE]->get_program_id();
-        shader_programm_color_lights   = shader_programm_id[SHADER_PROGRAM_COLOR_LIGHTS]->get_program_id();
-        shader_programm_texture_lights = shader_programm_id[SHADER_PROGRAM_TEXTURE_LIGHTS]->get_program_id();
+        shader_programm_color          = shader_programms[SHADER_PROGRAM_COLOR]->get_program_id();
+        shader_programm_texture        = shader_programms[SHADER_PROGRAM_TEXTURE]->get_program_id();
+        shader_programm_color_lights   = shader_programms[SHADER_PROGRAM_COLOR_LIGHTS]->get_program_id();
+        shader_programm_texture_lights = shader_programms[SHADER_PROGRAM_TEXTURE_LIGHTS]->get_program_id();
         // TODO implement
-        //      point_shader_program              = shader_programm_id[SHADER_PROGRAM_POINT];
-        //      line_shader_program               = shader_programm_id[SHADER_PROGRAM_LINE];
+        //      point_shader_program              = shader_programms[SHADER_PROGRAM_POINT];
+        //      line_shader_program               = shader_programms[SHADER_PROGRAM_LINE];
 
         setup_uniform_blocks("color", shader_programm_color);
         setup_uniform_blocks("texture", shader_programm_texture);
@@ -479,9 +449,9 @@ namespace umfeld {
         evaluate_shader_uniforms("texture_lights", shader_uniforms_texture_lights);
     }
 
-    void ShapeRendererOpenGL_3::initBuffers() {
+    void ShapeRendererOpenGL_3::init_buffers() {
         glGenVertexArrays(1, &default_vao);
-        glBindVertexArray(default_vao); // TODO VAOs are only guaranteed works for OpenGL ≥ 3
+        bind_default_vertex_buffer();
 
         glGenBuffers(1, &vbo);
         glBindBuffer(GL_ARRAY_BUFFER, vbo);
@@ -504,13 +474,13 @@ namespace umfeld {
         glBufferData(GL_UNIFORM_BUFFER, MAX_TRANSFORMS * sizeof(glm::mat4), nullptr, GL_DYNAMIC_DRAW);
         glBindBufferBase(GL_UNIFORM_BUFFER, 0, ubo);
 
-        glBindVertexArray(0); // TODO VAOs are only guaranteed works for OpenGL ≥ 3
+        unbind_default_vertex_buffer();
 
         // pre-allocate frame buffers
         flush_frame_matrices.reserve(MAX_TRANSFORMS);
     }
 
-    size_t ShapeRendererOpenGL_3::estimate_triangle_count(const Shape& s) {
+    size_t ShapeRendererOpenGL_3::estimate_triangle_count(const UShape& s) {
         const size_t n = s.vertices.size();
         if (n < 3 || !s.filled) {
             return 0;
@@ -527,7 +497,7 @@ namespace umfeld {
         }
     }
 
-    void ShapeRendererOpenGL_3::convert_shapes_to_triangles(const Shape& s, std::vector<Vertex>& out, const uint16_t transformID) {
+    void ShapeRendererOpenGL_3::convert_shapes_to_triangles(const UShape& s, std::vector<Vertex>& out, const uint16_t transformID) {
         const auto&  v = s.vertices;
         const size_t n = v.size();
         if (n < 3 || !s.filled) {
@@ -601,14 +571,19 @@ namespace umfeld {
         }
     }
 
-    void ShapeRendererOpenGL_3::render_shape(const Shape& s) {
+    void ShapeRendererOpenGL_3::render_shape(const UShape& s) {
         // NOTE assumes that shader is already in use and texture is already bound
 
         // upload transform (single mat4) if shader expects the transform block
-        if (custom_shader == nullptr || custom_shader->has_transform_block()) {
-            glBindBuffer(GL_UNIFORM_BUFFER, ubo);
-            glBufferSubData(GL_UNIFORM_BUFFER, 0, static_cast<GLsizeiptr>(sizeof(glm::mat4)), &s.model);
+        if (s.shader != nullptr) {
+            if (s.shader->has_transform_block()) {
+                warning_in_function_once("TODO set custom shader model uniform block?");
+            }
         }
+        // if (custom_shader == nullptr || custom_shader->has_transform_block()) {
+        glBindBuffer(GL_UNIFORM_BUFFER, ubo);
+        glBufferSubData(GL_UNIFORM_BUFFER, 0, static_cast<GLsizeiptr>(sizeof(glm::mat4)), &s.model);
+        // }
 
         // set lights once for this shape (if enabled)
         if (s.light_enabled) {
@@ -662,7 +637,7 @@ namespace umfeld {
         glDrawArrays(GL_TRIANGLES, 0, static_cast<GLsizei>(vcount));
     }
 
-    void ShapeRendererOpenGL_3::render_batch(const std::vector<Shape*>& shapes_to_render) {
+    void ShapeRendererOpenGL_3::render_batch(const std::vector<UShape*>& shapes_to_render) {
         // NOTE assumes that shader is already in use and texture is already bound
 
         if (shapes_to_render.empty()) {
@@ -679,14 +654,10 @@ namespace umfeld {
             for (size_t i = 0; i < chunkSize; ++i) {
                 flush_frame_matrices.push_back(shapes_to_render[offset + i]->model);
             }
-
-            if (custom_shader == nullptr || custom_shader->has_transform_block()) {
-                // TODO what if custom_shader does not implement the transform block?
-                glBindBuffer(GL_UNIFORM_BUFFER, ubo);
-                glBufferSubData(GL_UNIFORM_BUFFER, 0,
-                                static_cast<GLsizeiptr>(flush_frame_matrices.size() * sizeof(glm::mat4)),
-                                flush_frame_matrices.data());
-            }
+            glBindBuffer(GL_UNIFORM_BUFFER, ubo); // TODO maybe move this outside of loop
+            glBufferSubData(GL_UNIFORM_BUFFER, 0,
+                            static_cast<GLsizeiptr>(flush_frame_matrices.size() * sizeof(glm::mat4)),
+                            flush_frame_matrices.data());
 
             // estimate and reserve vertex space
             flush_frame_vertices.clear();
@@ -695,6 +666,16 @@ namespace umfeld {
                 totalEstimate += estimate_triangle_count(*shapes_to_render[offset + i]);
             }
             flush_frame_vertices.reserve(totalEstimate);
+
+            // TODO custom shaders and vertex are currently not supported in this render mode.
+            //      for this to work the current shade but also the current VBO would need to
+            //      stored and restored before using custom shader and vertex buffer
+            for (size_t i = 0; i < chunkSize; ++i) {
+                const auto* s = shapes_to_render[offset + i];
+                if (s->shader != nullptr) {
+                    warning_in_function_once("TODO custom shaders are currently not supported in render mode 'RENDER_MODE_SORTED_BY_Z_ORDER'");
+                }
+            }
 
             for (size_t i = 0; i < chunkSize; ++i) {
                 const auto* s = shapes_to_render[offset + i];
@@ -711,14 +692,14 @@ namespace umfeld {
                 const auto* s = shapes_to_render[offset + i];
                 convert_shapes_to_triangles(*s, flush_frame_vertices, static_cast<uint16_t>(i));
                 if (s->vertex_buffer != nullptr) {
-                    warning_in_function("vertex_buffer not supported yet … this shape needs to a/ trigger it s own render call and b/ handle the transform_id gracefully");
+                    s->vertex_buffer->draw();
                 }
             }
             if (flush_frame_vertices.size() > max_vertices_per_batch) {
-                // TODO ... ok an now what? add some *coping* strategy
+                // TODO ... ok and now what? add some *coping* strategy ...
                 error("number of batch vertices exceeded buffer");
             } else if (!flush_frame_vertices.empty()) {
-                glBindBuffer(GL_ARRAY_BUFFER, vbo);
+                glBindBuffer(GL_ARRAY_BUFFER, vbo); // TODO maybe move this outside of loop … but only if there a no shapes with custom vertex buffer
                 if (!initialized_vbo_buffer) {
                     initialized_vbo_buffer = true;
                     glBufferData(GL_ARRAY_BUFFER,
@@ -737,7 +718,7 @@ namespace umfeld {
         }
     }
 
-    void ShapeRendererOpenGL_3::computeShapeCenter(Shape& s) const {
+    void ShapeRendererOpenGL_3::computeShapeCenter(UShape& s) const {
         if (s.vertices.empty()) {
             s.center_object_space = glm::vec3(0, 0, 0);
             return;
@@ -845,6 +826,15 @@ namespace umfeld {
         }
     }
 
+    void ShapeRendererOpenGL_3::bind_default_vertex_buffer() const {
+        // TODO optimize by caching currently bound VBO
+        glBindVertexArray(default_vao); // NOTE VAOs are only guaranteed works for OpenGL ≥ 3
+    }
+
+    void ShapeRendererOpenGL_3::unbind_default_vertex_buffer() {
+        glBindVertexArray(0); // NOTE VAOs are only guaranteed works for OpenGL ≥ 3
+    }
+
     /**
      * render shapes in batches (preprocess).
      *
@@ -856,9 +846,9 @@ namespace umfeld {
      * @param view_matrix
      * @param projection_matrix
      */
-    void ShapeRendererOpenGL_3::flush_sort_by_z_order(std::vector<Shape>& shapes,
-                                                      const glm::mat4&    view_matrix,
-                                                      const glm::mat4&    projection_matrix) {
+    void ShapeRendererOpenGL_3::flush_sort_by_z_order(std::vector<UShape>& shapes,
+                                                      const glm::mat4&     view_matrix,
+                                                      const glm::mat4&     projection_matrix) {
         if (shapes.empty()) { return; }
 
         const glm::mat4 view_projection_matrix = projection_matrix * view_matrix;
@@ -896,25 +886,28 @@ namespace umfeld {
                 s->depth                           = center_view_space.z / center_view_space.w; // Proper NDC depth
             }
             std::sort(batch.transparent_shapes.begin(), batch.transparent_shapes.end(),
-                      [](const Shape* A, const Shape* B) { return A->depth > B->depth; }); // Back to front
+                      [](const UShape* A, const UShape* B) { return A->depth > B->depth; }); // Back to front
         }
 
-        glBindVertexArray(default_vao); // TODO VAOs are only guaranteed works for OpenGL ≥ 3
+        bind_default_vertex_buffer();
 
         GLuint cached_shader_program_id = NO_SHADER_PROGRAM;
         // NOTE some uniforms only need to be set once per (flush) frame
-        if (custom_shader == nullptr) {
-            set_per_frame_shader_uniforms(view_projection_matrix, frame_light_shapes_count, frame_transparent_shapes_count, frame_opaque_shapes_count);
-        } else {
-            warning_in_function_once("custom_shader: set shader uniforms once per FRAME");
-            if (cached_shader_program_id != custom_shader->get_program_id()) {
-                cached_shader_program_id = custom_shader->get_program_id();
-                glUseProgram(cached_shader_program_id);
-            }
-            custom_shader->set_uniform("uViewProj", view_projection_matrix); // glUniformMatrix4fv
-            custom_shader->set_uniform("uTexture", 0);                       // glUniform1i
-            // TODO maybe better separate matrices into `projection_matrix` and `view_matrix`
-        }
+        set_per_frame_shader_uniforms(view_projection_matrix, frame_light_shapes_count, frame_transparent_shapes_count, frame_opaque_shapes_count);
+
+        // if (s.shader != nullptr) {
+        // } else {}
+        // if (custom_shader == nullptr) {
+        // } else {
+        //     warning_in_function_once("custom_shader: set shader uniforms once per FRAME");
+        //     if (cached_shader_program_id != custom_shader->get_program_id()) {
+        //         cached_shader_program_id = custom_shader->get_program_id();
+        //         glUseProgram(cached_shader_program_id);
+        //     }
+        //     custom_shader->set_uniform("uViewProj", view_projection_matrix); // glUniformMatrix4fv
+        //     custom_shader->set_uniform("uTexture", 0);                       // glUniform1i
+        //     // TODO maybe better separate matrices into `projection_matrix` and `view_matrix`
+        // }
 
         // opaque pass
         if (frame_opaque_shapes_count > 0) {
@@ -947,7 +940,7 @@ namespace umfeld {
         glDepthMask(GL_TRUE);
         glDisable(GL_BLEND);
 
-        glBindVertexArray(0); // TODO VAOs are only guaranteed works for OpenGL ≥ 3
+        unbind_default_vertex_buffer();
     }
 
     void ShapeRendererOpenGL_3::set_light_uniforms(const ShaderUniforms& uniforms, const LightingState& lighting) {
@@ -1005,12 +998,12 @@ namespace umfeld {
      * @param view_matrix
      * @param projection_matrix
      */
-    void ShapeRendererOpenGL_3::flush_submission_order(std::vector<Shape>& shapes,
-                                                       const glm::mat4&    view_matrix,
-                                                       const glm::mat4&    projection_matrix) {
+    void ShapeRendererOpenGL_3::flush_submission_order(std::vector<UShape>& shapes,
+                                                       const glm::mat4&     view_matrix,
+                                                       const glm::mat4&     projection_matrix) {
         const glm::mat4 view_projection_matrix = projection_matrix * view_matrix;
 
-        glBindVertexArray(default_vao); // TODO VAOs are only guaranteed works for OpenGL ≥ 3
+        bind_default_vertex_buffer();
 
         // enable depth test for all shapes
         if (graphics != nullptr) {
@@ -1028,17 +1021,17 @@ namespace umfeld {
         bool   blendEnabled    = false;
 
         // NOTE some uniforms only need to be set once per (flush) frame
-        if (custom_shader == nullptr) {
-            set_per_frame_shader_uniforms(view_projection_matrix, frame_light_shapes_count, frame_transparent_shapes_count, frame_opaque_shapes_count);
-        } else {
-            warning_in_function_once("custom_shader: set shader uniforms once per FRAME");
-            glUseProgram(custom_shader->get_program_id());
-            // TODO maybe better separate matrices into `projection_matrix` and `view_matrix`
-            custom_shader->set_uniform("projection_matrix", projection_matrix); // glUniformMatrix4fv
-            custom_shader->set_uniform("view_matrix", view_matrix);             // glUniformMatrix4fv
-            custom_shader->set_uniform("uViewProj", view_projection_matrix);    // glUniformMatrix4fv
-            custom_shader->set_uniform("uTexture", 0);                          // glUniform1i
-        }
+        set_per_frame_shader_uniforms(view_projection_matrix, frame_light_shapes_count, frame_transparent_shapes_count, frame_opaque_shapes_count);
+        // if (custom_shader == nullptr) {
+        // } else {
+        //     warning_in_function_once("custom_shader: set shader uniforms once per FRAME");
+        //     glUseProgram(custom_shader->get_program_id());
+        //     // TODO maybe better separate matrices into `projection_matrix` and `view_matrix`
+        //     custom_shader->set_uniform("projection_matrix", projection_matrix); // glUniformMatrix4fv
+        //     custom_shader->set_uniform("view_matrix", view_matrix);             // glUniformMatrix4fv
+        //     custom_shader->set_uniform("uViewProj", view_projection_matrix);    // glUniformMatrix4fv
+        //     custom_shader->set_uniform("uTexture", 0);                          // glUniform1i
+        // }
 
         max_vertices_per_batch          = 0;
         initialized_vbo_buffer          = false;
@@ -1058,7 +1051,7 @@ namespace umfeld {
                 blendEnabled = false;
             }
             //  switch shader program ( if necessary )
-            if (custom_shader == nullptr) {
+            if (shape.shader == nullptr) {
                 const GLuint required_shader_program_id = shape.light_enabled ? (shape.texture_id == TEXTURE_NONE ? shader_programm_color_lights : shader_programm_texture_lights) : (shape.texture_id == TEXTURE_NONE ? shader_programm_color : shader_programm_texture);
                 if (required_shader_program_id != cached_shader_program_id) {
                     cached_shader_program_id = required_shader_program_id;
@@ -1066,8 +1059,8 @@ namespace umfeld {
                 }
             } else {
                 warning_in_function_once("custom_shader: set shader uniforms per SHAPE");
-                if (custom_shader->get_program_id() != cached_shader_program_id) {
-                    cached_shader_program_id = custom_shader->get_program_id();
+                if (shape.shader->get_program_id() != cached_shader_program_id) {
+                    cached_shader_program_id = shape.shader->get_program_id();
                     glUseProgram(cached_shader_program_id);
                 }
                 // NOTE update uniforms per shape
@@ -1075,10 +1068,13 @@ namespace umfeld {
                 // TODO implement an option that TRIES to set the *known* uniforms:
                 //      - model, view, projection matrices
                 //      - light uniforms
-                if (!custom_shader->has_transform_block() && custom_shader->has_model_matrix) {
-                    custom_shader->set_uniform(SHADER_UNIFORM_MODEL_MATRIX, shape.model); // glUniformMatrix4fv
-                }
+                // if (!shape.shader->has_transform_block() && shape.shader->has_model_matrix) {
+                //     shape.shader->set_uniform(SHADER_UNIFORM_MODEL_MATRIX, shape.model); // glUniformMatrix4fv
+                // }
                 // NOTE skipping light uniforms for now
+                if (shape.light_enabled) {
+                    warning_in_function_once("custom_shader: lighting currently not supported");
+                }
             }
             // handle texture changes
             if (shape.texture_id != current_texture) {
@@ -1113,20 +1109,20 @@ namespace umfeld {
         // restore default state
         glDepthMask(GL_TRUE);
         glDisable(GL_BLEND);
-        glBindVertexArray(0); // TODO VAOs are only guaranteed works for OpenGL ≥ 3
+        unbind_default_vertex_buffer();
     }
 
-    void ShapeRendererOpenGL_3::flush_immediately(std::vector<Shape>& shapes,
-                                                  const glm::mat4&    view_matrix,
-                                                  const glm::mat4&    projection_matrix) {
+    void ShapeRendererOpenGL_3::flush_immediately(std::vector<UShape>& shapes,
+                                                  const glm::mat4&     view_matrix,
+                                                  const glm::mat4&     projection_matrix) {
         flush_submission_order(shapes, view_matrix, projection_matrix);
     }
 
-    void ShapeRendererOpenGL_3::flush_processed_shapes(const std::vector<Shape>& processed_point_shapes,
-                                                       const std::vector<Shape>& processed_line_shapes,
-                                                       std::vector<Shape>&       processed_triangle_shapes,
-                                                       const glm::mat4&          view_matrix,
-                                                       const glm::mat4&          projection_matrix) {
+    void ShapeRendererOpenGL_3::flush_processed_shapes(const std::vector<UShape>& processed_point_shapes,
+                                                       const std::vector<UShape>& processed_line_shapes,
+                                                       std::vector<UShape>&       processed_triangle_shapes,
+                                                       const glm::mat4&           view_matrix,
+                                                       const glm::mat4&           projection_matrix) {
         if (!processed_point_shapes.empty() || !processed_line_shapes.empty()) {
             // TODO alternative render paths for points and lines are currently not implemented
             warning_in_function_once("TODO alternative render paths for points and lines are currently not implemented");
@@ -1159,9 +1155,9 @@ namespace umfeld {
      * @param processed_line_shapes
      * @param processed_triangle_shapes
      */
-    void ShapeRendererOpenGL_3::process_shapes(std::vector<Shape>& processed_point_shapes,
-                                               std::vector<Shape>& processed_line_shapes,
-                                               std::vector<Shape>& processed_triangle_shapes) {
+    void ShapeRendererOpenGL_3::process_shapes(std::vector<UShape>& processed_point_shapes,
+                                               std::vector<UShape>& processed_line_shapes,
+                                               std::vector<UShape>& processed_triangle_shapes) {
         // ReSharper disable once CppDFAConstantConditions
         if (shapes.empty() || graphics == nullptr) { return; }
 

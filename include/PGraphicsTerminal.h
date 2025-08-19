@@ -335,9 +335,6 @@ namespace umfeld {
             PGraphics::endDraw();
         }
 
-        // REMOVE all IMPL_ functions ASAP
-        void impl_background(float a, float b, float c, float d) override {}
-
     private:
         inline static const std::string DEFAULT_POINT_CHAR = "*";
 

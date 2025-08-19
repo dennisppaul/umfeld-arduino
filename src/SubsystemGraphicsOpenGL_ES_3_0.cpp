@@ -33,28 +33,28 @@ namespace umfeld {
     }
 
     static void setup_pre() {
-        checkOpenGLError("SUBSYSTEM_GRAPHICS_OPENGL_ES_3_0::setup_pre(begin)");
+        PGraphicsOpenGL::OGL_check_error("SUBSYSTEM_GRAPHICS_OPENGL_ES_3_0::setup_pre(begin)");
         OGL_setup_pre(window);
-        checkOpenGLError("SUBSYSTEM_GRAPHICS_OPENGL_ES_3_0::setup_pre(end)");
+        PGraphicsOpenGL::OGL_check_error("SUBSYSTEM_GRAPHICS_OPENGL_ES_3_0::setup_pre(end)");
     }
 
     static void setup_post() {
-        checkOpenGLError("SUBSYSTEM_GRAPHICS_OPENGL_ES_3_0::setup_post(begin)");
+        PGraphicsOpenGL::OGL_check_error("SUBSYSTEM_GRAPHICS_OPENGL_ES_3_0::setup_post(begin)");
         OGL_setup_post();
         OGL_draw_post(window, blit_framebuffer_object_to_screenbuffer); // TODO maybe move this to shared methods once it is fully integrated
-        checkOpenGLError("SUBSYSTEM_GRAPHICS_OPENGL_ES_3_0::setup_post(end)");
+        PGraphicsOpenGL::OGL_check_error("SUBSYSTEM_GRAPHICS_OPENGL_ES_3_0::setup_post(end)");
     }
 
     static void draw_pre() {
-        checkOpenGLError("SUBSYSTEM_GRAPHICS_OPENGL_ES_3_0::draw_pre(begin)");
+        PGraphicsOpenGL::OGL_check_error("SUBSYSTEM_GRAPHICS_OPENGL_ES_3_0::draw_pre(begin)");
         OGL_draw_pre();
-        checkOpenGLError("SUBSYSTEM_GRAPHICS_OPENGL_ES_3_0::draw_pre(end)");
+        PGraphicsOpenGL::OGL_check_error("SUBSYSTEM_GRAPHICS_OPENGL_ES_3_0::draw_pre(end)");
     }
 
     static void draw_post() {
-        checkOpenGLError("SUBSYSTEM_GRAPHICS_OPENGL_ES_3_0::draw_post(begin)");
+        PGraphicsOpenGL::OGL_check_error("SUBSYSTEM_GRAPHICS_OPENGL_ES_3_0::draw_post(begin)");
         OGL_draw_post(window, blit_framebuffer_object_to_screenbuffer);
-        checkOpenGLError("SUBSYSTEM_GRAPHICS_OPENGL_ES_3_0::draw_post(end)");
+        PGraphicsOpenGL::OGL_check_error("SUBSYSTEM_GRAPHICS_OPENGL_ES_3_0::draw_post(end)");
     }
 
     static void shutdown() {

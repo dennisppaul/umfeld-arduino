@@ -24,6 +24,16 @@
 #include "UmfeldConstants.h"
 
 namespace umfeld {
+
+    struct ShapeState {
+        ShapeMode mode{POLYGON};
+        bool      started{false};
+
+        void reset() {
+            mode    = POLYGON;
+            started = false;
+        }
+    };
     struct StrokeState {
         float stroke_weight{1};
         int   stroke_join_mode{BEVEL_FAST};

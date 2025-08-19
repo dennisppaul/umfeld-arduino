@@ -22,245 +22,38 @@
 #include <regex>
 #include <string>
 
-#include "UmfeldSDLOpenGL.h" // TODO move to cpp implementation
-
-#include "UmfeldFunctionsAdditional.h"
 #include "PGraphics.h"
-#include "UFont.h"
+
+namespace umfeld {
 
 #ifndef PGRAPHICS_OPENGL_DO_NOT_CHECK_ERRORS
 #define GL_CALL(func) \
     func;             \
-    checkOpenGLError(#func)
+    OGL_check_error(#func)
 #else
 #define GL_CALL(func) func;
 #endif
 
-namespace umfeld {
+    class UFont;
 
-    // TODO @maybe move the functions below into the class above
-
-    struct OpenGLCapabilities;
-    static constexpr int OPENGL_PROFILE_NONE          = -1;
-    static constexpr int OPENGL_PROFILE_CORE          = 1;
-    static constexpr int OPENGL_PROFILE_COMPATIBILITY = 2;
-
-    inline double depth_range = 10000; // TODO this should be configurable … maybe in `reset_matrices()`
-
-    inline std::string getOpenGLErrorString(const GLenum error) {
-        switch (error) {
-            case GL_NO_ERROR: return "No error";
-            case GL_INVALID_ENUM: return "Invalid enum (GL_INVALID_ENUM)";
-            case GL_INVALID_VALUE: return "Invalid value (GL_INVALID_VALUE)";
-            case GL_INVALID_OPERATION: return "Invalid operation (GL_INVALID_OPERATION)";
-            case GL_OUT_OF_MEMORY: return "Out of memory (GL_OUT_OF_MEMORY)";
-            case GL_INVALID_FRAMEBUFFER_OPERATION: return "Invalid framebuffer operation (GL_INVALID_FRAMEBUFFER_OPERATION)";
-#ifndef OPENGL_ES_3_0
-            case GL_STACK_OVERFLOW: return "Stack overflow (GL_STACK_OVERFLOW)";
-            case GL_STACK_UNDERFLOW: return "Stack underflow (GL_STACK_UNDERFLOW)";
-#endif
-            default: return "Unknown OpenGL error";
-        }
-    }
-
-    inline void checkOpenGLError(const std::string& functionName) {
-#ifndef PGRAPHICS_OPENGL_DO_NOT_CHECK_ERRORS
-        GLenum opengl_error;
-        while ((opengl_error = glGetError()) != GL_NO_ERROR) {
-            warning("[OpenGL Error] @", functionName, ": ", getOpenGLErrorString(opengl_error));
-        }
-#endif
-    }
-
-    static std::string fl(const std::string& text) {
-        constexpr size_t column_width = DEFAULT_CONSOLE_LABEL_WIDTH;
-        return format_label(text, column_width);
-    }
-
-    static void get_OpenGL_version(int& major, int& minor) {
-        const auto versionStr = reinterpret_cast<const char*>(glGetString(GL_VERSION));
-        if (!versionStr) {
-            major = 0;
-            minor = 0;
-            return;
-        }
-
-#ifdef OPENGL_ES_3_0
-        const std::regex versionRegex(R"(OpenGL ES (\d+)\.(\d+))");
-        std::cmatch      match;
-        if (std::regex_search(versionStr, match, versionRegex) && match.size() >= 3) {
-            major = std::stoi(match[1].str());
-            minor = std::stoi(match[2].str());
-        }
-#else
-        sscanf(versionStr, "%d.%d", &major, &minor);
-#endif
-    }
-
-    /* opengl capabilities */
-
-    struct OpenGLCapabilities {
-        int   version_major{0};
-        int   version_minor{0};
-        int   profile{0};
-        float line_size_min{0};
-        float line_size_max{0};
-        float line_size_granularity{0};
-        float point_size_min{0};
-        float point_size_max{0};
-        float point_size_granularity{0};
-    };
-
-    inline OpenGLCapabilities open_gl_capabilities;
-
-    void query_opengl_capabilities(OpenGLCapabilities& capabilities);
-
-    inline void printOpenGLInfo(OpenGLCapabilities& capabilities) {
-        const GLubyte* version         = glGetString(GL_VERSION);
-        const GLubyte* renderer        = glGetString(GL_RENDERER);
-        const GLubyte* vendor          = glGetString(GL_VENDOR);
-        const GLubyte* shadingLanguage = glGetString(GL_SHADING_LANGUAGE_VERSION);
-        get_OpenGL_version(capabilities.version_major, capabilities.version_minor);
-
-        console(fl("OpenGL Version"), version, " (", capabilities.version_major, ".", capabilities.version_minor, ")");
-        console(fl("Renderer"), renderer);
-        console(fl("Vendor"), vendor);
-        console(fl("GLSL Version"), shadingLanguage);
-
-        std::string profile_str = "none ( pre 3.2 )";
-        capabilities.profile    = OPENGL_PROFILE_NONE;
-
-#ifdef OPENGL_3_3_CORE
-        if (capabilities.version_major > 2) {
-            int profile = 0;
-            glGetIntegerv(GL_CONTEXT_PROFILE_MASK, &profile);
-            if (profile & GL_CONTEXT_CORE_PROFILE_BIT) {
-                profile_str = "core";
-                console("OpenGL Core Profile detected. Deprecated functions are not available.");
-                capabilities.profile = OPENGL_PROFILE_CORE;
-            }
-            if (profile & GL_CONTEXT_COMPATIBILITY_PROFILE_BIT) {
-                profile_str          = "compatibility ( legacy functions available )";
-                capabilities.profile = OPENGL_PROFILE_COMPATIBILITY;
-            }
-        }
-#endif // OPENGL_3_3_CORE
-        console(fl("Profile"), profile_str);
-    }
-
-    inline void query_opengl_capabilities(OpenGLCapabilities& capabilities) {
-        console(separator());
-        console("OPENGL CAPABILITIES");
-        console(separator());
-
-        printOpenGLInfo(capabilities);
-
-        console(separator(false));
-
-        // NOTE line and point capabilities queries are not available in OpenGL ES 3.0
-#ifndef OPENGL_ES_3_0
-        GLfloat line_size_range[2]{};
-        glGetFloatv(GL_LINE_WIDTH_RANGE, line_size_range);
-        capabilities.line_size_min = line_size_range[0];
-        capabilities.line_size_max = line_size_range[1];
-        console(fl("line size min"), capabilities.line_size_min);
-        console(fl("line size max"), capabilities.line_size_max);
-        if (capabilities.line_size_min == 1.0f && capabilities.line_size_max == 1.0f) {
-            console(fl("line support"), "since min and max line size is 1.0");
-            console(fl(""), "it is likely that lines are not");
-            console(fl(""), "properly supported.");
-        }
-
-        GLfloat line_size_granularity{0};
-        glGetFloatv(GL_LINE_WIDTH_GRANULARITY, &line_size_granularity);
-        console(fl("point size granularity"), line_size_granularity);
-        capabilities.line_size_granularity = line_size_granularity;
-
-        GLfloat point_size_range[2]{};
-        glGetFloatv(GL_POINT_SIZE_RANGE, point_size_range);
-        capabilities.point_size_min = point_size_range[0];
-        capabilities.point_size_max = point_size_range[1];
-        console(fl("point size min"), capabilities.point_size_min);
-        console(fl("point size max"), capabilities.point_size_max);
-
-        GLfloat point_size_granularity{0};
-        glGetFloatv(GL_POINT_SIZE_GRANULARITY, &point_size_granularity);
-        console(fl("point size granularity"), point_size_granularity);
-        capabilities.point_size_granularity = point_size_granularity;
-
-        console(separator());
-#endif
-    }
-
-    inline GLint get_draw_mode(const int shape) {
-        // primitives supported in OpenGL ES 3.0:
-        //
-        // GL_POINTS - Individual points
-        // GL_LINES - Pairs of vertices forming line segments
-        // GL_LINE_STRIP - Connected line segments
-        // GL_LINE_LOOP - Connected line segments forming a closed loop
-        // GL_TRIANGLES - Groups of 3 vertices forming triangles
-        // GL_TRIANGLE_STRIP - Connected triangles sharing vertices
-        // GL_TRIANGLE_FAN - Triangles sharing a common vertex
-
-        // TODO separate between client-side data storage ( vertices, native_opengl_shape etcetera ) and OpenGL implementation ( maybe create a vertex_buffer class )
-        // TODO add shapes drawing
-        int _shape = shape;
-        switch (shape) {
-            case TRIANGLES:
-                _shape = GL_TRIANGLES;
-                break;
-            case TRIANGLE_STRIP:
-                _shape = GL_TRIANGLE_STRIP;
-                break;
-            case TRIANGLE_FAN:
-                _shape = GL_TRIANGLE_FAN;
-                break;
-            case QUADS:
-#ifndef OPENGL_ES_3_0
-                _shape = GL_QUADS;
-#else
-                warning("QUADS not supported in this OpenGL version");
-#endif
-                break;
-            case QUAD_STRIP:
-#ifdef OPENGL_2_0
-                _shape = GL_QUAD_STRIP;
-#else
-                warning("QUAD_STRIP not supported in this OpenGL version");
-#endif
-                break;
-            case POLYGON:
-#ifdef OPENGL_2_0
-                _shape = GL_POLYGON;
-#else
-                warning("QUAD_STRIP not supported in this OpenGL version");
-#endif
-                break;
-            case POINTS:
-                _shape = GL_POINTS;
-                break;
-            case LINES:
-                _shape = GL_LINES;
-                break;
-            case LINE_STRIP:
-                _shape = GL_LINE_STRIP;
-                break;
-            default:
-                _shape = shape;
-        }
-        return _shape;
-    }
-
-    // TODO clean this up … move methods to implementation file
     class PGraphicsOpenGL : public PGraphics {
     public:
-        static constexpr int DEFAULT_ACTIVE_TEXTURE_UNIT = 0;
+        struct OpenGLCapabilities {
+            int   version_major{0};
+            int   version_minor{0};
+            int   profile{0};
+            float line_size_min{0};
+            float line_size_max{0};
+            float line_size_granularity{0};
+            float point_size_min{0};
+            float point_size_max{0};
+            float point_size_granularity{0};
+        };
 
         ~PGraphicsOpenGL() override = default;
 
         void set_default_graphics_state() override {
-            impl_background(0, 0, 0, 1);
+            background(0, 0, 0, 1);
             blendMode(BLEND);
         }
 
@@ -269,31 +62,6 @@ namespace umfeld {
         virtual void bind_fbo()          = 0;
         virtual void finish_fbo()        = 0;
 
-        void beginDraw() override {
-            PGraphics::beginDraw();
-            if (render_to_offscreen) {
-                // store_fbo_state(); // TODO moved to v33 + v20
-                bind_fbo();
-            }
-            glViewport(0, 0, framebuffer.width, framebuffer.height);
-        }
-
-        void endDraw() override {
-            PGraphics::endDraw();
-            if (render_to_offscreen) {
-                restore_fbo_state();
-                finish_fbo();
-            }
-        }
-
-        // common method to bind a framebuffer texture
-        void bind_framebuffer_texture() const {
-            glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, framebuffer.texture_id);
-        }
-
-        void blendMode(int mode) override;
-
         /* --- interface --- */
 
         void        init(uint32_t* pixels, int width, int height) override                                                              = 0;
@@ -301,18 +69,37 @@ namespace umfeld {
         void        download_texture(PImage* img) override                                                                              = 0;
         std::string name() override                                                                                                     = 0;
 
-        /* --- additional methods --- */
+        /* --- extended functionality --- */
 
-        static void OGL_bind_texture(int texture_id);
-        static bool OGL_read_framebuffer(const FrameBufferObject& framebuffer, std::vector<unsigned char>& pixels);
-        static bool OGL_generate_and_upload_image_as_texture(PImage* image);
-        static void OGL_texture_filter(TextureFilter filter);
-        static void OGL_texture_wrap(TextureWrap wrap, glm::vec4 color_stroke);
+        void background(const float a, const float b, const float c, const float d) override;
+        void beginDraw() override;
+        void endDraw() override;
+        void bind_framebuffer_texture() const;
+        void blendMode(int mode) override;
+        void texture_filter(TextureFilter filter) override;
+        void texture_wrap(TextureWrap wrap, glm::vec4 color_stroke) override;
+        int  texture_update_and_bind(PImage* img) override;
 
-        void texture_filter(const TextureFilter filter) override;
-        void texture_wrap(const TextureWrap wrap, const glm::vec4 color_stroke) override;
+        /* --- OpenGL specific methods --- */
+
+        static void        OGL_bind_texture(int texture_id);
+        static bool        OGL_read_framebuffer(const FrameBufferObject& framebuffer, std::vector<unsigned char>& pixels);
+        static bool        OGL_generate_and_upload_image_as_texture(PImage* image);
+        static void        OGL_texture_filter(TextureFilter filter);
+        static void        OGL_texture_wrap(TextureWrap wrap, glm::vec4 color_stroke);
+        static void        OGL_check_error(const std::string& functionName);
+        static void        OGL_query_capabilities(OpenGLCapabilities& capabilities);
+        static uint32_t    OGL_get_draw_mode(int shape);
+        static void        OGL_get_version(int& major, int& minor);
+        static std::string OGL_get_error_string(uint32_t error);
+        static void        OGL_print_info(OpenGLCapabilities& capabilities);
 
     protected:
-        UFont debug_font;
+        static constexpr int DEFAULT_ACTIVE_TEXTURE_UNIT  = 0;
+        static constexpr int OPENGL_PROFILE_NONE          = -1;
+        static constexpr int OPENGL_PROFILE_CORE          = 1;
+        static constexpr int OPENGL_PROFILE_COMPATIBILITY = 2;
+        double               depth_range                  = 10000; // TODO this should be configurable … maybe in `reset_matrices()`
+        UFont                debug_font;
     }; // class PGraphicsOpenGL
 } // namespace umfeld

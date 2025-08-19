@@ -219,6 +219,11 @@ namespace umfeld {
         return label + std::string(width - label.length(), ' ') + " : ";
     }
 
+    inline std::string fl(const std::string& text) {
+        constexpr size_t column_width = DEFAULT_CONSOLE_LABEL_WIDTH;
+        return format_label(text, column_width);
+    }
+
     inline std::string separator(const bool equal_sign = true, const std::size_t length = DEFAULT_CONSOLE_WIDTH) {
         return std::string(length, equal_sign ? '=' : '-');
     }

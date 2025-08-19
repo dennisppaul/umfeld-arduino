@@ -56,12 +56,22 @@ void PGraphics::beginDraw() {
 void PGraphics::endDraw() {
     flush();
     restore_mvp_matrices();
-    lights_enabled = false;
-    /* clear texture stack */
-    texture_id_pushed = false;
-    stored_texture    = nullptr;
-    /* reset shader */
+    lights_enabled     = false;
+    current_shape.mode = POLYGON;
+    texture_stack_top  = nullptr;
+    texture_stack_used = false;
     resetShader();
+}
+
+void PGraphics::shader(PShader* shader) {
+    current_custom_shader = shader;
+    if (shader == nullptr) {
+        resetShader();
+    }
+}
+
+void PGraphics::resetShader() {
+    current_custom_shader = nullptr;
 }
 
 void PGraphics::flush() {
@@ -111,7 +121,6 @@ void PGraphics::background(const float a, const float b, const float c, const fl
         }
         emitted_warning = true;
     }
-    impl_background(a, b, c, d);
 }
 
 /* --- transform matrices --- */
@@ -871,17 +880,7 @@ void PGraphics::text_str(const std::string& text, const float x, const float y, 
 }
 
 void PGraphics::texture(PImage* img) {
-    if (img != nullptr) {
-        current_texture = img;
-        if (shape_renderer) {
-            shape_renderer->set_texture(img);
-        }
-    } else {
-        current_texture = nullptr;
-        if (shape_renderer) {
-            shape_renderer->set_texture(nullptr);
-        }
-    }
+    current_texture = img;
 }
 
 void PGraphics::point(const float x, const float y, const float z) {
@@ -1320,7 +1319,7 @@ void PGraphics::printProjection() {
 void PGraphics::beginShape(const int shape) {
     shape_fill_vertex_buffer.clear();
     shape_stroke_vertex_buffer.clear();
-    shape_mode_cache = shape;
+    current_shape.mode = static_cast<ShapeMode>(shape);
 }
 
 void PGraphics::vertex(const float x, const float y, const float z) {
@@ -1345,7 +1344,7 @@ void PGraphics::vertex(const float x, const float y, const float z, const float 
         shape_stroke_vertex_buffer.emplace_back(position, as_vec4(color_stroke), tex_coord, current_normal);
     }
 
-    if (color_fill.active && shape_can_have_fill(shape_mode_cache)) {
+    if (color_fill.active && shape_can_have_fill(current_shape.mode)) {
         shape_fill_vertex_buffer.emplace_back(position, as_vec4(color_fill), tex_coord, current_normal);
     }
 }
@@ -1359,7 +1358,7 @@ void PGraphics::vertex(const Vertex& v) {
         shape_stroke_vertex_buffer.emplace_back(v.position, as_vec4(color_stroke), v.tex_coord, v.normal);
     }
 
-    if (color_fill.active && shape_can_have_fill(shape_mode_cache)) {
+    if (color_fill.active && shape_can_have_fill(current_shape.mode)) {
         // TODO maybe use v.color instead of color_fill?
         //      shape_fill_vertex_buffer.emplace_back(v);
         shape_fill_vertex_buffer.emplace_back(v.position, as_vec4(color_fill), v.tex_coord, v.normal);
@@ -1368,10 +1367,10 @@ void PGraphics::vertex(const Vertex& v) {
 
 int PGraphics::get_current_texture_id() const { return current_texture == nullptr ? TEXTURE_NONE : current_texture->texture_id; }
 
-void PGraphics::submit_stroke_shape(const bool closed, const bool force_transparent) {
+void PGraphics::submit_stroke_shape(const bool closed, const bool force_transparent) const {
     if (!shape_stroke_vertex_buffer.empty()) {
-        Shape s;
-        s.mode        = static_cast<ShapeMode>(shape_mode_cache);
+        UShape s;
+        s.mode        = current_shape.mode;
         s.stroke      = current_stroke_state;
         s.filled      = false;
         s.vertices    = shape_stroke_vertex_buffer;
@@ -1379,15 +1378,16 @@ void PGraphics::submit_stroke_shape(const bool closed, const bool force_transpar
         s.transparent = force_transparent ? true : has_transparent_vertices(shape_stroke_vertex_buffer);
         s.closed      = closed;
         s.texture_id  = get_current_texture_id();
-        shape_renderer->submitShape(s);
+        s.shader      = current_custom_shader;
+        shape_renderer->submit_shape(s);
     }
 }
 
-void PGraphics::submit_fill_shape(const bool closed, const bool force_transparent) {
+void PGraphics::submit_fill_shape(const bool closed, const bool force_transparent) const {
     if (shape_renderer != nullptr && !shape_fill_vertex_buffer.empty()) {
-        Shape s;
+        UShape s;
         // NOTE no need to copy stroke info for filled shape
-        s.mode          = static_cast<ShapeMode>(shape_mode_cache);
+        s.mode          = current_shape.mode;
         s.filled        = true;
         s.vertices      = shape_fill_vertex_buffer;
         s.model         = model_matrix;
@@ -1395,10 +1395,12 @@ void PGraphics::submit_fill_shape(const bool closed, const bool force_transparen
         s.closed        = closed;
         s.texture_id    = get_current_texture_id();
         s.light_enabled = lights_enabled;
+        // NOTE only copy lighting state if lights are enabled
         if (lights_enabled) {
-            s.lighting = lightingState; // NOTE only copy lighting state if lights are enabled
+            s.lighting = lightingState;
         }
-        shape_renderer->submitShape(s);
+        s.shader = current_custom_shader;
+        shape_renderer->submit_shape(s);
     }
 }
 
@@ -1409,29 +1411,15 @@ void PGraphics::endShape(const bool closed) {
         if (render_mode == RENDER_MODE_IMMEDIATELY) {
             flush();
         }
-        // } else {
-        // REMOVE move immediate mode to dedicated file
-        // process_collected_fill_vertices();
-        // process_collected_stroke_vertices(closed);
     }
-
     shape_fill_vertex_buffer.clear();
     shape_stroke_vertex_buffer.clear();
-
-    /*
-     * OpenGL ES 3.0 is stricter:
-     *
-     * 1. No GL_LINES, GL_LINE_STRIP, or GL_LINE_LOOP support in core spec!
-     * 2. No glLineWidth support at all.
-     * 3. Only GL_TRIANGLES, GL_TRIANGLE_STRIP, and GL_TRIANGLE_FAN are guaranteed.
-     *
-     * i.e GL_LINES + GL_LINE_STRIP must be emulated
-     */
+    current_shape.reset();
 }
 
 void PGraphics::debug_text(const std::string& text, const float x, const float y) {
     if (shape_renderer != nullptr && debug_font != nullptr) {
-        Shape s;
+        UShape s;
         s.mode   = TRIANGLES;
         s.filled = true;
         s.vertices.reserve(text.size() * 6);
@@ -1439,9 +1427,9 @@ void PGraphics::debug_text(const std::string& text, const float x, const float y
         s.model         = model_matrix;
         s.transparent   = true;
         s.closed        = false;
-        s.texture_id    = shape_renderer->set_texture(debug_font->atlas());
+        s.texture_id    = texture_update_and_bind(debug_font->atlas());
         s.light_enabled = false;
-        shape_renderer->submitShape(s);
+        shape_renderer->submit_shape(s);
     }
 }
 
@@ -1469,7 +1457,7 @@ void PGraphics::emit_shape_stroke_points(std::vector<Vertex>& point_vertices, co
 }
 
 // NOTE this is required by `ShapeRendererOpenGL_3::handle_stroke_shape`
-void PGraphics::convert_stroke_shape_to_line_strip(Shape& s, std::vector<Shape>& shapes) {
+void PGraphics::convert_stroke_shape_to_line_strip(UShape& s, std::vector<UShape>& shapes) {
     std::vector<Vertex> shape_stroke_vertex_buffer = s.vertices;
     const int           shape_mode_cache           = s.mode;
 
@@ -1493,7 +1481,7 @@ void PGraphics::convert_stroke_shape_to_line_strip(Shape& s, std::vector<Shape>&
                     vertices.push_back((*config.vertex_source)[i + j]);
                 }
 
-                Shape ns{
+                UShape ns{
                     .mode        = LINE_STRIP,
                     .stroke      = s.stroke,
                     .filled      = s.filled,
@@ -1550,7 +1538,7 @@ void PGraphics::convert_stroke_shape_to_line_strip(Shape& s, std::vector<Shape>&
     }
 }
 
-void PGraphics::convert_fill_shape_to_triangles(Shape& s) const {
+void PGraphics::convert_fill_shape_to_triangles(UShape& s) const {
     // NOTE used by ShapeRendererOpenGL_3
     const std::vector<Vertex> shape_fill_vertex_buffer = s.vertices;
     const int                 shape_mode_cache         = s.mode;

@@ -133,9 +133,9 @@ namespace umfeld {
 #error "Unsupported OpenGL version. Please define OPENGL_3_3_CORE or OPENGL_2_0 or OPENGL_ES_30."
 #endif
 
-        query_opengl_capabilities(open_gl_capabilities);
-
-        checkOpenGLError("SUBSYSTEM_GRAPHICS_OPENGL::init(end)");
+        PGraphicsOpenGL::OpenGLCapabilities open_gl_capabilities;
+        PGraphicsOpenGL::OGL_query_capabilities(open_gl_capabilities);
+        PGraphicsOpenGL::OGL_check_error("SUBSYSTEM_GRAPHICS_OPENGL::init(end)");
 
         return true;
     }

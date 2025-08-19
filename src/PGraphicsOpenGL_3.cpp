@@ -57,12 +57,7 @@ PGraphicsOpenGL_3::PGraphicsOpenGL_3(const bool render_to_offscreen) : PImage(0,
     this->render_to_offscreen = render_to_offscreen;
 }
 
-void PGraphicsOpenGL_3::impl_background(const float a, const float b, const float c, const float d) {
-    glClearColor(a, b, c, d);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-}
-
-void PGraphicsOpenGL_3::add_line_quad(const Vertex& p0, const Vertex& p1, float thickness, std::vector<Vertex>& out) {
+void PGraphicsOpenGL_3::OGL3_add_line_quad(const Vertex& p0, const Vertex& p1, float thickness, std::vector<Vertex>& out) {
     // glm::vec3 dir = glm::normalize(p1 - p0);
     glm::vec3 dir = p1.position - p0.position; // NOTE no need to normalize, the shader will do it
 
@@ -117,6 +112,16 @@ void PGraphicsOpenGL_3::beginDraw() {
 
 void PGraphicsOpenGL_3::endDraw() {
     PGraphicsOpenGL::endDraw();
+}
+
+void PGraphicsOpenGL_3::texture(PImage* img) {
+    PGraphics::texture(img);
+    // enable and
+    if (img != nullptr) {
+        texture_update_and_bind(img);
+    } else {
+        texture_update_and_bind(nullptr);
+    }
 }
 
 void PGraphicsOpenGL_3::render_framebuffer_to_screen(const bool use_blit) {
@@ -384,7 +389,6 @@ void PGraphicsOpenGL_3::init(uint32_t* pixels, const int width, const int height
     }
 
     /* initialize shape renderer */
-    // TODO this should be configurable. alternative might be `ShapeRendererImmediateOpenGL_3`
     const auto            shape_renderer_ogl3 = new ShapeRendererOpenGL_3();
     std::vector<PShader*> shader_batch_programs(ShapeRendererOpenGL_3::NUM_SHADER_PROGRAMS);
     shader_batch_programs[ShapeRendererOpenGL_3::SHADER_PROGRAM_COLOR]          = loadShader(shader_source_color.get_vertex_source(), shader_source_color.get_fragment_source());
@@ -407,19 +411,7 @@ void PGraphicsOpenGL_3::init(uint32_t* pixels, const int width, const int height
 
 /* additional */
 
-#ifndef USE_DRAW_FULLSCREEN_WITH_SHADER
-void PGraphicsOpenGL_3::OGL3_render_vertex_buffer(VertexBuffer& vertex_buffer, const GLenum primitive_mode, const std::vector<Vertex>& shape_vertices) {
-    if (shape_vertices.empty()) {
-        return;
-    }
-    vertex_buffer.clear();
-    vertex_buffer.add_vertices(shape_vertices);
-    vertex_buffer.set_shape(primitive_mode, false);
-    vertex_buffer.draw();
-}
-#endif
-
-void PGraphicsOpenGL_3::update_shader_matrices(PShader* shader) const {
+void PGraphicsOpenGL_3::OGL3_update_shader_matrices(PShader* shader) const {
     if (shader == nullptr) { return; }
     if (shader->has_model_matrix) {
         shader->set_uniform(SHADER_UNIFORM_MODEL_MATRIX, model_matrix);
@@ -435,7 +427,7 @@ void PGraphicsOpenGL_3::update_shader_matrices(PShader* shader) const {
     }
 }
 
-void PGraphicsOpenGL_3::reset_shader_matrices(PShader* shader) {
+void PGraphicsOpenGL_3::OGL3_reset_shader_matrices(PShader* shader) {
     if (shader == nullptr) { return; }
     if (shader->has_model_matrix) {
         shader->set_uniform(SHADER_UNIFORM_MODEL_MATRIX, glm::mat4(1.0f));
@@ -460,7 +452,7 @@ void PGraphicsOpenGL_3::mesh(VertexBuffer* mesh_shape) {
     mesh_shape->draw();
     UMFELD_PGRAPHICS_OPENGL_3_3_CORE_CHECK_ERRORS("mesh() end");
 #ifdef UMFELD_OGL33_RESET_MATRICES_ON_SHADER
-    reset_shader_matrices(current_shader);
+    OGL3_reset_shader_matrices(current_custom_shader);
 #endif
 }
 
@@ -476,19 +468,15 @@ PShader* PGraphicsOpenGL_3::loadShader(const std::string& vertex_code, const std
 }
 
 void PGraphicsOpenGL_3::shader(PShader* shader) {
-    if (shader == nullptr) {
-        resetShader();
-        return;
+    if (shader != nullptr) {
+        glUseProgram(shader->get_program_id());
     }
-    if (shape_renderer != nullptr) {
-        shape_renderer->set_custom_shader(shader);
-    }
+    PGraphics::shader(shader);
 }
 
 void PGraphicsOpenGL_3::resetShader() {
-    if (shape_renderer != nullptr) {
-        shape_renderer->set_custom_shader(nullptr);
-    }
+    PGraphics::resetShader();
+    glUseProgram(0);
 }
 
 bool PGraphicsOpenGL_3::read_framebuffer(std::vector<unsigned char>& pixels) {
@@ -759,7 +747,7 @@ void PGraphicsOpenGL_3::upload_colorbuffer(uint32_t* pixels) {
 
     if (render_to_offscreen) {
         if (!framebuffer.msaa) {
-            flip_pixel_buffer(pixels);
+            OGL3_flip_pixel_buffer(pixels);
             push_texture_id();
             OGL_bind_texture(framebuffer.texture_id);
             glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
@@ -800,39 +788,8 @@ void PGraphicsOpenGL_3::upload_colorbuffer(uint32_t* pixels) {
             // draw fullscreen quad
             push_texture_id();
             OGL_bind_texture(tempTexture);
-#ifdef USE_DRAW_FULLSCREEN_WITH_SHADER
-            draw_fullscreen_texture(tempTexture);
-#else
-            shader_fullscreen_texture->use();
-            update_shader_matrices(shader_fullscreen_texture);
-            // draw fullscreen quad
-            std::vector<Vertex> fullscreen_quad;
-            constexpr glm::vec4 color(1.0f, 1.0f, 1.0f, 1.0f);
-            const int           width  = this->width;
-            const int           height = this->height;
-            // TODO there is room for optimization below this line ...
-            //      i.e do not create a new vector every time and maybe create a dedicated vertex buffer for fullscreen quads
-            fullscreen_quad.emplace_back(0, 0, 0,
-                                         color.r, color.g, color.b, color.a,
-                                         0, 0);
-            fullscreen_quad.emplace_back(width, 0, 0,
-                                         color.r, color.g, color.b, color.a,
-                                         1, 0);
-            fullscreen_quad.emplace_back(width, height, 0,
-                                         color.r, color.g, color.b, color.a,
-                                         1, 1);
-            fullscreen_quad.emplace_back(0, 0, 0,
-                                         color.r, color.g, color.b, color.a,
-                                         0, 0);
-            fullscreen_quad.emplace_back(width, height, 0,
-                                         color.r, color.g, color.b, color.a,
-                                         1, 1);
-            fullscreen_quad.emplace_back(0, height, 0,
-                                         color.r, color.g, color.b, color.a,
-                                         0, 1);
-            OGL3_render_vertex_buffer(vertex_buffer, GL_TRIANGLES, fullscreen_quad);
-            // cleanup
-#endif // USE_DRAW_FULLSCREEN_WITH_SHADER
+            OGL3_draw_fullscreen_texture(tempTexture);
+
             pop_texture_id();
 
             restore_fbo_state();
@@ -851,38 +808,7 @@ void PGraphicsOpenGL_3::upload_colorbuffer(uint32_t* pixels) {
                         UMFELD_DEFAULT_EXTERNAL_PIXEL_FORMAT,
                         UMFELD_DEFAULT_TEXTURE_PIXEL_TYPE,
                         pixels);
-#ifdef USE_DRAW_FULLSCREEN_WITH_SHADER
-        draw_fullscreen_texture(texture_id);
-#else
-        shader_fullscreen_texture->use();
-        update_shader_matrices(shader_fullscreen_texture);
-        std::vector<Vertex> fullscreen_quad;
-        constexpr glm::vec4 color(1.0f, 1.0f, 1.0f, 1.0f);
-        const int           width  = this->width;
-        const int           height = this->height;
-        // OPTIMIZE there is room for optimization below this line ...
-        //          i.e do not create a new vector every time
-        //          and maybe create a dedicated vertex buffer for fullscreen quads
-        fullscreen_quad.emplace_back(0, 0, 0,
-                                     color.r, color.g, color.b, color.a,
-                                     0, 0);
-        fullscreen_quad.emplace_back(width, 0, 0,
-                                     color.r, color.g, color.b, color.a,
-                                     1, 0);
-        fullscreen_quad.emplace_back(width, height, 0,
-                                     color.r, color.g, color.b, color.a,
-                                     1, 1);
-        fullscreen_quad.emplace_back(0, 0, 0,
-                                     color.r, color.g, color.b, color.a,
-                                     0, 0);
-        fullscreen_quad.emplace_back(width, height, 0,
-                                     color.r, color.g, color.b, color.a,
-                                     1, 1);
-        fullscreen_quad.emplace_back(0, height, 0,
-                                     color.r, color.g, color.b, color.a,
-                                     0, 1);
-        OGL3_render_vertex_buffer(vertex_buffer, GL_TRIANGLES, fullscreen_quad);
-#endif // USE_DRAW_FULLSCREEN_WITH_SHADER
+        OGL3_draw_fullscreen_texture(texture_id);
         pop_texture_id();
     }
 }
@@ -897,7 +823,8 @@ void PGraphicsOpenGL_3::download_colorbuffer(uint32_t* pixels) {
         bind_fbo();
         if (framebuffer.msaa) {
             // OPTIMIZE there is room for optimization below this line ...
-            //          i.e do not use a temporary FBO if possible but rather create it once on first call to `download_colorbuffer`
+            //          i.e do not use a temporary FBO if possible but rather
+            //          create it once on first call to `download_colorbuffer`
             // Step 1: Create intermediate non-MSAA FBO + texture
             GLuint tempFBO, tempTex;
             glGenFramebuffers(1, &tempFBO);
@@ -964,10 +891,10 @@ void PGraphicsOpenGL_3::download_colorbuffer(uint32_t* pixels) {
                      UMFELD_DEFAULT_TEXTURE_PIXEL_TYPE,
                      pixels);
     }
-    flip_pixel_buffer(pixels);
+    OGL3_flip_pixel_buffer(pixels);
 }
 
-void PGraphicsOpenGL_3::flip_pixel_buffer(uint32_t* pixels) {
+void PGraphicsOpenGL_3::OGL3_flip_pixel_buffer(uint32_t* pixels) {
     const int d      = displayDensity();
     const int phys_w = width * d;
     const int phys_h = height * d;
@@ -996,7 +923,7 @@ void PGraphicsOpenGL_3::flip_pixel_buffer(uint32_t* pixels) {
 #endif // MORE_COMPATIBLE_FLIP_PIXEL_BUFFER
 }
 
-void PGraphicsOpenGL_3::draw_fullscreen_texture(const GLuint texture_id) const {
+void PGraphicsOpenGL_3::OGL3_draw_fullscreen_texture(const GLuint texture_id) const {
     if (shader_fullscreen_texture == nullptr) {
         return;
     }

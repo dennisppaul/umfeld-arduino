@@ -28,7 +28,7 @@
 #include "UmfeldFunctionsAdditional.h"
 #include "PImage.h"
 #include "Vertex.h"
-#include "Shape.h"
+#include "UShape.h"
 #include "Triangulator.h"
 #include "UFont.h"
 
@@ -71,10 +71,8 @@ namespace umfeld {
 
         /* --- implementation specific methods --- */
 
-        virtual void impl_background(float a, float b, float c, float d) = 0; // NOTE required to clear color buffer and depth buffer
-
-        virtual void render_framebuffer_to_screen(const bool use_blit) { (void) use_blit; } // TODO this should probably go to PGraphicsOpenGL
         virtual bool read_framebuffer(std::vector<unsigned char>& pixels) { return false; }
+        virtual void render_framebuffer_to_screen(const bool use_blit) { (void) use_blit; }; // TODO this should probably go to PGraphicsOpenGL
 
         /* --- implementation specific methods ( pure virtual ) --- */
 
@@ -156,8 +154,8 @@ namespace umfeld {
         virtual void vertex(float x, float y, float z = 0.0f);
         virtual void vertex(float x, float y, float z, float u, float v);
         virtual void vertex(const Vertex& v);
-        void         submit_stroke_shape(bool closed, bool force_transparent = false);
-        void         submit_fill_shape(bool closed, bool force_transparent = false);
+        void         submit_stroke_shape(bool closed, bool force_transparent = false) const;
+        void         submit_fill_shape(bool closed, bool force_transparent = false) const;
 
         // ## Structure
 
@@ -195,9 +193,9 @@ namespace umfeld {
         virtual void   sphereDetail(const int res) { sphereDetail(res, res); }
         // void             process_collected_fill_vertices();
         // void             process_collected_stroke_vertices(bool close_shape);
-        virtual void     shader(PShader* shader) {} // TODO maybe not implement them empty like this
+        virtual void     shader(PShader* shader);
         virtual PShader* loadShader(const std::string& vertex_code, const std::string& fragment_code, const std::string& geometry_code = "") { return nullptr; };
-        virtual void     resetShader() {}
+        virtual void     resetShader();
         virtual void     normal(float x, float y, float z, float w = 0);
         virtual void     blendMode(int mode) {} // TODO MAYBE change parameter to `BlendMode mode`
         // virtual void     beginCamera();
@@ -256,6 +254,7 @@ namespace umfeld {
         float               get_stroke_weight() const { return current_stroke_state.stroke_weight; }
         virtual void        texture_filter(TextureFilter filter) {}
         virtual void        texture_wrap(TextureWrap wrap, glm::vec4 color_fill = glm::vec4(0.0f)) {}
+        virtual int         texture_update_and_bind(PImage* img) { return 0; }
         virtual void        upload_texture(PImage* img, const uint32_t* pixel_data, int width, int height, int offset_x, int offset_y) {}
         virtual void        download_texture(PImage* img) {}
         virtual void        upload_colorbuffer(uint32_t* pixels) {}
@@ -271,8 +270,8 @@ namespace umfeld {
         static std::vector<Vertex> triangulate_faster(const std::vector<Vertex>& vertices);
         static std::vector<Vertex> triangulate_better_quality(const std::vector<Vertex>& vertices);
         static std::vector<Vertex> triangulate_good(const std::vector<Vertex>& vertices);
-        void                       convert_fill_shape_to_triangles(Shape& s) const;
-        static void                convert_stroke_shape_to_line_strip(Shape& s, std::vector<Shape>& shapes);
+        void                       convert_fill_shape_to_triangles(UShape& s) const;
+        static void                convert_stroke_shape_to_line_strip(UShape& s, std::vector<UShape>& shapes);
 
     protected:
         // const float                      DEFAULT_FOV            = 2.0f * atan(0.5f); // = 53.1301f; // P5 :: tan(PI*30.0 / 180.0);
@@ -282,7 +281,10 @@ namespace umfeld {
         ShapeRenderer*                   shape_renderer{nullptr}; // TODO @maybe make this `const` and set in constructor?
         PFont*                           current_font{nullptr};
         PImage*                          current_texture{nullptr};
-        PImage*                          stored_texture{nullptr};
+        ShapeState                       current_shape{};
+        PShader*                         current_custom_shader{nullptr};
+        PImage*                          texture_stack_top{nullptr}; // NOTE not really a stack yet ;)
+        bool                             texture_stack_used{false};
         StrokeState                      current_stroke_state;
         std::stack<StyleState>           style_stack;
         LightingState                    lightingState;
@@ -311,7 +313,6 @@ namespace umfeld {
         std::vector<Vertex>              sphere_vertices_LUT{};
         int                              sphere_u_resolution{DEFAULT_SPHERE_RESOLUTION};
         int                              sphere_v_resolution{DEFAULT_SPHERE_RESOLUTION};
-        int                              shape_mode_cache{POLYGON};
         static constexpr uint32_t        VBO_BUFFER_CHUNK_SIZE{1024 * 1024}; // 1MB
         std::vector<Vertex>              shape_stroke_vertex_buffer{VBO_BUFFER_CHUNK_SIZE};
         std::vector<Vertex>              shape_fill_vertex_buffer{VBO_BUFFER_CHUNK_SIZE};
@@ -321,7 +322,6 @@ namespace umfeld {
         glm::mat4                        temp_projection_matrix{};
         RenderMode                       render_mode{RENDER_MODE_SORTED_BY_Z_ORDER};
         bool                             in_camera_block{false};
-        bool                             texture_id_pushed{false};
         const UFont*                     debug_font{nullptr};
         void (*triangle_emitter_callback)(std::vector<Vertex>&){nullptr};
         void (*stroke_emitter_callback)(std::vector<Vertex>&, bool){nullptr};
@@ -346,19 +346,19 @@ namespace umfeld {
         }
 
         void push_texture_id() {
-            if (!texture_id_pushed) {
-                texture_id_pushed = true;
-                stored_texture    = current_texture;
+            if (!texture_stack_used) {
+                texture_stack_top  = current_texture;
+                texture_stack_used = true;
             } else {
                 warning("unbalanced texture id *push*/pop");
             }
         }
 
         void pop_texture_id() {
-            if (texture_id_pushed) {
-                texture_id_pushed = false;
-                current_texture   = stored_texture;
-                stored_texture    = nullptr;
+            if (texture_stack_used) {
+                current_texture    = texture_stack_top;
+                texture_stack_top  = nullptr;
+                texture_stack_used = false;
             } else {
                 warning("unbalanced texture id push/*pop*");
             }

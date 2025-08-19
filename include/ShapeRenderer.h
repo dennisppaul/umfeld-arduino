@@ -24,7 +24,7 @@
 
 #include "UmfeldConstants.h"
 #include "Vertex.h"
-#include "Shape.h"
+#include "UShape.h"
 #include "PGraphics.h"
 
 namespace umfeld {
@@ -32,7 +32,7 @@ namespace umfeld {
 
     class ShapeRenderer {
     public:
-        virtual ~ShapeRenderer()                                          = default;
+        virtual ~ShapeRenderer()                                               = default;
         virtual void init(PGraphics* g, std::vector<PShader*> shader_programs) = 0; // NOTE init shaders + buffers
         // virtual void beginShape(ShapeMode        mode,
         //                         bool             filled,
@@ -43,9 +43,9 @@ namespace umfeld {
         // virtual void setVertices(std::vector<Vertex>&& vertices)          = 0;
         // virtual void setVertices(const std::vector<Vertex>& vertices)     = 0;
         // virtual void endShape(bool closed)                                = 0;
-        virtual void submitShape(Shape& s)                                = 0;
-        virtual int  set_texture(PImage* img)                             = 0;
-        virtual void set_custom_shader(PShader* shader)                   = 0;
+        virtual void submit_shape(UShape& s)   = 0;
+        // virtual int  texture_update_and_bind(PImage* img) = 0; // TODO move to PGraohicsOpenGL3 and rename to `prepare_texture()`?
+        // virtual void set_custom_shader(PShader* shader) = 0;
 
         // NOTE `flush()` needs VP matrix and must be called to render batches at
         //      1. at end of frame
@@ -56,6 +56,7 @@ namespace umfeld {
 
     protected:
         PGraphics* graphics{nullptr};
+        std::vector<PShader*> default_shader_programs;
         // bool       shape_in_progress = false;
     };
 } // namespace umfeld

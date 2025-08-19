@@ -1,5 +1,5 @@
 /*
-* Umfeld
+ * Umfeld
  *
  * This file is part of the *Umfeld* library (https://github.com/dennisppaul/umfeld).
  * Copyright (c) 2025 Dennis P Paul.
@@ -475,8 +475,8 @@ namespace umfeld {
     }
 
     void ShapeRendererOpenGL_3::initBuffers() {
-        glGenVertexArrays(1, &vao);
-        glBindVertexArray(vao);
+        glGenVertexArrays(1, &default_vao);
+        glBindVertexArray(default_vao); // TODO VAOs are only guaranteed works for OpenGL ≥ 3
 
         glGenBuffers(1, &vbo);
         glBindBuffer(GL_ARRAY_BUFFER, vbo);
@@ -499,7 +499,7 @@ namespace umfeld {
         glBufferData(GL_UNIFORM_BUFFER, MAX_TRANSFORMS * sizeof(glm::mat4), nullptr, GL_DYNAMIC_DRAW);
         glBindBufferBase(GL_UNIFORM_BUFFER, 0, ubo);
 
-        glBindVertexArray(0);
+        glBindVertexArray(0); // TODO VAOs are only guaranteed works for OpenGL ≥ 3
 
         // pre-allocate frame buffers
         flush_frame_matrices.reserve(MAX_TRANSFORMS);
@@ -596,6 +596,67 @@ namespace umfeld {
         }
     }
 
+    void ShapeRendererOpenGL_3::render_shape(const Shape& s) {
+        // NOTE assumes that shader is already in use and texture is already bound
+
+        // upload transform (single mat4) if shader expects the transform block
+        if (custom_shader == nullptr || custom_shader->has_transform_block()) {
+            glBindBuffer(GL_UNIFORM_BUFFER, ubo);
+            glBufferSubData(GL_UNIFORM_BUFFER, 0, static_cast<GLsizeiptr>(sizeof(glm::mat4)), &s.model);
+        }
+
+        // set lights once for this shape (if enabled)
+        if (s.light_enabled) {
+            if (s.texture_id == TEXTURE_NONE) {
+                set_light_uniforms(shader_uniforms_color_lights, s.lighting);
+            } else {
+                set_light_uniforms(shader_uniforms_texture_lights, s.lighting);
+            }
+        }
+
+        // handle custom vertex buffer
+        if (s.vertex_buffer != nullptr) {
+            warning("ShapeRendererOpenGL_3::render_shape", ": vertex_buffer not supported yet … this shape needs to a/ trigger its own render call and b/ handle the transform_id gracefully");
+            // fall through and still draw the tessellated path for now
+        }
+
+        // tessellate the single shape into our scratch vertex buffer
+        flush_frame_vertices.clear();
+        const size_t estimate = estimate_triangle_count(s); // expected vertex count
+        if (estimate == 0) {
+            return;
+        }
+        flush_frame_vertices.reserve(estimate);
+
+        convert_shapes_to_triangles(s, flush_frame_vertices, 0);
+
+        // upload vertices and draw
+        const size_t vcount = flush_frame_vertices.size();
+        if (vcount == 0) {
+            return;
+        }
+        if (vcount > max_vertices_per_batch) {
+            error("number of vertices exceeded buffer in render_shape");
+            return;
+        }
+
+        glBindBuffer(GL_ARRAY_BUFFER, vbo);
+        if (!initialized_vbo_buffer) {
+            initialized_vbo_buffer = true;
+            glBufferData(GL_ARRAY_BUFFER,
+                         static_cast<GLsizeiptr>(max_vertices_per_batch * sizeof(Vertex)),
+                         nullptr,
+                         GL_DYNAMIC_DRAW);
+        }
+
+        glBufferSubData(GL_ARRAY_BUFFER,
+                        0,
+                        static_cast<GLsizeiptr>(vcount * sizeof(Vertex)),
+                        flush_frame_vertices.data());
+
+        glDrawArrays(GL_TRIANGLES, 0, static_cast<GLsizei>(vcount));
+    }
+
     void ShapeRendererOpenGL_3::render_batch(const std::vector<Shape*>& shapes_to_render) {
         // NOTE assumes that shader is already in use and texture is already bound
 
@@ -644,8 +705,8 @@ namespace umfeld {
             for (size_t i = 0; i < chunkSize; ++i) {
                 const auto* s = shapes_to_render[offset + i];
                 convert_shapes_to_triangles(*s, flush_frame_vertices, static_cast<uint16_t>(i));
-                if (s->byovbo != nullptr) {
-                    warning("ShapeRendererOpenGL_3::render_batch", ": byovbo not supported yet … this shape needs to a/ trigger it s own render call and b/ handle the transform_id gracefully");
+                if (s->vertex_buffer != nullptr) {
+                    warning_in_function("vertex_buffer not supported yet … this shape needs to a/ trigger it s own render call and b/ handle the transform_id gracefully");
                 }
             }
             if (flush_frame_vertices.size() > max_vertices_per_batch) {
@@ -833,7 +894,7 @@ namespace umfeld {
                       [](const Shape* A, const Shape* B) { return A->depth > B->depth; }); // Back to front
         }
 
-        glBindVertexArray(vao);
+        glBindVertexArray(default_vao); // TODO VAOs are only guaranteed works for OpenGL ≥ 3
 
         GLuint cached_shader_program_id = NO_SHADER_PROGRAM;
         // NOTE some uniforms only need to be set once per (flush) frame
@@ -877,8 +938,11 @@ namespace umfeld {
             }
         }
 
+        // restore default state
         glDepthMask(GL_TRUE);
-        glBindVertexArray(0);
+        glDisable(GL_BLEND);
+
+        glBindVertexArray(0); // TODO VAOs are only guaranteed works for OpenGL ≥ 3
     }
 
     void ShapeRendererOpenGL_3::set_light_uniforms(const ShaderUniforms& uniforms, const LightingState& lighting) {
@@ -941,7 +1005,7 @@ namespace umfeld {
                                                        const glm::mat4&    projection_matrix) {
         const glm::mat4 view_projection_matrix = projection_matrix * view_matrix;
 
-        glBindVertexArray(vao);
+        glBindVertexArray(default_vao); // TODO VAOs are only guaranteed works for OpenGL ≥ 3
 
         // enable depth test for all shapes
         if (graphics != nullptr) {
@@ -1034,7 +1098,7 @@ namespace umfeld {
         // restore default state
         glDepthMask(GL_TRUE);
         glDisable(GL_BLEND);
-        glBindVertexArray(0);
+        glBindVertexArray(0); // TODO VAOs are only guaranteed works for OpenGL ≥ 3
     }
 
     void ShapeRendererOpenGL_3::flush_immediately(std::vector<Shape>& shapes,

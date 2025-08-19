@@ -23,9 +23,11 @@
 
 #include "UmfeldConstants.h"
 #include "UmfeldTypes.h"
-#include "VertexBuffer.h"
 
 namespace umfeld {
+
+    class VertexBuffer;
+    class PShader;
 
     struct Shape {
         ShapeMode           mode{POLYGON};
@@ -40,9 +42,17 @@ namespace umfeld {
         uint16_t            texture_id{TEXTURE_NONE};
         bool                light_enabled{false};
         LightingState       lighting;
-        VertexBuffer*       byovbo{nullptr}; // NOTE this allows a shape to supply a dedicated vertex buffer i.e
-                                             //      - `vertices` should be empty and will be ignored
-                                             //      - all shapes are considered fill shape
-                                             //      - only certain modes are allowed or supported ( e.g POINTS, LINES, LINE_LOOP, LINE_STRIP, TRIANGLES, TRIANGLE_STRIP, TRIANGLE_FAN  )
+        /**
+         * a shape can supply a custom vertex buffer.
+         * - vertex buffer must be initialized and valid
+         * - `vertices` will be ignored ( and can be left empty )
+         * - shapes are ( maybe ) rendered in a dedicated path
+         */
+        VertexBuffer* vertex_buffer{nullptr};
+        /**
+         * a shape can supply a custom shader.
+         * - shader
+         */
+        PShader* shader{nullptr};
     };
 } // namespace umfeld

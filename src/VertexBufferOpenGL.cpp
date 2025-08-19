@@ -17,6 +17,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#if defined(OPENGL_ES_3_0) || defined(OPENGL_3_3_CORE) || defined(OPENGL_2_0)
+
 #include <cstring>
 // ReSharper disable once CppUnusedIncludeDirective
 #include <glm/glm.hpp>
@@ -362,3 +364,5 @@ void VertexBuffer::OGL3_disable_vertex_attributes() {
     glDisableVertexAttribArray(Vertex::ATTRIBUTE_LOCATION_TRANSFORM_ID);
     glDisableVertexAttribArray(Vertex::ATTRIBUTE_LOCATION_USERDATA);
 }
+
+#endif // OPENGL_ES_3_0 || OPENGL_3_3_CORE || OPENGL_2_0

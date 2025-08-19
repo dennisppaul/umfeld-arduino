@@ -50,7 +50,7 @@ namespace umfeld {
         std::vector<Vertex> _vertices;
         int                 vbo                = 0;
         int                 vao                = 0;
-        bool                vao_supported      = false;
+        bool                vao_supported      = false; // VAOs are guaranteed for OpenGL ES 3.0 and OpenGL 3.0 core
         bool                initial_upload     = false;
         bool                buffer_initialized = false;
         int                 server_buffer_size = 0;

@@ -1,5 +1,5 @@
 /*
-* Umfeld
+ * Umfeld
  *
  * This file is part of the *Umfeld* library (https://github.com/dennisppaul/umfeld).
  * Copyright (c) 2025 Dennis P Paul.
@@ -104,8 +104,8 @@ namespace umfeld {
         ShaderUniforms             shader_uniforms_point; // TODO implement
         ShaderUniforms             shader_uniforms_line;  // TODO implement
         GLuint                     vbo                            = 0;
-        GLuint                     ubo                            = 0;
-        GLuint                     vao                            = 0;
+        GLuint                     ubo                            = 0; // NOTE FYI UBOs are supported in OpenGL ES 3.0+ and OpenGL 3.1+
+        GLuint                     default_vao                    = 0;
         GLuint                     shader_programm_texture        = 0;
         GLuint                     shader_programm_color          = 0;
         GLuint                     shader_programm_texture_lights = 0;
@@ -130,6 +130,7 @@ namespace umfeld {
         static size_t estimate_triangle_count(const Shape& s);
         static void   convert_shapes_to_triangles(const Shape& s, std::vector<Vertex>& out, uint16_t transformID);
         void          render_batch(const std::vector<Shape*>& shapes_to_render);
+        void          render_shape(const Shape& s);
         void          computeShapeCenter(Shape& s) const;
         void          enable_depth_testing() const;
         static void   disable_depth_testing();

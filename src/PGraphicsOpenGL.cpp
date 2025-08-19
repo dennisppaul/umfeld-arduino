@@ -24,7 +24,7 @@
 #include "Umfeld.h"
 #include "UmfeldFunctionsGraphics.h"
 #include "PGraphicsOpenGLConstants.h"
-#include "ShapeRenderer.h"
+#include "UShapeRenderer.h"
 
 namespace umfeld {
     void PGraphicsOpenGL::background(const float a, const float b, const float c, const float d) {

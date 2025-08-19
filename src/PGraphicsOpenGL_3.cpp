@@ -40,7 +40,7 @@
 #include "ShaderSourcePoint.h"
 #include "ShaderSourceTexture.h"
 #include "ShaderSourceTextureLights.h"
-#include "ShapeRendererOpenGL_3.h"
+#include "UShapeRendererOpenGL_3.h"
 
 #ifdef UMFELD_PGRAPHICS_OPENGL_3_3_CORE_ERRORS
 #define UMFELD_PGRAPHICS_OPENGL_3_3_CORE_CHECK_ERRORS(msg) \
@@ -389,15 +389,15 @@ void PGraphicsOpenGL_3::init(uint32_t* pixels, const int width, const int height
     }
 
     /* initialize shape renderer */
-    const auto            shape_renderer_ogl3 = new ShapeRendererOpenGL_3();
-    std::vector<PShader*> shader_batch_programs(ShapeRendererOpenGL_3::NUM_SHADER_PROGRAMS);
-    shader_batch_programs[ShapeRendererOpenGL_3::SHADER_PROGRAM_COLOR]          = loadShader(shader_source_color.get_vertex_source(), shader_source_color.get_fragment_source());
-    shader_batch_programs[ShapeRendererOpenGL_3::SHADER_PROGRAM_TEXTURE]        = loadShader(shader_source_texture.get_vertex_source(), shader_source_texture.get_fragment_source());
-    shader_batch_programs[ShapeRendererOpenGL_3::SHADER_PROGRAM_COLOR_LIGHTS]   = loadShader(shader_source_color_lights.get_vertex_source(), shader_source_color_lights.get_fragment_source());
-    shader_batch_programs[ShapeRendererOpenGL_3::SHADER_PROGRAM_TEXTURE_LIGHTS] = loadShader(shader_source_texture_lights.get_vertex_source(), shader_source_texture_lights.get_fragment_source());
+    const auto            shape_renderer_ogl3 = new UShapeRendererOpenGL_3();
+    std::vector<PShader*> shader_batch_programs(UShapeRendererOpenGL_3::NUM_SHADER_PROGRAMS);
+    shader_batch_programs[UShapeRendererOpenGL_3::SHADER_PROGRAM_COLOR]          = loadShader(shader_source_color.get_vertex_source(), shader_source_color.get_fragment_source());
+    shader_batch_programs[UShapeRendererOpenGL_3::SHADER_PROGRAM_TEXTURE]        = loadShader(shader_source_texture.get_vertex_source(), shader_source_texture.get_fragment_source());
+    shader_batch_programs[UShapeRendererOpenGL_3::SHADER_PROGRAM_COLOR_LIGHTS]   = loadShader(shader_source_color_lights.get_vertex_source(), shader_source_color_lights.get_fragment_source());
+    shader_batch_programs[UShapeRendererOpenGL_3::SHADER_PROGRAM_TEXTURE_LIGHTS] = loadShader(shader_source_texture_lights.get_vertex_source(), shader_source_texture_lights.get_fragment_source());
     // TODO add point and line shader
-    // shader_batch_programs[ShapeRendererOpenGL_3::SHADER_PROGRAM_POINT]          = loadShader(shader_source_point.get_vertex_source(), shader_source_point.get_fragment_source());
-    // shader_batch_programs[ShapeRendererOpenGL_3::SHADER_PROGRAM_LINE]           = loadShader(shader_source_line.get_vertex_source(), shader_source_line.get_fragment_source());
+    // shader_batch_programs[UShapeRendererOpenGL_3::SHADER_PROGRAM_POINT]          = loadShader(shader_source_point.get_vertex_source(), shader_source_point.get_fragment_source());
+    // shader_batch_programs[UShapeRendererOpenGL_3::SHADER_PROGRAM_LINE]           = loadShader(shader_source_line.get_vertex_source(), shader_source_line.get_fragment_source());
     shape_renderer_ogl3->init(this, shader_batch_programs);
     shape_renderer = shape_renderer_ogl3;
 

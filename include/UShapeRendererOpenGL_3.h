@@ -20,7 +20,7 @@
 #pragma once
 
 #include "UmfeldSDLOpenGL.h"
-#include "ShapeRenderer.h"
+#include "UShapeRenderer.h"
 #include "UShape.h"
 #include "PShader.h"
 #include "PGraphics.h"
@@ -53,7 +53,7 @@ namespace umfeld {
         GLuint lightSpot     = UNINITIALIZED;
     };
 
-    class ShapeRendererOpenGL_3 final : public ShapeRenderer {
+    class UShapeRendererOpenGL_3 final : public UShapeRenderer {
     public:
         static constexpr uint16_t SHADER_PROGRAM_COLOR          = 0;
         static constexpr uint16_t SHADER_PROGRAM_TEXTURE        = 1;
@@ -69,7 +69,7 @@ namespace umfeld {
             CENTER_OF_MASS,
         };
 
-        ~ShapeRendererOpenGL_3() override {}
+        ~UShapeRendererOpenGL_3() override {}
         void init(PGraphics* g, std::vector<PShader*> shader_programs) override;
         void submit_shape(UShape& s) override;
         void handle_point_shape(std::vector<UShape>& processed_triangle_shapes, std::vector<UShape>& processed_point_shapes, UShape& point_shape) const;

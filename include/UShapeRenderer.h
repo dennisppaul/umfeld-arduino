@@ -30,9 +30,9 @@
 namespace umfeld {
     class PShader;
 
-    class ShapeRenderer {
+    class UShapeRenderer {
     public:
-        virtual ~ShapeRenderer()                                               = default;
+        virtual ~UShapeRenderer()                                               = default;
         virtual void init(PGraphics* g, std::vector<PShader*> shader_programs) = 0; // NOTE init shaders + buffers
         // virtual void beginShape(ShapeMode        mode,
         //                         bool             filled,

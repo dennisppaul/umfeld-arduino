@@ -22,38 +22,28 @@
 #include "ShaderSource.h"
 
 namespace umfeld {
-    inline ShaderSource shader_source_color_texture{
+    inline ShaderSource shader_source_fullscreen{
         .vertex   = R"(
-layout(location = 0) in vec4 aPosition;
-layout(location = 1) in vec4 aNormal;
-layout(location = 2) in vec4 aColor;
-layout(location = 3) in vec3 aTexCoord;
-layout(location = 4) in uint aTransformID;
-layout(location = 5) in uint aUserdata;
-
-out vec4 vColor;
-out vec2 vTexCoord;
-
-uniform mat4 uProjection;
-uniform mat4 uViewMatrix;
-uniform mat4 model_matrix;
-
+out vec2 vUV;
 void main() {
-    gl_Position = uProjection * uViewMatrix * model_matrix * aPosition;
-    vColor      = aColor;
-    vTexCoord   = aTexCoord.xy;
+    // Single fullscreen triangle (covers NDC [-1,1]^2)
+    const vec2 pos[3] = vec2[](
+        vec2(-1.0, -1.0),
+        vec2( 3.0, -1.0),
+        vec2(-1.0,  3.0)
+    );
+    vec2 p = pos[gl_VertexID];
+    vUV = p * 0.5 + 0.5;   // map from NDC to [0,1]
+    vUV = vec2(vUV.x, 1.0 - vUV.y); // flip texture coords
+    gl_Position = vec4(p, 0.0, 1.0);
 }
         )",
         .fragment = R"(
-in vec4 vColor;
-in vec2 vTexCoord;
-
+in vec2 vUV;
 out vec4 FragColor;
-
 uniform sampler2D uTexture;
-
 void main() {
-    FragColor = texture(uTexture, vTexCoord) * vColor;
+    FragColor = texture(uTexture, vUV);
 }
         )"};
 }

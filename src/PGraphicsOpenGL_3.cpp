@@ -35,11 +35,12 @@
 #include "PShader.h"
 #include "ShaderSourceColor.h"
 #include "ShaderSourceColorLights.h"
+#include "ShaderSourceFullscreen.h"
+#include "ShaderSourceLine.h"
+#include "ShaderSourcePoint.h"
 #include "ShaderSourceTexture.h"
 #include "ShaderSourceTextureLights.h"
 #include "ShapeRendererOpenGL_3.h"
-
-#include "ShaderSourceColorTexture.h" // REMOVE <<<
 
 #ifdef UMFELD_PGRAPHICS_OPENGL_3_3_CORE_ERRORS
 #define UMFELD_PGRAPHICS_OPENGL_3_3_CORE_CHECK_ERRORS(msg) \
@@ -49,7 +50,6 @@
 #else
 #define UMFELD_PGRAPHICS_OPENGL_3_3_CORE_CHECK_ERRORS(msg)
 #endif
-
 
 using namespace umfeld;
 
@@ -270,8 +270,6 @@ void PGraphicsOpenGL_3::download_texture(PImage* img) {
 void PGraphicsOpenGL_3::init(uint32_t* pixels, const int width, const int height) {
     const int msaa_samples = antialiasing; // TODO not cool to take this from Umfeld
 
-    shader_fill_texture = loadShader(shader_source_color_texture.get_vertex_source(), shader_source_color_texture.get_fragment_source());
-
     this->width        = width;
     this->height       = height;
     framebuffer.width  = width;
@@ -387,19 +385,19 @@ void PGraphicsOpenGL_3::init(uint32_t* pixels, const int width, const int height
 
     /* initialize shape renderer */
     // TODO this should be configurable. alternative might be `ShapeRendererImmediateOpenGL_3`
-    const auto       shape_renderer_ogl3 = new ShapeRendererOpenGL_3();
-    std::vector<int> shader_batch_programs(ShapeRendererOpenGL_3::NUM_SHADER_PROGRAMS);
-    shader_batch_programs[ShapeRendererOpenGL_3::SHADER_PROGRAM_COLOR]          = loadShader(shader_source_color.get_vertex_source(), shader_source_color.get_fragment_source())->get_program_id();
-    shader_batch_programs[ShapeRendererOpenGL_3::SHADER_PROGRAM_TEXTURE]        = loadShader(shader_source_texture.get_vertex_source(), shader_source_texture.get_fragment_source())->get_program_id();
-    shader_batch_programs[ShapeRendererOpenGL_3::SHADER_PROGRAM_COLOR_LIGHTS]   = loadShader(shader_source_color_lights.get_vertex_source(), shader_source_color_lights.get_fragment_source())->get_program_id();
-    shader_batch_programs[ShapeRendererOpenGL_3::SHADER_PROGRAM_TEXTURE_LIGHTS] = loadShader(shader_source_texture_lights.get_vertex_source(), shader_source_texture_lights.get_fragment_source())->get_program_id();
-    // TODO add shader programms
-    //      SHADER_PROGRAM_POINT
-    //      SHADER_PROGRAM_LINE
-    // shader_stroke = loadShader(shader_source_line.get_vertex_source(), shader_source_line.get_fragment_source());
-    // shader_point  = loadShader(shader_source_point.get_vertex_source(), shader_source_point.get_fragment_source());
+    const auto            shape_renderer_ogl3 = new ShapeRendererOpenGL_3();
+    std::vector<PShader*> shader_batch_programs(ShapeRendererOpenGL_3::NUM_SHADER_PROGRAMS);
+    shader_batch_programs[ShapeRendererOpenGL_3::SHADER_PROGRAM_COLOR]          = loadShader(shader_source_color.get_vertex_source(), shader_source_color.get_fragment_source());
+    shader_batch_programs[ShapeRendererOpenGL_3::SHADER_PROGRAM_TEXTURE]        = loadShader(shader_source_texture.get_vertex_source(), shader_source_texture.get_fragment_source());
+    shader_batch_programs[ShapeRendererOpenGL_3::SHADER_PROGRAM_COLOR_LIGHTS]   = loadShader(shader_source_color_lights.get_vertex_source(), shader_source_color_lights.get_fragment_source());
+    shader_batch_programs[ShapeRendererOpenGL_3::SHADER_PROGRAM_TEXTURE_LIGHTS] = loadShader(shader_source_texture_lights.get_vertex_source(), shader_source_texture_lights.get_fragment_source());
+    // TODO add point and line shader
+    // shader_batch_programs[ShapeRendererOpenGL_3::SHADER_PROGRAM_POINT]          = loadShader(shader_source_point.get_vertex_source(), shader_source_point.get_fragment_source());
+    // shader_batch_programs[ShapeRendererOpenGL_3::SHADER_PROGRAM_LINE]           = loadShader(shader_source_line.get_vertex_source(), shader_source_line.get_fragment_source());
     shape_renderer_ogl3->init(this, shader_batch_programs);
     shape_renderer = shape_renderer_ogl3;
+
+    shader_fullscreen_texture = loadShader(shader_source_fullscreen.get_vertex_source(), shader_source_fullscreen.get_fragment_source());
 
     if constexpr (sizeof(Vertex) != 64) {
         // ReSharper disable once CppDFAUnreachableCode
@@ -409,6 +407,7 @@ void PGraphicsOpenGL_3::init(uint32_t* pixels, const int width, const int height
 
 /* additional */
 
+#ifndef USE_DRAW_FULLSCREEN_WITH_SHADER
 void PGraphicsOpenGL_3::OGL3_render_vertex_buffer(VertexBuffer& vertex_buffer, const GLenum primitive_mode, const std::vector<Vertex>& shape_vertices) {
     if (shape_vertices.empty()) {
         return;
@@ -418,6 +417,7 @@ void PGraphicsOpenGL_3::OGL3_render_vertex_buffer(VertexBuffer& vertex_buffer, c
     vertex_buffer.set_shape(primitive_mode, false);
     vertex_buffer.draw();
 }
+#endif
 
 void PGraphicsOpenGL_3::update_shader_matrices(PShader* shader) const {
     if (shader == nullptr) { return; }
@@ -456,16 +456,6 @@ void PGraphicsOpenGL_3::mesh(VertexBuffer* mesh_shape) {
     if (mesh_shape == nullptr) {
         return;
     }
-    // if (custom_shader != nullptr) {
-    //     custom_shader->use();
-    //     update_shader_matrices(custom_shader);
-    // } else {
-    //     shader_fill_texture->use();
-    //     UMFELD_PGRAPHICS_OPENGL_3_3_CORE_CHECK_ERRORS("mesh() use shader");
-    //     update_shader_matrices(shader_fill_texture);
-    //     UMFELD_PGRAPHICS_OPENGL_3_3_CORE_CHECK_ERRORS("mesh() update shader matrices");
-    // }
-    // TODO is there a way to also draw this with line shader?
     warning_in_function_once("NOTE shader values are not properly set ATM");
     mesh_shape->draw();
     UMFELD_PGRAPHICS_OPENGL_3_3_CORE_CHECK_ERRORS("mesh() end");
@@ -807,13 +797,14 @@ void PGraphicsOpenGL_3::upload_colorbuffer(uint32_t* pixels) {
             bind_fbo();
             glViewport(0, 0, framebuffer.width, framebuffer.height);
 
-            // draw fullscreen quad using shader_fill_texture
-            shader_fill_texture->use();
-            update_shader_matrices(shader_fill_texture);
-
+            // draw fullscreen quad
             push_texture_id();
             OGL_bind_texture(tempTexture);
-
+#ifdef USE_DRAW_FULLSCREEN_WITH_SHADER
+            draw_fullscreen_texture(tempTexture);
+#else
+            shader_fullscreen_texture->use();
+            update_shader_matrices(shader_fullscreen_texture);
             // draw fullscreen quad
             std::vector<Vertex> fullscreen_quad;
             constexpr glm::vec4 color(1.0f, 1.0f, 1.0f, 1.0f);
@@ -840,9 +831,10 @@ void PGraphicsOpenGL_3::upload_colorbuffer(uint32_t* pixels) {
                                          color.r, color.g, color.b, color.a,
                                          0, 1);
             OGL3_render_vertex_buffer(vertex_buffer, GL_TRIANGLES, fullscreen_quad);
-
             // cleanup
+#endif // USE_DRAW_FULLSCREEN_WITH_SHADER
             pop_texture_id();
+
             restore_fbo_state();
             glDeleteTextures(1, &tempTexture);
         }
@@ -859,8 +851,11 @@ void PGraphicsOpenGL_3::upload_colorbuffer(uint32_t* pixels) {
                         UMFELD_DEFAULT_EXTERNAL_PIXEL_FORMAT,
                         UMFELD_DEFAULT_TEXTURE_PIXEL_TYPE,
                         pixels);
-        shader_fill_texture->use();
-        update_shader_matrices(shader_fill_texture);
+#ifdef USE_DRAW_FULLSCREEN_WITH_SHADER
+        draw_fullscreen_texture(texture_id);
+#else
+        shader_fullscreen_texture->use();
+        update_shader_matrices(shader_fullscreen_texture);
         std::vector<Vertex> fullscreen_quad;
         constexpr glm::vec4 color(1.0f, 1.0f, 1.0f, 1.0f);
         const int           width  = this->width;
@@ -887,6 +882,7 @@ void PGraphicsOpenGL_3::upload_colorbuffer(uint32_t* pixels) {
                                      color.r, color.g, color.b, color.a,
                                      0, 1);
         OGL3_render_vertex_buffer(vertex_buffer, GL_TRIANGLES, fullscreen_quad);
+#endif // USE_DRAW_FULLSCREEN_WITH_SHADER
         pop_texture_id();
     }
 }
@@ -998,6 +994,31 @@ void PGraphicsOpenGL_3::flip_pixel_buffer(uint32_t* pixels) {
         memcpy(row_bot, tmp, sz);
     }
 #endif // MORE_COMPATIBLE_FLIP_PIXEL_BUFFER
+}
+
+void PGraphicsOpenGL_3::draw_fullscreen_texture(const GLuint texture_id) const {
+    if (shader_fullscreen_texture == nullptr) {
+        return;
+    }
+    shader_fullscreen_texture->use();
+    // Ensure texture unit 0 active & bound
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, texture_id);
+    // Set sampler (assuming PShader has generic uniform setter; else raw glUniform)
+    // TODO should use PShader methods
+    // shader_fullscreen_texture->set_uniform("uTexture", 0);
+    const GLint loc = glGetUniformLocation(shader_fullscreen_texture->get_program_id(), "uTexture");
+    if (loc >= 0) {
+        glUniform1i(loc, 0);
+    }
+    // VAO must be bound in core profile
+    static GLuint empty_VAO = 0;
+    if (empty_VAO == 0) {
+        glGenVertexArrays(1, &empty_VAO);
+    }
+    glBindVertexArray(empty_VAO);
+    glDrawArrays(GL_TRIANGLES, 0, 3); // single fullscreen triangle
+    glBindVertexArray(0);
 }
 
 #endif // UMFELD_PGRAPHICS_OPENGLV33_CPP

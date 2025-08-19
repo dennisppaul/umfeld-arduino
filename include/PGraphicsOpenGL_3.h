@@ -22,6 +22,8 @@
 #include "PGraphicsOpenGL.h"
 #include "VertexBuffer.h"
 
+#define USE_DRAW_FULLSCREEN_WITH_SHADER
+
 namespace umfeld {
     class PGraphicsOpenGL_3 final : public PGraphicsOpenGL {
     public:
@@ -82,7 +84,6 @@ namespace umfeld {
         void emissive(float r, float g, float b) override;
         void shininess(float s) override;
 
-        PShader* shader_fill_texture{nullptr}; // REMOVE
 
     private:
         struct RenderBatch {
@@ -98,7 +99,10 @@ namespace umfeld {
         static constexpr bool    RENDER_PRIMITVES_AS_SHAPES             = true;
         static constexpr uint8_t NUM_FILL_VERTEX_ATTRIBUTES_XYZ_RGBA_UV = 9;
         static constexpr uint8_t NUM_STROKE_VERTEX_ATTRIBUTES_XYZ_RGBA  = 7;
-        VertexBuffer             vertex_buffer{};
+        PShader*                 shader_fullscreen_texture{nullptr};
+#ifndef USE_DRAW_FULLSCREEN_WITH_SHADER
+        VertexBuffer             vertex_buffer{}; // REMOVE <<< and all the related code
+#endif
         GLint                    previously_bound_read_FBO = 0;
         GLint                    previously_bound_draw_FBO = 0;
         GLint                    previous_viewport[4]{};
@@ -120,11 +124,13 @@ namespace umfeld {
         void setNoLightSpot(int num);
 
         /* --- OpenGL 3.3 specific methods --- */
-
+#ifndef USE_DRAW_FULLSCREEN_WITH_SHADER
         static void OGL3_render_vertex_buffer(VertexBuffer& vertex_buffer, GLenum primitive_mode, const std::vector<Vertex>& shape_vertices);
+#endif
         void        update_shader_matrices(PShader* shader) const;
         static void reset_shader_matrices(PShader* shader);
         static void add_line_quad(const Vertex& p0, const Vertex& p1, float thickness, std::vector<Vertex>& out);
         void        flip_pixel_buffer(uint32_t* pixels);
+        void        draw_fullscreen_texture(GLuint texture_id) const;
     };
 } // namespace umfeld

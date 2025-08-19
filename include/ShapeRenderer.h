@@ -28,10 +28,12 @@
 #include "PGraphics.h"
 
 namespace umfeld {
+    class PShader;
+
     class ShapeRenderer {
     public:
         virtual ~ShapeRenderer()                                          = default;
-        virtual void init(PGraphics* g, std::vector<int> shader_programs) = 0; // NOTE init shaders + buffers
+        virtual void init(PGraphics* g, std::vector<PShader*> shader_programs) = 0; // NOTE init shaders + buffers
         // virtual void beginShape(ShapeMode        mode,
         //                         bool             filled,
         //                         bool             transparent,

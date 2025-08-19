@@ -70,7 +70,7 @@ namespace umfeld {
         };
 
         ~ShapeRendererOpenGL_3() override {}
-        void init(PGraphics* g, std::vector<int> shader_programs) override;
+        void init(PGraphics* g, std::vector<PShader*> shader_programs) override;
         void submitShape(Shape& s) override;
         void handle_point_shape(std::vector<Shape>& processed_triangle_shapes, std::vector<Shape>& processed_point_shapes, Shape& point_shape) const;
         void handle_stroke_shape(std::vector<Shape>& processed_triangle_shapes, std::vector<Shape>& processed_line_shapes, Shape& stroke_shape) const;
@@ -125,7 +125,7 @@ namespace umfeld {
 
         static void   setup_uniform_blocks(const std::string& shader_name, GLuint program);
         static bool   evaluate_shader_uniforms(const std::string& shader_name, const ShaderUniforms& uniforms);
-        void          initShaders(const std::vector<int>& shader_programm_id);
+        void          initShaders(const std::vector<PShader*>& shader_programm_id);
         void          initBuffers();
         static size_t estimate_triangle_count(const Shape& s);
         static void   convert_shapes_to_triangles(const Shape& s, std::vector<Vertex>& out, uint16_t transformID);

@@ -32,7 +32,7 @@
 #include "Geometry.h"
 
 namespace umfeld {
-    void ShapeRendererOpenGL_3::init(PGraphics* g, const std::vector<int> shader_programs) {
+    void ShapeRendererOpenGL_3::init(PGraphics* g, const std::vector<PShader*> shader_programs) {
         graphics = g;
         initShaders(shader_programs);
         initBuffers();
@@ -127,6 +127,7 @@ namespace umfeld {
         console(format_label("triangle_shapes", format_gap), processed_triangle_shapes.size());
         console("----------------------------");
     }
+
     void ShapeRendererOpenGL_3::flush(const glm::mat4& view_matrix, const glm::mat4& projection_matrix) {
         if (shapes.empty() || graphics == nullptr) {
             reset_flush_frame();
@@ -152,7 +153,11 @@ namespace umfeld {
         processed_line_shapes.reserve(shapes.size());
         std::vector<Shape> processed_triangle_shapes;
         processed_triangle_shapes.reserve(shapes.size());
+        // NOTE `processed_triangle_shapes` converts all shapes to TRIANGLES with
+        //      the exception of POINTS and LINE* shapes that may be deferred to
+        //      separate render passes ( i.e `processed_point_shapes` or `processed_line_shapes` )
         process_shapes(processed_point_shapes, processed_line_shapes, processed_triangle_shapes);
+        // NOTE `flush_processed_shapes` renders shapes according to the current render mode.
         flush_processed_shapes(processed_point_shapes,
                                processed_line_shapes,
                                processed_triangle_shapes,
@@ -174,8 +179,8 @@ namespace umfeld {
         return false;
     }
 
-    // NOTE this is required by `process_shapes`
     void ShapeRendererOpenGL_3::handle_point_shape(std::vector<Shape>& processed_triangle_shapes, std::vector<Shape>& processed_point_shapes, Shape& point_shape) const {
+        // NOTE this is required by `process_shapes`
         if (graphics->get_point_render_mode() == POINT_RENDER_MODE_TRIANGULATE) {
             std::vector<Vertex> triangulated_vertices = convertPointsToTriangles(point_shape.vertices, graphics->get_point_size());
             point_shape.vertices                      = std::move(triangulated_vertices);
@@ -409,17 +414,17 @@ namespace umfeld {
         return valid;
     }
 
-    void ShapeRendererOpenGL_3::initShaders(const std::vector<int>& shader_programm_id) {
+    void ShapeRendererOpenGL_3::initShaders(const std::vector<PShader*>& shader_programm_id) {
         // NOTE for OpenGL ES 3.0 create shader source with dynamic array size
         //      ```c
         //      std::string transformsDefine = "#define MAX_TRANSFORMS " + std::to_string(MAX_TRANSFORMS) + "\n";
         //      const auto texturedVS = transformsDefine + R"(#version 330 core
         //      ```
 
-        shader_programm_color          = shader_programm_id[SHADER_PROGRAM_COLOR];
-        shader_programm_texture        = shader_programm_id[SHADER_PROGRAM_TEXTURE];
-        shader_programm_color_lights   = shader_programm_id[SHADER_PROGRAM_COLOR_LIGHTS];
-        shader_programm_texture_lights = shader_programm_id[SHADER_PROGRAM_TEXTURE_LIGHTS];
+        shader_programm_color          = shader_programm_id[SHADER_PROGRAM_COLOR]->get_program_id();
+        shader_programm_texture        = shader_programm_id[SHADER_PROGRAM_TEXTURE]->get_program_id();
+        shader_programm_color_lights   = shader_programm_id[SHADER_PROGRAM_COLOR_LIGHTS]->get_program_id();
+        shader_programm_texture_lights = shader_programm_id[SHADER_PROGRAM_TEXTURE_LIGHTS]->get_program_id();
         // TODO implement
         //      point_shader_program              = shader_programm_id[SHADER_PROGRAM_POINT];
         //      line_shader_program               = shader_programm_id[SHADER_PROGRAM_LINE];
@@ -1087,12 +1092,22 @@ namespace umfeld {
                 max_vertices_per_batch = shape.vertices.size();
                 initialized_vbo_buffer = false;
             }
-            // render single shape (create a vector with just this shape)
-            std::vector single_shape = {&shape};
-            TRACE_SCOPE_N("RENDER_BATCH_SUBMISION_ORDER");
-            {
-                render_batch(single_shape);
-            }
+            // NOTE `render_shape` is approx 14 µs faster then `render_batch(single_shape)`
+            //      for profiling test case:
+            //      2025-08-19 10:46:47.207 UMFELD.CONSOLE : ----------------------------
+            //      2025-08-19 10:46:47.207 UMFELD.CONSOLE : FRAME_INFO
+            //      2025-08-19 10:46:47.207 UMFELD.CONSOLE : ----------------------------
+            //      2025-08-19 10:46:47.207 UMFELD.CONSOLE : SHAPES SUBMITTED
+            //      2025-08-19 10:46:47.207 UMFELD.CONSOLE : opaque_shapes          : 7
+            //      2025-08-19 10:46:47.207 UMFELD.CONSOLE : light_shapes           : 2
+            //      2025-08-19 10:46:47.207 UMFELD.CONSOLE : transparent_shapes     : 4
+            //      2025-08-19 10:46:47.207 UMFELD.CONSOLE : ----------------------------
+            //      2025-08-19 10:46:47.207 UMFELD.CONSOLE : SHAPES PROCESSED
+            //      2025-08-19 10:46:47.207 UMFELD.CONSOLE : point_shapes           : 0
+            //      2025-08-19 10:46:47.207 UMFELD.CONSOLE : line_shapes            : 0
+            //      2025-08-19 10:46:47.207 UMFELD.CONSOLE : triangle_shapes        : 13
+            //      2025-08-19 10:46:47.207 UMFELD.CONSOLE : ----------------------------
+            render_shape(shape);
         }
 
         // restore default state
@@ -1122,7 +1137,10 @@ namespace umfeld {
             flush_sort_by_z_order(processed_triangle_shapes, view_matrix, projection_matrix);
         } else if (graphics->get_render_mode() == RENDER_MODE_SORTED_BY_SUBMISSION_ORDER) {
             console_once(format_label("render_mode"), "RENDER_MODE_SORTED_BY_SUBMISSION_ORDER ( rendering shapes in submission order )");
-            flush_submission_order(processed_triangle_shapes, view_matrix, projection_matrix);
+            {
+                TRACE_SCOPE_N("flush_submission_order");
+                flush_submission_order(processed_triangle_shapes, view_matrix, projection_matrix);
+            }
         } else if (graphics->get_render_mode() == RENDER_MODE_IMMEDIATELY) {
             console_once(format_label("render_mode"), "RENDER_MODE_IMMEDIATELY ( rendering shapes immediately )");
             flush_immediately(processed_triangle_shapes, view_matrix, projection_matrix);

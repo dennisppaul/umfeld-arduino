@@ -78,10 +78,16 @@ layout(std140) uniform Transforms {
 
 out vec4 vColor;
 
+uniform mat4 uModelFallback;
 uniform mat4 uViewProj;
 
 void main() {
-    mat4 M = uModel[aTransformID];
+    mat4 M;
+    if (aTransformID == 0u) {
+        M = uModelFallback;
+    } else {
+        M = uModel[aTransformID - 1u];
+    }
     gl_Position = uViewProj * M * aPosition;
     vColor = aColor;
 }

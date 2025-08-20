@@ -306,6 +306,11 @@ namespace umfeld {
             valid = false;
         }
 
+        if (uniforms.uModelFallback == ShaderUniforms::NOT_FOUND) {
+            warning(shader_name, ": uniform 'uModelFallback' not found");
+            valid = false;
+        }
+
         // only check uTexture for texture shaders
         if (shader_name.find("texture") != std::string::npos) {
             if (uniforms.uTexture == ShaderUniforms::NOT_FOUND) {
@@ -399,11 +404,13 @@ namespace umfeld {
         setup_uniform_blocks("texture_lights", shader_programm_texture_lights);
 
         // cache uniform locations
-        shader_uniforms_color.uViewProj = glGetUniformLocation(shader_programm_color, "uViewProj");
+        shader_uniforms_color.uViewProj      = glGetUniformLocation(shader_programm_color, "uViewProj");
+        shader_uniforms_color.uModelFallback = glGetUniformLocation(shader_programm_color, "uModelFallback");
         evaluate_shader_uniforms("color", shader_uniforms_color);
 
-        shader_uniforms_texture.uViewProj = glGetUniformLocation(shader_programm_texture, "uViewProj");
-        shader_uniforms_texture.uTexture  = glGetUniformLocation(shader_programm_texture, "uTexture");
+        shader_uniforms_texture.uViewProj      = glGetUniformLocation(shader_programm_texture, "uViewProj");
+        shader_uniforms_texture.uModelFallback = glGetUniformLocation(shader_programm_texture, "uModelFallback");
+        shader_uniforms_texture.uTexture       = glGetUniformLocation(shader_programm_texture, "uTexture");
         evaluate_shader_uniforms("texture", shader_uniforms_texture);
 
         // cache lighting shader uniform locations
@@ -575,10 +582,14 @@ namespace umfeld {
             }
         }
 
-        if (s.shader == nullptr || s.shader->has_transform_block()) {
-            glBindBuffer(GL_UNIFORM_BUFFER, ubo);
-            glBufferSubData(GL_UNIFORM_BUFFER, 0, static_cast<GLsizeiptr>(sizeof(glm::mat4)), &s.model);
-        }
+        // NOTE use fallback model matrix instead of UBO
+        // if (s.shader == nullptr || s.shader->has_transform_block()) {
+        // glBindBuffer(GL_UNIFORM_BUFFER, ubo);
+        // glBufferSubData(GL_UNIFORM_BUFFER, 0, static_cast<GLsizeiptr>(sizeof(glm::mat4)), &s.model);
+        // }
+        // TODO find the currently bound shader program and upload model matrix to that shader
+        glUniformMatrix4fv(shader_uniforms_color.uModelFallback, 1, GL_FALSE, &s.model[0][0]);
+        glUniformMatrix4fv(shader_uniforms_texture.uModelFallback, 1, GL_FALSE, &s.model[0][0]);
 
         // set lights once for this shape (if enabled)
         if (s.light_enabled) {
@@ -595,7 +606,7 @@ namespace umfeld {
 
         // handle custom vertex buffer
         if (s.vertex_buffer != nullptr) {
-            warning_in_function_once("custom vertex buffers do not receive model matrix yet"); // TODO somehow set the transformID attribute
+            // warning_in_function_once("custom vertex buffers do not receive model matrix yet"); // TODO somehow set the transformID attribute
             s.vertex_buffer->draw();
             bind_default_vertex_buffer(); // TODO this is a bit hack-ish but required because 's.vertex_buffer->draw()' switches VBO/VAOs
         } else {
@@ -607,7 +618,8 @@ namespace umfeld {
             }
             flush_frame_vertices.reserve(estimate);
 
-            convert_shapes_to_triangles(s, flush_frame_vertices, 0);
+            // OPTIMIZE check if this is the fastest way to prepare shapes
+            convert_shapes_to_triangles(s, flush_frame_vertices, FALLBACK_MODEL_MATRIX_ID);
 
             // upload vertices and draw
             const size_t vcount = flush_frame_vertices.size();
@@ -693,7 +705,7 @@ namespace umfeld {
             for (size_t i = 0; i < chunkSize; ++i) {
                 const auto* s = shapes_to_render[offset + i];
                 if (s->vertex_buffer == nullptr) {
-                    convert_shapes_to_triangles(*s, flush_frame_vertices, static_cast<uint16_t>(i));
+                    convert_shapes_to_triangles(*s, flush_frame_vertices, static_cast<uint16_t>(i + PER_VERTEX_TRANSFORM_ID_START));
                 }
             }
             if (flush_frame_vertices.size() > max_vertices_per_batch) {

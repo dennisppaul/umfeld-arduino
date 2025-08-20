@@ -34,8 +34,9 @@ namespace umfeld {
             NOT_FOUND     = GL_INVALID_INDEX, // NOTE result delivered by OpenGL s `glGetUniformLocation()`
             INITIALIZED   = 0,                // NOTE `0` is the first valid value
         };
-        GLuint uViewProj = UNINITIALIZED;
-        GLuint uTexture  = UNINITIALIZED;
+        GLuint uViewProj      = UNINITIALIZED;
+        GLuint uModelFallback = UNINITIALIZED;
+        GLuint uTexture       = UNINITIALIZED;
         // lighting uniforms
         GLuint uView         = UNINITIALIZED;
         GLuint normalMatrix  = UNINITIALIZED;
@@ -62,6 +63,8 @@ namespace umfeld {
         static constexpr uint16_t SHADER_PROGRAM_POINT          = 4; // TODO implement
         static constexpr uint16_t SHADER_PROGRAM_LINE           = 5; // TODO implement
         static constexpr uint16_t NUM_SHADER_PROGRAMS           = 6;
+        static constexpr uint16_t FALLBACK_MODEL_MATRIX_ID      = 0;
+        static constexpr uint16_t PER_VERTEX_TRANSFORM_ID_START = 1;
 
         enum ShapeCenterComputeStrategy {
             ZERO_CENTER,

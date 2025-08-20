@@ -38,8 +38,9 @@ layout(std140) uniform Transforms {
 out vec4 vColor;
 out vec4 vBackColor;
 
-uniform mat4 uViewProj;
-uniform mat4 uView;
+uniform mat4 uModelMatrixFallback;
+uniform mat4 uViewProjectionMatrix;
+uniform mat4 uViewMatrix;
 // uniform mat3 normalMatrix; // TODO "normalMatrix as Transform" add it via Transform block later
 
 uniform vec4 ambient;
@@ -86,9 +87,14 @@ float blinnPhongFactor(vec3 lightDir, vec3 vertPos, vec3 vecNormal, float shine)
 }
 
 void main() {
-    mat4 M = uModel[aTransformID];
-    mat4 MV = uView * M;
-    gl_Position = uViewProj * M * aPosition;
+    mat4 M;
+    if (aTransformID == 0u) {
+        M = uModelMatrixFallback;
+    } else {
+        M = uModel[aTransformID - 1u];
+    }
+    mat4 MV = uViewMatrix * M;
+    gl_Position = uViewProjectionMatrix * M * aPosition;
 
     // TODO "normalMatrix as Transform" better get this from transform
     // mat3 normalMatrix = mat3(transpose(inverse(MV)));

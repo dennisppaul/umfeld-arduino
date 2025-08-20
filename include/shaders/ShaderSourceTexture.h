@@ -38,17 +38,17 @@ layout(std140) uniform Transforms {
 out vec4 vColor;
 out vec2 vTexCoord;
 
-uniform mat4 uModelFallback;
-uniform mat4 uViewProj;
+uniform mat4 uModelMatrixFallback;
+uniform mat4 uViewProjectionMatrix;
 
 void main() {
     mat4 M;
     if (aTransformID == 0u) {
-        M = uModelFallback;
+        M = uModelMatrixFallback;
     } else {
         M = uModel[aTransformID - 1u];
     }
-    gl_Position = uViewProj * M * aPosition;
+    gl_Position = uViewProjectionMatrix * M * aPosition;
     vTexCoord   = aTexCoord.xy;
     vColor      = aColor;
 }
@@ -59,10 +59,10 @@ in vec2 vTexCoord;
 
 out vec4 FragColor;
 
-uniform sampler2D uTexture;
+uniform sampler2D uTextureUnit;
 
 void main() {
-    FragColor = texture(uTexture, vTexCoord) * vColor;
+    FragColor = texture(uTextureUnit, vTexCoord) * vColor;
 }
         )"};
 }

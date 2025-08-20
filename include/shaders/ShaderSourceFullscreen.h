@@ -41,9 +41,9 @@ void main() {
         .fragment = R"(
 in vec2 vUV;
 out vec4 FragColor;
-uniform sampler2D uTexture;
+uniform sampler2D uTextureUnit;
 void main() {
-    FragColor = texture(uTexture, vUV);
+    FragColor = texture(uTextureUnit, vUV);
 }
         )"};
 }

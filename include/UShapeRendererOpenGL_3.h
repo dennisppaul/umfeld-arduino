@@ -34,12 +34,12 @@ namespace umfeld {
             NOT_FOUND     = GL_INVALID_INDEX, // NOTE result delivered by OpenGL s `glGetUniformLocation()`
             INITIALIZED   = 0,                // NOTE `0` is the first valid value
         };
-        GLuint uViewProj      = UNINITIALIZED;
-        GLuint uModelFallback = UNINITIALIZED;
-        GLuint uTexture       = UNINITIALIZED;
+        GLuint uViewProjectionMatrix = UNINITIALIZED; // OPTIMIZE this is a bit redundant: only upload what s needed for an individual shader: M, MVP, VP, …
+        GLuint uModelMatrixFallback  = UNINITIALIZED;
+        GLuint uTextureUnit          = UNINITIALIZED;
         // lighting uniforms
-        GLuint uView         = UNINITIALIZED;
-        GLuint normalMatrix  = UNINITIALIZED;
+        GLuint uViewMatrix = UNINITIALIZED;
+        // GLuint normalMatrix  = UNINITIALIZED;
         GLuint ambient       = UNINITIALIZED;
         GLuint specular      = UNINITIALIZED;
         GLuint emissive      = UNINITIALIZED;
@@ -52,6 +52,8 @@ namespace umfeld {
         GLuint lightSpecular = UNINITIALIZED;
         GLuint lightFalloff  = UNINITIALIZED;
         GLuint lightSpot     = UNINITIALIZED;
+
+        static bool is_uniform_available(const GLuint loc) { return loc != UNINITIALIZED && loc != NOT_FOUND; }
     };
 
     class UShapeRendererOpenGL_3 final : public UShapeRenderer {
@@ -100,57 +102,62 @@ namespace umfeld {
             uint16_t             texture_id{TEXTURE_NONE};
         };
 
-        ShaderUniforms             shader_uniforms_color;
-        ShaderUniforms             shader_uniforms_texture;
-        ShaderUniforms             shader_uniforms_color_lights;
-        ShaderUniforms             shader_uniforms_texture_lights;
-        ShaderUniforms             shader_uniforms_point; // TODO implement
-        ShaderUniforms             shader_uniforms_line;  // TODO implement
-        GLuint                     vbo                            = 0;
-        GLuint                     ubo                            = 0; // NOTE FYI UBOs are supported in OpenGL ES 3.0+ and OpenGL 3.1+
-        GLuint                     default_vao                    = 0;
-        GLuint                     shader_programm_texture        = 0;
-        GLuint                     shader_programm_color          = 0;
-        GLuint                     shader_programm_texture_lights = 0;
-        GLuint                     shader_programm_color_lights   = 0;
-        GLuint                     point_shader_program           = 0; // TODO implement
-        GLuint                     line_shader_program            = 0; // TODO implement
+        struct ShaderProgram {
+            GLuint         id{0};
+            ShaderUniforms uniforms;
+        };
+
+        GLuint                     vbo         = 0;
+        GLuint                     ubo         = 0; // NOTE + FYI UBOs are supported in OpenGL ES 3.0+ and OpenGL 3.1+
+        GLuint                     default_vao = 0;
+        ShaderProgram              shader_color{};
+        ShaderProgram              shader_texture{};
+        ShaderProgram              shader_color_lights{};
+        ShaderProgram              shader_texture_lights{};
+        ShaderProgram              shader_point{}; // TODO implement
+        ShaderProgram              shader_line{};  // TODO implement
         std::vector<UShape>        shapes;
         ShapeCenterComputeStrategy shape_center_compute_strategy = ZERO_CENTER;
-        std::vector<Vertex>        flush_frame_vertices;
+        std::vector<Vertex>        current_vertex_buffer;
         std::vector<glm::mat4>     flush_frame_matrices;
         uint32_t                   max_vertices_per_batch{0};
-        bool                       require_vbo_resize{false};
-        // PShader*                   custom_shader{nullptr};
-        int frame_light_shapes_count{0};
-        int frame_transparent_shapes_count{0};
-        int frame_opaque_shapes_count{0};
+        bool                       require_buffer_resize{false};
+        GLuint                     cached_texture_id{UINT32_MAX};
+        ShaderProgram              cached_shader_program{.id = NO_SHADER_PROGRAM};
+        bool                       cached_blend_enabled{false};
+        int                        frame_light_shapes_count{0};
+        int                        frame_transparent_shapes_count{0};
+        int                        frame_opaque_shapes_count{0};
 
-        static void   setup_uniform_blocks(const std::string& shader_name, GLuint program);
-        static bool   evaluate_shader_uniforms(const std::string& shader_name, const ShaderUniforms& uniforms);
-        void          init_shaders(const std::vector<PShader*>& shader_programms);
-        void          init_buffers();
-        static size_t estimate_triangle_count(const UShape& s);
-        static void   convert_shapes_to_triangles(const UShape& s, std::vector<Vertex>& out, uint16_t transformID);
-        void          render_batch(const std::vector<UShape*>& shapes_to_render);
-        void          render_shape(const UShape& s);
-        void          computeShapeCenter(UShape& s) const;
-        void          enable_depth_testing() const;
-        static void   disable_depth_testing();
-        void          flush_sort_by_z_order(std::vector<UShape>& shapes, const glm::mat4& view_matrix, const glm::mat4& projection_matrix);
-        void          flush_submission_order(std::vector<UShape>& shapes, const glm::mat4& view_matrix, const glm::mat4& projection_matrix);
-        void          flush_immediately(std::vector<UShape>& shapes, const glm::mat4& view_matrix, const glm::mat4& projection_matrix);
-        void          flush_processed_shapes(const std::vector<UShape>& processed_point_shapes, const std::vector<UShape>& processed_line_shapes, std::vector<UShape>& processed_triangle_shapes, const glm::mat4& view_matrix, const glm::mat4& projection_matrix);
-        void          reset_flush_frame();
-        void          print_frame_info(const std::vector<UShape>& processed_point_shapes, const std::vector<UShape>& processed_line_shapes, const std::vector<UShape>& processed_triangle_shapes) const;
-        void          process_shapes(std::vector<UShape>& processed_point_shapes, std::vector<UShape>& processed_line_shapes, std::vector<UShape>& processed_triangle_shapes);
-        void          set_per_frame_default_shader_uniforms(const glm::mat4& view_projection_matrix, int frame_has_light_shapes, int frame_has_transparent_shapes, int frame_has_opaque_shapes) const;
-        void          enable_flat_shaders_and_bind_texture(GLuint& current_shader_program_id, unsigned texture_id) const;
-        void          enable_light_shaders_and_bind_texture(GLuint& current_shader_program_id, unsigned texture_id) const;
-        void          bind_default_vertex_buffer() const;
-        static void   unbind_default_vertex_buffer();
-        static bool   uniform_exists(const GLuint loc) { return loc != ShaderUniforms::NOT_FOUND; }
-        static void   set_light_uniforms(const ShaderUniforms& uniforms, const LightingState& lighting);
-        static bool   use_shader_program_cached(GLuint& cached_shader_program_id, GLuint required_shader_program_id);
+        static void          setup_uniform_blocks(const std::string& shader_name, GLuint program);
+        static bool          evaluate_shader_uniforms(const std::string& shader_name, const ShaderUniforms& uniforms);
+        void                 init_shaders(const std::vector<PShader*>& shader_programms);
+        void                 init_buffers();
+        static size_t        estimate_triangle_count(const UShape& s);
+        static void          convert_shapes_to_triangles(const UShape& s, std::vector<Vertex>& out, uint16_t transformID);
+        void                 render_batch(const std::vector<UShape*>& shapes_to_render);
+        void                 render_shape(const UShape& shape);
+        void                 computeShapeCenter(UShape& s) const;
+        void                 enable_depth_testing() const;
+        static void          disable_depth_testing();
+        void                 flush_sort_by_z_order(std::vector<UShape>& shapes, const glm::mat4& view_matrix, const glm::mat4& projection_matrix);
+        void                 flush_submission_order(const std::vector<UShape>& shapes, const glm::mat4& view_matrix, const glm::mat4& projection_matrix);
+        void                 flush_immediately(const std::vector<UShape>& shapes, const glm::mat4& view_matrix, const glm::mat4& projection_matrix);
+        void                 flush_processed_shapes(const std::vector<UShape>& processed_point_shapes, const std::vector<UShape>& processed_line_shapes, std::vector<UShape>& processed_triangle_shapes, const glm::mat4& view_matrix, const glm::mat4& projection_matrix);
+        void                 reset_current_flush_frame();
+        void                 prepare_next_flush_frame();
+        void                 print_frame_info(const std::vector<UShape>& processed_point_shapes, const std::vector<UShape>& processed_line_shapes, const std::vector<UShape>& processed_triangle_shapes) const;
+        void                 process_shapes(std::vector<UShape>& processed_point_shapes, std::vector<UShape>& processed_line_shapes, std::vector<UShape>& processed_triangle_shapes);
+        void                 set_per_frame_default_shader_uniforms(const glm::mat4& view_projection_matrix, int frame_has_light_shapes, int frame_has_transparent_shapes, int frame_has_opaque_shapes) const;
+        void                 enable_flat_shaders_and_bind_texture(GLuint& current_shader_program_id, unsigned texture_id) const;
+        void                 enable_light_shaders_and_bind_texture(GLuint& current_shader_program_id, unsigned texture_id) const;
+        void                 bind_default_vertex_buffer() const;
+        static void          unbind_default_vertex_buffer();
+        static bool          uniform_exists(const GLuint loc) { return loc != ShaderUniforms::NOT_FOUND; }
+        static void          set_light_uniforms(const ShaderUniforms& uniforms, const LightingState& lighting);
+        const ShaderProgram& get_shader_program_cached() const;
+        bool                 use_shader_program_cached(const ShaderProgram& required_shader_program);
+        static bool          set_uniform_model_matrix(const UShape& shape, const ShaderProgram& shader_program);
+        static bool          uniform_available(const GLuint loc) { return loc != ShaderUniforms::UNINITIALIZED && loc != ShaderUniforms::NOT_FOUND; }
     };
 } // namespace umfeld

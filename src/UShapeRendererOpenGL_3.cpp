@@ -103,7 +103,7 @@ namespace umfeld {
             return;
         }
 
-        // TODO (NEW!) 'z-order' render pipeline:
+        // OPTIMIZE (NEW!) 'z-order' render pipeline:
         // ├── opaque shapes
         // │   ├── point-shader shapes ( TODO implement )
         // │   ├── line-shader shapes ( TODO implement )
@@ -112,7 +112,7 @@ namespace umfeld {
         // └── transparent shapes
         //     └── all shapes by depth ( sorted by z-order, not-batched by texture IDs )
 
-        // TODO (NEW!) 'submission-order' render pipeline:
+        // 'submission-order' render pipeline:
         // └── all shapes ( ordered by submission. including point/line/custom-shader shapes, opaque/transparent-un/textured-flat/light triangle shapes )
         // NOTE ( render mode path 'immediately' uses 'submission-order' path with single shape )
 
@@ -154,6 +154,7 @@ namespace umfeld {
     void UShapeRendererOpenGL_3::handle_point_shape(std::vector<UShape>& processed_triangle_shapes, std::vector<UShape>& processed_point_shapes, UShape& point_shape) const {
         // NOTE this is required by `process_shapes`
         if (graphics->get_point_render_mode() == POINT_RENDER_MODE_TRIANGULATE) {
+            // TODO @maybe move this to PGraphics
             std::vector<Vertex> triangulated_vertices = convertPointsToTriangles(point_shape.vertices, graphics->get_point_size());
             point_shape.vertices                      = std::move(triangulated_vertices);
             point_shape.filled                        = true;
@@ -215,12 +216,16 @@ namespace umfeld {
                                                      UShape&              stroke_shape) const {
         /* convert stroke shape to line strips */
         const bool          shape_has_transparent_vertices = has_transparent_vertices(stroke_shape.vertices);
+        // TODO conversion may be deferred to stroke render modes
+        //      i.e it might not be necessary for all modes
+        //      e.g 'STROKE_RENDER_MODE_NATIVE' might benefit from built in OpenGL modes
         std::vector<UShape> converted_shapes;
         converted_shapes.reserve(stroke_shape.vertices.size());
         PGraphics::convert_stroke_shape_to_line_strip(stroke_shape, converted_shapes);
         /* triangulate line strips */
         if (!converted_shapes.empty()) {
             if (graphics->get_stroke_render_mode() == STROKE_RENDER_MODE_TRIANGULATE_2D) {
+                // TODO @maybe move this to PGraphics
                 for (auto& cs: converted_shapes) {
                     std::vector<Vertex> triangulated_vertices;
                     graphics->triangulate_line_strip_vertex(cs.vertices,
@@ -235,6 +240,7 @@ namespace umfeld {
                 }
             } else if (graphics->get_stroke_render_mode() == STROKE_RENDER_MODE_TUBE_3D) {
                 for (auto& cs: converted_shapes) {
+                    // TODO @maybe move this to PGraphics
                     const std::vector<Vertex> triangulated_vertices = generate_tube_mesh(cs.vertices,
                                                                                          cs.stroke.stroke_weight / 2.0f,
                                                                                          cs.closed);
@@ -611,28 +617,29 @@ namespace umfeld {
         // NOTE assumes that shader is already in use and texture is already bound
 
         // handle transparency state changes
-        // TODO transparency handling is a bit bulky/redundant … clean up
         if (shape.vertex_buffer != nullptr) {
-            if (shape.vertex_buffer->transparent && !cached_blend_enabled) {
-                glEnable(GL_BLEND);
-                glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-                glDepthMask(GL_FALSE); // Disable depth writes for transparency
-                cached_blend_enabled = true;
-            } else if (!shape.vertex_buffer->transparent && cached_blend_enabled) {
-                glDisable(GL_BLEND);
-                glDepthMask(GL_TRUE); // Enable depth writes for opaque
-                cached_blend_enabled = false;
+            if (shape.vertex_buffer->transparent) {
+                if (!cached_blend_enabled) {
+                    enable_blending();
+                    cached_blend_enabled = true;
+                }
+            } else {
+                if (cached_blend_enabled) {
+                    disable_blending();
+                    cached_blend_enabled = false;
+                }
             }
         } else {
-            if (shape.transparent && !cached_blend_enabled) {
-                glEnable(GL_BLEND);
-                glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-                glDepthMask(GL_FALSE); // Disable depth writes for transparency
-                cached_blend_enabled = true;
-            } else if (!shape.transparent && cached_blend_enabled) {
-                glDisable(GL_BLEND);
-                glDepthMask(GL_TRUE); // Enable depth writes for opaque
-                cached_blend_enabled = false;
+            if (shape.transparent) {
+                if (!cached_blend_enabled) {
+                    enable_blending();
+                    cached_blend_enabled = true;
+                }
+            } else {
+                if (cached_blend_enabled) {
+                    disable_blending();
+                    cached_blend_enabled = false;
+                }
             }
         }
         // switch shader program ( if necessary )
@@ -697,15 +704,15 @@ namespace umfeld {
         }
         // handle custom vertex buffer
         if (shape.vertex_buffer != nullptr) {
+            unbind_default_vertex_buffer();
             shape.vertex_buffer->draw();
-            // TODO this is a bit hack-ish but required because 'shape.vertex_buffer->draw()' switches VBO/VAOs
-            bind_default_vertex_buffer();
+            bind_default_vertex_buffer(); // OPTIMIZE this could be cached as well
         } else {
-            // tessellate the shape into vertex buffer
-            const uint32_t vertex_count_estimate = estimate_triangle_count(shape); // OPTIMIZE do we need this … it s just a single shape?!? // expected vertex count
+            // tessellate shape into triangles and write to vertex buffer
+            const uint32_t vertex_count_estimate = estimate_triangle_count(shape);
             current_vertex_buffer.clear();
             current_vertex_buffer.reserve(vertex_count_estimate);
-            // OPTIMIZE check if this is the fastest way to prepare shapes for this case
+            // OPTIMIZE check if this is the fastest way to prepare shapes for this case … maybe just use shape vertex data directly
             convert_shapes_to_triangles(shape, current_vertex_buffer, FALLBACK_MODEL_MATRIX_ID);
             // adapt buffer size if necessary
             const uint32_t vertex_count = current_vertex_buffer.size();
@@ -714,6 +721,7 @@ namespace umfeld {
                 require_buffer_resize  = true;
             }
             // draw vertex buffer
+            // bind_default_vertex_buffer(); // OPTIMIZE this could be cached as well
             GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, vbo));
             if (require_buffer_resize) {
                 require_buffer_resize = false;
@@ -727,6 +735,7 @@ namespace umfeld {
                                     static_cast<GLsizeiptr>(vertex_count * sizeof(Vertex)),
                                     current_vertex_buffer.data()));
             GL_CALL(glDrawArrays(GL_TRIANGLES, 0, static_cast<GLsizei>(vertex_count)));
+            // unbind_default_vertex_buffer();
         }
     }
 
@@ -812,17 +821,14 @@ namespace umfeld {
             for (size_t i = 0; i < chunkSize; ++i) {
                 const auto* s = shapes_to_render[offset + i];
                 if (s->vertex_buffer != nullptr) {
+                    unbind_default_vertex_buffer();
+                    const ShaderProgram required_shader_program = s->light_enabled ? (s->texture_id == TEXTURE_NONE ? shader_color_lights : shader_texture_lights) : (s->texture_id == TEXTURE_NONE ? shader_color : shader_texture);
+                    // TODO this is a bit hack-ish but required because 's.vertex_buffer->draw()' switches VBO/VAOs
+                    set_uniform_model_matrix(*s, required_shader_program);
                     s->vertex_buffer->draw();
-                    console(i, "::",
-                            s->model[0][0], ",",
-                            s->model[0][1], ",",
-                            s->model[0][2], ",",
-                            s->model[0][3]);
+                    bind_default_vertex_buffer();
                 }
             }
-            warning_in_function_once("custom vertex buffers do not receive model matrix yet");
-            // TODO somehow set the transformID in shader `static_cast<uint16_t>(i)`
-            bind_default_vertex_buffer(); // TODO this is a bit hack-ish but required because 's.vertex_buffer->draw()' switches VBO/VAOs
         }
     }
 
@@ -859,26 +865,24 @@ namespace umfeld {
     }
 
     void UShapeRendererOpenGL_3::enable_depth_testing() const {
-        if (graphics != nullptr) {
-            if (graphics->hint_enable_depth_test) {
-                glEnable(GL_DEPTH_TEST);
-            } else {
-                glDisable(GL_DEPTH_TEST);
-            }
+        if (graphics != nullptr && graphics->hint_enable_depth_test) {
+            PGraphicsOpenGL::OGL_enable_depth_testing();
         } else {
-            glEnable(GL_DEPTH_TEST);
+            PGraphicsOpenGL::OGL_disable_depth_testing();
         }
-        glDepthFunc(GL_LEQUAL); // allow equal depths to pass ( `GL_LESS` is default )
-        glDepthMask(GL_TRUE);
-        glDisable(GL_BLEND);
     }
 
     void UShapeRendererOpenGL_3::disable_depth_testing() {
+        PGraphicsOpenGL::OGL_disable_depth_testing();
+    }
+
+    void UShapeRendererOpenGL_3::enable_blending() {
         glEnable(GL_BLEND);
-        // TODO enable proper blend function
-        //      also figure out if blending needs to happen for non transparent shapes e.g via forced transparency
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        glDepthMask(GL_FALSE);
+    }
+
+    void UShapeRendererOpenGL_3::disable_blending() {
+        glEnable(GL_BLEND);
     }
 
     void UShapeRendererOpenGL_3::set_per_frame_default_shader_uniforms(const glm::mat4& view_projection_matrix,
@@ -1023,6 +1027,7 @@ namespace umfeld {
         // opaque pass
         if (frame_opaque_shapes_count > 0) {
             enable_depth_testing();
+            disable_blending();
             for (auto& [texture_id, batch]: texture_batches) {
                 enable_flat_shaders_and_bind_texture(cached_shader_program.id, texture_id);
                 render_batch(batch.opaque_shapes);
@@ -1032,6 +1037,7 @@ namespace umfeld {
         if (frame_light_shapes_count > 0) {
             if (frame_opaque_shapes_count > 0) {
                 enable_depth_testing();
+                disable_blending();
             }
             for (auto& [texture_id, batch]: texture_batches) {
                 enable_light_shaders_and_bind_texture(cached_shader_program.id, texture_id);
@@ -1040,16 +1046,17 @@ namespace umfeld {
         }
         // transparent pass
         if (frame_transparent_shapes_count > 0) {
-            disable_depth_testing();
+            enable_depth_testing();
+            enable_blending();
             for (auto& [texture_id, batch]: texture_batches) {
                 enable_flat_shaders_and_bind_texture(cached_shader_program.id, texture_id);
                 render_batch(batch.transparent_shapes);
             }
         }
 
-        // restore default state
-        glDepthMask(GL_TRUE);
-        glDisable(GL_BLEND);
+        // // restore default state
+        // glDepthMask(GL_TRUE);
+        // glDisable(GL_BLEND);
 
         unbind_default_vertex_buffer();
     }
@@ -1129,19 +1136,7 @@ namespace umfeld {
         if (shapes.empty()) { return; }
         const glm::mat4 view_projection_matrix = projection_matrix * view_matrix;
 
-        // enable depth test for all shapes
-        if (graphics != nullptr) {
-            if (graphics->hint_enable_depth_test) {
-                glEnable(GL_DEPTH_TEST);
-            } else {
-                glDisable(GL_DEPTH_TEST);
-            }
-        } else {
-            glEnable(GL_DEPTH_TEST);
-        }
-        glDisable(GL_BLEND);
-        glDepthMask(GL_TRUE);
-        glDepthFunc(GL_LEQUAL);
+        enable_depth_testing();
 
         // NOTE some uniforms only need to be set once per (flush) frame
         // OPTIMIZE only set uniforms if they have actually changed in the (default) shaders
@@ -1239,6 +1234,7 @@ namespace umfeld {
             }
             /* fill shapes */
             if (s.filled) {
+                // TODO @maybe move this to PGraphics
                 /* convert filled shapes to triangles */
                 graphics->convert_fill_shape_to_triangles(s);
                 s.mode = TRIANGLES;

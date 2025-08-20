@@ -81,6 +81,28 @@ namespace umfeld {
 
         Vertex()
             : Vertex(glm::vec3(DEFAULT_POSITION)) {}
+
+        // copy constructor
+        Vertex(const Vertex& other)
+            : position(other.position),
+              normal(other.normal),
+              color(other.color),
+              tex_coord(other.tex_coord),
+              transform_id(other.transform_id),
+              userdata(other.userdata) {}
+
+        // assignment operator
+        Vertex& operator=(const Vertex& other) {
+            if (this != &other) {
+                position     = other.position;
+                normal       = other.normal;
+                color        = other.color;
+                tex_coord    = other.tex_coord;
+                transform_id = other.transform_id;
+                userdata     = other.userdata;
+            }
+            return *this;
+        }
     };
     static_assert(sizeof(Vertex) == 64, "Vertex size should be exactly 64 bytes");
 

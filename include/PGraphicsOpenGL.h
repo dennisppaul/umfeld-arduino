@@ -93,6 +93,8 @@ namespace umfeld {
         static void        OGL_get_version(int& major, int& minor);
         static std::string OGL_get_error_string(uint32_t error);
         static void        OGL_print_info(OpenGLCapabilities& capabilities);
+        static void        OGL_enable_depth_testing();
+        static void        OGL_disable_depth_testing();
 
     protected:
         static constexpr int DEFAULT_ACTIVE_TEXTURE_UNIT  = 0;

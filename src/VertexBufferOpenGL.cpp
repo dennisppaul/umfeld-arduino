@@ -30,10 +30,11 @@
 
 using namespace umfeld;
 
+#define UMFELD_VERTEX_BUFFER_DEBUG_OPENGL_ERRORS
 #ifdef UMFELD_VERTEX_BUFFER_DEBUG_OPENGL_ERRORS
-#define UMFELD_VERTEX_BUFFER_CHECK_ERROR(msg) \
-    do {                                      \
-        OGL_check_error(msg);                 \
+#define UMFELD_VERTEX_BUFFER_CHECK_ERROR(msg)  \
+    do {                                       \
+        PGraphicsOpenGL::OGL_check_error(msg); \
     } while (0)
 #else
 #define UMFELD_VERTEX_BUFFER_CHECK_ERROR(msg)

@@ -29,8 +29,19 @@
 namespace umfeld {
     void PGraphicsOpenGL::background(const float a, const float b, const float c, const float d) {
         PGraphics::background(a, b, c, d);
+
+        GLboolean previous_depth_mask;
+        glGetBooleanv(GL_DEPTH_WRITEMASK, &previous_depth_mask);
+        if (!previous_depth_mask) {
+            glDepthMask(GL_TRUE);
+        }
+
         glClearColor(a, b, c, d);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        if (!previous_depth_mask) {
+            glDepthMask(previous_depth_mask);
+        }
     }
 
     void PGraphicsOpenGL::beginDraw() {
@@ -485,5 +496,17 @@ namespace umfeld {
                 _shape = shape;
         }
         return _shape;
+    }
+    void PGraphicsOpenGL::OGL_enable_depth_testing() {
+        glEnable(GL_DEPTH_TEST);
+        glDepthMask(GL_TRUE);
+        glDepthFunc(GL_LEQUAL); // allow equal depths to pass ( `GL_LESS` is default )
+    }
+
+    void PGraphicsOpenGL::OGL_disable_depth_testing() {
+        // TODO enable proper blend function
+        //      also figure out if blending needs to happen for non transparent shapes e.g via forced transparency
+        glDisable(GL_DEPTH_TEST);
+        glDepthMask(GL_FALSE);
     }
 } // namespace umfeld

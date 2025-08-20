@@ -139,6 +139,8 @@ namespace umfeld {
         void                 render_shape(const UShape& shape);
         void                 computeShapeCenter(UShape& s) const;
         void                 enable_depth_testing() const;
+        static void          enable_blending();
+        static void          disable_blending();
         static void          disable_depth_testing();
         void                 flush_sort_by_z_order(std::vector<UShape>& shapes, const glm::mat4& view_matrix, const glm::mat4& projection_matrix);
         void                 flush_submission_order(const std::vector<UShape>& shapes, const glm::mat4& view_matrix, const glm::mat4& projection_matrix);

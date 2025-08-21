@@ -712,6 +712,18 @@ namespace umfeld {
             shape.vertex_buffer->draw();
             bind_default_vertex_buffer(); // OPTIMIZE this could be cached as well
         } else {
+            if (shape.mode != TRIANGLES) {
+                warning_in_function_once("shape uses a non-triangle mode. interesting … let s investigate.");
+                // TODO primitives supported in OpenGL ES 3.0 ( + OpenGL 3.3 core ):
+                //      consider letting these through and NOT triangulate them beforehand … especially point and line
+                //      GL_POINTS - Individual points
+                //      GL_LINES - Pairs of vertices forming line segments
+                //      GL_LINE_STRIP - Connected line segments
+                //      GL_LINE_LOOP - Connected line segments forming a closed loop
+                //      GL_TRIANGLES - Groups of 3 vertices forming triangles
+                //      GL_TRIANGLE_STRIP - Connected triangles sharing vertices
+                //      GL_TRIANGLE_FAN - Triangles sharing a common vertex
+            }
             // tessellate shape into triangles and write to vertex buffer
             const uint32_t vertex_count_estimate = estimate_triangle_count(shape);
             current_vertex_buffer.clear();

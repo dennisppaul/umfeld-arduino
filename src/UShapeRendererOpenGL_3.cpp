@@ -60,15 +60,19 @@ namespace umfeld {
                 frame_opaque_shapes_count++;
             }
         }
+        if (s.texture_id != TEXTURE_NONE) {
+            frame_textured_shapes_count++;
+        }
         shapes.push_back(std::move(s));
     }
 
     void UShapeRendererOpenGL_3::reset_current_flush_frame() {
-        cached_texture_id        = UINT32_MAX;
-        cached_shader_program.id = NO_SHADER_PROGRAM;
-        cached_blend_enabled     = false;
-        require_buffer_resize    = false;
-        max_vertices_per_batch   = 0;
+        frame_state_cache.cached_texture_id                = UINT32_MAX;
+        frame_state_cache.cached_shader_program.id         = NO_SHADER_PROGRAM;
+        frame_state_cache.cached_transparent_shape_enabled = false;
+        frame_state_cache.cached_require_buffer_resize     = false;
+        frame_state_cache.cached_max_vertices_per_batch    = 0;
+        frame_state_cache.reset();
     }
 
     void UShapeRendererOpenGL_3::prepare_next_flush_frame() {
@@ -78,6 +82,7 @@ namespace umfeld {
         frame_light_shapes_count       = 0;
         frame_transparent_shapes_count = 0;
         frame_opaque_shapes_count      = 0;
+        frame_textured_shapes_count    = 0;
     }
 
     void UShapeRendererOpenGL_3::print_frame_info(const std::vector<UShape>& processed_point_shapes, const std::vector<UShape>& processed_line_shapes, const std::vector<UShape>& processed_triangle_shapes) const {
@@ -89,6 +94,7 @@ namespace umfeld {
         console(format_label("opaque_shapes", format_gap), frame_opaque_shapes_count);
         console(format_label("light_shapes", format_gap), frame_light_shapes_count);
         console(format_label("transparent_shapes", format_gap), frame_transparent_shapes_count);
+        console(format_label("(textured_shapes)", format_gap), frame_textured_shapes_count);
         console("----------------------------");
         console("SHAPES PROCESSED");
         console(format_label("point_shapes", format_gap), processed_point_shapes.size());
@@ -215,7 +221,7 @@ namespace umfeld {
                                                      std::vector<UShape>& processed_line_shapes,
                                                      UShape&              stroke_shape) const {
         /* convert stroke shape to line strips */
-        const bool          shape_has_transparent_vertices = has_transparent_vertices(stroke_shape.vertices);
+        const bool shape_has_transparent_vertices = has_transparent_vertices(stroke_shape.vertices);
         // TODO conversion may be deferred to stroke render modes
         //      i.e it might not be necessary for all modes
         //      e.g 'STROKE_RENDER_MODE_NATIVE' might benefit from built in OpenGL modes
@@ -614,34 +620,32 @@ namespace umfeld {
     }
 
     void UShapeRendererOpenGL_3::render_shape(const UShape& shape) {
-        // NOTE assumes that shader is already in use and texture is already bound
+        // NOTE 'render_shape' handles:
+        //      - transparency + depth testing (writing?)
+        //      - shader program usage
+        //      - shader uniforms update
+        //      - texture binding
+        //      - vertex buffer binding and drawing
 
         // handle transparency state changes
-        if (shape.vertex_buffer != nullptr) {
-            if (shape.vertex_buffer->transparent) {
-                if (!cached_blend_enabled) {
-                    enable_blending();
-                    cached_blend_enabled = true;
-                }
-            } else {
-                if (cached_blend_enabled) {
-                    disable_blending();
-                    cached_blend_enabled = false;
-                }
+        const bool desired_transparent_state = shape.vertex_buffer != nullptr ? shape.vertex_buffer->transparent : shape.transparent;
+        if (desired_transparent_state) {
+            if (!frame_state_cache.cached_transparent_shape_enabled) {
+                frame_state_cache.cached_transparent_shape_enabled = true;
+                // disable_depth_testing();
+                enable_depth_testing();
+                disable_depth_buffer_writing();
+                enable_blending();
             }
         } else {
-            if (shape.transparent) {
-                if (!cached_blend_enabled) {
-                    enable_blending();
-                    cached_blend_enabled = true;
-                }
-            } else {
-                if (cached_blend_enabled) {
-                    disable_blending();
-                    cached_blend_enabled = false;
-                }
+            if (frame_state_cache.cached_transparent_shape_enabled) {
+                enable_depth_testing();
+                enable_depth_buffer_writing();
+                disable_blending();
+                frame_state_cache.cached_transparent_shape_enabled = false;
             }
         }
+
         // switch shader program ( if necessary )
         if (shape.shader == nullptr) {
             const ShaderProgram required_shader_program = shape.light_enabled ? (shape.texture_id == TEXTURE_NONE ? shader_color_lights : shader_texture_lights) : (shape.texture_id == TEXTURE_NONE ? shader_color : shader_texture);
@@ -683,14 +687,7 @@ namespace umfeld {
                 warning_in_function_once("custom_shader: lighting currently not supported");
             }
         }
-        // handle texture changes
-        if (shape.texture_id != cached_texture_id) {
-            cached_texture_id = shape.texture_id;
-            if (cached_texture_id != TEXTURE_NONE) {
-                PGraphicsOpenGL::OGL_bind_texture(cached_texture_id);
-            }
-        }
-        // set lights once for this shape (if enabled)
+        // set lights for this shape ( if enabled )
         if (shape.light_enabled) {
             if (shape.shader == nullptr) {
                 if (shape.texture_id == TEXTURE_NONE) {
@@ -702,7 +699,14 @@ namespace umfeld {
                 warning_in_function_once("custom shader currently has no lighting");
             }
         }
-        // handle custom vertex buffer
+        // handle texture changes
+        if (shape.texture_id != frame_state_cache.cached_texture_id) {
+            frame_state_cache.cached_texture_id = shape.texture_id;
+            if (frame_state_cache.cached_texture_id != TEXTURE_NONE) {
+                PGraphicsOpenGL::OGL_bind_texture(frame_state_cache.cached_texture_id);
+            }
+        }
+        // handle vertex buffer binding + drawing
         if (shape.vertex_buffer != nullptr) {
             unbind_default_vertex_buffer();
             shape.vertex_buffer->draw();
@@ -716,17 +720,17 @@ namespace umfeld {
             convert_shapes_to_triangles(shape, current_vertex_buffer, FALLBACK_MODEL_MATRIX_ID);
             // adapt buffer size if necessary
             const uint32_t vertex_count = current_vertex_buffer.size();
-            if (vertex_count > max_vertices_per_batch) {
-                max_vertices_per_batch = vertex_count;
-                require_buffer_resize  = true;
+            if (vertex_count > frame_state_cache.cached_max_vertices_per_batch) {
+                frame_state_cache.cached_max_vertices_per_batch = vertex_count;
+                frame_state_cache.cached_require_buffer_resize  = true;
             }
             // draw vertex buffer
             // bind_default_vertex_buffer(); // OPTIMIZE this could be cached as well
             GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, vbo));
-            if (require_buffer_resize) {
-                require_buffer_resize = false;
+            if (frame_state_cache.cached_require_buffer_resize) {
+                frame_state_cache.cached_require_buffer_resize = false;
                 GL_CALL(glBufferData(GL_ARRAY_BUFFER,
-                                     static_cast<GLsizeiptr>(max_vertices_per_batch * sizeof(Vertex)),
+                                     static_cast<GLsizeiptr>(frame_state_cache.cached_max_vertices_per_batch * sizeof(Vertex)),
                                      nullptr,
                                      GL_DYNAMIC_DRAW));
             }
@@ -797,15 +801,15 @@ namespace umfeld {
                     convert_shapes_to_triangles(*s, current_vertex_buffer, static_cast<uint16_t>(i + PER_VERTEX_TRANSFORM_ID_START));
                 }
             }
-            if (current_vertex_buffer.size() > max_vertices_per_batch) {
+            if (current_vertex_buffer.size() > frame_state_cache.cached_max_vertices_per_batch) {
                 // TODO ... ok and now what? add some *coping* strategy ...
                 error("number of batch vertices exceeded buffer");
             } else if (!current_vertex_buffer.empty()) {
                 glBindBuffer(GL_ARRAY_BUFFER, vbo); // TODO maybe move this outside of loop … but only if there a no shapes with custom vertex buffer
-                if (require_buffer_resize) {
-                    require_buffer_resize = false;
+                if (frame_state_cache.cached_require_buffer_resize) {
+                    frame_state_cache.cached_require_buffer_resize = false;
                     glBufferData(GL_ARRAY_BUFFER,
-                                 static_cast<GLsizeiptr>(max_vertices_per_batch * sizeof(Vertex)),
+                                 static_cast<GLsizeiptr>(frame_state_cache.cached_max_vertices_per_batch * sizeof(Vertex)),
                                  nullptr,
                                  GL_DYNAMIC_DRAW);
                 }
@@ -864,25 +868,30 @@ namespace umfeld {
         }
     }
 
-    void UShapeRendererOpenGL_3::enable_depth_testing() const {
-        if (graphics != nullptr && graphics->hint_enable_depth_test) {
-            PGraphicsOpenGL::OGL_enable_depth_testing();
-        } else {
-            PGraphicsOpenGL::OGL_disable_depth_testing();
-        }
+    void UShapeRendererOpenGL_3::enable_depth_testing() {
+        // TODO figure out if and how we might handle this hint: if (graphics != nullptr && graphics->hint_enable_depth_test) {}
+        PGraphicsOpenGL::OGL_enable_depth_testing();
     }
 
     void UShapeRendererOpenGL_3::disable_depth_testing() {
         PGraphicsOpenGL::OGL_disable_depth_testing();
     }
 
+    void UShapeRendererOpenGL_3::enable_depth_buffer_writing() {
+        PGraphicsOpenGL::OGL_enable_depth_buffer_writing();
+    }
+
+    void UShapeRendererOpenGL_3::disable_depth_buffer_writing() {
+        PGraphicsOpenGL::OGL_disable_depth_buffer_writing();
+    }
+
     void UShapeRendererOpenGL_3::enable_blending() {
         glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); // TODO blendfunction should or could be configurable
     }
 
     void UShapeRendererOpenGL_3::disable_blending() {
-        glEnable(GL_BLEND);
+        glDisable(GL_BLEND);
     }
 
     void UShapeRendererOpenGL_3::set_per_frame_default_shader_uniforms(const glm::mat4& view_projection_matrix,
@@ -955,60 +964,94 @@ namespace umfeld {
      * - sort transparent shape by z-order.
      * render light shapes without transparency similar to opaque shapes.
      *
-     * @param shapes
+     * @param triangulated_shapes
      * @param view_matrix
      * @param projection_matrix
      */
-    void UShapeRendererOpenGL_3::flush_sort_by_z_order(std::vector<UShape>& shapes,
+    void UShapeRendererOpenGL_3::flush_sort_by_z_order(std::vector<UShape>& triangulated_shapes,
                                                        const glm::mat4&     view_matrix,
                                                        const glm::mat4&     projection_matrix) {
-        if (shapes.empty()) { return; }
-        const glm::mat4 view_projection_matrix = projection_matrix * view_matrix;
+
+        // TODO for tomorrow:
+        //      - separate transparent from opaque shapes
+        //      - sort opaque shapes into texture batches
+        //      - sort only transparent shapes by z-order
+        //      - render opaque point, line and triangle
+        //      - render transparent shapes similar to ( or maybe even re-use ) submission order ( or just use `render_shape` )
 
         // TODO separate transparent from opaque shapes.
         //      - render opaque with texture batches
         //      - render transparent depth sorted
 
-        // use unordered_map for better performance with many textures
-        std::unordered_map<GLuint, TextureBatch> texture_batches;
-        // TODO make default number of textures dynamic depending on last frame
-        texture_batches.reserve(DEFAULT_NUM_TEXTURES);
+        if (triangulated_shapes.empty()) { return; }
 
-        for (auto& s: shapes) {
-            TextureBatch& batch = texture_batches[s.texture_id];
+        // separate shapes by opaque and transparency property
+        const auto          partition_point = std::partition(triangulated_shapes.begin(), triangulated_shapes.end(), [](const UShape& s) { return !s.transparent; });
+        std::vector<UShape> opaque_shapes;
+        std::vector<UShape> transparent_shapes;
+        opaque_shapes.reserve(std::distance(triangulated_shapes.begin(), partition_point));
+        transparent_shapes.reserve(std::distance(partition_point, triangulated_shapes.end()));
+        std::move(triangulated_shapes.begin(), partition_point, std::back_inserter(opaque_shapes));
+        std::move(partition_point, triangulated_shapes.end(), std::back_inserter(transparent_shapes));
+
+        console_once("opaque_shapes     : ", opaque_shapes.size());
+        console_once("transparent_shapes: ", transparent_shapes.size());
+
+        // compute view_projection_matrix once perframe
+        const glm::mat4 view_projection_matrix = projection_matrix * view_matrix;
+
+        // sort shapes into batches by texture id
+        std::unordered_map<GLuint, TextureBatch> texture_batches;
+        texture_batches.reserve(frame_textured_shapes_count + 1);
+        // OPTIMIZE maybe not sort into texture batches if there are not a lot of different textures see `frame_textured_shapes_count`
+        for (auto& s: opaque_shapes) {
+            TextureBatch& batch = texture_batches[s.texture_id]; // use unordered_map for better performance with many textures
             batch.texture_id    = s.texture_id;
             if (s.light_enabled) {
                 batch.light_shapes.push_back(&s);
             } else {
                 if (s.transparent) {
-                    batch.transparent_shapes.push_back(&s);
-                } else {
-                    batch.opaque_shapes.push_back(&s);
+                    error("why are there transparent shapes … this should never happen");
                 }
+                batch.opaque_shapes.push_back(&s);
             }
             batch.max_vertices += s.vertices.size();
         }
 
+        uint8_t batch_id = 0;
         for (auto& [textureID, batch]: texture_batches) {
-            // determine if VBO is large enough
-            if (batch.max_vertices > max_vertices_per_batch) {
-                max_vertices_per_batch = batch.max_vertices;
-                require_buffer_resize  = true;
+            console_once(batch_id, "\t opaque_shapes:", batch.opaque_shapes.size(), ", light_shapes:", batch.light_shapes.size());
+            batch_id++;
+        }
+
+        // determine if VBO needs to be resized
+        for (auto& [textureID, batch]: texture_batches) {
+            if (batch.max_vertices > frame_state_cache.cached_max_vertices_per_batch) {
+                frame_state_cache.cached_max_vertices_per_batch = batch.max_vertices;
+                frame_state_cache.cached_require_buffer_resize  = true;
             }
-            // compute depth and sort transparents
-            for (auto* s: batch.transparent_shapes) {
-                const glm::vec4 center_world_space = s->model * glm::vec4(s->center_object_space, 1.0f);
+        }
+
+        // compute depth and sort transparent shapes
+        if (frame_transparent_shapes_count > 0) {
+            for (UShape& s: transparent_shapes) {
+                const glm::vec4 center_world_space = s.model * glm::vec4(s.center_object_space, 1.0f);
                 const glm::vec4 center_view_space  = view_projection_matrix * center_world_space;
-                s->depth                           = center_view_space.z / center_view_space.w; // Proper NDC depth
+                s.depth                            = center_view_space.z / center_view_space.w; // Proper NDC depth
             }
-            std::sort(batch.transparent_shapes.begin(), batch.transparent_shapes.end(),
-                      [](const UShape* A, const UShape* B) { return A->depth > B->depth; }); // Back to front
+            std::sort(transparent_shapes.begin(), transparent_shapes.end(),
+                      [](const UShape& A, const UShape& B) {
+                          return A.depth > B.depth;
+                      }); // back to front
         }
 
         bind_default_vertex_buffer();
 
         // NOTE some uniforms only need to be set once per (flush) frame
-        set_per_frame_default_shader_uniforms(view_projection_matrix, frame_light_shapes_count, frame_transparent_shapes_count, frame_opaque_shapes_count);
+        set_per_frame_default_shader_uniforms(view_projection_matrix,
+                                              frame_light_shapes_count,
+                                              frame_transparent_shapes_count,
+                                              frame_opaque_shapes_count);
 
         // if (s.shader != nullptr) {
         // } else {}
@@ -1027,36 +1070,36 @@ namespace umfeld {
         // opaque pass
         if (frame_opaque_shapes_count > 0) {
             enable_depth_testing();
+            enable_depth_buffer_writing();
             disable_blending();
             for (auto& [texture_id, batch]: texture_batches) {
-                enable_flat_shaders_and_bind_texture(cached_shader_program.id, texture_id);
+                enable_flat_shaders_and_bind_texture(frame_state_cache.cached_shader_program.id, texture_id);
                 render_batch(batch.opaque_shapes);
             }
         }
-        // light pass
+        // light pass ( opaque )
         if (frame_light_shapes_count > 0) {
-            if (frame_opaque_shapes_count > 0) {
-                enable_depth_testing();
-                disable_blending();
-            }
+            enable_depth_testing();
+            enable_depth_buffer_writing();
+            disable_blending();
             for (auto& [texture_id, batch]: texture_batches) {
-                enable_light_shaders_and_bind_texture(cached_shader_program.id, texture_id);
+                enable_light_shaders_and_bind_texture(frame_state_cache.cached_shader_program.id, texture_id);
                 render_batch(batch.light_shapes);
             }
         }
         // transparent pass
         if (frame_transparent_shapes_count > 0) {
-            enable_depth_testing();
-            enable_blending();
-            for (auto& [texture_id, batch]: texture_batches) {
-                enable_flat_shaders_and_bind_texture(cached_shader_program.id, texture_id);
-                render_batch(batch.transparent_shapes);
+            // enable_depth_testing();
+            // disable_depth_buffer_writing();
+            // enable_blending();
+            // for (auto& [texture_id, batch]: texture_batches) {
+            //     enable_flat_shaders_and_bind_texture(frame_state_cache.cached_shader_program.id, texture_id);
+            //     render_batch(batch.transparent_shapes);
+            // }
+            for (auto& shape: transparent_shapes) {
+                render_shape(shape);
             }
         }
-
-        // // restore default state
-        // glDepthMask(GL_TRUE);
-        // glDisable(GL_BLEND);
 
         unbind_default_vertex_buffer();
     }
@@ -1108,14 +1151,14 @@ namespace umfeld {
     }
 
     const UShapeRendererOpenGL_3::ShaderProgram& UShapeRendererOpenGL_3::get_shader_program_cached() const {
-        return cached_shader_program;
+        return frame_state_cache.cached_shader_program;
     }
 
     bool UShapeRendererOpenGL_3::use_shader_program_cached(const ShaderProgram& required_shader_program) {
         // TODO use this for all program changes i.e make `cached_shader_program` a global property
-        if (required_shader_program.id != cached_shader_program.id) {
-            cached_shader_program = required_shader_program;
-            glUseProgram(cached_shader_program.id);
+        if (required_shader_program.id != frame_state_cache.cached_shader_program.id) {
+            frame_state_cache.cached_shader_program = required_shader_program;
+            glUseProgram(frame_state_cache.cached_shader_program.id);
             return true;
         }
         return false;
@@ -1141,7 +1184,11 @@ namespace umfeld {
         // NOTE some uniforms only need to be set once per (flush) frame
         // OPTIMIZE only set uniforms if they have actually changed in the (default) shaders
         //          maybe this should then be moved to `render_shape`
-        set_per_frame_default_shader_uniforms(view_projection_matrix, frame_light_shapes_count, frame_transparent_shapes_count, frame_opaque_shapes_count);
+        set_per_frame_default_shader_uniforms(view_projection_matrix,
+                                              frame_light_shapes_count,
+                                              frame_transparent_shapes_count,
+                                              frame_opaque_shapes_count);
+        // TODO maybe remove the above and handle it with caching flags entirely in loop below … don t forget `glUniform1i(shader_xxx.uniforms.uTextureUnit, 0);`
 
         bind_default_vertex_buffer();
 
@@ -1187,13 +1234,12 @@ namespace umfeld {
         // NOTE the paths below ONLY render filled triangle shapes.
         if (graphics->get_render_mode() == RENDER_MODE_SORTED_BY_Z_ORDER) {
             console_once(format_label("render_mode"), "RENDER_MODE_SORTED_BY_Z_ORDER ( rendering shapes in z-order and in batches )");
-            flush_sort_by_z_order(processed_triangle_shapes, view_matrix, projection_matrix);
+            TRACE_SCOPE_N("RENDER_MODE_SORTED_BY_Z_ORDER");
+            { flush_sort_by_z_order(processed_triangle_shapes, view_matrix, projection_matrix); }
         } else if (graphics->get_render_mode() == RENDER_MODE_SORTED_BY_SUBMISSION_ORDER) {
             console_once(format_label("render_mode"), "RENDER_MODE_SORTED_BY_SUBMISSION_ORDER ( rendering shapes in submission order )");
-            {
-                TRACE_SCOPE_N("flush_submission_order");
-                flush_submission_order(processed_triangle_shapes, view_matrix, projection_matrix);
-            }
+            TRACE_SCOPE_N("RENDER_MODE_SORTED_BY_SUBMISSION_ORDER");
+            { flush_submission_order(processed_triangle_shapes, view_matrix, projection_matrix); }
         } else if (graphics->get_render_mode() == RENDER_MODE_IMMEDIATELY) {
             console_once(format_label("render_mode"), "RENDER_MODE_IMMEDIATELY ( rendering shapes immediately )");
             flush_immediately(processed_triangle_shapes, view_matrix, projection_matrix);

@@ -497,16 +497,21 @@ namespace umfeld {
         }
         return _shape;
     }
+
     void PGraphicsOpenGL::OGL_enable_depth_testing() {
         glEnable(GL_DEPTH_TEST);
-        glDepthMask(GL_TRUE);
         glDepthFunc(GL_LEQUAL); // allow equal depths to pass ( `GL_LESS` is default )
     }
 
     void PGraphicsOpenGL::OGL_disable_depth_testing() {
-        // TODO enable proper blend function
-        //      also figure out if blending needs to happen for non transparent shapes e.g via forced transparency
         glDisable(GL_DEPTH_TEST);
+    }
+
+    void PGraphicsOpenGL::OGL_enable_depth_buffer_writing() {
+        glDepthMask(GL_TRUE);
+    }
+
+    void PGraphicsOpenGL::OGL_disable_depth_buffer_writing() {
         glDepthMask(GL_FALSE);
     }
 } // namespace umfeld

@@ -95,6 +95,8 @@ namespace umfeld {
         static void        OGL_print_info(OpenGLCapabilities& capabilities);
         static void        OGL_enable_depth_testing();
         static void        OGL_disable_depth_testing();
+        static void        OGL_enable_depth_buffer_writing();
+        static void        OGL_disable_depth_buffer_writing();
 
     protected:
         static constexpr int DEFAULT_ACTIVE_TEXTURE_UNIT  = 0;

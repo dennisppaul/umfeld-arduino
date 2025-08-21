@@ -947,6 +947,10 @@ void PGraphics::quad(const float x1, const float y1, const float z1, const float
 }
 
 void PGraphics::rect(const float x, const float y, const float width, const float height, const bool flip_y_texcoords) {
+    // TODO not too happy about the texture flip option …
+    //      maybe this can be handled elsewhere
+    //      e.g in a tex_coord matrix … in shader
+    //      ( currently there is no such matrix in use )
     if (!color_stroke.active && !color_fill.active) {
         return;
     }
@@ -994,7 +998,7 @@ void PGraphics::rect(const float x, const float y, const float width, const floa
 }
 
 void PGraphics::rect(const float x, const float y, const float width, const float height) {
-    rect(x, y, width, height, false);
+    rect(x, y, width, height, true);
 }
 
 void PGraphics::box(const float width, const float height, const float depth) {

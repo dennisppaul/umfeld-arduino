@@ -84,7 +84,7 @@ namespace umfeld {
         void flush(const glm::mat4& view_matrix, const glm::mat4& projection_matrix) override;
 
     private:
-        static constexpr int      DEFAULT_NUM_TEXTURES = 64;
+        static constexpr int      DEFAULT_NUM_TEXTURES = 16;
         static constexpr uint32_t NO_SHADER_PROGRAM    = -1;
         static constexpr uint16_t MAX_TRANSFORMS       = 256;
         // NOTE check `GL_MAX_UNIFORM_BLOCK_SIZE`
@@ -96,7 +96,6 @@ namespace umfeld {
 
         struct TextureBatch {
             std::vector<UShape*> opaque_shapes;
-            std::vector<UShape*> transparent_shapes;
             std::vector<UShape*> light_shapes;
             uint32_t             max_vertices{0};
             uint16_t             texture_id{TEXTURE_NONE};
@@ -105,6 +104,23 @@ namespace umfeld {
         struct ShaderProgram {
             GLuint         id{0};
             ShaderUniforms uniforms;
+        };
+
+        struct FrameState {
+            GLuint        cached_texture_id{UINT32_MAX};
+            ShaderProgram cached_shader_program{.id = NO_SHADER_PROGRAM};
+            bool          cached_transparent_shape_enabled{false};
+            bool          cached_require_buffer_resize{false};
+            uint32_t      cached_max_vertices_per_batch{0};
+            // TODO add more states like blend, depth_write/test …
+
+            void reset() {
+                cached_texture_id                = UINT32_MAX;
+                cached_shader_program            = {.id = NO_SHADER_PROGRAM};
+                cached_transparent_shape_enabled = false;
+                cached_require_buffer_resize     = false;
+                cached_max_vertices_per_batch    = 0;
+            }
         };
 
         GLuint                     vbo         = 0;
@@ -120,14 +136,11 @@ namespace umfeld {
         ShapeCenterComputeStrategy shape_center_compute_strategy = ZERO_CENTER;
         std::vector<Vertex>        current_vertex_buffer;
         std::vector<glm::mat4>     flush_frame_matrices;
-        uint32_t                   max_vertices_per_batch{0};
-        bool                       require_buffer_resize{false};
-        GLuint                     cached_texture_id{UINT32_MAX};
-        ShaderProgram              cached_shader_program{.id = NO_SHADER_PROGRAM};
-        bool                       cached_blend_enabled{false};
-        int                        frame_light_shapes_count{0};
-        int                        frame_transparent_shapes_count{0};
-        int                        frame_opaque_shapes_count{0};
+        FrameState                 frame_state_cache{};
+        int                        frame_light_shapes_count{0};       // NOTE set in 'submit_shape'
+        int                        frame_transparent_shapes_count{0}; // NOTE set in 'submit_shape'
+        int                        frame_opaque_shapes_count{0};      // NOTE set in 'submit_shape'
+        int                        frame_textured_shapes_count{0};    // NOTE set in 'submit_shape'
 
         static void          setup_uniform_blocks(const std::string& shader_name, GLuint program);
         static bool          evaluate_shader_uniforms(const std::string& shader_name, const ShaderUniforms& uniforms);
@@ -138,11 +151,13 @@ namespace umfeld {
         void                 render_batch(const std::vector<UShape*>& shapes_to_render);
         void                 render_shape(const UShape& shape);
         void                 computeShapeCenter(UShape& s) const;
-        void                 enable_depth_testing() const;
+        static void          enable_depth_testing();
         static void          enable_blending();
         static void          disable_blending();
+        static void          enable_depth_buffer_writing();
+        static void          disable_depth_buffer_writing();
         static void          disable_depth_testing();
-        void                 flush_sort_by_z_order(std::vector<UShape>& shapes, const glm::mat4& view_matrix, const glm::mat4& projection_matrix);
+        void                 flush_sort_by_z_order(std::vector<UShape>& triangulated_shapes, const glm::mat4& view_matrix, const glm::mat4& projection_matrix);
         void                 flush_submission_order(const std::vector<UShape>& shapes, const glm::mat4& view_matrix, const glm::mat4& projection_matrix);
         void                 flush_immediately(const std::vector<UShape>& shapes, const glm::mat4& view_matrix, const glm::mat4& projection_matrix);
         void                 flush_processed_shapes(const std::vector<UShape>& processed_point_shapes, const std::vector<UShape>& processed_line_shapes, std::vector<UShape>& processed_triangle_shapes, const glm::mat4& view_matrix, const glm::mat4& projection_matrix);

@@ -1567,15 +1567,16 @@ void PGraphics::convert_stroke_shape_to_line_strip(UShape& s, std::vector<UShape
 }
 
 void PGraphics::convert_fill_shape_to_triangles(UShape& s) const {
-    // NOTE used by ShapeRendererOpenGL_3
+    // NOTE used by UShapeRendererOpenGL_3::convert_fill_shape_to_triangles
     const std::vector<Vertex> shape_fill_vertex_buffer = s.vertices;
     const int                 shape_mode_cache         = s.mode;
+    // TODO what if polygon has only 3 ( triangle ) or 4 vertices ( quad )? could shortcut … here
     if (!shape_fill_vertex_buffer.empty()) {
         switch (shape_mode_cache) {
             case POINTS:
             case LINES:
             case LINE_STRIP:
-                return;
+                warning_in_function_once("points, lines, line_strip should not be processed here.");
             case TRIANGLES:
                 break;
             case TRIANGLE_FAN: {
@@ -1591,7 +1592,9 @@ void PGraphics::convert_fill_shape_to_triangles(UShape& s) const {
                 std::vector<Vertex> vertices_filled_triangles = convertQuadsToTriangles(shape_fill_vertex_buffer);
                 s.vertices                                    = std::move(vertices_filled_triangles);
             } break;
-            case POLYGON: {
+            case POLYGON:
+            default: {
+                // NOTE default: POLYGON_TRIANGULATION_BETTER
                 std::vector<Vertex> vertices_filled_triangles;
                 if (polygon_triangulation_strategy == POLYGON_TRIANGULATION_FASTER) {
                     // EARCUT :: supports concave polygons, textures but no holes or self-intersection
@@ -1604,11 +1607,8 @@ void PGraphics::convert_fill_shape_to_triangles(UShape& s) const {
                     vertices_filled_triangles = triangulate_better_quality(shape_fill_vertex_buffer);
                 }
                 s.vertices = std::move(vertices_filled_triangles);
-                // TODO what if polygon has only 3 ( triangle ) or 4 vertices ( quad )? could shortcut … here
             } break;
-            default:
-                return;
         }
+        s.mode = TRIANGLES;
     }
-    s.mode = TRIANGLES;
 }

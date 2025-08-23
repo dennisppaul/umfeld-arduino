@@ -128,7 +128,8 @@ namespace umfeld {
     enum PointRenderMode {
         POINT_RENDER_MODE_NATIVE = 0x60,
         POINT_RENDER_MODE_TRIANGULATE,
-        POINT_RENDER_MODE_SHADER
+        POINT_RENDER_MODE_POINT_SHADER,
+        POINT_RENDER_MODE_GEOMETRY_SHADER
     };
     enum PolygonTriangulation {
         POLYGON_TRIANGULATION_FASTER = 0x70,

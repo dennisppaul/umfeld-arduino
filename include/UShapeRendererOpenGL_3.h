@@ -68,6 +68,8 @@ namespace umfeld {
         static constexpr uint16_t FALLBACK_MODEL_MATRIX_ID      = 0;
         static constexpr uint16_t PER_VERTEX_TRANSFORM_ID_START = 1;
 
+        static_assert(Vertex::DEFAULT_TRANSFORM_ID == FALLBACK_MODEL_MATRIX_ID);
+
         enum ShapeCenterComputeStrategy {
             ZERO_CENTER,
             AXIS_ALIGNED_BOUNDING_BOX,
@@ -165,24 +167,25 @@ namespace umfeld {
         static bool          uniform_available(const GLuint loc) { return loc != ShaderUniforms::UNINITIALIZED && loc != ShaderUniforms::NOT_FOUND; }
 
         void          flush_sort_by_z_order(std::vector<UShape>& triangulated_shapes, const glm::mat4& view_matrix, const glm::mat4& projection_matrix);
-        void          flush_submission_order(const std::vector<UShape>& shapes, const glm::mat4& view_matrix, const glm::mat4& projection_matrix);
-        void          flush_immediately(const std::vector<UShape>& shapes, const glm::mat4& view_matrix, const glm::mat4& projection_matrix);
-        void          process_shapes_for_sorted_by_z_order(std::vector<UShape>& processed_point_shapes, std::vector<UShape>& processed_line_shapes, std::vector<UShape>& processed_triangle_shapes);
-        void          process_shapes_for_sorted_by_submission_order(std::vector<UShape>& processed_point_shapes, std::vector<UShape>& processed_line_shapes, std::vector<UShape>& processed_shape_batch);
-        void          convert_point_shape_to_triangles(std::vector<UShape>& processed_triangle_shapes, UShape& point_shape) const;
+        void          flush_submission_order(std::vector<UShape>& shapes, const glm::mat4& view_matrix, const glm::mat4& projection_matrix);
+        void          flush_immediately(std::vector<UShape>& shapes, const glm::mat4& view_matrix, const glm::mat4& projection_matrix);
+        void          process_shapes_z_order(std::vector<UShape>& processed_point_shapes, std::vector<UShape>& processed_line_shapes, std::vector<UShape>& processed_triangle_shapes);
+        void          process_shapes_submission_order(std::vector<UShape>& processed_point_shapes, std::vector<UShape>& processed_line_shapes, std::vector<UShape>& processed_shapes);
+        static void   convert_point_shape_to_triangles(std::vector<UShape>& processed_triangle_shapes, UShape& point_shape);
         static void   convert_point_shape_for_shader(std::vector<UShape>& processed_point_shapes, UShape& point_shape);
-        void          process_point_shape(std::vector<UShape>& processed_triangle_shapes, std::vector<UShape>& processed_point_shapes, UShape& point_shape) const;
+        void          process_point_shape_z_order(std::vector<UShape>& processed_triangle_shapes, std::vector<UShape>& processed_point_shapes, UShape& point_shape) const;
+        void          process_point_shape_submission_order(std::vector<UShape>& processed_shape_batch, UShape& point_shape) const;
         void          convert_stroke_shape_to_triangles_2D(std::vector<UShape>& processed_triangle_shapes, UShape& stroke_shape) const;
         void          convert_stroke_shape_to_triangles_3D_tube(std::vector<UShape>& processed_triangle_shapes, UShape& stroke_shape) const;
         void          convert_stroke_shape_for_native(std::vector<UShape>& processed_line_shapes, UShape& stroke_shape) const;
         void          convert_stroke_shape_for_line_shader(std::vector<UShape>& processed_line_shapes, UShape& stroke_shape) const;
         void          convert_stroke_shape_for_barycentric_shader(std::vector<UShape>& processed_line_shapes, UShape& stroke_shape) const;
         void          convert_stroke_shape_for_geometry_shader(std::vector<UShape>& processed_line_shapes, UShape& stroke_shape) const;
-        void          process_stroke_shapes_sorted_by_z_order(std::vector<UShape>& processed_triangle_shapes, std::vector<UShape>& processed_line_shapes, UShape& stroke_shape) const;
-        void          process_stroke_shapes_for_sorted_by_submission_order(std::vector<UShape>& processed_shape_batch, UShape& stroke_shape) const;
+        void          process_stroke_shapes_z_order(std::vector<UShape>& processed_triangle_shapes, std::vector<UShape>& processed_line_shapes, UShape& stroke_shape) const;
+        void          process_stroke_shapes_submission_order(std::vector<UShape>& processed_shape_batch, UShape& stroke_shape) const;
         static size_t estimate_triangle_count(const UShape& s);
-        static void   convert_shapes_to_triangles(const UShape& s, std::vector<Vertex>& out, uint16_t transformID);
+        static void   convert_shapes_to_triangles_and_set_transform_id(const UShape& s, std::vector<Vertex>& out, uint16_t transformID);
         void          render_batch(const std::vector<UShape*>& shapes_to_render);
-        void          render_shape(const UShape& shape);
+        void          render_shape(UShape& shape);
     };
 } // namespace umfeld

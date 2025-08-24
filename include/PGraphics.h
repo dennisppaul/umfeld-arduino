@@ -239,7 +239,7 @@ namespace umfeld {
         int                 getPixelDensity() const { return pixel_density; }
         void                set_point_render_mode(const int point_render_mode) { this->point_render_mode = point_render_mode; }
         int                 get_point_render_mode() const { return point_render_mode; }
-        int                 get_point_size() const { return point_size; }
+        int                 get_point_size() const { return current_stroke_state.point_weight; }
         void                set_stroke_render_mode(const int stroke_render_mode) { this->stroke_render_mode = stroke_render_mode; }
         int                 get_stroke_render_mode() const { return stroke_render_mode; }
         void                stroke_properties(float stroke_join_round_resolution, float stroke_cap_round_resolution, float stroke_join_miter_max_angle);
@@ -278,7 +278,7 @@ namespace umfeld {
         static constexpr uint16_t        ELLIPSE_DETAIL_MIN     = 3;
         static constexpr uint16_t        ELLIPSE_DETAIL_DEFAULT = 36;
         static constexpr uint16_t        ARC_DETAIL_DEFAULT     = 36;
-        UShapeRenderer*                   shape_renderer{nullptr}; // TODO @maybe make this `const` and set in constructor?
+        UShapeRenderer*                  shape_renderer{nullptr}; // TODO @maybe make this `const` and set in constructor?
         PFont*                           current_font{nullptr};
         PImage*                          current_texture{nullptr};
         ShapeState                       current_shape{};
@@ -297,7 +297,6 @@ namespace umfeld {
         int                              ellipse_detail{0};
         int                              arc_detail{ARC_DETAIL_DEFAULT};
         std::vector<glm::vec2>           ellipse_points_LUT{};
-        float                            point_size{1};
         int                              bezier_detail{20};
         int                              curve_detail{20};
         float                            curve_tightness{0.0f};

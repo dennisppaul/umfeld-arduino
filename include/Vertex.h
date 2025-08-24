@@ -46,12 +46,14 @@ namespace umfeld {
         static constexpr auto DEFAULT_NORMAL                  = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
         static constexpr auto DEFAULT_COLOR                   = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
         static constexpr auto DEFAULT_TEX_COORD               = glm::vec3(0.0f, 0.0f, 0.0f);
+        static constexpr auto DEFAULT_TRANSFORM_ID            = 0;
+        static constexpr auto DEFAULT_USERDATA                = 0;
         glm::aligned_vec4     position;
         glm::aligned_vec4     normal;
         glm::aligned_vec4     color;
         glm::vec3             tex_coord;
-        uint16_t              transform_id{0};
-        uint16_t              userdata{0};
+        uint16_t              transform_id{DEFAULT_TRANSFORM_ID};
+        uint16_t              userdata{DEFAULT_USERDATA};
         // TODO check with profiler if reduced data types are faster. i.e
         //      - glm::aligned_vec3     position;
         //      - glm::aligned_vec3     normal;

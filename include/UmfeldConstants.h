@@ -81,7 +81,8 @@ namespace umfeld {
         POLYGON,
         POINTS,
         LINES,
-        LINE_STRIP
+        LINE_STRIP,
+        LINE_LOOP
     };
     enum ArcMode {
         OPEN = 0x19,

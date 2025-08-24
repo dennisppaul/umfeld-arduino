@@ -910,7 +910,7 @@ void PGraphics::point(const float x, const float y, const float z) {
 }
 
 void PGraphics::pointSize(const float size) {
-    point_size = size;
+    current_stroke_state.point_weight = size;
 }
 
 void PGraphics::line(const float x1, const float y1, const float z1, const float x2, const float y2, const float z2) {

@@ -488,6 +488,9 @@ namespace umfeld {
             case LINE_STRIP:
                 _shape = GL_LINE_STRIP;
                 break;
+            case LINE_LOOP:
+                _shape = GL_LINE_LOOP;
+                break;
             default:
                 _shape = shape;
         }

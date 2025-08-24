@@ -35,6 +35,7 @@ namespace umfeld {
         }
     };
     struct StrokeState {
+        float point_weight{1};
         float stroke_weight{1};
         int   stroke_join_mode{BEVEL_FAST};
         int   stroke_cap_mode{SQUARE};

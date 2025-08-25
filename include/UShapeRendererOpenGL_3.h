@@ -164,6 +164,7 @@ namespace umfeld {
         const ShaderProgram& get_shader_program_cached() const;
         bool                 use_shader_program_cached(const ShaderProgram& required_shader_program);
         static bool          set_uniform_model_matrix(const UShape& shape, const ShaderProgram& shader_program);
+        void                 set_point_size_and_line_width(UShape& shape);
         static bool          uniform_available(const GLuint loc) { return loc != ShaderUniforms::UNINITIALIZED && loc != ShaderUniforms::NOT_FOUND; }
 
         void          flush_sort_by_z_order(std::vector<UShape>& point_shapes, std::vector<UShape>& line_shapes, std::vector<UShape>& triangulated_shapes, const glm::mat4& view_matrix, const glm::mat4& projection_matrix);

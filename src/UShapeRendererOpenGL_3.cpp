@@ -150,7 +150,11 @@ namespace umfeld {
                 //      may be handle differently ( e.g rendered with point shader or in natively )
                 process_shapes_z_order(processed_point_shapes, processed_line_shapes, processed_triangle_shapes);
                 // NOTE `flush_processed_shapes` renders shapes according to the current render mode.
-                flush_sort_by_z_order(processed_triangle_shapes, view_matrix, projection_matrix);
+                flush_sort_by_z_order(processed_point_shapes,
+                                      processed_line_shapes,
+                                      processed_triangle_shapes,
+                                      view_matrix,
+                                      projection_matrix);
                 run_once({ print_frame_info(processed_point_shapes, processed_line_shapes, processed_triangle_shapes); });
             }
         } else if (graphics->get_render_mode() == RENDER_MODE_SORTED_BY_SUBMISSION_ORDER || graphics->get_render_mode() == RENDER_MODE_IMMEDIATELY) {
@@ -161,8 +165,8 @@ namespace umfeld {
             }
             TRACE_SCOPE_N("RENDER_MODE_SORTED_BY_SUBMISSION_ORDER/RENDER_MODE_IMMEDIATELY");
             {
-                std::vector<UShape> processed_point_shapes; // NOTE needed for shader-based point rendering
-                std::vector<UShape> processed_line_shapes;  // NOTE needed for shader-based line rendering
+                std::vector<UShape> processed_point_shapes; // TODO not needed NOTE needed for shader-based point rendering
+                std::vector<UShape> processed_line_shapes;  // TODO not needed NOTE needed for shader-based line rendering
                 std::vector<UShape> processed_shapes;
                 processed_point_shapes.reserve(shapes.size());
                 processed_line_shapes.reserve(shapes.size());
@@ -289,7 +293,7 @@ namespace umfeld {
             }
         }
     }
-    void UShapeRendererOpenGL_3::convert_stroke_shape_to_triangles_3D_tube(std::vector<UShape>& processed_triangle_shapes, UShape& stroke_shape) const {
+    void UShapeRendererOpenGL_3::convert_stroke_shape_to_triangles_3D_tube(std::vector<UShape>& processed_triangle_shapes, UShape& stroke_shape) {
         std::vector<UShape> converted_shapes;
         converted_shapes.reserve(stroke_shape.vertices.size());
         PGraphics::convert_stroke_shape_to_line_strip(stroke_shape, converted_shapes);
@@ -308,17 +312,130 @@ namespace umfeld {
         warning_in_function_once("untested stroke render mode 'STROKE_RENDER_MODE_TUBE_3D'");
     }
 
-    void UShapeRendererOpenGL_3::convert_stroke_shape_for_native(std::vector<UShape>& processed_line_shapes, UShape& stroke_shape) const {
-        std::vector<UShape> converted_shapes;
-        converted_shapes.reserve(stroke_shape.vertices.size());
-        PGraphics::convert_stroke_shape_to_line_strip(stroke_shape, converted_shapes);
-        for (auto& cs: converted_shapes) {
-            processed_line_shapes.push_back(std::move(cs));
+    void UShapeRendererOpenGL_3::convert_stroke_shape_for_native(UShape& stroke_shape) {
+        // NOTE convert all shapes here that have no native OpenGL mode to:
+        //      - LINES           -> GL_LINES
+        //      - LINE_STRIP      -> GL_LINE_STRIPS
+        //      - LINE_LOOP       -> GL_LINE_LOOP
+        //      convert the following shapes to conform with one of the 3 native modes ( RESTART is for future implementation of indexed mode ):
+        //      - LINES           -> GL_LINES
+        //      - LINE_STRIP      -> GL_LINE_STRIPS
+        //      - LINE_LOOP       -> GL_LINE_LOOP
+        //      - TRIANGLES       -> GL_LINE_LOOP + RESTART
+        //      - TRIANGLE_STRIP  -> GL_LINE_STRIPS + RESTART
+        //      - TRIANGLE_FAN    -> GL_LINE_LOOP + RESTART
+        //      - QUADS           -> GL_LINE_LOOP + RESTART
+        //      - QUAD_STRIP      -> GL_LINE_STRIPS + RESTART
+        //      - POLYGON(OPEN)   -> GL_LINE_STRIPS
+        //      - POLYGON(CLOSED) -> GL_LINE_LOOP
+
+        if (stroke_shape.mode == LINES ||
+            stroke_shape.mode == LINE_STRIP ||
+            stroke_shape.mode == LINE_LOOP) {
+            return;
         }
-        warning_in_function_once("unsupported stroke render mode 'STROKE_RENDER_MODE_NATIVE'");
+
+        const auto&  v = stroke_shape.vertices;
+        const size_t n = v.size();
+
+        // helper to append one line segment (two vertices).
+        std::vector<Vertex> out;
+        out.reserve(n * 2); // rough upper bound for typical cases
+        auto add_segment = [&](const size_t i, const size_t j) {
+            if (i < n && j < n) {
+                out.push_back(v[i]);
+                out.push_back(v[j]);
+            }
+        };
+
+        switch (stroke_shape.mode) {
+            case TRIANGLES: {
+                const size_t m = (n / 3) * 3;
+                for (size_t i = 0; i + 2 < m; i += 3) {
+                    const size_t a = i, b = i + 1, c = i + 2;
+                    add_segment(a, b);
+                    add_segment(b, c);
+                    add_segment(c, a);
+                }
+                stroke_shape.vertices = std::move(out);
+                stroke_shape.mode     = LINES;
+                stroke_shape.closed   = false;
+                stroke_shape.filled   = false;
+                break;
+            }
+            case TRIANGLE_STRIP: {
+                if (n >= 3) {
+                    for (size_t k = 2; k < n; ++k) {
+                        const size_t a = k - 2, b = k - 1, c = k;
+                        add_segment(a, b);
+                        add_segment(b, c);
+                        add_segment(c, a);
+                    }
+                }
+                stroke_shape.vertices = std::move(out);
+                stroke_shape.mode     = LINES;
+                stroke_shape.closed   = false;
+                stroke_shape.filled   = false;
+                break;
+            }
+            case TRIANGLE_FAN: {
+                if (n >= 3) {
+                    constexpr size_t center = 0;
+                    for (size_t i = 1; i + 1 < n; ++i) {
+                        const size_t a = center, b = i, c = i + 1;
+                        add_segment(a, b);
+                        add_segment(b, c);
+                        add_segment(c, a);
+                    }
+                }
+                stroke_shape.vertices = std::move(out);
+                stroke_shape.mode     = LINES;
+                stroke_shape.closed   = false;
+                stroke_shape.filled   = false;
+                break;
+            }
+            case QUADS: {
+                const size_t q = (n / 4) * 4;
+                for (size_t i = 0; i + 3 < q; i += 4) {
+                    const size_t a = i, b = i + 1, c = i + 2, d = i + 3;
+                    add_segment(a, b);
+                    add_segment(b, c);
+                    add_segment(c, d);
+                    add_segment(d, a);
+                }
+                stroke_shape.vertices = std::move(out);
+                stroke_shape.mode     = LINES;
+                stroke_shape.closed   = false;
+                stroke_shape.filled   = false;
+                break;
+            }
+            case QUAD_STRIP: {
+                // Each quad is (i,i+1,i+2,i+3) for i += 2
+                for (size_t i = 0; i + 3 < n; i += 2) {
+                    const size_t a = i, b = i + 1, c = i + 2, d = i + 3;
+                    add_segment(a, b);
+                    add_segment(b, d);
+                    add_segment(d, c);
+                    add_segment(c, a);
+                }
+                stroke_shape.vertices = std::move(out);
+                stroke_shape.mode     = LINES;
+                stroke_shape.closed   = false;
+                stroke_shape.filled   = false;
+                break;
+            }
+            case POLYGON:
+            default: {
+                // Map directly to native line topology based on `closed`.
+                stroke_shape.mode   = stroke_shape.closed ? LINE_LOOP : LINE_STRIP;
+                stroke_shape.filled = false;
+                // vertices stay as-is
+                break;
+            }
+        }
     }
 
-    void UShapeRendererOpenGL_3::convert_stroke_shape_for_line_shader(std::vector<UShape>& processed_line_shapes, UShape& stroke_shape) const {
+    void UShapeRendererOpenGL_3::convert_stroke_shape_for_line_shader(std::vector<UShape>& processed_line_shapes, UShape& stroke_shape) {
         std::vector<UShape> converted_shapes;
         converted_shapes.reserve(stroke_shape.vertices.size());
         PGraphics::convert_stroke_shape_to_line_strip(stroke_shape, converted_shapes);
@@ -351,7 +468,7 @@ namespace umfeld {
         warning_in_function_once("unsupported stroke render mode 'STROKE_RENDER_MODE_LINE_SHADER'");
     }
 
-    void UShapeRendererOpenGL_3::convert_stroke_shape_for_barycentric_shader(std::vector<UShape>& processed_line_shapes, UShape& stroke_shape) const {
+    void UShapeRendererOpenGL_3::convert_stroke_shape_for_barycentric_shader(std::vector<UShape>& processed_line_shapes, UShape& stroke_shape) {
         std::vector<UShape> converted_shapes;
         converted_shapes.reserve(stroke_shape.vertices.size());
         PGraphics::convert_stroke_shape_to_line_strip(stroke_shape, converted_shapes);
@@ -360,7 +477,7 @@ namespace umfeld {
         }
         warning_in_function_once("unsupported stroke render mode 'STROKE_RENDER_MODE_BARYCENTRIC_SHADER'");
     }
-    void UShapeRendererOpenGL_3::convert_stroke_shape_for_geometry_shader(std::vector<UShape>& processed_line_shapes, UShape& stroke_shape) const {
+    void UShapeRendererOpenGL_3::convert_stroke_shape_for_geometry_shader(std::vector<UShape>& processed_line_shapes, UShape& stroke_shape) {
         std::vector<UShape> converted_shapes;
         converted_shapes.reserve(stroke_shape.vertices.size());
         PGraphics::convert_stroke_shape_to_line_strip(stroke_shape, converted_shapes);
@@ -380,7 +497,8 @@ namespace umfeld {
         } else if (graphics->get_stroke_render_mode() == STROKE_RENDER_MODE_TUBE_3D) {
             convert_stroke_shape_to_triangles_3D_tube(processed_triangle_shapes, stroke_shape);
         } else if (graphics->get_stroke_render_mode() == STROKE_RENDER_MODE_NATIVE) {
-            convert_stroke_shape_for_native(processed_line_shapes, stroke_shape);
+            convert_stroke_shape_for_native(stroke_shape);
+            processed_line_shapes.push_back(std::move(stroke_shape));
         } else if (graphics->get_stroke_render_mode() == STROKE_RENDER_MODE_LINE_SHADER) {
             convert_stroke_shape_for_line_shader(processed_line_shapes, stroke_shape);
         } else if (graphics->get_stroke_render_mode() == STROKE_RENDER_MODE_BARYCENTRIC_SHADER) {
@@ -391,58 +509,50 @@ namespace umfeld {
     }
 
     void UShapeRendererOpenGL_3::process_stroke_shapes_submission_order(std::vector<UShape>& processed_shape_batch, UShape& stroke_shape) const {
-        /* triangulate line strips */
-        if (graphics->get_stroke_render_mode() == STROKE_RENDER_MODE_TRIANGULATE_2D) {
-            convert_stroke_shape_to_triangles_2D(processed_shape_batch, stroke_shape);
-        } else if (graphics->get_stroke_render_mode() == STROKE_RENDER_MODE_TUBE_3D) {
-            convert_stroke_shape_to_triangles_3D_tube(processed_shape_batch, stroke_shape);
-        } else if (graphics->get_stroke_render_mode() == STROKE_RENDER_MODE_NATIVE) {
-            if (stroke_shape.mode == LINES ||
-                stroke_shape.mode == LINE_STRIP ||
-                stroke_shape.mode == LINE_LOOP) {
-            } else if (stroke_shape.mode == POINTS) {
-                // NOTE that POINTS are handled separately
-                warning_in_function_once("POINTS should not to be handled here");
-            } else {
-                // convert_stroke_shape_for_native(processed_line_shapes, stroke_shape);
-                // TODO convert all shapes here that have no native OpenGL mode to:
-                //      - LINES           -> GL_LINES
-                //      - LINE_STRIP      -> GL_LINE_STRIPS
-                //      - LINE_LOOP       -> GL_LINE_LOOP
-                // TODO convert shapes to conform with one of the 3 native modes:
-                //      - LINES           -> GL_LINES
-                //      - LINE_STRIP      -> GL_LINE_STRIPS
-                //      - LINE_LOOP       -> GL_LINE_LOOP
-                //      - TRIANGLES       -> GL_LINE_LOOP + RESTART
-                //      - TRIANGLE_STRIP  -> GL_LINE_STRIPS + RESTART
-                //      - TRIANGLE_FAN    -> GL_LINE_LOOP + RESTART
-                //      - QUADS           -> GL_LINE_LOOP + RESTART
-                //      - QUAD_STRIP      -> GL_LINE_STRIPS + RESTART
-                //      - POLYGON(OPEN)   -> GL_LINE_STRIPS
-                //      - POLYGON(CLOSED) -> GL_LINE_LOOP
-                switch (stroke_shape.mode) {
-                    case LINES:
-                    case LINE_STRIP:
-                    case LINE_LOOP:
-                        break;
-                    case TRIANGLES:
-                    case TRIANGLE_STRIP:
-                    case TRIANGLE_FAN:
-                    case QUADS:
-                    case QUAD_STRIP:
-                        warning_in_function_once("TRIANGLES, TRIANGLE_STRIP, TRIANGLE_FAN, QUADS, QUAD_STRIP are not properly implemented with native line renderer");
-                    case POLYGON:
-                    default:
-                        stroke_shape.mode = stroke_shape.closed ? LINE_LOOP : LINE_STRIP;
+        const int stroke_render_mode = graphics->get_stroke_render_mode();
+        switch (stroke_render_mode) {
+            case STROKE_RENDER_MODE_TUBE_3D: {
+                convert_stroke_shape_to_triangles_3D_tube(processed_shape_batch, stroke_shape);
+            } break;
+            case STROKE_RENDER_MODE_NATIVE: {
+                if (stroke_shape.mode == LINES ||
+                    stroke_shape.mode == LINE_STRIP ||
+                    stroke_shape.mode == LINE_LOOP) {
+                } else if (stroke_shape.mode == POINTS) {
+                    // NOTE that POINTS are handled separately
+                    warning_in_function_once("POINTS should not to be handled here");
+                } else {
+                    switch (stroke_shape.mode) {
+                        case LINES:
+                        case LINE_STRIP:
+                        case LINE_LOOP:
+                            break;
+                        case TRIANGLES:
+                        case TRIANGLE_STRIP:
+                        case TRIANGLE_FAN:
+                        case QUADS:
+                        case QUAD_STRIP:
+                            convert_stroke_shape_for_native(stroke_shape); // NOTE this converts one of the above shapes to a *renderable* native shape
+                        case POLYGON:
+                        default:
+                            stroke_shape.mode = stroke_shape.closed ? LINE_LOOP : LINE_STRIP;
+                    }
                 }
-            }
-            processed_shape_batch.push_back(std::move(stroke_shape));
-        } else if (graphics->get_stroke_render_mode() == STROKE_RENDER_MODE_LINE_SHADER) {
-            convert_stroke_shape_for_line_shader(processed_shape_batch, stroke_shape); // TODO
-        } else if (graphics->get_stroke_render_mode() == STROKE_RENDER_MODE_BARYCENTRIC_SHADER) {
-            convert_stroke_shape_for_barycentric_shader(processed_shape_batch, stroke_shape); // TODO
-        } else if (graphics->get_stroke_render_mode() == STROKE_RENDER_MODE_GEOMETRY_SHADER) {
-            convert_stroke_shape_for_geometry_shader(processed_shape_batch, stroke_shape); // TODO
+                processed_shape_batch.push_back(std::move(stroke_shape));
+            } break;
+            case STROKE_RENDER_MODE_LINE_SHADER: {
+                convert_stroke_shape_for_line_shader(processed_shape_batch, stroke_shape); // TODO
+            } break;
+            case STROKE_RENDER_MODE_BARYCENTRIC_SHADER: {
+                convert_stroke_shape_for_barycentric_shader(processed_shape_batch, stroke_shape); // TODO
+            } break;
+            case STROKE_RENDER_MODE_GEOMETRY_SHADER: {
+                convert_stroke_shape_for_geometry_shader(processed_shape_batch, stroke_shape); // TODO
+            } break;
+            case STROKE_RENDER_MODE_TRIANGULATE_2D:
+            default: {
+                convert_stroke_shape_to_triangles_2D(processed_shape_batch, stroke_shape);
+            } break;
         }
     }
 
@@ -766,7 +876,37 @@ namespace umfeld {
         //      - texture binding
         //      - vertex buffer binding and drawing
 
-        // handle transparency state changes
+        // NOTE 'render_shape' asssumes that a shape is either 'fill' or 'stroke':
+        //       - 'fill shapes' are expected to render in shape mode TRIANGLES, TRIANGLE_STRIP or TRIANGLE_FAN
+        //       - 'stroke shapes' are expected to render in shape mode POINTS, LINES, LINE_STRIP or LINE_LOOP
+        if (shape.mode == TRIANGLES ||
+            shape.mode == TRIANGLE_STRIP ||
+            shape.mode == TRIANGLE_FAN) {
+            /* NOTE draw filled shapes */
+            // opengl_shape_mode = PGraphicsOpenGL::OGL_get_draw_mode(shape.mode);
+            // tessellate shape into triangles and write to vertex buffer
+            // current_vertex_buffer.clear();
+            // current_vertex_buffer.reserve(vertex_count_estimate);
+            // // OPTIMIZE check if this is the fastest way to prepare shapes for this case … maybe just use shape vertex data directly
+            // convert_shapes_to_triangles_and_set_transform_id(shape, current_vertex_buffer, FALLBACK_MODEL_MATRIX_ID);
+            // convert_shapes_to_triangles_and_set_transform_id(shape, shape.vertices, FALLBACK_MODEL_MATRIX_ID);
+        } else if (shape.mode == POINTS ||
+                   shape.mode == LINES ||
+                   shape.mode == LINE_STRIP ||
+                   shape.mode == LINE_LOOP) {
+            /* NOTE draw stroke shapes */
+            // const uint32_t vertex_count_estimate = shape.vertices.size();
+            // current_vertex_buffer.clear();
+            // current_vertex_buffer.reserve(vertex_count_estimate);
+            // current_vertex_buffer.insert(current_vertex_buffer.end(), shape.vertices.begin(), shape.vertices.end());
+            // for (auto& vertex: current_vertex_buffer) {
+            // vertex.transform_id = FALLBACK_MODEL_MATRIX_ID;
+            // }
+        } else {
+            warning_in_function_once("shape mode not supported at this point ... undefined behavior");
+        }
+
+        /* handle transparency state changes */
         const bool desired_transparent_state = shape.vertex_buffer != nullptr ? shape.vertex_buffer->transparent : shape.transparent;
         if (desired_transparent_state) {
             if (!frame_state_cache.cached_transparent_shape_enabled) {
@@ -784,17 +924,20 @@ namespace umfeld {
                 frame_state_cache.cached_transparent_shape_enabled = false;
             }
         }
-        // switch shader program ( if necessary )
+        /* switch shader program ( if necessary ) */
         if (shape.shader == nullptr) {
+            /* default shaders */
             const ShaderProgram required_shader_program = shape.light_enabled ? (shape.texture_id == TEXTURE_NONE ? shader_color_lights : shader_texture_lights) : (shape.texture_id == TEXTURE_NONE ? shader_color : shader_texture);
             const bool          changed_shader_program  = use_shader_program_cached(required_shader_program);
             if (changed_shader_program) {
                 // TODO warning_in_function_once("default shader: do we need to update uniforms here?");
+                // OPTIMIZE maybe use this to set a shader uniform ( e.g view matrix ) once per flush frame once it is reuqested for the first time
             }
             // NOTE always use fallback model matrix instead of UBO
-            //      i.e vertex attribute 'aTransformID' would need to be 0
+            //      i.e vertex attribute 'aTransformID' needs to be 0
             set_uniform_model_matrix(shape, required_shader_program);
         } else {
+            /* custom shader */
             warning_in_function_once("custom_shader: set shader uniforms per SHAPE ( e.g 'view_projection_matrix' )");
             const auto required_shader_program = ShaderProgram{.id = shape.shader->get_program_id()};
             // TODO what about the uniforms … should we maybe add the `ShaderProgram` struct to PShader?
@@ -825,7 +968,7 @@ namespace umfeld {
                 warning_in_function_once("custom_shader: lighting currently not supported");
             }
         }
-        // set lights for this shape ( if enabled )
+        /* set lights for this shape ( if enabled ) */
         if (shape.light_enabled) {
             if (shape.shader == nullptr) {
                 if (shape.texture_id == TEXTURE_NONE) {
@@ -834,17 +977,18 @@ namespace umfeld {
                     set_light_uniforms(shader_texture_lights.uniforms, shape.lighting);
                 }
             } else {
-                warning_in_function_once("custom shader currently has no lighting");
+                // TODO see above
+                warning_in_function_once("custom_shader: lighting currently not supported");
             }
         }
-        // handle texture changes
+        /* handle texture changes */
         if (shape.texture_id != frame_state_cache.cached_texture_id) {
             frame_state_cache.cached_texture_id = shape.texture_id;
             if (frame_state_cache.cached_texture_id != TEXTURE_NONE) {
                 PGraphicsOpenGL::OGL_bind_texture(frame_state_cache.cached_texture_id);
             }
         }
-        // handle vertex buffer binding + drawing
+        /* handle vertex buffer binding + drawing */
         if (shape.vertex_buffer != nullptr) {
             unbind_default_vertex_buffer();
             shape.vertex_buffer->draw();
@@ -853,36 +997,7 @@ namespace umfeld {
             // NOTE at this point there should be only either of two shapes groups:
             //      - filled shapes :: TRIANGLES, TRIANGLE_STRIP, TRIANGLE_FAN
             //      - stroke shapes :: POINTS, LINES, LINE_STRIP, LINE_LOOP
-            uint32_t opengl_shape_mode = PGraphicsOpenGL::OGL_get_draw_mode(shape.mode);
-            if (shape.mode == TRIANGLES ||
-                shape.mode == TRIANGLE_STRIP ||
-                shape.mode == TRIANGLE_FAN) {
-                /* NOTE draw filled shapes */
-                // opengl_shape_mode = PGraphicsOpenGL::OGL_get_draw_mode(shape.mode);
-                // tessellate shape into triangles and write to vertex buffer
-                // current_vertex_buffer.clear();
-                // current_vertex_buffer.reserve(vertex_count_estimate);
-                // // OPTIMIZE check if this is the fastest way to prepare shapes for this case … maybe just use shape vertex data directly
-                // convert_shapes_to_triangles_and_set_transform_id(shape, current_vertex_buffer, FALLBACK_MODEL_MATRIX_ID);
-                // convert_shapes_to_triangles_and_set_transform_id(shape, shape.vertices, FALLBACK_MODEL_MATRIX_ID);
-                // NOTE `convert_shapes_to_triangles_and_set_transform_id` is not required here anymore as shapes should be converted by now
-            } else if (shape.mode == POINTS ||
-                       shape.mode == LINES ||
-                       shape.mode == LINE_STRIP ||
-                       shape.mode == LINE_LOOP) {
-                /* NOTE draw stroke shapes */
-                // const uint32_t vertex_count_estimate = shape.vertices.size();
-                // current_vertex_buffer.clear();
-                // current_vertex_buffer.reserve(vertex_count_estimate);
-                // current_vertex_buffer.insert(current_vertex_buffer.end(), shape.vertices.begin(), shape.vertices.end());
-                // for (auto& vertex: current_vertex_buffer) {
-                // vertex.transform_id = FALLBACK_MODEL_MATRIX_ID;
-                // }
-            } else {
-                warning_in_function_once("shape mode not supported at this point ... abording");
-                return;
-            }
-            opengl_shape_mode = PGraphicsOpenGL::OGL_get_draw_mode(shape.mode);
+            const uint32_t opengl_shape_mode = PGraphicsOpenGL::OGL_get_draw_mode(shape.mode);
 
 #ifndef OPENGL_ES_3_0
             if (shape.mode == POINTS) {
@@ -1140,7 +1255,9 @@ namespace umfeld {
      * @param view_matrix
      * @param projection_matrix
      */
-    void UShapeRendererOpenGL_3::flush_sort_by_z_order(std::vector<UShape>& triangulated_shapes,
+    void UShapeRendererOpenGL_3::flush_sort_by_z_order(std::vector<UShape>& point_shapes,
+                                                       std::vector<UShape>& line_shapes,
+                                                       std::vector<UShape>& triangulated_shapes,
                                                        const glm::mat4&     view_matrix,
                                                        const glm::mat4&     projection_matrix) {
 
@@ -1248,6 +1365,13 @@ namespace umfeld {
                 enable_flat_shaders_and_bind_texture(frame_state_cache.cached_shader_program.id, texture_id);
                 render_batch(batch.opaque_shapes);
             }
+        }
+        // TODO clean up point_shapes & line_shape rendering
+        for (auto& shape: point_shapes) {
+            render_shape(shape);
+        }
+        for (auto& shape: line_shapes) {
+            render_shape(shape);
         }
         // light pass ( opaque )
         if (frame_light_shapes_count > 0) {
@@ -1431,8 +1555,9 @@ namespace umfeld {
 
         for (auto& s: shapes) {
             /* stroke shapes */
-            // NOTE 'stroke shapes' are required to either be converted to TRIANGLES and handled as filled shapes ( e.g triangulated outlines or point sprite point )
-            //      or convert other shape modes ( e.g QUADS or TRIANGLES ) to either POINTS, LINES, LINE_STRIP, LINE_LOOP.
+            // NOTE 'stroke shapes' are required to either be converted to TRIANGLES
+            //      and handled as filled shapes ( e.g triangulated outlines or point sprite point )
+            //      or to convert non-stroke shape modes ( e.g QUADS or TRIANGLES ) to either POINTS, LINES, LINE_STRIP, LINE_LOOP modes.
             if (!s.filled) {
                 if (s.mode == POINTS) {
                     /* point shapes */

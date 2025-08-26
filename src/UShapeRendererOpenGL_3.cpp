@@ -66,15 +66,6 @@ namespace umfeld {
         shapes.push_back(std::move(s));
     }
 
-    void UShapeRendererOpenGL_3::reset_current_flush_frame() {
-        frame_state_cache.cached_texture_id                = UINT32_MAX;
-        frame_state_cache.cached_shader_program.id         = NO_SHADER_PROGRAM;
-        frame_state_cache.cached_transparent_shape_enabled = false;
-        frame_state_cache.cached_require_buffer_resize     = false;
-        frame_state_cache.cached_max_vertices_per_batch    = 0;
-        frame_state_cache.reset();
-    }
-
     void UShapeRendererOpenGL_3::prepare_next_flush_frame() {
         const size_t current_size = shapes.size();
         shapes.clear();
@@ -110,55 +101,55 @@ namespace umfeld {
         }
 
         // NOTE render mode paths
-        //     ├── 1. z_order
-        //     │   ├── 1.1 process_shapes_z_order
-        //     │   │   ├── processed_point_shapes
-        //     │   │   ├── processed_line_shapes
-        //     │   │   └── processed_shapes
-        //     │   └── 1.2 flush_sort_by_z_order ( TODO what about custom shader and custom vertex buffer shapes ... `render_shape()` handles them already but what about `render_batch()`? )
-        //     │       ├── separate shapes into opaque and transparent shapes
-        //     │       ├── sort opaque shapes into light shapes and texture batched shapes ( TODO all light shapes are in one batch )
-        //     │       ├── ggf resize default vertex buffer ( depending on batch size ) ( TODO what about transparent shapes? )
-        //     │       ├── compute depth and sort transparent shapes ( TODO check if this is already done in `submit_shape()` )
-        //     │       ├── set per frame shader uniforms ( OPTIMIZE this can be handle more efficent e.g with caching states )
-        //     │       ├── draw opaque pass ( with `render_batch()` )
-        //     │       │   ├── disable transpareny
-        //     │       │   ├── use shader + ggf bind texture
-        //     │       │   └── draw with `render_batch()`
-        //     │       ├── draw (native) point pass ( with `render_shape()` )
-        //     │       ├── draw (native) line pass ( with `render_shape()` )
-        //     │       ├── draw light (opaque) pass ( with `render_batch()` )
-        //     │       │   ├── disable transpareny
-        //     │       │   ├── use shader + ggf bind texture
-        //     │       │   └── draw with `render_batch()`
-        //     │       └── draw transparent pass ( with `render_shape()` ) ( OPTIMIZE might be improved with dedicates `render_shape()` )
-        //     ├── 2. submission_order
-        //     │   ├── 2.1 process_shapes_submission_order
-        //     │   │   ├── stroke shapes
-        //     │   │   │   ├── point ( depending on point render mode, converts points to triangles or point primitive )
-        //     │   │   │   └── line ( depending on line render mode, converts lines to triangles or native line primitives LINES, LINE_STRIP or LINE_LOOP )
-        //     │   │   └── filled shapes ( converts all filled shapes to TRIANGLES ) ( OPTIMIZE include primitves TRIANGLE_FAN and TRIANGLE_STRIP )
-        //     │   └── 2.2 flush_submission_order
-        //     │       └── render_shape
-        //     │           ├── evaluate shape mode ( TODO what about shapes with custom vertex buffers? )
-        //     │           ├── handle transparency
-        //     │           ├── handle shader program ( incl custom shader )
-        //     │           │   ├── default shader
-        //     │           │   │   └── ggf set/update model matrix uniforms
-        //     │           │   └── custom shader
-        //     │           │       └── ggf set/update model matrix uniforms
-        //     │           ├── handle lighting
-        //     │           │   └── ggf set/update light uniforms
-        //     │           ├── handle texture ( NOTE use caching to minimze API calls )
-        //     │           ├── handle vertex buffer
-        //     │           │   ├── default vertex buffer
-        //     │           │   │   └── ggf set/update model matrix uniforms
-        //     │           │   └── custom vertex buffer
-        //     │           │       ├── unbind default vertex buffer
-        //     │           │       ├── draw custom vertex buffer
-        //     │           │       └── (re)bind default vertex buffer
-        //     │           └── draw vertex buffer ( default and custom )
-        //     └── 3. immediately ( same as 'submission order' only with single shape )
+        //      ├── 1. z_order
+        //      │   ├── 1.1 process_shapes_z_order
+        //      │   │   ├── processed_point_shapes
+        //      │   │   ├── processed_line_shapes
+        //      │   │   └── processed_shapes
+        //      │   └── 1.2 flush_sort_by_z_order ( TODO what about custom shader and custom vertex buffer shapes ... `render_shape()` handles them already but what about `render_batch()`? )
+        //      │       ├── separate shapes into opaque and transparent shapes
+        //      │       ├── sort opaque shapes into light shapes and texture batched shapes ( TODO all light shapes are in one batch )
+        //      │       ├── ggf resize default vertex buffer ( depending on batch size ) ( TODO what about transparent shapes? )
+        //      │       ├── compute depth and sort transparent shapes ( TODO check if this is already done in `submit_shape()` )
+        //      │       ├── set per frame shader uniforms ( OPTIMIZE this can be handle more efficent e.g with caching states )
+        //      │       ├── draw opaque pass ( with `render_batch()` )
+        //      │       │   ├── disable transpareny
+        //      │       │   ├── use shader + ggf bind texture
+        //      │       │   └── draw with `render_batch()`
+        //      │       ├── draw (native) point pass ( with `render_shape()` )
+        //      │       ├── draw (native) line pass ( with `render_shape()` )
+        //      │       ├── draw light (opaque) pass ( with `render_batch()` )
+        //      │       │   ├── disable transpareny
+        //      │       │   ├── use shader + ggf bind texture
+        //      │       │   └── draw with `render_batch()`
+        //      │       └── draw transparent pass ( with `render_shape()` ) ( OPTIMIZE might be improved with dedicates `render_shape()` )
+        //      ├── 2. submission_order
+        //      │   ├── 2.1 process_shapes_submission_order
+        //      │   │   ├── stroke shapes
+        //      │   │   │   ├── point ( depending on point render mode, converts points to triangles or point primitive )
+        //      │   │   │   └── line ( depending on line render mode, converts lines to triangles or native line primitives LINES, LINE_STRIP or LINE_LOOP )
+        //      │   │   └── filled shapes ( converts all filled shapes to TRIANGLES ) ( OPTIMIZE include primitves TRIANGLE_FAN and TRIANGLE_STRIP )
+        //      │   └── 2.2 flush_submission_order
+        //      │       └── render_shape
+        //      │           ├── evaluate shape mode ( TODO what about shapes with custom vertex buffers? )
+        //      │           ├── handle transparency
+        //      │           ├── handle shader program ( incl custom shader )
+        //      │           │   ├── default shader
+        //      │           │   │   └── ggf set/update model matrix uniforms
+        //      │           │   └── custom shader
+        //      │           │       └── ggf set/update model matrix uniforms
+        //      │           ├── handle lighting
+        //      │           │   └── ggf set/update light uniforms
+        //      │           ├── handle texture ( NOTE use caching to minimze API calls )
+        //      │           ├── handle vertex buffer
+        //      │           │   ├── default vertex buffer
+        //      │           │   │   └── ggf set/update model matrix uniforms
+        //      │           │   └── custom vertex buffer
+        //      │           │       ├── unbind default vertex buffer
+        //      │           │       ├── draw custom vertex buffer
+        //      │           │       └── (re)bind default vertex buffer
+        //      │           └── draw vertex buffer ( default and custom )
+        //      └── 3. immediately ( same as 'submission order' only with single shape )
 
         // NOTE 'z-order' render pipeline:
         //       ├── opaque shapes
@@ -177,7 +168,7 @@ namespace umfeld {
         // NOTE 'immediately' render pipeline:
         //       render mode path 'immediately' uses 'submission-order' path with just single shape
 
-        reset_current_flush_frame();
+        frame_state_cache.reset();
 
         // if (!processed_point_shapes.empty() || !processed_line_shapes.empty()) {
         //     // TODO alternative render paths for points and lines are currently not implemented
@@ -304,6 +295,14 @@ namespace umfeld {
         if (graphics->get_point_render_mode() == POINT_RENDER_MODE_TRIANGULATE) {
             convert_point_shape_to_triangles(processed_triangle_shapes, point_shape);
         } else if (graphics->get_point_render_mode() == POINT_RENDER_MODE_NATIVE) {
+#ifdef OPENGL_ES_3_0
+            warning_in_function_once("in OpenGL ES 3.0 native points behave weird … be warned! you might want to selecte a different point render mode.");
+#endif
+            if (point_shape.texture_id != TEXTURE_NONE) {
+                // TODO how to handle textures here? HACK just remove texture for native render mode ... for now
+                point_shape.texture_id = TEXTURE_NONE;
+                warning_in_function_once("removing texture for points in native render mode");
+            }
             processed_point_shapes.push_back(std::move(point_shape));
         } else if (graphics->get_point_render_mode() == POINT_RENDER_MODE_POINT_SHADER) {
             warning_in_function_once("TODO pointer shader is not implemented yet");
@@ -316,6 +315,14 @@ namespace umfeld {
         if (graphics->get_point_render_mode() == POINT_RENDER_MODE_TRIANGULATE) {
             convert_point_shape_to_triangles(processed_shape_batch, point_shape);
         } else if (graphics->get_point_render_mode() == POINT_RENDER_MODE_NATIVE) {
+#ifdef OPENGL_ES_3_0
+            warning_in_function_once("in OpenGL ES 3.0 native points behave weird … be warned! you might want to selecte a different point render mode.");
+#endif
+            if (point_shape.texture_id != TEXTURE_NONE) {
+                // TODO how to handle textures here? HACK just remove texture for native render mode ... for now
+                point_shape.texture_id = TEXTURE_NONE;
+                warning_in_function_once("removing texture for points in native render mode");
+            }
             processed_shape_batch.push_back(std::move(point_shape));
         } else if (graphics->get_point_render_mode() == POINT_RENDER_MODE_POINT_SHADER) {
             warning_in_function_once("TODO pointer shader is not implemented yet");
@@ -915,34 +922,62 @@ namespace umfeld {
         return false;
     }
 
-    void UShapeRendererOpenGL_3::set_point_size_and_line_width(UShape& shape) {
-        // TODO this does not work so well …better move to shader soon
+    void UShapeRendererOpenGL_3::set_point_size_and_line_width(const UShape& shape) const {
+        // TODO this does not work so well … better move to shader soon
         // TODO this is a bit hacky … is there a better place?
         /* NOTE draw stroke shapes */
         if (shape.mode == LINES ||
             shape.mode == LINE_STRIP ||
             shape.mode == LINE_LOOP) {
-#ifndef OPENGL_3_3_CORE
             if (graphics->get_stroke_render_mode() == STROKE_RENDER_MODE_NATIVE) {
-                glLineWidth(shape.stroke.stroke_weight);
-            }
+#ifndef OPENGL_ES_3_0
+                static bool    query_once = false;
+                static GLfloat line_width_range[2];
+                if (!query_once) {
+                    query_once = true;
+                    glGetFloatv(GL_LINE_WIDTH_RANGE, line_width_range);
+                    console(format_label("native line width range"), nf(line_width_range[0], 1), "px — ", nf(line_width_range[1], 1), "px");
+                }
+
+                // Clamp the line width to supported range
+                const float clamped_width = std::clamp(shape.stroke.stroke_weight,
+                                                       line_width_range[0],
+                                                       line_width_range[1]);
+#else
+                constexpr float clamped_width = 1;
 #endif
+                glLineWidth(clamped_width);
+            }
         }
 #ifndef OPENGL_ES_3_0
         else if (shape.mode == POINTS) {
+            static bool    query_once = false;
+            static GLfloat point_size_range[2];
+            if (!query_once) {
+                query_once = true;
+                glGetFloatv(GL_POINT_SIZE_RANGE, point_size_range);
+                console(format_label("native point size range"), nf(point_size_range[0], 1), "px — ", nf(point_size_range[1], 1), "px");
+            }
             if (graphics->get_point_render_mode() == POINT_RENDER_MODE_NATIVE) {
-                glPointSize(shape.stroke.point_weight);
+                const float clamped_size = std::clamp(shape.stroke.point_weight,
+                                                      point_size_range[0],
+                                                      point_size_range[1]);
+                glPointSize(clamped_size);
             }
         }
 #endif
     }
-    void UShapeRendererOpenGL_3::render_shape(UShape& shape) {
+
+    void UShapeRendererOpenGL_3::render_shape(const UShape& shape) {
         // NOTE 'render_shape' handles:
         //      - transparency + depth testing (writing?)
         //      - shader program usage
         //      - shader uniforms update
         //      - texture binding
         //      - vertex buffer binding and drawing
+
+        const bool has_custom_shader        = shape.shader != nullptr;
+        const bool has_custom_vertex_buffer = shape.vertex_buffer != nullptr;
 
         // NOTE 'render_shape' asssumes that a shape is either 'fill' or 'stroke':
         //       - 'fill shapes' are expected to render in shape mode TRIANGLES, TRIANGLE_STRIP or TRIANGLE_FAN
@@ -964,17 +999,16 @@ namespace umfeld {
                    shape.mode == LINE_LOOP) {
             set_point_size_and_line_width(shape);
         } else {
-            if (shape.vertex_buffer == nullptr) {
+            if (!has_custom_vertex_buffer) {
                 // NOTE only emit warning von default vertex buffer ... this should never happen
                 warning_in_function_once("shape mode not supported at this point ... this should never happen ... undefined behavior");
             }
         }
         /* handle transparency state changes */
-        const bool desired_transparent_state = shape.vertex_buffer != nullptr ? shape.vertex_buffer->transparent : shape.transparent;
+        const bool desired_transparent_state = has_custom_vertex_buffer ? shape.vertex_buffer->transparent : shape.transparent;
         if (desired_transparent_state) {
             if (!frame_state_cache.cached_transparent_shape_enabled) {
                 frame_state_cache.cached_transparent_shape_enabled = true;
-                // disable_depth_testing();
                 enable_depth_testing();
                 disable_depth_buffer_writing();
                 enable_blending();
@@ -988,7 +1022,7 @@ namespace umfeld {
             }
         }
         /* switch shader program ( if necessary ) */
-        if (shape.shader == nullptr) {
+        if (!has_custom_shader) {
             /* default shaders */
             const ShaderProgram required_shader_program = shape.light_enabled ? (shape.texture_id == TEXTURE_NONE ? shader_color_lights : shader_texture_lights) : (shape.texture_id == TEXTURE_NONE ? shader_color : shader_texture);
             const bool          changed_shader_program  = use_shader_program_cached(required_shader_program);
@@ -1033,7 +1067,7 @@ namespace umfeld {
         }
         /* set lights for this shape ( if enabled ) */
         if (shape.light_enabled) {
-            if (shape.shader == nullptr) {
+            if (!has_custom_shader) {
                 if (shape.texture_id == TEXTURE_NONE) {
                     set_light_uniforms(shader_color_lights.uniforms, shape.lighting);
                 } else {
@@ -1052,7 +1086,7 @@ namespace umfeld {
             }
         }
         /* handle vertex buffer binding + drawing */
-        if (shape.vertex_buffer != nullptr) {
+        if (has_custom_vertex_buffer) {
             unbind_default_vertex_buffer();
             shape.vertex_buffer->draw();
             bind_default_vertex_buffer(); // OPTIMIZE this could be cached as well
@@ -1317,18 +1351,10 @@ namespace umfeld {
                                                        const glm::mat4&     view_matrix,
                                                        const glm::mat4&     projection_matrix) {
 
-        // TODO for tomorrow:
-        //      - separate transparent from opaque shapes
-        //      - sort opaque shapes into texture batches
-        //      - sort only transparent shapes by z-order
-        //      - render opaque point, line and triangle
-        //      - render transparent shapes similar to ( or maybe even re-use ) submission order ( or just use `render_shape` )
-        // TODO separate transparent from opaque shapes.
-        //      - render opaque with texture batches
-        //      - render transparent depth sorted
-
         if (triangulated_shapes.empty()) { return; }
 
+        // OPTIMIZE drop `partition_point` strategy and sort all shapes in one iteration with conventional for loop:
+        //      for (auto& s: triangulated_shapes) {}
         /* separate shapes into opaque and transparent shapes */
         const auto          partition_point = std::partition(triangulated_shapes.begin(), triangulated_shapes.end(), [](const UShape& s) { return !s.transparent; });
         std::vector<UShape> opaque_shapes;
@@ -1338,13 +1364,18 @@ namespace umfeld {
         std::move(triangulated_shapes.begin(), partition_point, std::back_inserter(opaque_shapes));
         std::move(partition_point, triangulated_shapes.end(), std::back_inserter(transparent_shapes));
 
-        console_once("opaque_shapes     : ", opaque_shapes.size());
-        console_once("transparent_shapes: ", transparent_shapes.size());
+        console_once("----------------------------");
+        console_once("FLUSH SORT_BY_Z_ORDER STATS");
+        console_once("----------------------------");
+        console_once("point shapes      : ", point_shapes.size());
+        console_once("line shapes       : ", line_shapes.size());
+        console_once("opaque shapes     : ", opaque_shapes.size());
+        console_once("transparent shapes: ", transparent_shapes.size());
 
         /* compute view_projection_matrix once perframe */
         const glm::mat4 view_projection_matrix = projection_matrix * view_matrix;
 
-        /* sort shapes into batches by texture id */
+        /* sort shapes into batches by texture id or light option */
         std::unordered_map<GLuint, TextureBatch> texture_batches;
         texture_batches.reserve(frame_textured_shapes_count + 1);
         // OPTIMIZE maybe not sort into texture batches if there are not a lot of different textures see `frame_textured_shapes_count`
@@ -1592,6 +1623,7 @@ namespace umfeld {
             /* fill shapes */
             if (s.filled) {
                 // TODO @maybe move this to PGraphics
+                // OPTIMIZE also make us of other native modes like TRIANGLE_FAN and TRIANGLE_STRIP
                 /* convert filled shapes to triangles */
                 graphics->convert_fill_shape_to_triangles(s);
                 s.mode = TRIANGLES;

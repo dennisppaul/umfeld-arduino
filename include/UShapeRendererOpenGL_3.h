@@ -149,7 +149,6 @@ namespace umfeld {
         static void          enable_depth_buffer_writing();
         static void          disable_depth_buffer_writing();
         static void          disable_depth_testing();
-        void                 reset_current_flush_frame();
         void                 prepare_next_flush_frame();
         void                 print_frame_info(const std::vector<UShape>& processed_point_shapes, const std::vector<UShape>& processed_line_shapes, const std::vector<UShape>& processed_triangle_shapes) const;
         void                 bind_default_vertex_buffer() const;
@@ -164,7 +163,7 @@ namespace umfeld {
         const ShaderProgram& get_shader_program_cached() const;
         bool                 use_shader_program_cached(const ShaderProgram& required_shader_program);
         static bool          set_uniform_model_matrix(const UShape& shape, const ShaderProgram& shader_program);
-        void                 set_point_size_and_line_width(UShape& shape);
+        void                 set_point_size_and_line_width(const UShape& shape) const;
         static bool          uniform_available(const GLuint loc) { return loc != ShaderUniforms::UNINITIALIZED && loc != ShaderUniforms::NOT_FOUND; }
 
         void          flush_sort_by_z_order(std::vector<UShape>& point_shapes, std::vector<UShape>& line_shapes, std::vector<UShape>& triangulated_shapes, const glm::mat4& view_matrix, const glm::mat4& projection_matrix);
@@ -187,6 +186,6 @@ namespace umfeld {
         static size_t estimate_triangle_count(const UShape& s);
         static void   convert_shapes_to_triangles_and_set_transform_id(const UShape& s, std::vector<Vertex>& out, uint16_t transformID);
         void          render_batch(const std::vector<UShape*>& shapes_to_render);
-        void          render_shape(UShape& shape);
+        void          render_shape(const UShape& shape);
     };
 } // namespace umfeld

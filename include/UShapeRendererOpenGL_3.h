@@ -167,10 +167,10 @@ namespace umfeld {
         static bool          uniform_available(const GLuint loc) { return loc != ShaderUniforms::UNINITIALIZED && loc != ShaderUniforms::NOT_FOUND; }
 
         void          flush_sort_by_z_order(std::vector<UShape>& point_shapes, std::vector<UShape>& line_shapes, std::vector<UShape>& triangulated_shapes, const glm::mat4& view_matrix, const glm::mat4& projection_matrix);
-        void          flush_submission_order(std::vector<UShape>& shapes, const glm::mat4& view_matrix, const glm::mat4& projection_matrix);
+        void          flush_submission_order(const std::vector<UShape>& shapes, const glm::mat4& view_matrix, const glm::mat4& projection_matrix);
         void          flush_immediately(std::vector<UShape>& shapes, const glm::mat4& view_matrix, const glm::mat4& projection_matrix);
         void          process_shapes_z_order(std::vector<UShape>& processed_point_shapes, std::vector<UShape>& processed_line_shapes, std::vector<UShape>& processed_triangle_shapes);
-        void          process_shapes_submission_order(std::vector<UShape>& processed_point_shapes, std::vector<UShape>& processed_line_shapes, std::vector<UShape>& processed_shapes);
+        void          process_shapes_submission_order(std::vector<UShape>& processed_shapes);
         static void   convert_point_shape_to_triangles(std::vector<UShape>& processed_triangle_shapes, UShape& point_shape);
         static void   convert_point_shape_for_shader(std::vector<UShape>& processed_point_shapes, UShape& point_shape);
         void          process_point_shape_z_order(std::vector<UShape>& processed_triangle_shapes, std::vector<UShape>& processed_point_shapes, UShape& point_shape) const;

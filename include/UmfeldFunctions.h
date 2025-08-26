@@ -135,7 +135,7 @@ namespace umfeld {
 
     // ## Rendering
 
-    PGraphics* createGraphics(int width, int height, int renderer=DEFAULT);
+    PGraphics* createGraphics(int width, int height, int renderer = DEFAULT);
 
     // ## Image
 
@@ -150,7 +150,7 @@ namespace umfeld {
     float noise(float x, float y, float z);
     void  noiseSeed(int seed);
     float randomGaussian();
-    float random(float max);
+    float random(float max = 1.0f);
     float random(float min, float max);
 
     // ### Random

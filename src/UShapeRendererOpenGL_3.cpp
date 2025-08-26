@@ -207,20 +207,16 @@ namespace umfeld {
             }
             TRACE_SCOPE_N("RENDER_MODE_SORTED_BY_SUBMISSION_ORDER/RENDER_MODE_IMMEDIATELY");
             {
-                std::vector<UShape> processed_point_shapes; // TODO not needed NOTE needed for shader-based point rendering
-                std::vector<UShape> processed_line_shapes;  // TODO not needed NOTE needed for shader-based line rendering
                 std::vector<UShape> processed_shapes;
-                processed_point_shapes.reserve(shapes.size());
-                processed_line_shapes.reserve(shapes.size());
                 processed_shapes.reserve(shapes.size());
                 // NOTE `process_shapes_z_order` converts all shapes to TRIANGLES with the exception of
                 //      POINTS and LINE* shapes that may be deferred to separate render passes
                 //      ( i.e `processed_point_shapes` and `processed_line_shapes` ) where they
                 //      may be handle differently ( e.g rendered with point shader or in natively )
-                process_shapes_submission_order(processed_point_shapes, processed_line_shapes, processed_shapes);
+                process_shapes_submission_order(processed_shapes);
                 // NOTE `flush_processed_shapes` renders shapes according to the current render mode.
                 flush_submission_order(processed_shapes, view_matrix, projection_matrix);
-                run_once({ print_frame_info(processed_point_shapes, processed_line_shapes, processed_shapes); });
+                run_once({ print_frame_info({}, {}, processed_shapes); });
             }
         }
 
@@ -1553,9 +1549,9 @@ namespace umfeld {
      * @param view_matrix
      * @param projection_matrix
      */
-    void UShapeRendererOpenGL_3::flush_submission_order(std::vector<UShape>& shapes,
-                                                        const glm::mat4&     view_matrix,
-                                                        const glm::mat4&     projection_matrix) {
+    void UShapeRendererOpenGL_3::flush_submission_order(const std::vector<UShape>& shapes,
+                                                        const glm::mat4&           view_matrix,
+                                                        const glm::mat4&           projection_matrix) {
         if (shapes.empty()) { return; }
         const glm::mat4 view_projection_matrix = projection_matrix * view_matrix;
 
@@ -1632,9 +1628,7 @@ namespace umfeld {
         }
     }
 
-    void UShapeRendererOpenGL_3::process_shapes_submission_order(std::vector<UShape>& processed_point_shapes,
-                                                                 std::vector<UShape>& processed_line_shapes,
-                                                                 std::vector<UShape>& processed_shapes) {
+    void UShapeRendererOpenGL_3::process_shapes_submission_order(std::vector<UShape>& processed_shapes) {
         // ReSharper disable once CppDFAConstantConditions
         if (shapes.empty() || graphics == nullptr) { return; }
 
@@ -1660,7 +1654,9 @@ namespace umfeld {
             if (s.filled) {
                 /* convert all filled shapes to triangles */
                 graphics->convert_fill_shape_to_triangles(s);
-                assert(s.mode == TRIANGLES);
+                if (s.vertex_buffer == nullptr) {
+                    assert(s.mode == TRIANGLES);
+                }
                 processed_shapes.push_back(std::move(s));
             }
         }

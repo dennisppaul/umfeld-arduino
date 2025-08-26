@@ -93,8 +93,7 @@ namespace umfeld {
         //      ```
 
         struct TextureBatch {
-            std::vector<UShape*> opaque_shapes;
-            std::vector<UShape*> light_shapes;
+            std::vector<UShape*> shapes;
             uint32_t             max_vertices{0};
             uint16_t             texture_id{TEXTURE_NONE};
         };
@@ -132,13 +131,12 @@ namespace umfeld {
         ShaderProgram              shader_line{};  // TODO implement
         std::vector<UShape>        shapes;
         ShapeCenterComputeStrategy shape_center_compute_strategy = ZERO_CENTER;
-        std::vector<Vertex>        current_vertex_buffer;
-        std::vector<glm::mat4>     flush_frame_matrices;
         FrameState                 frame_state_cache{};
         int                        frame_light_shapes_count{0};       // NOTE set in 'submit_shape'
         int                        frame_transparent_shapes_count{0}; // NOTE set in 'submit_shape'
         int                        frame_opaque_shapes_count{0};      // NOTE set in 'submit_shape'
         int                        frame_textured_shapes_count{0};    // NOTE set in 'submit_shape'
+        std::vector<Vertex>        current_vertex_buffer;
 
         void                 init_shaders(const std::vector<PShader*>& shader_programms);
         void                 init_buffers();
@@ -166,9 +164,9 @@ namespace umfeld {
         void                 set_point_size_and_line_width(const UShape& shape) const;
         static bool          uniform_available(const GLuint loc) { return loc != ShaderUniforms::UNINITIALIZED && loc != ShaderUniforms::NOT_FOUND; }
 
-        void          flush_sort_by_z_order(std::vector<UShape>& point_shapes, std::vector<UShape>& line_shapes, std::vector<UShape>& triangulated_shapes, const glm::mat4& view_matrix, const glm::mat4& projection_matrix);
+        void          flush_sort_by_z_order(const std::vector<UShape>& point_shapes, const std::vector<UShape>& line_shapes, std::vector<UShape>& triangulated_shapes, const glm::mat4& view_matrix, const glm::mat4& projection_matrix);
         void          flush_submission_order(const std::vector<UShape>& shapes, const glm::mat4& view_matrix, const glm::mat4& projection_matrix);
-        void          flush_immediately(std::vector<UShape>& shapes, const glm::mat4& view_matrix, const glm::mat4& projection_matrix);
+        void          flush_immediately(const std::vector<UShape>& shapes, const glm::mat4& view_matrix, const glm::mat4& projection_matrix);
         void          process_shapes_z_order(std::vector<UShape>& processed_point_shapes, std::vector<UShape>& processed_line_shapes, std::vector<UShape>& processed_triangle_shapes);
         void          process_shapes_submission_order(std::vector<UShape>& processed_shapes);
         static void   convert_point_shape_to_triangles(std::vector<UShape>& processed_triangle_shapes, UShape& point_shape);

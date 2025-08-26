@@ -43,20 +43,22 @@ namespace umfeld {
         void                 init();
         void                 set_shape(int shape, bool map_to_opengl_draw_mode = true);
         int                  get_shape() const { return native_opengl_shape; }
+        void                 set_transparent(bool transparent) { this->transparent = transparent; }
+        bool                 get_transparent() const { return transparent; }
 
-        bool transparent{false};
 
     private:
         const int           VBO_BUFFER_CHUNK_SIZE_BYTES = 1024 * 16 * sizeof(Vertex);
         std::vector<Vertex> _vertices;
-        int                 vbo                = 0;
-        int                 vao                = 0;
-        bool                vao_supported      = false; // VAOs are guaranteed for OpenGL ES 3.0 and OpenGL 3.0 core
-        bool                initial_upload     = false;
-        bool                buffer_initialized = false;
-        int                 server_buffer_size = 0;
-        bool                dirty              = false;
-        int                 native_opengl_shape;
+        int                 vbo                 = 0;
+        int                 vao                 = 0;
+        bool                vao_supported       = false; // NOTE VAOs are guaranteed for OpenGL ES 3.0 and OpenGL 3.0 core
+        bool                initial_upload      = false;
+        bool                buffer_initialized  = false;
+        int                 server_buffer_size  = 0;
+        bool                dirty               = false;
+        bool                transparent         = false;
+        int                 native_opengl_shape = 0;
 
         static bool isContextValid();
         void        enable_vertex_attributes() const;

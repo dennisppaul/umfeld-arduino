@@ -36,6 +36,7 @@
 #include "Vertex.h"
 #include "Geometry.h"
 #include "UShapeRenderer.h"
+#include "VertexBuffer.h"
 
 using namespace umfeld;
 
@@ -87,7 +88,7 @@ void PGraphics::mesh(VertexBuffer* mesh_shape) {
         s.filled = true;
         // NOTE ignore 'vertices'
         s.model       = model_matrix;
-        s.transparent = false; // TODO see if this is a good idea
+        s.transparent = mesh_shape->get_transparent();
         // NOTE ignore 'closed'
         s.texture_id    = get_current_texture_id();
         s.light_enabled = lights_enabled; // TODO not properly supported WIP

@@ -23,7 +23,47 @@
 
 #include "UmfeldConstants.h"
 
+#define MAKE_UNIFORM(var) \
+    Uniform var { .name = #var }
+
 namespace umfeld {
+    struct ShaderUniforms {
+
+        struct Uniform {
+            uint32_t    id = UNINITIALIZED;
+            const char* name;
+        };
+
+        // cached uniform locations
+        // TODO move to UmfeldTypes and replace GLuint with uint32_t
+        //      remove all OpenGL deps
+        //      maybe rename to `DefaultShaderUniforms`
+        enum UNIFORM_LOCATION_STATE : uint32_t {
+            UNINITIALIZED = 0xFFFFFFFE,
+            NOT_FOUND     = 0xFFFFFFFF,
+            INITIALIZED   = 0, // NOTE `0` is the first valid value
+        };
+
+        Uniform uViewProjectionMatrix{.id = UNINITIALIZED, .name = "uViewProjectionMatrix"};
+        Uniform uModelMatrixFallback{.name = "uModelMatrixFallback"};
+        Uniform uTextureUnit{.name = "uTextureUnit"};
+        Uniform uViewMatrix{.name = "uViewMatrix"}; /* lighting uniforms */
+        Uniform ambient{.name = "ambient"};
+        Uniform specular{.name = "specular"};
+        Uniform emissive{.name = "emissive"};
+        Uniform shininess{.name = "shininess"};
+        Uniform lightCount{.name = "lightCount"};
+        Uniform lightPosition{.name = "lightPosition"};
+        Uniform lightNormal{.name = "lightNormal"};
+        Uniform lightAmbient{.name = "lightAmbient"};
+        Uniform lightDiffuse{.name = "lightDiffuse"};
+        Uniform lightSpecular{.name = "lightSpecular"};
+        Uniform lightFalloff{.name = "lightFalloff"};
+        MAKE_UNIFORM(lightSpot);
+        // MAKE_UNIFORM(normalMatrix);
+
+        static bool is_uniform_available(const uint32_t loc) { return loc != UNINITIALIZED && loc != NOT_FOUND; }
+    };
 
     struct ShapeState {
         ShapeMode mode{POLYGON};
@@ -34,6 +74,7 @@ namespace umfeld {
             started = false;
         }
     };
+
     struct StrokeState {
         float point_weight{1};
         float stroke_weight{1};

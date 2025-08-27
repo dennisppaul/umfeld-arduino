@@ -97,12 +97,9 @@ void main() {
     gl_Position = uViewProjectionMatrix * M * aPosition;
 
     // TODO "normalMatrix as Transform" better get this from transform
-    // mat3 normalMatrix = mat3(transpose(inverse(MV)));
+    //mat3 normalMatrix = mat3(transpose(inverse(MV)));
     mat3 normalMatrix = mat3(MV);
     vec3 n = normalMatrix * aNormal.xyz;
-    if (length(n) < 1e-6) {
-        n = aNormal.xyz;
-    }
 
     vec3 ecVertex = vec3(MV * aPosition);
     vec3 ecNormal = normalize(n);

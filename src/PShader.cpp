@@ -63,15 +63,16 @@ void PShader::unuse() {
 
 void PShader::check_for_matrix_uniforms() {
     if (!programID) { return; }
-    GLint location        = glGetUniformLocation(programID, SHADER_UNIFORM_MODEL_MATRIX.c_str());
-    has_model_matrix      = location != -1;
-    location              = glGetUniformLocation(programID, SHADER_UNIFORM_VIEW_MATRIX.c_str());
-    has_view_matrix       = location != -1;
-    location              = glGetUniformLocation(programID, SHADER_UNIFORM_PROJECTION_MATRIX.c_str());
-    has_projection_matrix = location != -1;
-    location              = glGetUniformLocation(programID, SHADER_UNIFORM_TEXTURE_UNIT.c_str());
-    has_texture_unit      = location != -1;
-    location              = glGetUniformBlockIndex(programID, SHADER_UNIFORM_TRANFORM_BLOCK.c_str());
+    // TODO replace these with `ShaderUniforms`
+    GLint location        = glGetUniformLocation(programID, "uModelMatrixFallback");
+    has_model_matrix      = location != GL_INVALID_INDEX;
+    location              = glGetUniformLocation(programID, "uViewMatrix");
+    has_view_matrix       = location != GL_INVALID_INDEX;
+    location              = glGetUniformLocation(programID, "uProjectionMatrix");
+    has_projection_matrix = location != GL_INVALID_INDEX;
+    location              = glGetUniformLocation(programID, "uTextureUnit");
+    has_texture_unit      = location != GL_INVALID_INDEX;
+    location              = glGetUniformBlockIndex(programID, "Transforms");
     has_tranform_block    = location != GL_INVALID_INDEX;
 }
 
@@ -185,4 +186,9 @@ void PShader::set_uniform(const std::string& name, const glm::mat4& value) {
     if (!programID) { return; }
     check_uniform_location(name);
     glUniformMatrix4fv(getUniformLocation(name), 1, GL_FALSE, &value[0][0]);
+}
+
+void PShader::update_uniforms() {
+    // try to update default uniforms
+    warning_in_function_once("find and update default uniforms");
 }

@@ -208,9 +208,9 @@ namespace umfeld {
         WYRAND        // WyRand very fast (among the fastest non-cryptographic PRNGs). good statistical quality (passes PractRand up to 32 TB).
     };
 
-    const std::string SHADER_UNIFORM_MODEL_MATRIX      = "model_matrix";
-    const std::string SHADER_UNIFORM_VIEW_MATRIX       = "uViewMatrixMatrix";
-    const std::string SHADER_UNIFORM_PROJECTION_MATRIX = "uProjection";
-    const std::string SHADER_UNIFORM_TEXTURE_UNIT      = "uTextureUnit";
-    const std::string SHADER_UNIFORM_TRANFORM_BLOCK    = "Transforms";
+    // const std::string SHADER_UNIFORM_MODEL_MATRIX      = "model_matrix";
+    // const std::string SHADER_UNIFORM_VIEW_MATRIX       = "uViewMatrixMatrix";
+    // const std::string SHADER_UNIFORM_PROJECTION_MATRIX = "uProjection";
+    // const std::string SHADER_UNIFORM_TEXTURE_UNIT      = "uTextureUnit";
+    // const std::string SHADER_UNIFORM_TRANFORM_BLOCK    = "Transforms";
 } // namespace umfeld

@@ -28,7 +28,10 @@ namespace umfeld {
     class PShader {
     public:
         PShader();
-        ~PShader();
+        virtual ~PShader();
+
+        virtual void update_uniforms();
+        // TODO at first use populate ShaderUniforms
 
         void set_uniform(const std::string& name, int value);
         void set_uniform(const std::string& name, int value_a, int value_b);

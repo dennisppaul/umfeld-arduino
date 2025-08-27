@@ -413,37 +413,37 @@ void PGraphicsOpenGL_3::init(uint32_t* pixels, const int width, const int height
 
 /* additional */
 
-void PGraphicsOpenGL_3::OGL3_update_shader_matrices(PShader* shader) const {
-    if (shader == nullptr) { return; }
-    if (shader->has_model_matrix) {
-        shader->set_uniform(SHADER_UNIFORM_MODEL_MATRIX, model_matrix);
-    }
-    if (shader->has_view_matrix) {
-        shader->set_uniform(SHADER_UNIFORM_VIEW_MATRIX, view_matrix);
-    }
-    if (shader->has_projection_matrix) {
-        shader->set_uniform(SHADER_UNIFORM_PROJECTION_MATRIX, projection_matrix);
-    }
-    if (shader->has_texture_unit) {
-        shader->set_uniform(SHADER_UNIFORM_TEXTURE_UNIT, DEFAULT_ACTIVE_TEXTURE_UNIT);
-    }
-}
-
-void PGraphicsOpenGL_3::OGL3_reset_shader_matrices(PShader* shader) {
-    if (shader == nullptr) { return; }
-    if (shader->has_model_matrix) {
-        shader->set_uniform(SHADER_UNIFORM_MODEL_MATRIX, glm::mat4(1.0f));
-    }
-    if (shader->has_view_matrix) {
-        shader->set_uniform(SHADER_UNIFORM_VIEW_MATRIX, glm::mat4(1.0f));
-    }
-    if (shader->has_projection_matrix) {
-        shader->set_uniform(SHADER_UNIFORM_PROJECTION_MATRIX, glm::mat4(1.0f));
-    }
-    if (shader->has_texture_unit) {
-        shader->set_uniform(SHADER_UNIFORM_TEXTURE_UNIT, 0);
-    }
-}
+// void PGraphicsOpenGL_3::OGL3_update_shader_matrices(PShader* shader) const {
+//     if (shader == nullptr) { return; }
+//     if (shader->has_model_matrix) {
+//         shader->set_uniform(SHADER_UNIFORM_MODEL_MATRIX, model_matrix);
+//     }
+//     if (shader->has_view_matrix) {
+//         shader->set_uniform(SHADER_UNIFORM_VIEW_MATRIX, view_matrix);
+//     }
+//     if (shader->has_projection_matrix) {
+//         shader->set_uniform(SHADER_UNIFORM_PROJECTION_MATRIX, projection_matrix);
+//     }
+//     if (shader->has_texture_unit) {
+//         shader->set_uniform(SHADER_UNIFORM_TEXTURE_UNIT, DEFAULT_ACTIVE_TEXTURE_UNIT);
+//     }
+// }
+//
+// void PGraphicsOpenGL_3::OGL3_reset_shader_matrices(PShader* shader) {
+//     if (shader == nullptr) { return; }
+//     if (shader->has_model_matrix) {
+//         shader->set_uniform(SHADER_UNIFORM_MODEL_MATRIX, glm::mat4(1.0f));
+//     }
+//     if (shader->has_view_matrix) {
+//         shader->set_uniform(SHADER_UNIFORM_VIEW_MATRIX, glm::mat4(1.0f));
+//     }
+//     if (shader->has_projection_matrix) {
+//         shader->set_uniform(SHADER_UNIFORM_PROJECTION_MATRIX, glm::mat4(1.0f));
+//     }
+//     if (shader->has_texture_unit) {
+//         shader->set_uniform(SHADER_UNIFORM_TEXTURE_UNIT, 0);
+//     }
+// }
 
 // void PGraphicsOpenGL_3::mesh(VertexBuffer* mesh_shape) {
 //     UMFELD_PGRAPHICS_OPENGL_3_3_CORE_CHECK_ERRORS("mesh() begin");

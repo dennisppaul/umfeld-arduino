@@ -115,8 +115,8 @@ namespace umfeld {
 
         /* --- OpenGL 3.3 specific methods --- */
 
-        void        OGL3_update_shader_matrices(PShader* shader) const;
-        static void OGL3_reset_shader_matrices(PShader* shader);
+        // void        OGL3_update_shader_matrices(PShader* shader) const;
+        // static void OGL3_reset_shader_matrices(PShader* shader);
         static void OGL3_add_line_quad(const Vertex& p0, const Vertex& p1, float thickness, std::vector<Vertex>& out);
         void        OGL3_flip_pixel_buffer(uint32_t* pixels);
         void        OGL3_draw_fullscreen_texture(GLuint texture_id) const;

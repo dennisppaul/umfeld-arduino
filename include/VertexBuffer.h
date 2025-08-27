@@ -43,7 +43,7 @@ namespace umfeld {
         void                 init();
         void                 set_shape(int shape, bool map_to_opengl_draw_mode = true);
         int                  get_shape() const { return native_opengl_shape; }
-        void                 set_transparent(bool transparent) { this->transparent = transparent; }
+        void                 set_transparent(const bool transparent) { this->transparent = transparent; }
         bool                 get_transparent() const { return transparent; }
 
 

@@ -27,34 +27,7 @@
 #include "UmfeldFunctionsGraphics.h"
 
 namespace umfeld {
-    // cached uniform locations
-    struct ShaderUniforms {
-        enum UNIFORM_LOCATION_STATE : GLuint {
-            UNINITIALIZED = static_cast<GLuint>(-2),
-            NOT_FOUND     = GL_INVALID_INDEX, // NOTE result delivered by OpenGL s `glGetUniformLocation()`
-            INITIALIZED   = 0,                // NOTE `0` is the first valid value
-        };
-        GLuint uViewProjectionMatrix = UNINITIALIZED; // OPTIMIZE this is a bit redundant: only upload what s needed for an individual shader: M, MVP, VP, …
-        GLuint uModelMatrixFallback  = UNINITIALIZED;
-        GLuint uTextureUnit          = UNINITIALIZED;
-        // lighting uniforms
-        GLuint uViewMatrix = UNINITIALIZED;
-        // GLuint normalMatrix  = UNINITIALIZED;
-        GLuint ambient       = UNINITIALIZED;
-        GLuint specular      = UNINITIALIZED;
-        GLuint emissive      = UNINITIALIZED;
-        GLuint shininess     = UNINITIALIZED;
-        GLuint lightCount    = UNINITIALIZED;
-        GLuint lightPosition = UNINITIALIZED;
-        GLuint lightNormal   = UNINITIALIZED;
-        GLuint lightAmbient  = UNINITIALIZED;
-        GLuint lightDiffuse  = UNINITIALIZED;
-        GLuint lightSpecular = UNINITIALIZED;
-        GLuint lightFalloff  = UNINITIALIZED;
-        GLuint lightSpot     = UNINITIALIZED;
 
-        static bool is_uniform_available(const GLuint loc) { return loc != UNINITIALIZED && loc != NOT_FOUND; }
-    };
 
     class UShapeRendererOpenGL_3 final : public UShapeRenderer {
     public:
@@ -99,7 +72,7 @@ namespace umfeld {
         };
 
         struct ShaderProgram {
-            GLuint         id{0};
+            uint32_t       id{0};
             ShaderUniforms uniforms;
         };
 
@@ -156,7 +129,7 @@ namespace umfeld {
         static void          setup_uniform_blocks(const std::string& shader_name, GLuint program);
         static bool          evaluate_shader_uniforms(const std::string& shader_name, const ShaderUniforms& uniforms);
         static bool          uniform_exists(const GLuint loc) { return loc != ShaderUniforms::NOT_FOUND; }
-        void                 set_per_frame_default_shader_uniforms(const glm::mat4& view_projection_matrix, int frame_has_light_shapes, int frame_has_transparent_shapes, int frame_has_opaque_shapes) const;
+        void                 set_per_frame_default_shader_uniforms(const glm::mat4& view_projection_matrix,const glm::mat4& view_matrix, int frame_has_light_shapes, int frame_has_transparent_shapes, int frame_has_opaque_shapes) const;
         static void          set_light_uniforms(const ShaderUniforms& uniforms, const LightingState& lighting);
         const ShaderProgram& get_shader_program_cached() const;
         bool                 use_shader_program_cached(const ShaderProgram& required_shader_program);

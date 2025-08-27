@@ -44,11 +44,12 @@ namespace umfeld {
             INITIALIZED   = 0, // NOTE `0` is the first valid value
         };
 
-        Uniform uViewProjectionMatrix{.id = UNINITIALIZED, .name = "uViewProjectionMatrix"};
-        Uniform uModelMatrixFallback{.name = "uModelMatrixFallback"};
-        Uniform uTextureUnit{.name = "uTextureUnit"};
-        Uniform uViewMatrix{.name = "uViewMatrix"}; /* lighting uniforms */
-        Uniform ambient{.name = "ambient"};
+        Uniform u_model_matrix{.name = "u_model_matrix"};
+        Uniform u_view_matrix{.name = "u_view_matrix"};
+        Uniform u_projection_matrix{.name = "u_projection_matrix"};
+        Uniform u_view_projection_matrix{.name = "u_view_projection_matrix"};
+        Uniform u_texture_unit{.name = "u_texture_unit"};
+        Uniform ambient{.name = "ambient"}; /* lighting uniforms */
         Uniform specular{.name = "specular"};
         Uniform emissive{.name = "emissive"};
         Uniform shininess{.name = "shininess"};
@@ -63,6 +64,11 @@ namespace umfeld {
         // MAKE_UNIFORM(normalMatrix);
 
         static bool is_uniform_available(const uint32_t loc) { return loc != UNINITIALIZED && loc != NOT_FOUND; }
+    };
+
+    struct ShaderProgram {
+        uint32_t       id{0};
+        ShaderUniforms uniforms;
     };
 
     struct ShapeState {

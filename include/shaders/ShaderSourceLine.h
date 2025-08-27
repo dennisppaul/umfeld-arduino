@@ -34,9 +34,9 @@ layout(std140) uniform Transforms {
 
 out vec4 vColor;
 
-uniform mat4 uModelMatrixFallback;
+uniform mat4 u_model_matrix;
 uniform mat4 uProjection;
-uniform mat4 uViewMatrixMatrix;
+uniform mat4 u_view_matrix;
 
 uniform vec4 viewport;
 uniform int perspective;
@@ -44,12 +44,12 @@ uniform vec3 scale;
 
 void main() {
     mat4 M;
-    if (aTransformID == 0u) {
-        M = uModelMatrixFallback;
+    if (a_transform_id == 0u) {
+        M = u_model_matrix;
     } else {
-        M = uModel[aTransformID - 1u];
+        M = uModel[a_transform_id - 1u];
     }
-    mat4 modelviewMatrix =  uViewMatrixMatrix * M;
+    mat4 modelviewMatrix =  u_view_matrix * M;
     mat4 projectionMatrix = uProjection;
     vec4 direction = aNormal;
     vec4 posp = modelviewMatrix * aPosition;

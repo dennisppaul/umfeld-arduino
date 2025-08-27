@@ -228,14 +228,6 @@ namespace umfeld {
         return false;
     }
 
-    static uint32_t get_uniform_location(const uint32_t& id, const char* uniform_name) {
-        const uint32_t location = glGetUniformLocation(id, uniform_name);
-        if (location == GL_INVALID_INDEX) {
-            return ShaderUniforms::NOT_FOUND;
-        }
-        return location;
-    }
-
     void UShapeRendererOpenGL_3::init_shaders(const std::vector<PShader*>& shader_programms) {
         // NOTE for OpenGL ES 3.0 create shader source with dynamic array size
         //      ```c
@@ -258,52 +250,52 @@ namespace umfeld {
         // TODO shader_line.id
 
         /* cache uniform locations */
-        shader_color.uniforms.uModelMatrixFallback.id  = get_uniform_location(shader_color.id, "uModelMatrixFallback");
-        shader_color.uniforms.uViewProjectionMatrix.id = get_uniform_location(shader_color.id, "uViewProjectionMatrix");
-        evaluate_shader_uniforms("color", shader_color.uniforms);
+        shader_color.uniforms.u_model_matrix.id           = PGraphicsOpenGL::OGL_get_uniform_location(shader_color.id, "u_model_matrix");
+        shader_color.uniforms.u_view_projection_matrix.id = PGraphicsOpenGL::OGL_get_uniform_location(shader_color.id, "u_view_projection_matrix");
+        PGraphicsOpenGL::OGL_evaluate_shader_uniforms("color", shader_color.uniforms);
 
-        shader_texture.uniforms.uModelMatrixFallback.id  = get_uniform_location(shader_texture.id, "uModelMatrixFallback");
-        shader_texture.uniforms.uViewProjectionMatrix.id = get_uniform_location(shader_texture.id, "uViewProjectionMatrix");
-        shader_texture.uniforms.uTextureUnit.id          = get_uniform_location(shader_texture.id, "uTextureUnit");
-        evaluate_shader_uniforms("texture", shader_texture.uniforms);
+        shader_texture.uniforms.u_model_matrix.id           = PGraphicsOpenGL::OGL_get_uniform_location(shader_texture.id, "u_model_matrix");
+        shader_texture.uniforms.u_view_projection_matrix.id = PGraphicsOpenGL::OGL_get_uniform_location(shader_texture.id, "u_view_projection_matrix");
+        shader_texture.uniforms.u_texture_unit.id           = PGraphicsOpenGL::OGL_get_uniform_location(shader_texture.id, "u_texture_unit");
+        PGraphicsOpenGL::OGL_evaluate_shader_uniforms("texture", shader_texture.uniforms);
 
         /* cache lighting shader uniform locations */
-        // shader_color_lights.uniforms.normalMatrix  = get_uniform_location(shader_color_lights.id, "normalMatrix"); // TODO "normalMatrix as Transform"
-        shader_color_lights.uniforms.uModelMatrixFallback.id  = get_uniform_location(shader_color_lights.id, "uModelMatrixFallback");
-        shader_color_lights.uniforms.uViewProjectionMatrix.id = get_uniform_location(shader_color_lights.id, "uViewProjectionMatrix");
-        shader_color_lights.uniforms.uViewMatrix.id           = get_uniform_location(shader_color_lights.id, "uViewMatrix");
-        shader_color_lights.uniforms.ambient.id               = get_uniform_location(shader_color_lights.id, "ambient");
-        shader_color_lights.uniforms.specular.id              = get_uniform_location(shader_color_lights.id, "specular");
-        shader_color_lights.uniforms.emissive.id              = get_uniform_location(shader_color_lights.id, "emissive");
-        shader_color_lights.uniforms.shininess.id             = get_uniform_location(shader_color_lights.id, "shininess");
-        shader_color_lights.uniforms.lightCount.id            = get_uniform_location(shader_color_lights.id, "lightCount");
-        shader_color_lights.uniforms.lightPosition.id         = get_uniform_location(shader_color_lights.id, "lightPosition");
-        shader_color_lights.uniforms.lightNormal.id           = get_uniform_location(shader_color_lights.id, "lightNormal");
-        shader_color_lights.uniforms.lightAmbient.id          = get_uniform_location(shader_color_lights.id, "lightAmbient");
-        shader_color_lights.uniforms.lightDiffuse.id          = get_uniform_location(shader_color_lights.id, "lightDiffuse");
-        shader_color_lights.uniforms.lightSpecular.id         = get_uniform_location(shader_color_lights.id, "lightSpecular");
-        shader_color_lights.uniforms.lightFalloff.id          = get_uniform_location(shader_color_lights.id, "lightFalloff");
-        shader_color_lights.uniforms.lightSpot.id             = get_uniform_location(shader_color_lights.id, "lightSpot");
-        evaluate_shader_uniforms("color_lights", shader_color_lights.uniforms);
+        // shader_color_lights.uniforms.normalMatrix  = PGraphicsOpenGL::OGL_get_uniform_location(shader_color_lights.id, "normalMatrix"); // TODO "normalMatrix as Transform"
+        shader_color_lights.uniforms.u_model_matrix.id           = PGraphicsOpenGL::OGL_get_uniform_location(shader_color_lights.id, "u_model_matrix");
+        shader_color_lights.uniforms.u_view_projection_matrix.id = PGraphicsOpenGL::OGL_get_uniform_location(shader_color_lights.id, "u_view_projection_matrix");
+        shader_color_lights.uniforms.u_view_matrix.id            = PGraphicsOpenGL::OGL_get_uniform_location(shader_color_lights.id, "u_view_matrix");
+        shader_color_lights.uniforms.ambient.id                  = PGraphicsOpenGL::OGL_get_uniform_location(shader_color_lights.id, "ambient");
+        shader_color_lights.uniforms.specular.id                 = PGraphicsOpenGL::OGL_get_uniform_location(shader_color_lights.id, "specular");
+        shader_color_lights.uniforms.emissive.id                 = PGraphicsOpenGL::OGL_get_uniform_location(shader_color_lights.id, "emissive");
+        shader_color_lights.uniforms.shininess.id                = PGraphicsOpenGL::OGL_get_uniform_location(shader_color_lights.id, "shininess");
+        shader_color_lights.uniforms.lightCount.id               = PGraphicsOpenGL::OGL_get_uniform_location(shader_color_lights.id, "lightCount");
+        shader_color_lights.uniforms.lightPosition.id            = PGraphicsOpenGL::OGL_get_uniform_location(shader_color_lights.id, "lightPosition");
+        shader_color_lights.uniforms.lightNormal.id              = PGraphicsOpenGL::OGL_get_uniform_location(shader_color_lights.id, "lightNormal");
+        shader_color_lights.uniforms.lightAmbient.id             = PGraphicsOpenGL::OGL_get_uniform_location(shader_color_lights.id, "lightAmbient");
+        shader_color_lights.uniforms.lightDiffuse.id             = PGraphicsOpenGL::OGL_get_uniform_location(shader_color_lights.id, "lightDiffuse");
+        shader_color_lights.uniforms.lightSpecular.id            = PGraphicsOpenGL::OGL_get_uniform_location(shader_color_lights.id, "lightSpecular");
+        shader_color_lights.uniforms.lightFalloff.id             = PGraphicsOpenGL::OGL_get_uniform_location(shader_color_lights.id, "lightFalloff");
+        shader_color_lights.uniforms.lightSpot.id                = PGraphicsOpenGL::OGL_get_uniform_location(shader_color_lights.id, "lightSpot");
+        PGraphicsOpenGL::OGL_evaluate_shader_uniforms("color_lights", shader_color_lights.uniforms);
 
-        // shader_texture_lights.uniforms.normalMatrix  = get_uniform_location(shader_texture_lights.id, "normalMatrix"); // TODO "normalMatrix as Transform"
-        shader_texture_lights.uniforms.uModelMatrixFallback.id  = get_uniform_location(shader_texture_lights.id, "uModelMatrixFallback");
-        shader_texture_lights.uniforms.uTextureUnit.id          = get_uniform_location(shader_texture_lights.id, "uTextureUnit");
-        shader_texture_lights.uniforms.uViewProjectionMatrix.id = get_uniform_location(shader_texture_lights.id, "uViewProjectionMatrix");
-        shader_texture_lights.uniforms.uViewMatrix.id           = get_uniform_location(shader_texture_lights.id, "uViewMatrix");
-        shader_texture_lights.uniforms.ambient.id               = get_uniform_location(shader_texture_lights.id, "ambient");
-        shader_texture_lights.uniforms.specular.id              = get_uniform_location(shader_texture_lights.id, "specular");
-        shader_texture_lights.uniforms.emissive.id              = get_uniform_location(shader_texture_lights.id, "emissive");
-        shader_texture_lights.uniforms.shininess.id             = get_uniform_location(shader_texture_lights.id, "shininess");
-        shader_texture_lights.uniforms.lightCount.id            = get_uniform_location(shader_texture_lights.id, "lightCount");
-        shader_texture_lights.uniforms.lightPosition.id         = get_uniform_location(shader_texture_lights.id, "lightPosition");
-        shader_texture_lights.uniforms.lightNormal.id           = get_uniform_location(shader_texture_lights.id, "lightNormal");
-        shader_texture_lights.uniforms.lightAmbient.id          = get_uniform_location(shader_texture_lights.id, "lightAmbient");
-        shader_texture_lights.uniforms.lightDiffuse.id          = get_uniform_location(shader_texture_lights.id, "lightDiffuse");
-        shader_texture_lights.uniforms.lightSpecular.id         = get_uniform_location(shader_texture_lights.id, "lightSpecular");
-        shader_texture_lights.uniforms.lightFalloff.id          = get_uniform_location(shader_texture_lights.id, "lightFalloff");
-        shader_texture_lights.uniforms.lightSpot.id             = get_uniform_location(shader_texture_lights.id, "lightSpot");
-        evaluate_shader_uniforms("texture_lights", shader_texture_lights.uniforms);
+        // shader_texture_lights.uniforms.normalMatrix  = PGraphicsOpenGL::OGL_get_uniform_location(shader_texture_lights.id, "normalMatrix"); // TODO "normalMatrix as Transform"
+        shader_texture_lights.uniforms.u_model_matrix.id           = PGraphicsOpenGL::OGL_get_uniform_location(shader_texture_lights.id, "u_model_matrix");
+        shader_texture_lights.uniforms.u_texture_unit.id           = PGraphicsOpenGL::OGL_get_uniform_location(shader_texture_lights.id, "u_texture_unit");
+        shader_texture_lights.uniforms.u_view_projection_matrix.id = PGraphicsOpenGL::OGL_get_uniform_location(shader_texture_lights.id, "u_view_projection_matrix");
+        shader_texture_lights.uniforms.u_view_matrix.id            = PGraphicsOpenGL::OGL_get_uniform_location(shader_texture_lights.id, "u_view_matrix");
+        shader_texture_lights.uniforms.ambient.id                  = PGraphicsOpenGL::OGL_get_uniform_location(shader_texture_lights.id, "ambient");
+        shader_texture_lights.uniforms.specular.id                 = PGraphicsOpenGL::OGL_get_uniform_location(shader_texture_lights.id, "specular");
+        shader_texture_lights.uniforms.emissive.id                 = PGraphicsOpenGL::OGL_get_uniform_location(shader_texture_lights.id, "emissive");
+        shader_texture_lights.uniforms.shininess.id                = PGraphicsOpenGL::OGL_get_uniform_location(shader_texture_lights.id, "shininess");
+        shader_texture_lights.uniforms.lightCount.id               = PGraphicsOpenGL::OGL_get_uniform_location(shader_texture_lights.id, "lightCount");
+        shader_texture_lights.uniforms.lightPosition.id            = PGraphicsOpenGL::OGL_get_uniform_location(shader_texture_lights.id, "lightPosition");
+        shader_texture_lights.uniforms.lightNormal.id              = PGraphicsOpenGL::OGL_get_uniform_location(shader_texture_lights.id, "lightNormal");
+        shader_texture_lights.uniforms.lightAmbient.id             = PGraphicsOpenGL::OGL_get_uniform_location(shader_texture_lights.id, "lightAmbient");
+        shader_texture_lights.uniforms.lightDiffuse.id             = PGraphicsOpenGL::OGL_get_uniform_location(shader_texture_lights.id, "lightDiffuse");
+        shader_texture_lights.uniforms.lightSpecular.id            = PGraphicsOpenGL::OGL_get_uniform_location(shader_texture_lights.id, "lightSpecular");
+        shader_texture_lights.uniforms.lightFalloff.id             = PGraphicsOpenGL::OGL_get_uniform_location(shader_texture_lights.id, "lightFalloff");
+        shader_texture_lights.uniforms.lightSpot.id                = PGraphicsOpenGL::OGL_get_uniform_location(shader_texture_lights.id, "lightSpot");
+        PGraphicsOpenGL::OGL_evaluate_shader_uniforms("texture_lights", shader_texture_lights.uniforms);
 
         // TODO add point + line shader program
     }
@@ -444,86 +436,6 @@ namespace umfeld {
         }
     }
 
-    bool UShapeRendererOpenGL_3::evaluate_shader_uniforms(const std::string& shader_name, const ShaderUniforms& uniforms) {
-        bool valid = true;
-        if (uniforms.uViewProjectionMatrix.id == ShaderUniforms::NOT_FOUND) {
-            warning(shader_name, ": uniform 'uViewProjectionMatrix' not found");
-            valid = false;
-        }
-        if (uniforms.uModelMatrixFallback.id == ShaderUniforms::NOT_FOUND) {
-            warning(shader_name, ": uniform 'uModelMatrixFallback' not found");
-            valid = false;
-        }
-        /* only check uTextureUnit for texture shaders */
-        if (shader_name.find("texture") != std::string::npos) {
-            if (uniforms.uTextureUnit.id == ShaderUniforms::NOT_FOUND) {
-                warning(shader_name, ": uniform 'uTextureUnit' not found");
-                valid = false;
-            }
-        }
-        /* only check lighting uniforms for lighting shaders */
-        if (shader_name.find("lights") != std::string::npos) {
-            if (uniforms.uViewMatrix.id == ShaderUniforms::NOT_FOUND) {
-                warning(shader_name, ": uniform 'uViewMatrix' not found");
-                valid = false;
-            }
-            // TODO consider "normalMatrix as Transform" ... see model_matrix
-            // if (uniforms.normalMatrix == ShaderUniforms::NOT_FOUND) {
-            //     warning(shader_name, ": uniform 'normalMatrix' not found");
-            //     valid = false;
-            // }
-            if (uniforms.ambient.id == ShaderUniforms::NOT_FOUND) {
-                warning(shader_name, ": uniform 'ambient' not found");
-                valid = false;
-            }
-            if (uniforms.specular.id == ShaderUniforms::NOT_FOUND) {
-                warning(shader_name, ": uniform 'specular' not found");
-                valid = false;
-            }
-            if (uniforms.emissive.id == ShaderUniforms::NOT_FOUND) {
-                warning(shader_name, ": uniform 'emissive' not found");
-                valid = false;
-            }
-            if (uniforms.shininess.id == ShaderUniforms::NOT_FOUND) {
-                warning(shader_name, ": uniform 'shininess' not found");
-                valid = false;
-            }
-            if (uniforms.lightCount.id == ShaderUniforms::NOT_FOUND) {
-                warning(shader_name, ": uniform 'lightCount' not found");
-                valid = false;
-            }
-            if (uniforms.lightPosition.id == ShaderUniforms::NOT_FOUND) {
-                warning(shader_name, ": uniform 'lightPosition' not found");
-                valid = false;
-            }
-            if (uniforms.lightNormal.id == ShaderUniforms::NOT_FOUND) {
-                warning(shader_name, ": uniform 'lightNormal' not found");
-                valid = false;
-            }
-            if (uniforms.lightAmbient.id == ShaderUniforms::NOT_FOUND) {
-                warning(shader_name, ": uniform 'lightAmbient' not found");
-                valid = false;
-            }
-            if (uniforms.lightDiffuse.id == ShaderUniforms::NOT_FOUND) {
-                warning(shader_name, ": uniform 'lightDiffuse' not found");
-                valid = false;
-            }
-            if (uniforms.lightSpecular.id == ShaderUniforms::NOT_FOUND) {
-                warning(shader_name, ": uniform 'lightSpecular' not found");
-                valid = false;
-            }
-            if (uniforms.lightFalloff.id == ShaderUniforms::NOT_FOUND) {
-                warning(shader_name, ": uniform 'lightFalloff' not found");
-                valid = false;
-            }
-            if (uniforms.lightSpot.id == ShaderUniforms::NOT_FOUND) {
-                warning(shader_name, ": uniform 'lightSpot' not found");
-                valid = false;
-            }
-        }
-        return valid;
-    }
-
     void UShapeRendererOpenGL_3::set_per_frame_default_shader_uniforms(const glm::mat4& view_projection_matrix,
                                                                        const glm::mat4& view_matrix,
                                                                        const int        frame_has_light_shapes,
@@ -532,21 +444,21 @@ namespace umfeld {
         // NOTE set view_projection_matrix and texture unit in all default shaders
         if (frame_has_light_shapes > 0) {
             glUseProgram(shader_color_lights.id);
-            glUniformMatrix4fv(shader_color_lights.uniforms.uViewProjectionMatrix.id, 1, GL_FALSE, &view_projection_matrix[0][0]);
-            glUniformMatrix4fv(shader_color_lights.uniforms.uViewMatrix.id, 1, GL_FALSE, &view_matrix[0][0]);
+            glUniformMatrix4fv(shader_color_lights.uniforms.u_view_projection_matrix.id, 1, GL_FALSE, &view_projection_matrix[0][0]);
+            glUniformMatrix4fv(shader_color_lights.uniforms.u_view_matrix.id, 1, GL_FALSE, &view_matrix[0][0]);
 
             glUseProgram(shader_texture_lights.id);
-            glUniformMatrix4fv(shader_texture_lights.uniforms.uViewProjectionMatrix.id, 1, GL_FALSE, &view_projection_matrix[0][0]);
-            glUniformMatrix4fv(shader_texture_lights.uniforms.uViewMatrix.id, 1, GL_FALSE, &view_matrix[0][0]);
-            glUniform1i(shader_texture_lights.uniforms.uTextureUnit.id, 0);
+            glUniformMatrix4fv(shader_texture_lights.uniforms.u_view_projection_matrix.id, 1, GL_FALSE, &view_projection_matrix[0][0]);
+            glUniformMatrix4fv(shader_texture_lights.uniforms.u_view_matrix.id, 1, GL_FALSE, &view_matrix[0][0]);
+            glUniform1i(shader_texture_lights.uniforms.u_texture_unit.id, 0);
         }
         if (frame_has_opaque_shapes > 0 || frame_has_transparent_shapes > 0) {
             glUseProgram(shader_color.id);
-            glUniformMatrix4fv(shader_color.uniforms.uViewProjectionMatrix.id, 1, GL_FALSE, &view_projection_matrix[0][0]);
+            glUniformMatrix4fv(shader_color.uniforms.u_view_projection_matrix.id, 1, GL_FALSE, &view_projection_matrix[0][0]);
 
             glUseProgram(shader_texture.id);
-            glUniformMatrix4fv(shader_texture.uniforms.uViewProjectionMatrix.id, 1, GL_FALSE, &view_projection_matrix[0][0]);
-            glUniform1i(shader_texture.uniforms.uTextureUnit.id, 0);
+            glUniformMatrix4fv(shader_texture.uniforms.u_view_projection_matrix.id, 1, GL_FALSE, &view_projection_matrix[0][0]);
+            glUniform1i(shader_texture.uniforms.u_texture_unit.id, 0);
         }
         // TODO implement point and line shaders
     }
@@ -597,7 +509,7 @@ namespace umfeld {
         }
     }
 
-    const UShapeRendererOpenGL_3::ShaderProgram& UShapeRendererOpenGL_3::get_shader_program_cached() const {
+    const ShaderProgram& UShapeRendererOpenGL_3::get_shader_program_cached() const {
         return frame_state_cache.cached_shader_program;
     }
 
@@ -613,14 +525,17 @@ namespace umfeld {
 
     bool UShapeRendererOpenGL_3::set_uniform_model_matrix(const UShape&        shape,
                                                           const ShaderProgram& shader_program) {
-        if (uniform_available(shader_program.uniforms.uModelMatrixFallback.id)) {
-            glUniformMatrix4fv(shader_program.uniforms.uModelMatrixFallback.id, 1, GL_FALSE, &shape.model[0][0]);
+        if (uniform_available(shader_program.uniforms.u_model_matrix.id)) {
+            glUniformMatrix4fv(shader_program.uniforms.u_model_matrix.id, 1, GL_FALSE, &shape.model[0][0]);
             return true;
         }
         return false;
     }
 
     void UShapeRendererOpenGL_3::set_point_size_and_line_width(const UShape& shape) const {
+        if (graphics == nullptr) {
+            return;
+        }
         // TODO this does not work so well … better move to shader soon
         // TODO this is a bit hacky … is there a better place?
         /* NOTE draw stroke shapes */
@@ -871,7 +786,7 @@ namespace umfeld {
                                               frame_light_shapes_count,
                                               frame_transparent_shapes_count,
                                               frame_opaque_shapes_count);
-        // TODO maybe remove the above and handle it with cacxxxxxxhing flags entirely in loop below … don t forget `glUniform1i(shader_xxx.uniforms.uTextureUnit, 0);`
+        // TODO maybe remove the above and handle it with cacxxxxxxhing flags entirely in loop below … don t forget `glUniform1i(shader_xxx.uniforms.u_texture_unit, 0);`
 
         bind_default_vertex_buffer();
 
@@ -1030,6 +945,7 @@ namespace umfeld {
     }
 
     void UShapeRendererOpenGL_3::process_point_shape_z_order(std::vector<UShape>& processed_triangle_shapes, std::vector<UShape>& processed_point_shapes, UShape& point_shape) const {
+        if (graphics == nullptr) { return; }
         // NOTE this is required by `process_shapes_z_order`
         if (graphics->get_point_render_mode() == POINT_RENDER_MODE_TRIANGULATE) {
             convert_point_shape_to_triangles(processed_triangle_shapes, point_shape);
@@ -1050,6 +966,7 @@ namespace umfeld {
     }
 
     void UShapeRendererOpenGL_3::process_point_shape_submission_order(std::vector<UShape>& processed_shape_batch, UShape& point_shape) const {
+        if (graphics == nullptr) { return; }
         // NOTE this is required by `process_shapes_z_order`
         if (graphics->get_point_render_mode() == POINT_RENDER_MODE_TRIANGULATE) {
             convert_point_shape_to_triangles(processed_shape_batch, point_shape);
@@ -1070,6 +987,7 @@ namespace umfeld {
     }
 
     void UShapeRendererOpenGL_3::convert_stroke_shape_to_triangles_2D(std::vector<UShape>& processed_triangle_shapes, UShape& stroke_shape) const {
+        if (graphics == nullptr) { return; }
         std::vector<UShape> converted_shapes;
         converted_shapes.reserve(stroke_shape.vertices.size());
         PGraphics::convert_stroke_shape_to_line_strip(stroke_shape, converted_shapes);
@@ -1290,6 +1208,7 @@ namespace umfeld {
     void UShapeRendererOpenGL_3::process_stroke_shapes_z_order(std::vector<UShape>& processed_triangle_shapes,
                                                                std::vector<UShape>& processed_line_shapes,
                                                                UShape&              stroke_shape) const {
+        if (graphics == nullptr) { return; }
         if (graphics->get_stroke_render_mode() == STROKE_RENDER_MODE_TRIANGULATE_2D) {
             convert_stroke_shape_to_triangles_2D(processed_triangle_shapes, stroke_shape);
         } else if (graphics->get_stroke_render_mode() == STROKE_RENDER_MODE_TUBE_3D) {
@@ -1307,6 +1226,7 @@ namespace umfeld {
     }
 
     void UShapeRendererOpenGL_3::process_stroke_shapes_submission_order(std::vector<UShape>& processed_shape_batch, UShape& stroke_shape) const {
+        if (graphics == nullptr) { return; }
         const int stroke_render_mode = graphics->get_stroke_render_mode();
         switch (stroke_render_mode) {
             case STROKE_RENDER_MODE_TUBE_3D: {
@@ -1553,7 +1473,6 @@ namespace umfeld {
         const bool has_custom_shader        = shape.shader != nullptr;
         const bool has_custom_vertex_buffer = shape.vertex_buffer != nullptr;
 
-        // TODO custom shapes can be quite different here
         // NOTE 'render_shape' asssumes that a shape is either 'fill' or 'stroke':
         //       - 'fill shapes' are expected to render in shape mode TRIANGLES, TRIANGLE_STRIP or TRIANGLE_FAN
         //       - 'stroke shapes' are expected to render in shape mode POINTS, LINES, LINE_STRIP or LINE_LOOP
@@ -1579,7 +1498,7 @@ namespace umfeld {
                 warning_in_function_once("shape mode not supported at this point ... this should never happen ... undefined behavior");
             }
         }
-        /* handle transparency state changes */
+        /* transparency: handle transparency state changes */
         const bool desired_transparent_state = has_custom_vertex_buffer ? shape.vertex_buffer->get_transparent() : shape.transparent;
         if (desired_transparent_state) {
             if (!frame_state_cache.cached_transparent_shape_enabled) {
@@ -1590,23 +1509,20 @@ namespace umfeld {
             }
         } else {
             if (frame_state_cache.cached_transparent_shape_enabled) {
+                frame_state_cache.cached_transparent_shape_enabled = false;
                 enable_depth_testing();
                 enable_depth_buffer_writing();
                 disable_blending();
-                frame_state_cache.cached_transparent_shape_enabled = false;
             }
         }
-        /* switch shader program ( if necessary ) */
+        /* shader: switch shader program ( if necessary ) */
         if (has_custom_shader) {
             /* custom shader */
-            warning_in_function_once("custom_shader: set shader uniforms per SHAPE ( e.g 'view_projection_matrix' )");
-            shape.shader->use();
-            shape.shader->update_uniforms();
             const auto required_shader_program = ShaderProgram{.id = shape.shader->get_program_id()};
-            // TODO integrate ShaderProgram ...
-            // TODO what about the uniforms … should we maybe add the `ShaderProgram` struct to PShader?
-            // TODO question: how to handle default shader compliant uniforms for custom shader?
-            const bool changed_shader_program = use_shader_program_cached(required_shader_program);
+            const bool changed_shader_program  = use_shader_program_cached(required_shader_program);
+            if (graphics != nullptr) {
+                shape.shader->update_uniforms(shape.model, graphics->view_matrix, graphics->projection_matrix);
+            }
             if (changed_shader_program) {
                 // NOTE update uniforms per shape
                 warning_in_function_once("custom_shader: update uniforms once per frame");
@@ -1640,7 +1556,7 @@ namespace umfeld {
                 // OPTIMIZE maybe use this to set a shader uniform ( e.g view matrix ) once per flush frame once it is reuqested for the first time
             }
             // NOTE always use fallback model matrix instead of UBO
-            //      i.e vertex attribute 'aTransformID' needs to be 0
+            //      i.e vertex attribute 'a_transform_id' needs to be 0
             set_uniform_model_matrix(shape, required_shader_program);
         }
         /* set lights for this shape ( if enabled ) */

@@ -19,19 +19,27 @@
 
 #pragma once
 
+#include "UShapeRendererOpenGL_3.h"
+
+
 #include <string>
 #include <unordered_map>
-#include "UmfeldSDLOpenGL.h" // TODO move to cpp implementation
 #include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+
+#include "UmfeldTypes.h"
 
 namespace umfeld {
+    class PGraphics;
+    struct UShape;
+
     class PShader {
     public:
         PShader();
         virtual ~PShader();
 
-        virtual void update_uniforms();
-        // TODO at first use populate ShaderUniforms
+        virtual void init_uniforms();
+        virtual void update_uniforms(const glm::mat4& model_matrix, const glm::mat4& view_matrix, const glm::mat4& projection_matrix);
 
         void set_uniform(const std::string& name, int value);
         void set_uniform(const std::string& name, int value_a, int value_b);
@@ -45,29 +53,29 @@ namespace umfeld {
         void check_uniform_location(const std::string& name) const;
         void check_for_matrix_uniforms();
         bool has_transform_block() const { return has_tranform_block; }
+        void set_auto_update_uniforms(const bool value) { auto_update_uniforms = value; }
 
         // TODO maybe move these to implementation
-        bool   load(const std::string& vertex_code, const std::string& fragment_code, const std::string& geometry_code = "");
-        void   use();
-        void   unuse();
-        GLuint get_program_id() const { return programID; }
-        bool   is_bound() const { return in_use; }
+        bool     load(const std::string& vertex_code, const std::string& fragment_code, const std::string& geometry_code = "");
+        void     use();
+        void     unuse();
+        uint32_t get_program_id() const { return program.id; }
+        bool     is_bound() const { return in_use; }
 
         bool debug_uniform_location = true;
-        bool has_model_matrix       = false;
+        bool has_model_matrix       = false; // REMOVE ->
         bool has_view_matrix        = false;
         bool has_projection_matrix  = false;
         bool has_texture_unit       = false;
         bool has_tranform_block     = false;
 
     private:
-        GLuint                                 programID;
-        std::unordered_map<std::string, GLint> uniformLocations;
-        bool                                   in_use{false};
+        std::unordered_map<std::string, int32_t> uniformLocations;
+        bool                                     in_use{false};
+        ShaderProgram                            program;
+        bool                                     auto_update_uniforms{true};
 
-        static GLuint compileShader(const std::string& source, GLenum type);
-        static void   checkCompileErrors(GLuint shader, GLenum type);
-        static void   checkLinkErrors(GLuint program);
-        GLint         getUniformLocation(const std::string& name);
+        int32_t getUniformLocation(const std::string& name);
     };
+
 } // namespace umfeld

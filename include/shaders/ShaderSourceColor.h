@@ -28,7 +28,7 @@ layout(location = 0) in vec4 aPosition;
 layout(location = 1) in vec4 aNormal;
 layout(location = 2) in vec4 aColor;
 layout(location = 3) in vec3 aTexCoord;
-layout(location = 4) in uint aTransformID;
+layout(location = 4) in uint a_transform_id;
 layout(location = 5) in uint aUserdata;
 
 layout(std140) uniform Transforms {
@@ -37,17 +37,17 @@ layout(std140) uniform Transforms {
 
 out vec4 vColor;
 
-uniform mat4 uModelMatrixFallback;
-uniform mat4 uViewProjectionMatrix;
+uniform mat4 u_model_matrix;
+uniform mat4 u_view_projection_matrix;
 
 void main() {
     mat4 M;
-    if (aTransformID == 0u) {
-        M = uModelMatrixFallback;
+    if (a_transform_id == 0u) {
+        M = u_model_matrix;
     } else {
-        M = uModel[aTransformID - 1u];
+        M = uModel[a_transform_id - 1u];
     }
-    gl_Position = uViewProjectionMatrix * M * aPosition;
+    gl_Position = u_view_projection_matrix * M * aPosition;
     vColor = aColor;
 }
         )",

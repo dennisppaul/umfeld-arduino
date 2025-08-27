@@ -71,11 +71,6 @@ namespace umfeld {
             uint16_t             texture_id{TEXTURE_NONE};
         };
 
-        struct ShaderProgram {
-            uint32_t       id{0};
-            ShaderUniforms uniforms;
-        };
-
         struct FrameState {
             GLuint        cached_texture_id{UINT32_MAX};
             ShaderProgram cached_shader_program{.id = NO_SHADER_PROGRAM};
@@ -127,7 +122,6 @@ namespace umfeld {
         void                 enable_flat_shaders_and_bind_texture(GLuint& current_shader_program_id, unsigned texture_id) const;
         void                 enable_light_shaders_and_bind_texture(GLuint& current_shader_program_id, unsigned texture_id) const;
         static void          setup_uniform_blocks(const std::string& shader_name, GLuint program);
-        static bool          evaluate_shader_uniforms(const std::string& shader_name, const ShaderUniforms& uniforms);
         static bool          uniform_exists(const GLuint loc) { return loc != ShaderUniforms::NOT_FOUND; }
         void                 set_per_frame_default_shader_uniforms(const glm::mat4& view_projection_matrix,const glm::mat4& view_matrix, int frame_has_light_shapes, int frame_has_transparent_shapes, int frame_has_opaque_shapes) const;
         static void          set_light_uniforms(const ShaderUniforms& uniforms, const LightingState& lighting);

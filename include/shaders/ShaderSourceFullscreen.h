@@ -25,6 +25,7 @@ namespace umfeld {
     inline ShaderSource shader_source_fullscreen{
         .vertex   = R"(
 out vec2 vUV;
+
 void main() {
     // Single fullscreen triangle (covers NDC [-1,1]^2)
     const vec2 pos[3] = vec2[](
@@ -40,10 +41,13 @@ void main() {
         )",
         .fragment = R"(
 in vec2 vUV;
+
 out vec4 FragColor;
-uniform sampler2D uTextureUnit;
+
+uniform sampler2D u_texture_unit;
+
 void main() {
-    FragColor = texture(uTextureUnit, vUV);
+    FragColor = texture(u_texture_unit, vUV);
 }
         )"};
 }

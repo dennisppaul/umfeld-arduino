@@ -40,7 +40,7 @@ namespace umfeld {
         static constexpr auto ATTRIBUTE_NAME_NORMAL           = "aNormal";
         static constexpr auto ATTRIBUTE_NAME_COLOR            = "aColor";
         static constexpr auto ATTRIBUTE_NAME_TEXCOORD         = "aTexCoord";
-        static constexpr auto ATTRIBUTE_NAME_TRANSFORM_ID     = "aTransformID";
+        static constexpr auto ATTRIBUTE_NAME_TRANSFORM_ID     = "a_transform_id";
         static constexpr auto ATTRIBUTE_NAME_USERDATA         = "aUserdata";
         static constexpr auto DEFAULT_POSITION                = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
         static constexpr auto DEFAULT_NORMAL                  = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);

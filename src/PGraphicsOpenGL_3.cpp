@@ -935,8 +935,8 @@ void PGraphicsOpenGL_3::OGL3_draw_fullscreen_texture(const GLuint texture_id) co
     glBindTexture(GL_TEXTURE_2D, texture_id);
     // Set sampler (assuming PShader has generic uniform setter; else raw glUniform)
     // TODO should use PShader methods
-    // shader_fullscreen_texture->set_uniform("uTextureUnit", 0);
-    const GLint loc = glGetUniformLocation(shader_fullscreen_texture->get_program_id(), "uTextureUnit");
+    // shader_fullscreen_texture->set_uniform("u_texture_unit", 0);
+    const GLint loc = glGetUniformLocation(shader_fullscreen_texture->get_program_id(), "u_texture_unit");
     if (loc >= 0) {
         glUniform1i(loc, 0);
     }

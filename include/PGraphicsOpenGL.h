@@ -97,6 +97,8 @@ namespace umfeld {
         static void        OGL_disable_depth_testing();
         static void        OGL_enable_depth_buffer_writing();
         static void        OGL_disable_depth_buffer_writing();
+        static uint32_t    OGL_get_uniform_location(const uint32_t& id, const char* uniform_name);
+        static bool        OGL_evaluate_shader_uniforms(const std::string& shader_name, const ShaderUniforms& uniforms);
 
     protected:
         static constexpr int DEFAULT_ACTIVE_TEXTURE_UNIT  = 0;

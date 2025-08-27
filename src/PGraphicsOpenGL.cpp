@@ -513,4 +513,92 @@ namespace umfeld {
     void PGraphicsOpenGL::OGL_disable_depth_buffer_writing() {
         glDepthMask(GL_FALSE);
     }
+
+    uint32_t PGraphicsOpenGL::OGL_get_uniform_location(const uint32_t& id, const char* uniform_name) {
+        const uint32_t location = glGetUniformLocation(id, uniform_name);
+        if (location == GL_INVALID_INDEX) {
+            return ShaderUniforms::NOT_FOUND;
+        }
+        return location;
+    }
+
+    bool PGraphicsOpenGL::OGL_evaluate_shader_uniforms(const std::string& shader_name, const ShaderUniforms& uniforms) {
+        bool valid = true;
+        if (uniforms.u_model_matrix.id == ShaderUniforms::NOT_FOUND) {
+            warning(shader_name, ": uniform '", uniforms.u_model_matrix.name, "' not found");
+            valid = false;
+        }
+        if (uniforms.u_view_matrix.id == ShaderUniforms::NOT_FOUND) {
+            warning(shader_name, ": uniform 'u_view_matrix' not found");
+            valid = false;
+        }
+        if (uniforms.u_projection_matrix.id == ShaderUniforms::NOT_FOUND) {
+            warning(shader_name, ": uniform 'u_projection_matrix' not found");
+            valid = false;
+        }
+        if (uniforms.u_view_projection_matrix.id == ShaderUniforms::NOT_FOUND) {
+            warning(shader_name, ": uniform '", uniforms.u_view_projection_matrix.name, "' not found");
+            valid = false;
+        }
+        /* texture shader */
+        if (uniforms.u_texture_unit.id == ShaderUniforms::NOT_FOUND) {
+            warning(shader_name, ": uniform 'u_texture_unit' not found");
+            valid = false;
+        }
+        /* lighting shader */
+        // TODO consider "normalMatrix as Transform" ... see model_matrix
+        // if (uniforms.normalMatrix == ShaderUniforms::NOT_FOUND) {
+        //     warning(shader_name, ": uniform 'normalMatrix' not found");
+        //     valid = false;
+        // }
+        if (uniforms.ambient.id == ShaderUniforms::NOT_FOUND) {
+            warning(shader_name, ": uniform 'ambient' not found");
+            valid = false;
+        }
+        if (uniforms.specular.id == ShaderUniforms::NOT_FOUND) {
+            warning(shader_name, ": uniform 'specular' not found");
+            valid = false;
+        }
+        if (uniforms.emissive.id == ShaderUniforms::NOT_FOUND) {
+            warning(shader_name, ": uniform 'emissive' not found");
+            valid = false;
+        }
+        if (uniforms.shininess.id == ShaderUniforms::NOT_FOUND) {
+            warning(shader_name, ": uniform 'shininess' not found");
+            valid = false;
+        }
+        if (uniforms.lightCount.id == ShaderUniforms::NOT_FOUND) {
+            warning(shader_name, ": uniform 'lightCount' not found");
+            valid = false;
+        }
+        if (uniforms.lightPosition.id == ShaderUniforms::NOT_FOUND) {
+            warning(shader_name, ": uniform 'lightPosition' not found");
+            valid = false;
+        }
+        if (uniforms.lightNormal.id == ShaderUniforms::NOT_FOUND) {
+            warning(shader_name, ": uniform 'lightNormal' not found");
+            valid = false;
+        }
+        if (uniforms.lightAmbient.id == ShaderUniforms::NOT_FOUND) {
+            warning(shader_name, ": uniform 'lightAmbient' not found");
+            valid = false;
+        }
+        if (uniforms.lightDiffuse.id == ShaderUniforms::NOT_FOUND) {
+            warning(shader_name, ": uniform 'lightDiffuse' not found");
+            valid = false;
+        }
+        if (uniforms.lightSpecular.id == ShaderUniforms::NOT_FOUND) {
+            warning(shader_name, ": uniform 'lightSpecular' not found");
+            valid = false;
+        }
+        if (uniforms.lightFalloff.id == ShaderUniforms::NOT_FOUND) {
+            warning(shader_name, ": uniform 'lightFalloff' not found");
+            valid = false;
+        }
+        if (uniforms.lightSpot.id == ShaderUniforms::NOT_FOUND) {
+            warning(shader_name, ": uniform 'lightSpot' not found");
+            valid = false;
+        }
+        return valid;
+    }
 } // namespace umfeld

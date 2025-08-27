@@ -209,8 +209,8 @@ namespace umfeld {
     };
 
     // const std::string SHADER_UNIFORM_MODEL_MATRIX      = "model_matrix";
-    // const std::string SHADER_UNIFORM_VIEW_MATRIX       = "uViewMatrixMatrix";
+    // const std::string SHADER_UNIFORM_VIEW_MATRIX       = "u_view_matrix";
     // const std::string SHADER_UNIFORM_PROJECTION_MATRIX = "uProjection";
-    // const std::string SHADER_UNIFORM_TEXTURE_UNIT      = "uTextureUnit";
+    // const std::string SHADER_UNIFORM_TEXTURE_UNIT      = "u_texture_unit";
     // const std::string SHADER_UNIFORM_TRANFORM_BLOCK    = "Transforms";
 } // namespace umfeld

@@ -39,6 +39,8 @@ static uint32_t compileShader(const std::string& source, const GLenum type) {
     return shader;
 }
 
+static bool uniform_available(const GLuint loc) { return loc != ShaderUniforms::UNINITIALIZED && loc != ShaderUniforms::NOT_FOUND; }
+
 PShader::PShader() {}
 
 PShader::~PShader() {
@@ -77,8 +79,6 @@ bool PShader::load(const std::string& vertex_code, const std::string& fragment_c
         glDeleteShader(geometryShader);
     }
 
-    check_for_matrix_uniforms();
-
     init_uniforms();
 
     return true;
@@ -93,21 +93,6 @@ void PShader::use() {
 void PShader::unuse() {
     glUseProgram(0);
     in_use = false;
-}
-
-void PShader::check_for_matrix_uniforms() {
-    if (!program.id) { return; }
-    // TODO replace these with `ShaderUniforms`
-    int32_t location      = glGetUniformLocation(program.id, "u_model_matrix");
-    has_model_matrix      = location != GL_INVALID_INDEX;
-    location              = glGetUniformLocation(program.id, "u_view_matrix");
-    has_view_matrix       = location != GL_INVALID_INDEX;
-    location              = glGetUniformLocation(program.id, "u_projection_matrix");
-    has_projection_matrix = location != GL_INVALID_INDEX;
-    location              = glGetUniformLocation(program.id, "u_texture_unit");
-    has_texture_unit      = location != GL_INVALID_INDEX;
-    location              = glGetUniformBlockIndex(program.id, "Transforms");
-    has_tranform_block    = location != GL_INVALID_INDEX;
 }
 
 int32_t PShader::getUniformLocation(const std::string& name) {
@@ -198,13 +183,11 @@ void PShader::init_uniforms() {
     program.uniforms.u_view_matrix.id       = PGraphicsOpenGL::OGL_get_uniform_location(program.id, "u_view_matrix");
     program.uniforms.u_projection_matrix.id = PGraphicsOpenGL::OGL_get_uniform_location(program.id, "u_projection_matrix");
     program.uniforms.u_texture_unit.id      = PGraphicsOpenGL::OGL_get_uniform_location(program.id, "u_texture_unit");
-    // program.uniforms.Transforms.id = PGraphicsOpenGL::OGL_get_uniform_location(program.id, "Transforms");
+    // TODO program.uniforms.Transforms.id = PGraphicsOpenGL::OGL_get_uniform_location(program.id, "Transforms");
     PGraphicsOpenGL::OGL_evaluate_shader_uniforms("PShader", program.uniforms);
 }
 
-static bool uniform_available(const GLuint loc) { return loc != ShaderUniforms::UNINITIALIZED && loc != ShaderUniforms::NOT_FOUND; }
-
-void PShader::update_uniforms(const glm::mat4& model_matrix, const glm::mat4& view_matrix, const glm::mat4& projection_matrix) {
+void PShader::update_uniforms(const glm::mat4& model_matrix, const glm::mat4& view_matrix, const glm::mat4& projection_matrix, const uint32_t texture_unit) {
     if (auto_update_uniforms) {
         if (uniform_available(program.uniforms.u_model_matrix.id)) {
             glUniformMatrix4fv(program.uniforms.u_model_matrix.id, 1, GL_FALSE, &model_matrix[0][0]);
@@ -214,6 +197,9 @@ void PShader::update_uniforms(const glm::mat4& model_matrix, const glm::mat4& vi
         }
         if (uniform_available(program.uniforms.u_projection_matrix.id)) {
             glUniformMatrix4fv(program.uniforms.u_projection_matrix.id, 1, GL_FALSE, &projection_matrix[0][0]);
+        }
+        if (uniform_available(program.uniforms.u_texture_unit.id)) {
+            glUniform1i(program.uniforms.u_texture_unit.id, texture_unit);
         }
     }
 }

@@ -33,29 +33,26 @@ namespace umfeld {
     class PGraphics;
     struct UShape;
 
+    // ReSharper disable once CppClassCanBeFinal
     class PShader {
     public:
         PShader();
         virtual ~PShader();
 
         virtual void init_uniforms();
-        virtual void update_uniforms(const glm::mat4& model_matrix, const glm::mat4& view_matrix, const glm::mat4& projection_matrix);
+        virtual void update_uniforms(const glm::mat4& model_matrix, const glm::mat4& view_matrix, const glm::mat4& projection_matrix, const uint32_t texture_unit);
 
-        void set_uniform(const std::string& name, int value);
-        void set_uniform(const std::string& name, int value_a, int value_b);
-        void set_uniform(const std::string& name, float value);
-        void set_uniform(const std::string& name, float value_a, float value_b);
-        void set_uniform(const std::string& name, const glm::vec2& value);
-        void set_uniform(const std::string& name, const glm::vec3& value);
-        void set_uniform(const std::string& name, const glm::vec4& value);
-        void set_uniform(const std::string& name, const glm::mat3& value);
-        void set_uniform(const std::string& name, const glm::mat4& value);
-        void check_uniform_location(const std::string& name) const;
-        void check_for_matrix_uniforms();
-        bool has_transform_block() const { return has_tranform_block; }
-        void set_auto_update_uniforms(const bool value) { auto_update_uniforms = value; }
-
-        // TODO maybe move these to implementation
+        void     set_uniform(const std::string& name, int value);
+        void     set_uniform(const std::string& name, int value_a, int value_b);
+        void     set_uniform(const std::string& name, float value);
+        void     set_uniform(const std::string& name, float value_a, float value_b);
+        void     set_uniform(const std::string& name, const glm::vec2& value);
+        void     set_uniform(const std::string& name, const glm::vec3& value);
+        void     set_uniform(const std::string& name, const glm::vec4& value);
+        void     set_uniform(const std::string& name, const glm::mat3& value);
+        void     set_uniform(const std::string& name, const glm::mat4& value);
+        void     check_uniform_location(const std::string& name) const;
+        void     set_auto_update_uniforms(const bool value) { auto_update_uniforms = value; }
         bool     load(const std::string& vertex_code, const std::string& fragment_code, const std::string& geometry_code = "");
         void     use();
         void     unuse();
@@ -63,11 +60,6 @@ namespace umfeld {
         bool     is_bound() const { return in_use; }
 
         bool debug_uniform_location = true;
-        bool has_model_matrix       = false; // REMOVE ->
-        bool has_view_matrix        = false;
-        bool has_projection_matrix  = false;
-        bool has_texture_unit       = false;
-        bool has_tranform_block     = false;
 
     private:
         std::unordered_map<std::string, int32_t> uniformLocations;

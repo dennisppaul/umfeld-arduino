@@ -1521,30 +1521,12 @@ namespace umfeld {
             const auto required_shader_program = ShaderProgram{.id = shape.shader->get_program_id()};
             const bool changed_shader_program  = use_shader_program_cached(required_shader_program);
             if (graphics != nullptr) {
-                shape.shader->update_uniforms(shape.model, graphics->view_matrix, graphics->projection_matrix);
+                shape.shader->update_uniforms(shape.model, graphics->view_matrix, graphics->projection_matrix, 0);
             }
             if (changed_shader_program) {
-                // NOTE update uniforms per shape
-                warning_in_function_once("custom_shader: update uniforms once per frame");
-                // custom_shader->update_uniforms(shape);
-                // TODO implement an option that TRIES to set the *known* uniforms:
-                //      - model, view, projection matrices
-                //      - light uniforms
-                // if (!shape.shader->has_transform_block() && shape.shader->has_model_matrix) {
-                //     shape.shader->set_uniform(SHADER_UNIFORM_MODEL_MATRIX, shape.model); // glUniformMatrix4fv
-                // }
-            }
-            // const bool result = set_uniform_model_matrix(shape, required_shader_program);
-            // if (!result) {
-            //     warning_in_function_once("custom shader has no model matrix ( might be intended )");
-            // }
-            /* upload transform (single mat4) if shader expects the transform block */
-            if (shape.shader->has_transform_block()) {
-                // TODO do we need or want this?!?
-                warning_in_function_once("custom_shader: TODO set custom shader model uniform block");
+                // TODO this state is useless unless we can also confirm that matrices havn t changed
             }
             if (shape.light_enabled) {
-                // TODO skipping light uniforms for now
                 warning_in_function_once("custom_shader: lighting currently not supported");
             }
         } else {
@@ -1555,8 +1537,7 @@ namespace umfeld {
                 // TODO warning_in_function_once("default shader: do we need to update uniforms here?");
                 // OPTIMIZE maybe use this to set a shader uniform ( e.g view matrix ) once per flush frame once it is reuqested for the first time
             }
-            // NOTE always use fallback model matrix instead of UBO
-            //      i.e vertex attribute 'a_transform_id' needs to be 0
+            // NOTE always use fallback model matrix instead of UBO i.e vertex attribute 'a_transform_id' needs to be set to 0
             set_uniform_model_matrix(shape, required_shader_program);
         }
         /* set lights for this shape ( if enabled ) */

@@ -705,7 +705,7 @@ namespace umfeld {
         return triangles;
     }
 
-    inline void generate_box(std::vector<Vertex>& vertices) {
+    inline void generate_box(std::vector<Vertex>& vertices, bool generate_triangles = true) {
         // 8 corner points of the unit cube
         glm::vec3 p0(-0.5f, -0.5f, -0.5f); // Back face
         glm::vec3 p1(0.5f, -0.5f, -0.5f);
@@ -717,44 +717,71 @@ namespace umfeld {
         glm::vec3 p6(0.5f, 0.5f, 0.5f);
         glm::vec3 p7(-0.5f, 0.5f, 0.5f);
 
-        // define a helper to create a quad face from 4 corners and a normal
-        auto add_face = [&](const glm::vec3& a,
-                            const glm::vec3& b,
-                            const glm::vec3& c,
-                            const glm::vec3& d,
-                            const glm::vec3& normal) {
-            // texture coordinates (just mapped from 0 to 1)
-            glm::vec3 uv0(0.0f, 0.0f, 0.0f);
-            glm::vec3 uv1(1.0f, 0.0f, 0.0f);
-            glm::vec3 uv2(1.0f, 1.0f, 0.0f);
-            glm::vec3 uv3(0.0f, 1.0f, 0.0f);
+        if (generate_triangles) {
+            // define a helper to create a quad face from 4 corners and a normal
+            auto add_face_triangle = [&](const glm::vec3& a,
+                                         const glm::vec3& b,
+                                         const glm::vec3& c,
+                                         const glm::vec3& d,
+                                         const glm::vec3& normal) {
+                // texture coordinates (just mapped from 0 to 1)
+                glm::vec3 uv0(0.0f, 0.0f, 0.0f);
+                glm::vec3 uv1(1.0f, 0.0f, 0.0f);
+                glm::vec3 uv2(1.0f, 1.0f, 0.0f);
+                glm::vec3 uv3(0.0f, 1.0f, 0.0f);
+                if (winding_order == CCW) {
+                    vertices.emplace_back(a, glm::vec4(1.0f), uv0, glm::vec4(normal, 0.0f));
+                    vertices.emplace_back(b, glm::vec4(1.0f), uv1, glm::vec4(normal, 0.0f));
+                    vertices.emplace_back(c, glm::vec4(1.0f), uv2, glm::vec4(normal, 0.0f));
 
-            if (winding_order == CCW) {
-                vertices.emplace_back(a, glm::vec4(1.0f), uv0, glm::vec4(normal, 0.0f));
-                vertices.emplace_back(c, glm::vec4(1.0f), uv2, glm::vec4(normal, 0.0f));
-                vertices.emplace_back(b, glm::vec4(1.0f), uv1, glm::vec4(normal, 0.0f));
+                    vertices.emplace_back(a, glm::vec4(1.0f), uv0, glm::vec4(normal, 0.0f));
+                    vertices.emplace_back(c, glm::vec4(1.0f), uv2, glm::vec4(normal, 0.0f));
+                    vertices.emplace_back(d, glm::vec4(1.0f), uv3, glm::vec4(normal, 0.0f));
+                } else {
+                    vertices.emplace_back(a, glm::vec4(1.0f), uv0, glm::vec4(normal, 0.0f));
+                    vertices.emplace_back(c, glm::vec4(1.0f), uv2, glm::vec4(normal, 0.0f));
+                    vertices.emplace_back(b, glm::vec4(1.0f), uv1, glm::vec4(normal, 0.0f));
 
-                vertices.emplace_back(a, glm::vec4(1.0f), uv0, glm::vec4(normal, 0.0f));
-                vertices.emplace_back(d, glm::vec4(1.0f), uv3, glm::vec4(normal, 0.0f));
-                vertices.emplace_back(c, glm::vec4(1.0f), uv2, glm::vec4(normal, 0.0f));
-            } else {
-                vertices.emplace_back(a, glm::vec4(1.0f), uv0, glm::vec4(normal, 0.0f));
-                vertices.emplace_back(b, glm::vec4(1.0f), uv1, glm::vec4(normal, 0.0f));
-                vertices.emplace_back(c, glm::vec4(1.0f), uv2, glm::vec4(normal, 0.0f));
-
-                vertices.emplace_back(c, glm::vec4(1.0f), uv2, glm::vec4(normal, 0.0f));
-                vertices.emplace_back(d, glm::vec4(1.0f), uv3, glm::vec4(normal, 0.0f));
-                vertices.emplace_back(a, glm::vec4(1.0f), uv0, glm::vec4(normal, 0.0f));
-            }
-        };
-
-        // faces
-        add_face(p0, p1, p2, p3, glm::vec3(0.0f, 0.0f, -1.0f)); // Back
-        add_face(p5, p4, p7, p6, glm::vec3(0.0f, 0.0f, 1.0f));  // Front
-        add_face(p4, p0, p3, p7, glm::vec3(-1.0f, 0.0f, 0.0f)); // Left
-        add_face(p1, p5, p6, p2, glm::vec3(1.0f, 0.0f, 0.0f));  // Right
-        add_face(p4, p5, p1, p0, glm::vec3(0.0f, -1.0f, 0.0f)); // Bottom
-        add_face(p3, p2, p6, p7, glm::vec3(0.0f, 1.0f, 0.0f));  // Top
+                    vertices.emplace_back(a, glm::vec4(1.0f), uv0, glm::vec4(normal, 0.0f));
+                    vertices.emplace_back(d, glm::vec4(1.0f), uv3, glm::vec4(normal, 0.0f));
+                    vertices.emplace_back(c, glm::vec4(1.0f), uv2, glm::vec4(normal, 0.0f));
+                }
+            };
+            // faces - corrected vertex ordering
+            add_face_triangle(p0, p1, p2, p3, glm::vec3(0.0f, 0.0f, -1.0f)); // Back
+            add_face_triangle(p4, p7, p6, p5, glm::vec3(0.0f, 0.0f, 1.0f));  // Front
+            add_face_triangle(p0, p3, p7, p4, glm::vec3(-1.0f, 0.0f, 0.0f)); // Left
+            add_face_triangle(p1, p5, p6, p2, glm::vec3(1.0f, 0.0f, 0.0f));  // Right
+            add_face_triangle(p0, p4, p5, p1, glm::vec3(0.0f, -1.0f, 0.0f)); // Bottom
+            add_face_triangle(p3, p2, p6, p7, glm::vec3(0.0f, 1.0f, 0.0f));  // Top
+        } else {
+            // define a helper to create a quad face from 4 corners and a normal
+            auto add_face_quad = [&](const glm::vec3& a, const glm::vec3& b, const glm::vec3& c, const glm::vec3& d, const glm::vec3& normal) {
+                // texture coordinates (just mapped from 0 to 1)
+                glm::vec3 uv0(0.0f, 0.0f, 0.0f);
+                glm::vec3 uv1(1.0f, 0.0f, 0.0f);
+                glm::vec3 uv2(1.0f, 1.0f, 0.0f);
+                glm::vec3 uv3(0.0f, 1.0f, 0.0f);
+                if (winding_order == CCW) {
+                    vertices.emplace_back(a, glm::vec4(1.0f), uv0, glm::vec4(normal, 0.0f));
+                    vertices.emplace_back(b, glm::vec4(1.0f), uv1, glm::vec4(normal, 0.0f));
+                    vertices.emplace_back(c, glm::vec4(1.0f), uv2, glm::vec4(normal, 0.0f));
+                    vertices.emplace_back(d, glm::vec4(1.0f), uv3, glm::vec4(normal, 0.0f));
+                } else {
+                    vertices.emplace_back(a, glm::vec4(1.0f), uv0, glm::vec4(normal, 0.0f));
+                    vertices.emplace_back(d, glm::vec4(1.0f), uv3, glm::vec4(normal, 0.0f));
+                    vertices.emplace_back(c, glm::vec4(1.0f), uv2, glm::vec4(normal, 0.0f));
+                    vertices.emplace_back(b, glm::vec4(1.0f), uv1, glm::vec4(normal, 0.0f));
+                }
+            };
+            // faces - corrected vertex ordering
+            add_face_quad(p0, p1, p2, p3, glm::vec3(0.0f, 0.0f, -1.0f)); // Back
+            add_face_quad(p4, p7, p6, p5, glm::vec3(0.0f, 0.0f, 1.0f));  // Front
+            add_face_quad(p0, p3, p7, p4, glm::vec3(-1.0f, 0.0f, 0.0f)); // Left
+            add_face_quad(p1, p5, p6, p2, glm::vec3(1.0f, 0.0f, 0.0f));  // Right
+            add_face_quad(p0, p4, p5, p1, glm::vec3(0.0f, -1.0f, 0.0f)); // Bottom
+            add_face_quad(p3, p2, p6, p7, glm::vec3(0.0f, 1.0f, 0.0f));  // Top
+        }
     }
 
     inline void generate_sphere(std::vector<Vertex>& vertices, const int stacks, const int slices) {

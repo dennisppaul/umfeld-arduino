@@ -45,7 +45,8 @@ PGraphics::PGraphics() : PImage(0, 0), debug_font(new UFont()) {
     PGraphics::fill(1.0f);
     PGraphics::stroke(0.0f);
     PGraphics::ellipseDetail(ELLIPSE_DETAIL_DEFAULT);
-    generate_box(box_vertices_LUT);
+    generate_box(box_fill_vertices_LUT, true);
+    generate_box(box_stroke_vertices_LUT, false);
     generate_sphere(sphere_vertices_LUT, sphere_u_resolution, sphere_u_resolution);
 }
 
@@ -1016,14 +1017,34 @@ void PGraphics::rect(const float x, const float y, const float width, const floa
 }
 
 void PGraphics::box(const float width, const float height, const float depth) {
-    beginShape(TRIANGLES);
-    for (const auto& v: box_vertices_LUT) {
-        vertex(Vertex{glm::vec4(v.position.x * width, v.position.y * height, v.position.z * depth, v.position.w),
-                      v.color,
-                      v.tex_coord,
-                      v.normal});
+    pushMatrix();
+    scale(width, height, depth);
+    /* fill */
+    if (color_fill.active) {
+        current_shape.started          = true;
+        current_shape.mode             = TRIANGLES;
+        shape_fill_vertex_buffer       = box_fill_vertices_LUT; // bulk copy
+        const glm::vec4 fill_color_vec = as_vec4(color_fill);
+        std::fill(shape_fill_vertex_buffer.begin(), shape_fill_vertex_buffer.end(),
+                  [&fill_color_vec](Vertex& v) { v.color = fill_color_vec; });
+        submit_fill_shape(true, shape_force_transparent);
+        shape_fill_vertex_buffer.clear();
+        current_shape.started = false;
     }
-    endShape();
+    /* stroke */
+    if (color_stroke.active) {
+        current_shape.started            = true;
+        current_shape.mode               = QUADS;
+        shape_stroke_vertex_buffer       = box_stroke_vertices_LUT; // bulk copy
+        const glm::vec4 stroke_color_vec = as_vec4(color_stroke);
+        std::fill(shape_stroke_vertex_buffer.begin(), shape_stroke_vertex_buffer.end(),
+                  [&stroke_color_vec](Vertex& v) { v.color = stroke_color_vec; });
+        submit_stroke_shape(true, shape_force_transparent);
+        shape_stroke_vertex_buffer.clear();
+        current_shape.started = false;
+    }
+    popMatrix();
+    current_shape.reset();
 }
 
 void PGraphics::sphere(const float width, const float height, const float depth) {
@@ -1393,14 +1414,11 @@ void PGraphics::vertex(const Vertex& v) {
     if (!color_stroke.active && !color_fill.active) {
         return;
     }
-
+    // TODO maybe use v.color instead of color_fill? 'shape_fill_vertex_buffer.emplace_back(v);'
     if (color_stroke.active) {
         shape_stroke_vertex_buffer.emplace_back(v.position, as_vec4(color_stroke), v.tex_coord, v.normal);
     }
-
     if (color_fill.active && shape_can_have_fill(current_shape.mode)) {
-        // TODO maybe use v.color instead of color_fill?
-        //      shape_fill_vertex_buffer.emplace_back(v);
         shape_fill_vertex_buffer.emplace_back(v.position, as_vec4(color_fill), v.tex_coord, v.normal);
     }
 }

@@ -309,7 +309,8 @@ namespace umfeld {
         inline static const Triangulator triangulator{};
         std::vector<ColorState>          color_stroke_stack{};
         std::vector<ColorState>          color_fill_stack{};
-        std::vector<Vertex>              box_vertices_LUT{};
+        std::vector<Vertex>              box_fill_vertices_LUT{};
+        std::vector<Vertex>              box_stroke_vertices_LUT{};
         std::vector<Vertex>              sphere_vertices_LUT{};
         int                              sphere_u_resolution{DEFAULT_SPHERE_RESOLUTION};
         int                              sphere_v_resolution{DEFAULT_SPHERE_RESOLUTION};

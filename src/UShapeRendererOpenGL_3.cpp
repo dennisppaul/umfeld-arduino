@@ -1589,14 +1589,22 @@ namespace umfeld {
         if (desired_transparent_state) {
             if (!frame_state_cache.cached_transparent_shape_enabled) {
                 frame_state_cache.cached_transparent_shape_enabled = true;
-                enable_depth_testing();
+                if (g->hint_force_depth_test) {
+                    enable_depth_testing();
+                } else {
+                    disable_depth_testing();
+                }
                 disable_depth_buffer_writing();
                 enable_blending();
             }
         } else {
             if (frame_state_cache.cached_transparent_shape_enabled) {
                 frame_state_cache.cached_transparent_shape_enabled = false;
-                enable_depth_testing();
+                if (g->hint_force_depth_test) {
+                    enable_depth_testing();
+                } else {
+                    disable_depth_testing();
+                }
                 enable_depth_buffer_writing();
                 disable_blending();
             }

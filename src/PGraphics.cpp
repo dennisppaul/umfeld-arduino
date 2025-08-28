@@ -105,7 +105,17 @@ void PGraphics::mesh(VertexBuffer* mesh_shape) {
     }
 }
 
-void PGraphics::hint(const uint16_t property) {}
+void PGraphics::hint(const uint16_t property) {
+    switch (property) {
+        case ENABLE_DEPTH_TEST: {
+            hint_force_depth_test = true;
+        } break;
+        case DISABLE_DEPTH_TEST: {
+            hint_force_depth_test = false;
+        } break;
+        default:
+    }
+}
 
 int PGraphics::displayDensity() {
     return pixel_density;
@@ -693,7 +703,7 @@ void PGraphics::image(PImage* img, const float x, const float y, float w, float 
         h = img->height;
     }
 
-    const bool _stroke_active           = color_stroke.active;
+    const bool _stroke_active = color_stroke.active;
     noStroke();
     push_texture_id();
     push_force_transparent();
@@ -702,7 +712,7 @@ void PGraphics::image(PImage* img, const float x, const float y, float w, float 
     rect(x, y, w, h, img->flip_y_texcoords);
     pop_texture_id();
     pop_force_transparent();
-    color_stroke.active     = _stroke_active;
+    color_stroke.active = _stroke_active;
 }
 
 void PGraphics::image(PImage* img, const float x, const float y) {

@@ -332,7 +332,8 @@ namespace umfeld {
         glm::mat4              view_matrix{};
         glm::mat4              projection_matrix{};
         std::vector<glm::mat4> model_matrix_stack{};
-        bool                   hint_enable_depth_test{false};
+        // bool                   hint_enable_depth_test{false};
+        bool                   hint_force_depth_test{false};
 
         void push_force_transparent() {
             current_force_transparent = shape_force_transparent;

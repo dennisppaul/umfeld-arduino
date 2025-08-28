@@ -168,17 +168,6 @@ void PGraphicsOpenGL_3::hint(const uint16_t property) {
             glHint(GL_LINE_SMOOTH_HINT, GL_FASTEST);
 #endif
             break;
-        case ENABLE_DEPTH_TEST:
-            glEnable(GL_DEPTH_TEST);
-            glDepthMask(GL_TRUE);
-            glDepthFunc(GL_LEQUAL); // allow equal depths to pass ( `GL_LESS` is default )
-            hint_enable_depth_test = true;
-            break;
-        case DISABLE_DEPTH_TEST:
-            glDisable(GL_DEPTH_TEST);
-            glDepthMask(GL_FALSE);
-            hint_enable_depth_test = false;
-            break;
         default:
             break;
     }

@@ -694,15 +694,15 @@ void PGraphics::image(PImage* img, const float x, const float y, float w, float 
     }
 
     const bool _stroke_active           = color_stroke.active;
-    const bool _shape_force_transparent = shape_force_transparent;
     noStroke();
     push_texture_id();
+    push_force_transparent();
     shape_force_transparent = true;
     texture(img);
     rect(x, y, w, h, img->flip_y_texcoords);
     pop_texture_id();
+    pop_force_transparent();
     color_stroke.active     = _stroke_active;
-    shape_force_transparent = _shape_force_transparent;
 }
 
 void PGraphics::image(PImage* img, const float x, const float y) {

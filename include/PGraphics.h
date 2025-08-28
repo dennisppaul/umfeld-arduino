@@ -325,6 +325,7 @@ namespace umfeld {
         const UFont*                     debug_font{nullptr};
         void (*triangle_emitter_callback)(std::vector<Vertex>&){nullptr};
         void (*stroke_emitter_callback)(std::vector<Vertex>&, bool){nullptr};
+        bool current_force_transparent{false};
 
     public:
         glm::mat4              model_matrix{};
@@ -333,16 +334,12 @@ namespace umfeld {
         std::vector<glm::mat4> model_matrix_stack{};
         bool                   hint_enable_depth_test{false};
 
-    protected:
-        int get_current_texture_id() const;
+        void push_force_transparent() {
+            current_force_transparent = shape_force_transparent;
+        }
 
-        static bool has_transparent_vertices(const std::vector<Vertex>& vertices) {
-            for (auto& v: vertices) {
-                if (v.color.a < 1.0f) {
-                    return true;
-                }
-            }
-            return false;
+        void pop_force_transparent() {
+            shape_force_transparent = current_force_transparent;
         }
 
         void push_texture_id() {
@@ -362,6 +359,22 @@ namespace umfeld {
             } else {
                 warning("unbalanced texture id push/*pop*");
             }
+        }
+
+        void set_shape_force_transparent(bool shape_force_transparent) {
+            this->shape_force_transparent = shape_force_transparent;
+        }
+
+    protected:
+        int get_current_texture_id() const;
+
+        static bool has_transparent_vertices(const std::vector<Vertex>& vertices) {
+            for (auto& v: vertices) {
+                if (v.color.a < 1.0f) {
+                    return true;
+                }
+            }
+            return false;
         }
 
         void vertex_vec(const glm::vec3& position, const glm::vec2& tex_coords) {

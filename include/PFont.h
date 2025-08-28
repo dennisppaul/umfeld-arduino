@@ -58,47 +58,7 @@ namespace umfeld {
         const std::string character_atlas_default = " ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()[]{}-_=+;:'\",<.>/?`~";
 
     public:
-        explicit PFont(const std::string& filepath,
-                       const int          font_size,
-                       const float        pixelDensity = 1) : font_size(font_size) {
-            if (!file_exists(filepath)) {
-                error("PFont / file not found: '", filepath, "'");
-                return;
-            }
-
-            const std::string character_atlas = character_atlas_default;
-            (void) pixelDensity; // TODO implement pixel density
-
-            /* init freetype and font struct */
-            const char* filepath_c = filepath.c_str();
-            FT_Init_FreeType(&freetype);
-            font         = new FontData();
-            font->buffer = hb_buffer_create();
-            FT_New_Face(freetype, filepath_c, 0, &font->face);
-            FT_Set_Pixel_Sizes(font->face, 0, font_size);
-            font->hb_font = hb_ft_font_create(font->face, nullptr);
-
-            create_font_atlas(*font, character_atlas);
-
-            // TODO see if pixel density needs to or should be respected in the atlas
-
-            // tex_id = create_font_texture(*font); // NOTE this is done in PGraphics
-            width  = static_cast<float>(font->atlas_width);
-            height = static_cast<float>(font->atlas_height);
-            pixels = new uint32_t[static_cast<int>(width * height)];
-            set_auto_generate_mipmap(true); // NOTE set mipmap generation to true by default
-            copy_atlas_to_rgba(*font, reinterpret_cast<unsigned char*>(pixels));
-
-            console(format_label("PFont"), "atlas created");
-            console(format_label("PFont atlas size"), width, "×", height, " px");
-            textSize(font_size);
-            textLeading(font_size * 1.2f);
-#ifdef PFONT_DEBUG_FONT
-            DEBUG_save_font_atlas(*font, font_filepath + "--font_atlas.png");
-            DEBUG_save_text(*font, "AVTAWaToVAWeYoyo Hamburgefonts", font_filepath + "--text.png");
-#endif //PFONT_DEBUG_FONT
-        }
-
+        explicit PFont(const std::string& filepath, int font_size, float pixelDensity = 1);
         static constexpr int atlas_pixel_width       = 512;
         static constexpr int atlas_character_padding = 2;
         const float          font_size;
@@ -213,89 +173,7 @@ namespace umfeld {
         //     return convert.from_bytes(utf8);
         // }
 
-        static void create_font_atlas(FontData& font, const std::string& characters_in_atlas) {
-            if (font.face == nullptr || font.hb_font == nullptr) {
-                error("font data not intizialized");
-                return;
-            }
-
-            font.ascent   = static_cast<int>(font.face->size->metrics.ascender >> 6);
-            font.descent  = static_cast<int>(-font.face->size->metrics.descender >> 6);
-            font.line_gap = static_cast<int>(font.face->size->metrics.height >> 6);
-
-            hb_buffer_clear_contents(font.buffer);
-            // std::u16string s16 = utf8_to_utf16(characters_in_atlas);
-            // std::vector<uint16_t> utf16_vec(s16.begin(), s16.end());
-            // utf16_vec.push_back(0);  // Add null terminator
-            // const uint16_t* raw_utf16 = utf16_vec.data();
-            // hb_buffer_add_utf16(font.buffer, raw_utf16, -1, 0, -1);
-            hb_buffer_add_utf8(font.buffer, characters_in_atlas.c_str(), -1, 0, -1);
-            hb_buffer_set_direction(font.buffer, HB_DIRECTION_LTR);
-            hb_buffer_set_script(font.buffer, HB_SCRIPT_LATIN);
-            hb_buffer_set_language(font.buffer, hb_language_from_string("en", 2));
-
-            hb_shape(font.hb_font, font.buffer, nullptr, 0);
-
-            unsigned int           glyph_count;
-            const hb_glyph_info_t* glyph_info = hb_buffer_get_glyph_infos(font.buffer, &glyph_count);
-
-            int           current_x      = 0;
-            int           current_y      = 0;
-            int           max_row_height = 0;
-            constexpr int atlas_width    = atlas_pixel_width;
-            int           atlas_height   = 0;
-
-            for (unsigned int i = 0; i < glyph_count; i++) {
-                FT_Load_Glyph(font.face, glyph_info[i].codepoint, FT_LOAD_RENDER);
-                const FT_GlyphSlot glyph = font.face->glyph;
-
-                if (font.glyphs.find(glyph_info[i].codepoint) == font.glyphs.end()) {
-                    Glyph g;
-                    g.width   = static_cast<int>(glyph->bitmap.width);
-                    g.height  = static_cast<int>(glyph->bitmap.rows);
-                    g.left    = glyph->bitmap_left;
-                    g.top     = glyph->bitmap_top;
-                    g.advance = static_cast<int>(glyph->advance.x) >> 6;
-
-                    // Ensure correct copying of bitmap buffer
-                    if (glyph->bitmap.buffer) {
-                        g.bitmap.assign(glyph->bitmap.buffer, glyph->bitmap.buffer + g.width * g.height);
-                    } else {
-                        g.bitmap.assign(g.width * g.height, 0);
-                    }
-
-                    if (current_x + g.width + atlas_character_padding > atlas_width) {
-                        current_x = 0;
-                        current_y += max_row_height + atlas_character_padding;
-                        max_row_height = 0;
-                    }
-
-                    g.atlas_x = current_x;
-                    g.atlas_y = current_y;
-
-                    current_x += g.width + atlas_character_padding;
-                    max_row_height = std::max(max_row_height, g.height);
-
-                    font.glyphs[glyph_info[i].codepoint] = g;
-                }
-            }
-
-            atlas_height      = current_y + max_row_height; // Fix last row height
-            font.atlas_width  = atlas_width;
-            font.atlas_height = atlas_height;
-            font.atlas.resize(atlas_width * atlas_height, 0);
-
-            for (const auto& pair: font.glyphs) {
-                const Glyph& g = pair.second;
-                for (int y = 0; y < g.height; y++) {
-                    for (int x = 0; x < g.width; x++) {
-                        const int atlas_x                           = g.atlas_x + x;
-                        const int atlas_y                           = g.atlas_y + y;
-                        font.atlas[atlas_y * atlas_width + atlas_x] = g.bitmap[y * g.width + x];
-                    }
-                }
-            }
-        }
+        static void create_font_atlas(FontData& font, const std::string& characters_in_atlas);
 
         static void copy_atlas_to_rgba(const FontData& font, unsigned char* atlas_rgba) {
             for (int y = 0; y < font.atlas_height; y++) {
@@ -332,74 +210,7 @@ namespace umfeld {
             return width;
         }
 
-        static void generate_text_quads(const FontData&            font,
-                                        const std::string&         text,
-                                        std::vector<TexturedQuad>& quads) {
-            quads.clear();
-            hb_buffer_clear_contents(font.buffer);
-
-            hb_buffer_add_utf8(font.buffer, text.c_str(), -1, 0, -1);
-            hb_buffer_set_direction(font.buffer, HB_DIRECTION_LTR);
-            hb_buffer_set_script(font.buffer, HB_SCRIPT_LATIN);
-            hb_buffer_set_language(font.buffer, hb_language_from_string("en", 2));
-
-            hb_shape(font.hb_font, font.buffer, nullptr, 0);
-
-            unsigned int               glyph_count;
-            const hb_glyph_info_t*     glyph_info = hb_buffer_get_glyph_infos(font.buffer, &glyph_count);
-            const hb_glyph_position_t* glyph_pos  = hb_buffer_get_glyph_positions(font.buffer, &glyph_count);
-
-            // Dynamically decide whether to preallocate
-            if (text.length() > 100) { // Only preallocate if the text is long
-                size_t estimated_quads = 0;
-                for (unsigned int i = 0; i < glyph_count; i++) {
-                    uint32_t glyph_id = glyph_info[i].codepoint;
-                    if (glyph_id != ' ' && font.glyphs.find(glyph_id) != font.glyphs.end()) {
-                        estimated_quads++; // Only count valid glyphs (not spaces)
-                    }
-                }
-                quads.reserve(estimated_quads);
-            }
-
-            float      x = 0.0f;
-            const auto y = static_cast<float>(font.ascent); // Baseline position
-
-            for (unsigned int i = 0; i < glyph_count; i++) {
-                uint32_t glyph_id = glyph_info[i].codepoint;
-
-                auto it = font.glyphs.find(glyph_id);
-                if (it == font.glyphs.end()) {
-                    // Handle spaces explicitly
-                    if (glyph_id == ' ') {
-                        x += static_cast<float>(glyph_pos[i].x_advance >> 6); // Move forward for spaces
-                    }
-                    continue; // Skip unsupported glyphs
-                }
-
-                const Glyph& g = it->second;
-
-                float      x_pos = x + static_cast<float>(g.left + (glyph_pos[i].x_offset >> 6));
-                float      y_pos = y - static_cast<float>(g.top + (glyph_pos[i].y_offset >> 6));
-                const auto w     = static_cast<float>(g.width);
-                const auto h     = static_cast<float>(g.height);
-
-                // Compute texture coordinates
-                float u0 = static_cast<float>(g.atlas_x) / static_cast<float>(font.atlas_width);
-                float v0 = static_cast<float>(g.atlas_y) / static_cast<float>(font.atlas_height);
-                float u1 = static_cast<float>(g.atlas_x + g.width) / static_cast<float>(font.atlas_width);
-                float v1 = static_cast<float>(g.atlas_y + g.height) / static_cast<float>(font.atlas_height);
-
-                // Add textured quad
-                quads.emplace_back(
-                    x_pos, y_pos, u0, v0,         // Top-left
-                    x_pos + w, y_pos, u1, v0,     // Top-right
-                    x_pos + w, y_pos + h, u1, v1, // Bottom-right
-                    x_pos, y_pos + h, u0, v1      // Bottom-left
-                );
-
-                x += static_cast<float>(glyph_pos[i].x_advance >> 6); // Move forward
-            }
-        }
+        static void generate_text_quads(const FontData& font, const std::string& text, std::vector<TexturedQuad>& quads);
 
         static std::vector<std::string> split_lines(const std::string& text) {
             std::vector<std::string> lines;
@@ -412,73 +223,7 @@ namespace umfeld {
         }
 
     public:
-        void draw(PGraphics* g, const std::string& text, const float x, const float y, const float z = 0) {
-            if (font == nullptr) {
-                return;
-            }
-            if (g == nullptr || font_size == 0) {
-                return;
-            }
-
-            const float text_scale = text_size / font_size;
-            const float ascent     = font->ascent;
-            const float descent    = font->descent;
-
-            const std::vector<std::string> lines = split_lines(text); // see helper below
-
-            float y_offset = -ascent;
-
-            // vertical alignment adjustment (now considers multiple lines)
-            const float total_height = lines.size() * text_leading;
-            switch (text_align_y) {
-                case TOP: y_offset += ascent; break;
-                case CENTER: y_offset += ascent - total_height * 0.5f; break;
-                case BOTTOM: y_offset -= total_height - descent; break;
-                case BASELINE:
-                default:
-                    break;
-            }
-
-            g->pushMatrix();
-            g->translate(x, y, z);
-            g->scale(text_scale, text_scale, 1);
-            g->translate(0, y_offset, 0);
-            g->texture(this);
-
-            for (std::size_t i = 0; i < lines.size(); ++i) {
-                const std::string& line       = lines[i];
-                const float        line_width = get_text_width(*font, line);
-
-                float x_offset = 0;
-                switch (text_align_x) {
-                    case CENTER: x_offset -= line_width * 0.5f; break;
-                    case RIGHT: x_offset -= line_width; break;
-                    case LEFT:
-                    default:
-                        break;
-                }
-
-                generate_text_quads(*font, line, text_quads);
-
-                g->pushMatrix();
-                g->translate(x_offset, i * text_leading, 0); // baseline offset for current line
-                g->beginShape(TRIANGLES);
-                for (const auto& q: text_quads) {
-                    g->vertex(q.x0, q.y0, 0, q.u0, q.v0);
-                    g->vertex(q.x1, q.y1, 0, q.u1, q.v1);
-                    g->vertex(q.x2, q.y2, 0, q.u2, q.v2);
-
-                    g->vertex(q.x3, q.y3, 0, q.u3, q.v3);
-                    g->vertex(q.x0, q.y0, 0, q.u0, q.v0);
-                    g->vertex(q.x2, q.y2, 0, q.u2, q.v2);
-                }
-                g->endShape(CLOSE);
-                g->popMatrix();
-            }
-
-            g->texture();
-            g->popMatrix();
-        }
+        void draw(PGraphics* g, const std::string& text, float x, float y, float z = 0);
 
     private:
         struct OutlineContext {
@@ -545,59 +290,6 @@ namespace umfeld {
         }
 
     public:
-        void outline(const std::string& text, std::vector<std::vector<glm::vec2>>& outlines) const {
-            if (font == nullptr) {
-                return;
-            }
-
-            hb_buffer_clear_contents(font->buffer);
-            hb_buffer_add_utf8(font->buffer, text.c_str(), -1, 0, -1);
-            hb_buffer_guess_segment_properties(font->buffer);
-            hb_shape(font->hb_font, font->buffer, nullptr, 0);
-
-            unsigned int           glyph_count;
-            const hb_glyph_info_t* glyph_info = hb_buffer_get_glyph_infos(font->buffer, &glyph_count);
-
-            constexpr FT_Outline_Funcs funcs{
-                move_to_callback,
-                line_to_callback,
-                conic_to_callback,
-                cubic_to_callback,
-                0, 0};
-
-            float pen_x = 0;
-            float pen_y = 0;
-
-            const auto* pos = hb_buffer_get_glyph_positions(font->buffer, nullptr);
-
-            for (unsigned int i = 0; i < glyph_count; ++i) {
-                const FT_UInt glyph_index = glyph_info[i].codepoint;
-                FT_Load_Glyph(font->face, glyph_index, FT_LOAD_NO_BITMAP | FT_LOAD_NO_HINTING);
-                if (font->face->glyph->format == FT_GLYPH_FORMAT_OUTLINE) {
-                    const float    text_scale = text_size / font_size;
-                    OutlineContext ctx(outlines, text_scale);
-
-                    // offset pen position before decomposition
-                    FT_Outline* outline = &font->face->glyph->outline;
-
-                    // move all outline points manually before decomposing
-                    for (int j = 0; j < outline->n_points; ++j) {
-                        outline->points[j].x += pen_x;
-                        outline->points[j].y += pen_y;
-                    }
-
-                    FT_Outline_Decompose(outline, &funcs, &ctx);
-
-                    // restore original outline (optional, in case reused)
-                    for (int j = 0; j < outline->n_points; ++j) {
-                        outline->points[j].x -= pen_x;
-                        outline->points[j].y -= pen_y;
-                    }
-                }
-
-                pen_x += pos[i].x_advance;
-                pen_y += pos[i].y_advance;
-            }
-        }
+        void outline(const std::string& text, std::vector<std::vector<glm::vec2>>& outlines) const;
     };
 } // namespace umfeld

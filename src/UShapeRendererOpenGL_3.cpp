@@ -996,21 +996,41 @@ namespace umfeld {
         PGraphics::convert_stroke_shape_to_line_strip(stroke_shape, converted_shapes);
         const bool shape_has_transparent_vertices = has_transparent_vertices(stroke_shape.vertices);
         if (!converted_shapes.empty()) {
-            // TODO @maybe move this to PGraphics
+            // OPTIMIZE why does this create individual shapes for each line strip?
+            // for (auto& cs: converted_shapes) {
+            //     std::vector<Vertex> triangulated_vertices;
+            //     graphics->triangulate_line_strip_vertex(stroke_shape.model_matrix,
+            //                                             cs.vertices,
+            //                                             cs.stroke,
+            //                                             cs.closed,
+            //                                             triangulated_vertices);
+            //     cs.vertices     = std::move(triangulated_vertices);
+            //     cs.filled       = true;
+            //     cs.mode         = TRIANGLES;
+            //     cs.model_matrix = glm::mat4(1.0f); // NOTE triangles are already transformed with model matrix in `triangulate_line_strip_vertex`
+            //     cs.transparent  = shape_has_transparent_vertices;
+            //     processed_triangle_shapes.push_back(std::move(cs));
+            // }
+            std::vector<Vertex> total_triangulated_vertices;
+            total_triangulated_vertices.reserve(converted_shapes.size() * 6); // NOTE this assumes that each line strip has at least 2 triangles
+            std::vector<Vertex> triangulated_vertices;
+            triangulated_vertices.reserve(6);
             for (auto& cs: converted_shapes) {
-                std::vector<Vertex> triangulated_vertices;
+                triangulated_vertices.clear();
                 graphics->triangulate_line_strip_vertex(stroke_shape.model_matrix,
                                                         cs.vertices,
                                                         cs.stroke,
                                                         cs.closed,
                                                         triangulated_vertices);
-                cs.vertices     = std::move(triangulated_vertices);
-                cs.filled       = true;
-                cs.mode         = TRIANGLES;
-                cs.model_matrix = glm::mat4(1.0f); // NOTE triangles are already transformed with model matrix in `triangulate_line_strip_vertex`
-                cs.transparent  = shape_has_transparent_vertices;
-                processed_triangle_shapes.push_back(std::move(cs));
+                total_triangulated_vertices.insert(total_triangulated_vertices.end(), triangulated_vertices.begin(), triangulated_vertices.end());
             }
+            UShape cs;
+            cs.filled       = true;
+            cs.mode         = TRIANGLES;
+            cs.model_matrix = glm::mat4(1.0f); // NOTE triangles are already transformed with model matrix in `triangulate_line_strip_vertex`
+            cs.vertices     = std::move(total_triangulated_vertices);
+            cs.transparent  = shape_has_transparent_vertices;
+            processed_triangle_shapes.push_back(std::move(cs));
         }
     }
 

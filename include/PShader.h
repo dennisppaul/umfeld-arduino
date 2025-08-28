@@ -36,28 +36,32 @@ namespace umfeld {
     // ReSharper disable once CppClassCanBeFinal
     class PShader {
     public:
-        PShader();
+        explicit PShader(const std::string& shader_name = "<shader name>");
         virtual ~PShader();
 
-        virtual void init_uniforms();
+        virtual void init_default_uniforms();
         virtual void update_uniforms(const glm::mat4& model_matrix, const glm::mat4& view_matrix, const glm::mat4& projection_matrix, const uint32_t texture_unit);
 
-        void     set_uniform(const std::string& name, int value);
-        void     set_uniform(const std::string& name, int value_a, int value_b);
-        void     set_uniform(const std::string& name, float value);
-        void     set_uniform(const std::string& name, float value_a, float value_b);
-        void     set_uniform(const std::string& name, const glm::vec2& value);
-        void     set_uniform(const std::string& name, const glm::vec3& value);
-        void     set_uniform(const std::string& name, const glm::vec4& value);
-        void     set_uniform(const std::string& name, const glm::mat3& value);
-        void     set_uniform(const std::string& name, const glm::mat4& value);
-        void     check_uniform_location(const std::string& name) const;
-        void     set_auto_update_uniforms(const bool value) { auto_update_uniforms = value; }
-        bool     load(const std::string& vertex_code, const std::string& fragment_code, const std::string& geometry_code = "");
-        void     use();
-        void     unuse();
-        uint32_t get_program_id() const { return program.id; }
-        bool     is_bound() const { return in_use; }
+        void               set_uniform(const std::string& name, int value);
+        void               set_uniform(const std::string& name, int value_a, int value_b);
+        void               set_uniform(const std::string& name, float value);
+        void               set_uniform(const std::string& name, float value_a, float value_b);
+        void               set_uniform(const std::string& name, const glm::vec2& value);
+        void               set_uniform(const std::string& name, const glm::vec3& value);
+        void               set_uniform(const std::string& name, const glm::vec4& value);
+        void               set_uniform(const std::string& name, const glm::mat3& value);
+        void               set_uniform(const std::string& name, const glm::mat4& value);
+        bool               check_uniform_location(const std::string& name) const;
+        int32_t            get_uniform_location(const std::string& name);
+        void               check_default_uniforms() const;
+        void               set_auto_update_uniforms(const bool value) { auto_update_uniforms = value; }
+        bool               load(const std::string& vertex_code, const std::string& fragment_code, const std::string& geometry_code = "");
+        void               use();
+        void               unuse();
+        uint32_t           get_program_id() const { return program.id; }
+        bool               is_bound() const { return in_use; }
+        void               set_name(const std::string& name) { shader_name = name; }
+        const std::string& get_name() const { return shader_name; }
 
         bool debug_uniform_location = true;
 
@@ -66,8 +70,7 @@ namespace umfeld {
         bool                                     in_use{false};
         ShaderProgram                            program;
         bool                                     auto_update_uniforms{true};
-
-        int32_t getUniformLocation(const std::string& name);
+        std::string                              shader_name;
     };
 
 } // namespace umfeld

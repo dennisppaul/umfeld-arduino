@@ -143,8 +143,8 @@ namespace umfeld {
             //           ├── ( SINGLE ) all shapes ( textured+flat+light+custom ) sorted by z-order
             //           └── ( BATCH_ ) OR textured+flat+light shapes ( if no other transparent custom shapes are present )
 
-            console_once(format_label("render_mode"), "RENDER_MODE_SORTED_BY_Z_ORDER ( rendering shapes in z-order and in batches )");
             TRACE_SCOPE_N("RENDER_MODE_SORTED_BY_Z_ORDER");
+            console_once(format_label("render_mode"), "RENDER_MODE_SORTED_BY_Z_ORDER ( rendering shapes in z-order and in batches )");
             {
                 std::vector<UShape> processed_point_shapes;
                 std::vector<UShape> processed_line_shapes;
@@ -252,12 +252,16 @@ namespace umfeld {
         /* cache uniform locations */
         shader_color.uniforms.u_model_matrix.id           = PGraphicsOpenGL::OGL_get_uniform_location(shader_color.id, "u_model_matrix");
         shader_color.uniforms.u_view_projection_matrix.id = PGraphicsOpenGL::OGL_get_uniform_location(shader_color.id, "u_view_projection_matrix");
-        PGraphicsOpenGL::OGL_evaluate_shader_uniforms("color", shader_color.uniforms);
+        if (!PGraphicsOpenGL::OGL_evaluate_shader_uniforms("color", shader_color.uniforms)) {
+            warning("shader_color: some uniforms not found");
+        }
 
         shader_texture.uniforms.u_model_matrix.id           = PGraphicsOpenGL::OGL_get_uniform_location(shader_texture.id, "u_model_matrix");
         shader_texture.uniforms.u_view_projection_matrix.id = PGraphicsOpenGL::OGL_get_uniform_location(shader_texture.id, "u_view_projection_matrix");
         shader_texture.uniforms.u_texture_unit.id           = PGraphicsOpenGL::OGL_get_uniform_location(shader_texture.id, "u_texture_unit");
-        PGraphicsOpenGL::OGL_evaluate_shader_uniforms("texture", shader_texture.uniforms);
+        if (!PGraphicsOpenGL::OGL_evaluate_shader_uniforms("texture", shader_texture.uniforms)) {
+            warning("shader_texture: some uniforms not found");
+        }
 
         /* cache lighting shader uniform locations */
         // shader_color_lights.uniforms.normalMatrix  = PGraphicsOpenGL::OGL_get_uniform_location(shader_color_lights.id, "normalMatrix"); // TODO "normalMatrix as Transform"
@@ -276,7 +280,9 @@ namespace umfeld {
         shader_color_lights.uniforms.lightSpecular.id            = PGraphicsOpenGL::OGL_get_uniform_location(shader_color_lights.id, "lightSpecular");
         shader_color_lights.uniforms.lightFalloff.id             = PGraphicsOpenGL::OGL_get_uniform_location(shader_color_lights.id, "lightFalloff");
         shader_color_lights.uniforms.lightSpot.id                = PGraphicsOpenGL::OGL_get_uniform_location(shader_color_lights.id, "lightSpot");
-        PGraphicsOpenGL::OGL_evaluate_shader_uniforms("color_lights", shader_color_lights.uniforms);
+        if (!PGraphicsOpenGL::OGL_evaluate_shader_uniforms("color_lights", shader_color_lights.uniforms)) {
+            warning("shader_color_lights: some uniforms not found");
+        }
 
         // shader_texture_lights.uniforms.normalMatrix  = PGraphicsOpenGL::OGL_get_uniform_location(shader_texture_lights.id, "normalMatrix"); // TODO "normalMatrix as Transform"
         shader_texture_lights.uniforms.u_model_matrix.id           = PGraphicsOpenGL::OGL_get_uniform_location(shader_texture_lights.id, "u_model_matrix");
@@ -295,7 +301,9 @@ namespace umfeld {
         shader_texture_lights.uniforms.lightSpecular.id            = PGraphicsOpenGL::OGL_get_uniform_location(shader_texture_lights.id, "lightSpecular");
         shader_texture_lights.uniforms.lightFalloff.id             = PGraphicsOpenGL::OGL_get_uniform_location(shader_texture_lights.id, "lightFalloff");
         shader_texture_lights.uniforms.lightSpot.id                = PGraphicsOpenGL::OGL_get_uniform_location(shader_texture_lights.id, "lightSpot");
-        PGraphicsOpenGL::OGL_evaluate_shader_uniforms("texture_lights", shader_texture_lights.uniforms);
+        if (!PGraphicsOpenGL::OGL_evaluate_shader_uniforms("texture_lights", shader_texture_lights.uniforms)) {
+            warning("shader_texture_lights: some uniforms not found");
+        }
 
         // TODO add point + line shader program
     }
@@ -996,33 +1004,75 @@ namespace umfeld {
         PGraphics::convert_stroke_shape_to_line_strip(stroke_shape, converted_shapes);
         const bool shape_has_transparent_vertices = has_transparent_vertices(stroke_shape.vertices);
         if (!converted_shapes.empty()) {
-            // OPTIMIZE why does this create individual shapes for each line strip?
-            // for (auto& cs: converted_shapes) {
-            //     std::vector<Vertex> triangulated_vertices;
-            //     graphics->triangulate_line_strip_vertex(stroke_shape.model_matrix,
-            //                                             cs.vertices,
-            //                                             cs.stroke,
-            //                                             cs.closed,
-            //                                             triangulated_vertices);
-            //     cs.vertices     = std::move(triangulated_vertices);
-            //     cs.filled       = true;
-            //     cs.mode         = TRIANGLES;
-            //     cs.model_matrix = glm::mat4(1.0f); // NOTE triangles are already transformed with model matrix in `triangulate_line_strip_vertex`
-            //     cs.transparent  = shape_has_transparent_vertices;
-            //     processed_triangle_shapes.push_back(std::move(cs));
-            // }
+            // // OPTIMIZE why does this create individual shapes for each line strip?
+            // static uint8_t strategy_counter = 0;
+            // strategy_counter++;
+            // strategy_counter %= 3;
+            // strategy_counter = 0;
+            // if (strategy_counter == 0) {
+            //     console_once("using my initial triangulation strategy");
+            //     TRACE_SCOPE_N("TRIANGULATION__INITIAL");
+            //     {
+            //         // ------------------------ PROFILE my initial approach
+            //         for (auto& cs: converted_shapes) {
+            //             std::vector<Vertex> triangulated_vertices;
+            //             graphics->triangulate_line_strip_vertex(stroke_shape.model_matrix,
+            //                                                     cs.vertices,
+            //                                                     cs.stroke,
+            //                                                     cs.closed,
+            //                                                     triangulated_vertices);
+            //             cs.vertices     = std::move(triangulated_vertices);
+            //             cs.filled       = true;
+            //             cs.mode         = TRIANGLES;
+            //             cs.model_matrix = glm::mat4(1.0f); // NOTE triangles are already transformed with model matrix in `triangulate_line_strip_vertex`
+            //             cs.transparent  = shape_has_transparent_vertices;
+            //             processed_triangle_shapes.push_back(std::move(cs));
+            //         }
+            //     }
+            // } else if (strategy_counter == 1) {
+            //     console_once("using my optimized triangulation strategy");
+            //     TRACE_SCOPE_N("TRIANGULATION__OPTIMIZED");
+            //     {
+            //         // ------------------------ PROFILE my optimized approach
+            //         std::vector<Vertex> total_triangulated_vertices;
+            //         total_triangulated_vertices.reserve(converted_shapes.size() * 6); // NOTE this assumes that each line strip has at least 2 triangles
+            //         std::vector<Vertex> triangulated_vertices;
+            //         triangulated_vertices.reserve(6);
+            //         for (auto& cs: converted_shapes) {
+            //             triangulated_vertices.clear();
+            //             graphics->triangulate_line_strip_vertex(stroke_shape.model_matrix,
+            //                                                     cs.vertices,
+            //                                                     cs.stroke,
+            //                                                     cs.closed,
+            //                                                     triangulated_vertices);
+            //             total_triangulated_vertices.insert(total_triangulated_vertices.end(), triangulated_vertices.begin(), triangulated_vertices.end());
+            //         }
+            //         UShape cs;
+            //         cs.filled       = true;
+            //         cs.mode         = TRIANGLES;
+            //         cs.model_matrix = glm::mat4(1.0f); // NOTE triangles are already transformed with model matrix in `triangulate_line_strip_vertex`
+            //         cs.vertices     = std::move(total_triangulated_vertices);
+            //         cs.transparent  = shape_has_transparent_vertices;
+            //         processed_triangle_shapes.push_back(std::move(cs));
+            //     }
+            // } else if (strategy_counter == 2) {
+            //     console_once("using claude's triangulation strategy");
+            //     TRACE_SCOPE_N("TRIANGULATION__OPTIMIZED_CLAUDE4");
+            //     {
+            //         // ------------------------ PROFILE claude approach
             std::vector<Vertex> total_triangulated_vertices;
-            total_triangulated_vertices.reserve(converted_shapes.size() * 6); // NOTE this assumes that each line strip has at least 2 triangles
-            std::vector<Vertex> triangulated_vertices;
-            triangulated_vertices.reserve(6);
+            size_t              estimated_vertices = 0;
+            for (const auto& cs: converted_shapes) {
+                // Better estimation: (vertices - 1) * 6 for line strips
+                estimated_vertices += cs.vertices.size() > 1 ? (cs.vertices.size() - 1) * 6 : 6;
+            }
+            total_triangulated_vertices.reserve(estimated_vertices);
             for (auto& cs: converted_shapes) {
-                triangulated_vertices.clear();
                 graphics->triangulate_line_strip_vertex(stroke_shape.model_matrix,
                                                         cs.vertices,
                                                         cs.stroke,
                                                         cs.closed,
-                                                        triangulated_vertices);
-                total_triangulated_vertices.insert(total_triangulated_vertices.end(), triangulated_vertices.begin(), triangulated_vertices.end());
+                                                        total_triangulated_vertices); // Modified to append directly
             }
             UShape cs;
             cs.filled       = true;
@@ -1031,6 +1081,8 @@ namespace umfeld {
             cs.vertices     = std::move(total_triangulated_vertices);
             cs.transparent  = shape_has_transparent_vertices;
             processed_triangle_shapes.push_back(std::move(cs));
+            // }
+            // }
         }
     }
 

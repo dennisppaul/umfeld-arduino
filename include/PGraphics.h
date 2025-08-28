@@ -198,27 +198,28 @@ namespace umfeld {
         virtual void     resetShader();
         virtual void     normal(float x, float y, float z, float w = 0);
         virtual void     blendMode(int mode) {} // TODO MAYBE change parameter to `BlendMode mode`
-        // virtual void     beginCamera();
-        // virtual void     endCamera();
-        virtual void camera();
-        virtual void camera(float eyeX, float eyeY, float eyeZ, float centerX, float centerY, float centerZ, float upX, float upY, float upZ);
-        virtual void frustum(float left, float right, float bottom, float top, float near, float far);
-        virtual void ortho(float left, float right, float bottom, float top, float near, float far);
-        virtual void perspective(float fovy, float aspect, float near, float far);
-        virtual void printCamera();
-        virtual void printProjection();
-        virtual void lights() {}
-        virtual void noLights() {}
-        virtual void ambientLight(float r, float g, float b, float x, float y, float z) {}
-        virtual void directionalLight(float r, float g, float b, float nx, float ny, float nz) {}
-        virtual void pointLight(float r, float g, float b, float x, float y, float z) {}
-        virtual void spotLight(float r, float g, float b, float x, float y, float z, float nx, float ny, float nz, float angle, float concentration) {}
-        virtual void lightFalloff(float constant, float linear, float quadratic) {}
-        virtual void lightSpecular(float r, float g, float b) {}
-        virtual void ambient(float r, float g, float b) {}
-        virtual void specular(float r, float g, float b) {}
-        virtual void emissive(float r, float g, float b) {}
-        virtual void shininess(float s) {}
+        virtual void     beginCamera();
+        virtual void     endCamera();
+        virtual void     camera();
+        virtual void     camera(float eyeX, float eyeY, float eyeZ, float centerX, float centerY, float centerZ, float upX, float upY, float upZ);
+        void             auto_flush_after_matrices_modified();
+        virtual void     frustum(float left, float right, float bottom, float top, float near, float far);
+        virtual void     ortho(float left, float right, float bottom, float top, float near, float far);
+        virtual void     perspective(float fovy, float aspect, float near, float far);
+        virtual void     printCamera();
+        virtual void     printProjection();
+        virtual void     lights() {}
+        virtual void     noLights() {}
+        virtual void     ambientLight(float r, float g, float b, float x, float y, float z) {}
+        virtual void     directionalLight(float r, float g, float b, float nx, float ny, float nz) {}
+        virtual void     pointLight(float r, float g, float b, float x, float y, float z) {}
+        virtual void     spotLight(float r, float g, float b, float x, float y, float z, float nx, float ny, float nz, float angle, float concentration) {}
+        virtual void     lightFalloff(float constant, float linear, float quadratic) {}
+        virtual void     lightSpecular(float r, float g, float b) {}
+        virtual void     ambient(float r, float g, float b) {}
+        virtual void     specular(float r, float g, float b) {}
+        virtual void     emissive(float r, float g, float b) {}
+        virtual void     shininess(float s) {}
 
         void         loadPixels() { download_texture(this); }
         void         updatePixels() { update_full_internal(this); }
@@ -333,8 +334,8 @@ namespace umfeld {
         glm::mat4              view_matrix{};
         glm::mat4              projection_matrix{};
         std::vector<glm::mat4> model_matrix_stack{};
-        // bool                   hint_enable_depth_test{false};
         bool                   hint_force_depth_test{false};
+        bool                   auto_flush{true};
 
         void push_force_transparent() {
             current_force_transparent = shape_force_transparent;
@@ -399,5 +400,7 @@ namespace umfeld {
         }
 
         void resize_ellipse_points_LUT();
+        void update_projection_matrix(const glm::mat4& proj);
+        void update_view_matrix(const glm::mat4& view);
     };
 } // namespace umfeld

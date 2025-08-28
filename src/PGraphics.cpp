@@ -1025,8 +1025,7 @@ void PGraphics::box(const float width, const float height, const float depth) {
         current_shape.mode             = TRIANGLES;
         shape_fill_vertex_buffer       = box_fill_vertices_LUT; // bulk copy
         const glm::vec4 fill_color_vec = as_vec4(color_fill);
-        std::fill(shape_fill_vertex_buffer.begin(), shape_fill_vertex_buffer.end(),
-                  [&fill_color_vec](Vertex& v) { v.color = fill_color_vec; });
+        for (auto& v: shape_fill_vertex_buffer) { v.color = fill_color_vec; }
         submit_fill_shape(true, shape_force_transparent);
         shape_fill_vertex_buffer.clear();
         current_shape.started = false;
@@ -1037,8 +1036,7 @@ void PGraphics::box(const float width, const float height, const float depth) {
         current_shape.mode               = QUADS;
         shape_stroke_vertex_buffer       = box_stroke_vertices_LUT; // bulk copy
         const glm::vec4 stroke_color_vec = as_vec4(color_stroke);
-        std::fill(shape_stroke_vertex_buffer.begin(), shape_stroke_vertex_buffer.end(),
-                  [&stroke_color_vec](Vertex& v) { v.color = stroke_color_vec; });
+        for (auto& v: shape_stroke_vertex_buffer) { v.color = stroke_color_vec; }
         submit_stroke_shape(true, shape_force_transparent);
         shape_stroke_vertex_buffer.clear();
         current_shape.started = false;
@@ -1298,19 +1296,36 @@ void PGraphics::normal(const float x, const float y, const float z, const float 
     current_normal.w = w;
 }
 
-// void PGraphics::beginCamera() {
-//     in_camera_block        = true;
-//     temp_view_matrix       = view_matrix;
-//     temp_projection_matrix = projection_matrix;
-// }
-//
-// void PGraphics::endCamera() {
-//     if (in_camera_block) {
-//         view_matrix       = temp_view_matrix;
-//         projection_matrix = temp_projection_matrix;
-//         in_camera_block   = false;
-//     }
-// }
+void PGraphics::beginCamera() {
+    in_camera_block        = true;
+    temp_view_matrix       = view_matrix;
+    temp_projection_matrix = projection_matrix;
+}
+
+void PGraphics::endCamera() {
+    if (in_camera_block) {
+        update_view_matrix(temp_view_matrix);
+        update_projection_matrix(projection_matrix);
+        in_camera_block = false;
+    }
+}
+
+void PGraphics::auto_flush_after_matrices_modified() {
+    if (auto_flush) {
+        flush();
+        resetMatrix();
+    }
+}
+
+void PGraphics::update_view_matrix(const glm::mat4& view) {
+    auto_flush_after_matrices_modified();
+    view_matrix = view;
+}
+
+void PGraphics::update_projection_matrix(const glm::mat4& proj) {
+    auto_flush_after_matrices_modified();
+    projection_matrix = proj;
+}
 
 void PGraphics::camera(const float eyeX, const float eyeY, const float eyeZ,
                        const float centerX, const float centerY, const float centerZ,
@@ -1322,11 +1337,13 @@ void PGraphics::camera(const float eyeX, const float eyeY, const float eyeZ,
     if (in_camera_block) {
         temp_view_matrix = glm::lookAt(eye, center, up);
     } else {
-        view_matrix = glm::lookAt(eye, center, up);
+        const glm::mat4 view = glm::lookAt(eye, center, up);
+        update_view_matrix(view);
     }
 }
 
 void PGraphics::camera() {
+    auto_flush_after_matrices_modified();
     // from https://processing.org/reference/camera_.html with FOV 60°
     // camera(width / 2.0, height / 2.0, (height / 2.0) / tan(PI * 30.0 / 180.0),
     //        width / 2.0, height / 2.0, 0,
@@ -1343,7 +1360,7 @@ void PGraphics::frustum(const float left, const float right, const float bottom,
     if (in_camera_block) {
         temp_projection_matrix = proj;
     } else {
-        projection_matrix = proj;
+        update_projection_matrix(proj);
     }
 }
 
@@ -1352,7 +1369,7 @@ void PGraphics::ortho(const float left, const float right, const float bottom, c
     if (in_camera_block) {
         temp_projection_matrix = proj;
     } else {
-        projection_matrix = proj;
+        update_projection_matrix(proj);
     }
 }
 
@@ -1361,7 +1378,7 @@ void PGraphics::perspective(const float fovy, const float aspect, const float ne
     if (in_camera_block) {
         temp_projection_matrix = proj;
     } else {
-        projection_matrix = proj;
+        update_projection_matrix(proj);
     }
 }
 

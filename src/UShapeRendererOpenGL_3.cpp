@@ -751,13 +751,16 @@ namespace umfeld {
         for (auto& shape: opaque_custom_shapes) {
             render_shape(shape);
         }
-        /* render pass: opaque point + line shapes */
+        /* render pass: opaque point + line shapes ( e.g native ) */
         // TODO point and line shapes ( that are not triangulated )
         //      are always treated as opaque ... maybe there is
         //      a smarter way to handle this?
-        enable_depth_testing();
-        enable_depth_buffer_writing();
-        disable_blending();
+        if (graphics->get_stroke_render_mode() == STROKE_RENDER_MODE_NATIVE || graphics->get_point_render_mode() == POINT_RENDER_MODE_NATIVE) {
+            // TODO this is a bit of a HACK … need to address this properly at some point
+            enable_depth_testing();
+            enable_depth_buffer_writing();
+            disable_blending();
+        }
         for (auto& shape: point_shapes) {
             render_shape(shape);
         }
@@ -1002,7 +1005,7 @@ namespace umfeld {
         std::vector<UShape> converted_shapes;
         converted_shapes.reserve(stroke_shape.vertices.size());
         PGraphics::convert_stroke_shape_to_line_strip(stroke_shape, converted_shapes);
-        const bool shape_has_transparent_vertices = has_transparent_vertices(stroke_shape.vertices);
+        // const bool shape_has_transparent_vertices = has_transparent_vertices(stroke_shape.vertices);
         if (!converted_shapes.empty()) {
             // // OPTIMIZE why does this create individual shapes for each line strip?
             // static uint8_t strategy_counter = 0;
@@ -1079,7 +1082,7 @@ namespace umfeld {
             cs.mode         = TRIANGLES;
             cs.model_matrix = glm::mat4(1.0f); // NOTE triangles are already transformed with model matrix in `triangulate_line_strip_vertex`
             cs.vertices     = std::move(total_triangulated_vertices);
-            cs.transparent  = shape_has_transparent_vertices;
+            cs.transparent  = stroke_shape.transparent;
             processed_triangle_shapes.push_back(std::move(cs));
             // }
             // }
@@ -1282,17 +1285,18 @@ namespace umfeld {
     }
 
     // NOTE this is required by `process_shapes_z_order`
-    void UShapeRendererOpenGL_3::process_stroke_shapes_z_order(std::vector<UShape>& processed_triangle_shapes,
-                                                               std::vector<UShape>& processed_line_shapes,
-                                                               UShape&              stroke_shape) const {
+    void UShapeRendererOpenGL_3::process_stroke_shapes_z_order(std::vector<UShape>& processed_triangle_shapes, std::vector<UShape>& processed_line_shapes, UShape& stroke_shape) const {
+        // NOTE make sure that this is somewhat aligned with `process_stroke_shapes_submission_order`
         if (graphics == nullptr) { return; }
         if (graphics->get_stroke_render_mode() == STROKE_RENDER_MODE_TRIANGULATE_2D) {
             convert_stroke_shape_to_triangles_2D(processed_triangle_shapes, stroke_shape);
         } else if (graphics->get_stroke_render_mode() == STROKE_RENDER_MODE_TUBE_3D) {
             convert_stroke_shape_to_triangles_3D_tube(processed_triangle_shapes, stroke_shape);
         } else if (graphics->get_stroke_render_mode() == STROKE_RENDER_MODE_NATIVE) {
-            convert_stroke_shape_for_native(stroke_shape);
-            processed_line_shapes.push_back(std::move(stroke_shape));
+            process_stroke_shape_for_native(processed_line_shapes, stroke_shape);
+            // TODO why does it not aligne with submission order
+            // convert_stroke_shape_for_native(stroke_shape);
+            // processed_line_shapes.push_back(std::move(stroke_shape));
         } else if (graphics->get_stroke_render_mode() == STROKE_RENDER_MODE_LINE_SHADER) {
             convert_stroke_shape_for_line_shader(processed_line_shapes, stroke_shape);
         } else if (graphics->get_stroke_render_mode() == STROKE_RENDER_MODE_BARYCENTRIC_SHADER) {
@@ -1302,7 +1306,34 @@ namespace umfeld {
         }
     }
 
+    void UShapeRendererOpenGL_3::process_stroke_shape_for_native(std::vector<UShape>& processed_shape_batch, UShape& stroke_shape) {
+        if (stroke_shape.mode == LINES ||
+            stroke_shape.mode == LINE_STRIP ||
+            stroke_shape.mode == LINE_LOOP) {
+        } else if (stroke_shape.mode == POINTS) {
+            // NOTE that POINTS are handled separately
+            warning_in_function_once("POINTS should not to be handled here");
+        } else {
+            switch (stroke_shape.mode) {
+                case LINES:
+                case LINE_STRIP:
+                case LINE_LOOP:
+                    break;
+                case TRIANGLES:
+                case TRIANGLE_STRIP:
+                case TRIANGLE_FAN:
+                case QUADS:
+                case QUAD_STRIP:
+                    convert_stroke_shape_for_native(stroke_shape); // NOTE this converts one of the above shapes to a *renderable* native shape
+                case POLYGON:
+                default:
+                    stroke_shape.mode = stroke_shape.closed ? LINE_LOOP : LINE_STRIP;
+            }
+        }
+        processed_shape_batch.push_back(std::move(stroke_shape));
+    }
     void UShapeRendererOpenGL_3::process_stroke_shapes_submission_order(std::vector<UShape>& processed_shape_batch, UShape& stroke_shape) const {
+        // NOTE make sure that this is somewhat aligned with `process_stroke_shapes_z_order`
         if (graphics == nullptr) { return; }
         const int stroke_render_mode = graphics->get_stroke_render_mode();
         switch (stroke_render_mode) {
@@ -1310,30 +1341,8 @@ namespace umfeld {
                 convert_stroke_shape_to_triangles_3D_tube(processed_shape_batch, stroke_shape);
             } break;
             case STROKE_RENDER_MODE_NATIVE: {
-                if (stroke_shape.mode == LINES ||
-                    stroke_shape.mode == LINE_STRIP ||
-                    stroke_shape.mode == LINE_LOOP) {
-                } else if (stroke_shape.mode == POINTS) {
-                    // NOTE that POINTS are handled separately
-                    warning_in_function_once("POINTS should not to be handled here");
-                } else {
-                    switch (stroke_shape.mode) {
-                        case LINES:
-                        case LINE_STRIP:
-                        case LINE_LOOP:
-                            break;
-                        case TRIANGLES:
-                        case TRIANGLE_STRIP:
-                        case TRIANGLE_FAN:
-                        case QUADS:
-                        case QUAD_STRIP:
-                            convert_stroke_shape_for_native(stroke_shape); // NOTE this converts one of the above shapes to a *renderable* native shape
-                        case POLYGON:
-                        default:
-                            stroke_shape.mode = stroke_shape.closed ? LINE_LOOP : LINE_STRIP;
-                    }
-                }
-                processed_shape_batch.push_back(std::move(stroke_shape));
+                // TODO why does it not aligne with z-order
+                process_stroke_shape_for_native(processed_shape_batch, stroke_shape);
             } break;
             case STROKE_RENDER_MODE_LINE_SHADER: {
                 convert_stroke_shape_for_line_shader(processed_shape_batch, stroke_shape); // TODO

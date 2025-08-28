@@ -1399,6 +1399,7 @@ void PGraphics::vertex(const Vertex& v) {
 int PGraphics::get_current_texture_id() const { return current_texture == nullptr ? TEXTURE_NONE : current_texture->texture_id; }
 
 void PGraphics::submit_stroke_shape(const bool closed, const bool force_transparent) const {
+    const bool _force_transparent = stroke_render_mode == STROKE_RENDER_MODE_TRIANGULATE_2D ? true : force_transparent;
     if (!shape_stroke_vertex_buffer.empty()) {
         UShape s;
         s.mode         = current_shape.mode;
@@ -1406,7 +1407,7 @@ void PGraphics::submit_stroke_shape(const bool closed, const bool force_transpar
         s.filled       = false;
         s.vertices     = shape_stroke_vertex_buffer;
         s.model_matrix = model_matrix;
-        s.transparent  = force_transparent ? true : has_transparent_vertices(shape_stroke_vertex_buffer);
+        s.transparent  = _force_transparent ? true : has_transparent_vertices(shape_stroke_vertex_buffer);
         s.closed       = closed;
         s.texture_id   = get_current_texture_id();
         s.shader       = current_custom_shader;

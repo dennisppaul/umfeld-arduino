@@ -123,7 +123,7 @@ namespace umfeld {
         void                 enable_light_shaders_and_bind_texture(GLuint& current_shader_program_id, unsigned texture_id) const;
         static void          setup_uniform_blocks(const std::string& shader_name, GLuint program);
         static bool          uniform_exists(const GLuint loc) { return loc != ShaderUniforms::NOT_FOUND; }
-        void                 set_per_frame_default_shader_uniforms(const glm::mat4& view_projection_matrix,const glm::mat4& view_matrix, int frame_has_light_shapes, int frame_has_transparent_shapes, int frame_has_opaque_shapes) const;
+        void                 set_per_frame_default_shader_uniforms(const glm::mat4& view_projection_matrix, const glm::mat4& view_matrix, int frame_has_light_shapes, int frame_has_transparent_shapes, int frame_has_opaque_shapes) const;
         static void          set_light_uniforms(const ShaderUniforms& uniforms, const LightingState& lighting);
         const ShaderProgram& get_shader_program_cached() const;
         bool                 use_shader_program_cached(const ShaderProgram& required_shader_program);
@@ -147,6 +147,7 @@ namespace umfeld {
         static void   convert_stroke_shape_for_barycentric_shader(std::vector<UShape>& processed_line_shapes, UShape& stroke_shape);
         static void   convert_stroke_shape_for_geometry_shader(std::vector<UShape>& processed_line_shapes, UShape& stroke_shape);
         void          process_stroke_shapes_z_order(std::vector<UShape>& processed_triangle_shapes, std::vector<UShape>& processed_line_shapes, UShape& stroke_shape) const;
+        static void   process_stroke_shape_for_native(std::vector<UShape>& processed_shape_batch, UShape& stroke_shape);
         void          process_stroke_shapes_submission_order(std::vector<UShape>& processed_shape_batch, UShape& stroke_shape) const;
         static size_t estimate_triangle_count(const UShape& s);
         static void   convert_shapes_to_triangles_and_set_transform_id(const UShape& s, std::vector<Vertex>& out, uint16_t transformID);

@@ -33,6 +33,25 @@
 #include "audio/Sampler.h"
 
 namespace umfeld {
+    void profile(Profile profile_name) {
+        if (g == nullptr) {
+            warning_in_function_once("use 'profile' only in 'setup()' or 'draw()' ( not in 'settings()' ).");
+            return;
+        }
+        switch (profile_name) {
+            case PROFILE_2D: {
+                g->set_render_mode(RENDER_MODE_SORTED_BY_SUBMISSION_ORDER);
+                g->set_stroke_render_mode(STROKE_RENDER_MODE_TRIANGULATE_2D);
+                g->set_point_render_mode(POINT_RENDER_MODE_TRIANGULATE);
+                hint(ENABLE_SMOOTH_LINES);
+            } break;
+            case PROFILE_3D: {
+                g->set_render_mode(RENDER_MODE_SORTED_BY_Z_ORDER);
+                g->set_stroke_render_mode(STROKE_RENDER_MODE_NATIVE);
+                g->set_point_render_mode(POINT_RENDER_MODE_NATIVE);
+            } break;
+        }
+    }
 
     bool begins_with(const std::string& str, const std::string& prefix) {
         if (prefix.size() > str.size()) {

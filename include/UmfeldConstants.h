@@ -207,10 +207,8 @@ namespace umfeld {
         PCG,          // Permuted Congruential Generator (PCG) good quality, fast, small state. Designed by Melissa O’Neill. Very popular and widely recommended for general-purpose PRNG.
         WYRAND        // WyRand very fast (among the fastest non-cryptographic PRNGs). good statistical quality (passes PractRand up to 32 TB).
     };
-
-    // const std::string SHADER_UNIFORM_MODEL_MATRIX      = "model_matrix";
-    // const std::string SHADER_UNIFORM_VIEW_MATRIX       = "u_view_matrix";
-    // const std::string SHADER_UNIFORM_PROJECTION_MATRIX = "uProjection";
-    // const std::string SHADER_UNIFORM_TEXTURE_UNIT      = "u_texture_unit";
-    // const std::string SHADER_UNIFORM_TRANFORM_BLOCK    = "Transforms";
+    enum Profile {
+        PROFILE_2D,
+        PROFILE_3D
+    };
 } // namespace umfeld

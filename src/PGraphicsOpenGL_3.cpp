@@ -202,14 +202,14 @@ void PGraphicsOpenGL_3::upload_texture(PImage*         img,
 
     if (img->texture_id < TEXTURE_VALID_ID) {
         OGL_generate_and_upload_image_as_texture(img); // NOTE texture binding and unbinding is handled here properly
-        console(__func__, ": texture has not been initialized yet … trying to initialize");
+        console_in_function(": texture has not been initialized yet … trying to initialize");
         if (img->texture_id < TEXTURE_VALID_ID) {
             error_in_function("failed to create texture");
             return;
         }
         console("texture is now initialized.");
         if (offset_x > 0 || offset_y > 0) {
-            console(__func__, ": offset was ignored (WIP)");
+            console_in_function(": offset was ignored (WIP)");
         }
         return; // NOTE this should be fine, as the texture is now initialized
     }

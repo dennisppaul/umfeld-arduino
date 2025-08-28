@@ -84,6 +84,7 @@ namespace umfeld {
     Sampler*                 loadSample(const std::string& file);
     void                     saveImage(const PImage* image, const std::string& filename);
     PAudio*                  createAudio(const AudioUnitInfo* device_info);
+    void                     profile(Profile profile_name);
 
     /* --- utilities --- */
 

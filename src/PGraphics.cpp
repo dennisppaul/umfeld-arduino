@@ -113,7 +113,6 @@ void PGraphics::hint(const uint16_t property) {
         case DISABLE_DEPTH_TEST: {
             hint_force_depth_test = false;
         } break;
-        default:
     }
 }
 
@@ -1013,7 +1012,7 @@ void PGraphics::rect(const float x, const float y, const float width, const floa
 }
 
 void PGraphics::rect(const float x, const float y, const float width, const float height) {
-    rect(x, y, width, height, true);
+    rect(x, y, width, height, false);
 }
 
 void PGraphics::box(const float width, const float height, const float depth) {

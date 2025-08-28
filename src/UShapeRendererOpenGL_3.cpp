@@ -1531,21 +1531,21 @@ namespace umfeld {
                     current_vertex_buffer.back().transform_id = transform_id;
                 }
             }
+            GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, vbo));
+            if (frame_state_cache.cached_require_buffer_resize) {
+                frame_state_cache.cached_require_buffer_resize = false;
+                GL_CALL(glBufferData(GL_ARRAY_BUFFER,
+                                     static_cast<GLsizeiptr>(frame_state_cache.cached_max_vertices_per_batch * sizeof(Vertex)),
+                                     nullptr,
+                                     GL_DYNAMIC_DRAW));
+            }
+            GL_CALL(glBufferSubData(GL_ARRAY_BUFFER,
+                                    0, current_vertex_buffer.size() * sizeof(Vertex),
+                                    current_vertex_buffer.data()));
+            GL_CALL(glDrawArrays(GL_TRIANGLES,
+                                 0,
+                                 static_cast<GLsizei>(current_vertex_buffer.size())));
         }
-        GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, vbo)); // TODO maybe move this outside of loop … but only if there a no shapes with custom vertex buffer
-        if (frame_state_cache.cached_require_buffer_resize) {
-            frame_state_cache.cached_require_buffer_resize = false;
-            GL_CALL(glBufferData(GL_ARRAY_BUFFER,
-                                 static_cast<GLsizeiptr>(frame_state_cache.cached_max_vertices_per_batch * sizeof(Vertex)),
-                                 nullptr,
-                                 GL_DYNAMIC_DRAW));
-        }
-        GL_CALL(glBufferSubData(GL_ARRAY_BUFFER,
-                                0, current_vertex_buffer.size() * sizeof(Vertex),
-                                current_vertex_buffer.data()));
-        GL_CALL(glDrawArrays(GL_TRIANGLES,
-                             0,
-                             static_cast<GLsizei>(current_vertex_buffer.size())));
     }
 
     void UShapeRendererOpenGL_3::render_shape(const UShape& shape) {

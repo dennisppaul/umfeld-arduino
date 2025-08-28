@@ -72,10 +72,10 @@ namespace umfeld {
             return c;
         }
 
-        void set_auto_generate_mipmap(bool generate_mipmap) { auto_generate_mipmap = generate_mipmap; }
+        void set_auto_generate_mipmap(const bool generate_mipmap) { auto_generate_mipmap = generate_mipmap; }
         bool get_auto_generate_mipmap() const { return auto_generate_mipmap; }
 
-        void set_texture_wrap(TextureWrap wrap) {
+        void set_texture_wrap(const TextureWrap wrap) {
             if (wrap != texture_wrap) {
                 texture_wrap       = wrap;
                 texture_wrap_dirty = true;
@@ -85,7 +85,7 @@ namespace umfeld {
         bool        is_texture_wrap_dirty() const { return texture_wrap_dirty; }
         void        set_texture_wrap_clean() { texture_wrap_dirty = false; }
 
-        void set_texture_filter(TextureFilter filter) {
+        void set_texture_filter(const TextureFilter filter) {
             if (filter != texture_filter) {
                 texture_filter       = filter;
                 texture_filter_dirty = true;
@@ -98,9 +98,9 @@ namespace umfeld {
         float                    width;
         float                    height;
         uint32_t*                pixels;
-        static constexpr uint8_t channels         = DEFAULT_BYTES_PER_PIXELS;
-        bool                     flip_y_texcoords = false;
-        int                      texture_id       = TEXTURE_NOT_GENERATED;
+        static constexpr uint8_t channels{DEFAULT_BYTES_PER_PIXELS};
+        bool                     flip_y_texcoords{false};
+        int                      texture_id{TEXTURE_NOT_GENERATED};
 
     protected:
         bool          auto_generate_mipmap{false};

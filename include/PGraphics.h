@@ -320,7 +320,7 @@ namespace umfeld {
         glm::vec4                        current_normal{Vertex::DEFAULT_NORMAL};
         glm::mat4                        temp_view_matrix{};
         glm::mat4                        temp_projection_matrix{};
-        RenderMode                       render_mode{RENDER_MODE_SORTED_BY_Z_ORDER};
+        RenderMode                       render_mode{RENDER_MODE_SORTED_BY_SUBMISSION_ORDER};
         bool                             in_camera_block{false};
         const UFont*                     debug_font{nullptr};
         void (*triangle_emitter_callback)(std::vector<Vertex>&){nullptr};

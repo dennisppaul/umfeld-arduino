@@ -34,7 +34,7 @@ namespace umfeld {
         StrokeState         stroke;
         bool                filled{true};
         std::vector<Vertex> vertices;
-        glm::mat4           model{};
+        glm::mat4           model_matrix{};
         bool                transparent{};
         bool                closed{false};
         uint16_t            texture_id{TEXTURE_NONE};

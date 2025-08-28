@@ -89,8 +89,8 @@ void PGraphics::mesh(VertexBuffer* mesh_shape) {
     // NOTE ignore 'mode'
     s.filled = true;
     // NOTE ignore 'vertices'
-    s.model       = model_matrix;
-    s.transparent = mesh_shape->get_transparent();
+    s.model_matrix = model_matrix;
+    s.transparent  = mesh_shape->get_transparent();
     // NOTE ignore 'closed'
     s.texture_id    = get_current_texture_id();
     s.light_enabled = lights_enabled; // TODO not properly supported WIP
@@ -1228,7 +1228,9 @@ static glm::vec3 world_to_screen(
     return screen;
 }
 
-void PGraphics::triangulate_line_strip_vertex(const std::vector<Vertex>& line_strip,
+// OPTIMIZE this and store MVP ( and variants ) globally
+void PGraphics::triangulate_line_strip_vertex(const glm::mat4&           model_matrix,
+                                              const std::vector<Vertex>& line_strip,
                                               const StrokeState&         stroke,
                                               const bool                 close_shape,
                                               std::vector<Vertex>&       line_vertices) const {
@@ -1237,7 +1239,7 @@ void PGraphics::triangulate_line_strip_vertex(const std::vector<Vertex>& line_st
     std::vector<glm::vec2> points(line_strip.size());
     std::vector<glm::vec2> triangles;
 
-    const glm::mat4 mvp = projection_matrix * view_matrix * model_matrix; // OPTIMIZE this and store MVP ( and variants ) globally
+    const glm::mat4 mvp = projection_matrix * view_matrix * model_matrix;
     for (int i = 0; i < line_strip.size(); ++i) {
         // glm::vec3 _position = line_strip[i].position;
         // to_screen_space(_position);
@@ -1399,15 +1401,15 @@ int PGraphics::get_current_texture_id() const { return current_texture == nullpt
 void PGraphics::submit_stroke_shape(const bool closed, const bool force_transparent) const {
     if (!shape_stroke_vertex_buffer.empty()) {
         UShape s;
-        s.mode        = current_shape.mode;
-        s.stroke      = current_stroke_state;
-        s.filled      = false;
-        s.vertices    = shape_stroke_vertex_buffer;
-        s.model       = model_matrix;
-        s.transparent = force_transparent ? true : has_transparent_vertices(shape_stroke_vertex_buffer);
-        s.closed      = closed;
-        s.texture_id  = get_current_texture_id();
-        s.shader      = current_custom_shader;
+        s.mode         = current_shape.mode;
+        s.stroke       = current_stroke_state;
+        s.filled       = false;
+        s.vertices     = shape_stroke_vertex_buffer;
+        s.model_matrix = model_matrix;
+        s.transparent  = force_transparent ? true : has_transparent_vertices(shape_stroke_vertex_buffer);
+        s.closed       = closed;
+        s.texture_id   = get_current_texture_id();
+        s.shader       = current_custom_shader;
         shape_renderer->submit_shape(s);
     }
 }
@@ -1419,7 +1421,7 @@ void PGraphics::submit_fill_shape(const bool closed, const bool force_transparen
         s.mode          = current_shape.mode;
         s.filled        = true;
         s.vertices      = shape_fill_vertex_buffer;
-        s.model         = model_matrix;
+        s.model_matrix  = model_matrix;
         s.transparent   = force_transparent ? true : has_transparent_vertices(shape_fill_vertex_buffer);
         s.closed        = closed;
         s.texture_id    = get_current_texture_id();
@@ -1456,7 +1458,7 @@ void PGraphics::debug_text(const std::string& text, const float x, const float y
     s.filled = true;
     s.vertices.reserve(text.size() * 6);
     debug_font->generate(s.vertices, text, x, y, glm::vec4(color_fill));
-    s.model         = model_matrix;
+    s.model_matrix  = model_matrix;
     s.transparent   = true;
     s.closed        = false;
     s.texture_id    = texture_update_and_bind(debug_font->atlas());
@@ -1519,14 +1521,14 @@ void PGraphics::convert_stroke_shape_to_line_strip(UShape& s, std::vector<UShape
                 }
 
                 UShape ns{
-                    .mode        = LINE_STRIP,
-                    .stroke      = s.stroke,
-                    .filled      = s.filled,
-                    .vertices    = std::move(vertices),
-                    .model       = s.model,
-                    .transparent = s.transparent,
-                    .closed      = config.is_closed,
-                    .texture_id  = s.texture_id};
+                    .mode         = LINE_STRIP,
+                    .stroke       = s.stroke,
+                    .filled       = s.filled,
+                    .vertices     = std::move(vertices),
+                    .model_matrix = s.model_matrix,
+                    .transparent  = s.transparent,
+                    .closed       = config.is_closed,
+                    .texture_id   = s.texture_id};
                 shapes.emplace_back(std::move(ns));
             }
         };

@@ -243,7 +243,8 @@ namespace umfeld {
         void                set_stroke_render_mode(const int stroke_render_mode) { this->stroke_render_mode = stroke_render_mode; }
         int                 get_stroke_render_mode() const { return stroke_render_mode; }
         void                stroke_properties(float stroke_join_round_resolution, float stroke_cap_round_resolution, float stroke_join_miter_max_angle);
-        void                triangulate_line_strip_vertex(const std::vector<Vertex>& line_strip,
+        void                triangulate_line_strip_vertex(const glm::mat4&           model_matrix,
+                                                          const std::vector<Vertex>& line_strip,
                                                           const StrokeState&         stroke,
                                                           bool                       close_shape,
                                                           std::vector<Vertex>&       line_vertices) const;

@@ -254,7 +254,7 @@ namespace umfeld {
     }
 
     static bool init() {
-        // NOTE not sure if we should use the AudioStream concept. currently the mental model
+        // NOTE not sure if we should use the AudioStream concept. currently the mental model_matrix
         //     is slightly different: a subsystem correlates to an audio driver ( e.g SDL or PortAudio )
         //     and the actual audio devices are represented by `PAudio`. so each `create_audio` call
         //     would need to open a device and create a single stream for that device. this is different

@@ -526,7 +526,7 @@ namespace umfeld {
     bool UShapeRendererOpenGL_3::set_uniform_model_matrix(const UShape&        shape,
                                                           const ShaderProgram& shader_program) {
         if (uniform_available(shader_program.uniforms.u_model_matrix.id)) {
-            glUniformMatrix4fv(shader_program.uniforms.u_model_matrix.id, 1, GL_FALSE, &shape.model[0][0]);
+            glUniformMatrix4fv(shader_program.uniforms.u_model_matrix.id, 1, GL_FALSE, &shape.model_matrix[0][0]);
             return true;
         }
         return false;
@@ -700,7 +700,7 @@ namespace umfeld {
         /* compute depth and sort transparent shapes */
         if (frame_transparent_shapes_count > 0) {
             for (UShape& s: transparent_shapes) {
-                const glm::vec4 center_world_space = s.model * glm::vec4(s.center_object_space, 1.0f);
+                const glm::vec4 center_world_space = s.model_matrix * glm::vec4(s.center_object_space, 1.0f);
                 const glm::vec4 center_view_space  = view_projection_matrix * center_world_space;
                 s.depth                            = center_view_space.z / center_view_space.w; // Proper NDC depth
             }
@@ -719,16 +719,6 @@ namespace umfeld {
                                               frame_transparent_shapes_count,
                                               frame_opaque_shapes_count);
 
-        /* render pass: opaque point + line shapes */
-        // TODO point and line shapes ( that are not triangulated )
-        //      are always treated as opaque ... maybe there is
-        //      a smarter way to handle this?
-        for (auto& shape: point_shapes) {
-            render_shape(shape);
-        }
-        for (auto& shape: line_shapes) {
-            render_shape(shape);
-        }
         /* render pass: opaque flat shapes */
         if (frame_opaque_shapes_count > 0) {
             enable_depth_testing();
@@ -751,6 +741,19 @@ namespace umfeld {
         }
         /* render pass: opaque custom shapes */
         for (auto& shape: opaque_custom_shapes) {
+            render_shape(shape);
+        }
+        /* render pass: opaque point + line shapes */
+        // TODO point and line shapes ( that are not triangulated )
+        //      are always treated as opaque ... maybe there is
+        //      a smarter way to handle this?
+        enable_depth_testing();
+        enable_depth_buffer_writing();
+        disable_blending();
+        for (auto& shape: point_shapes) {
+            render_shape(shape);
+        }
+        for (auto& shape: line_shapes) {
             render_shape(shape);
         }
         /* render pass: transparent shapes */
@@ -996,14 +999,16 @@ namespace umfeld {
             // TODO @maybe move this to PGraphics
             for (auto& cs: converted_shapes) {
                 std::vector<Vertex> triangulated_vertices;
-                graphics->triangulate_line_strip_vertex(cs.vertices,
+                graphics->triangulate_line_strip_vertex(stroke_shape.model_matrix,
+                                                        cs.vertices,
                                                         cs.stroke,
                                                         cs.closed,
                                                         triangulated_vertices);
-                cs.vertices    = std::move(triangulated_vertices);
-                cs.filled      = true;
-                cs.mode        = TRIANGLES;
-                cs.transparent = shape_has_transparent_vertices;
+                cs.vertices     = std::move(triangulated_vertices);
+                cs.filled       = true;
+                cs.mode         = TRIANGLES;
+                cs.model_matrix = glm::mat4(1.0f); // NOTE triangles are already transformed with model matrix in `triangulate_line_strip_vertex`
+                cs.transparent  = shape_has_transparent_vertices;
                 processed_triangle_shapes.push_back(std::move(cs));
             }
         }
@@ -1412,7 +1417,7 @@ namespace umfeld {
             flush_frame_matrices.reserve(chunkSize);
             for (size_t i = 0; i < chunkSize; ++i) {
                 const auto* s = shapes_to_render[offset + i];
-                flush_frame_matrices.push_back(s->model);
+                flush_frame_matrices.push_back(s->model_matrix);
             }
             // OPTIMIZE this only needs to happen once per frame
             // TODO maybe move this outside of loop
@@ -1521,7 +1526,7 @@ namespace umfeld {
             const auto required_shader_program = ShaderProgram{.id = shape.shader->get_program_id()};
             const bool changed_shader_program  = use_shader_program_cached(required_shader_program);
             if (graphics != nullptr) {
-                shape.shader->update_uniforms(shape.model, graphics->view_matrix, graphics->projection_matrix, 0);
+                shape.shader->update_uniforms(shape.model_matrix, graphics->view_matrix, graphics->projection_matrix, 0);
             }
             if (changed_shader_program) {
                 // TODO this state is useless unless we can also confirm that matrices havn t changed
@@ -1537,7 +1542,7 @@ namespace umfeld {
                 // TODO warning_in_function_once("default shader: do we need to update uniforms here?");
                 // OPTIMIZE maybe use this to set a shader uniform ( e.g view matrix ) once per flush frame once it is reuqested for the first time
             }
-            // NOTE always use fallback model matrix instead of UBO i.e vertex attribute 'a_transform_id' needs to be set to 0
+            // NOTE always use fallback model_matrix matrix instead of UBO i.e vertex attribute 'a_transform_id' needs to be set to 0
             set_uniform_model_matrix(shape, required_shader_program);
         }
         /* set lights for this shape ( if enabled ) */

@@ -33,7 +33,7 @@
 #include "audio/Sampler.h"
 
 namespace umfeld {
-    void profile(Profile profile_name) {
+    void profile(const Profile profile_name) {
         if (g == nullptr) {
             warning_in_function_once("use 'profile' only in 'setup()' or 'draw()' ( not in 'settings()' ).");
             return;
@@ -47,7 +47,8 @@ namespace umfeld {
             } break;
             case PROFILE_3D: {
                 g->set_render_mode(RENDER_MODE_SORTED_BY_Z_ORDER);
-                g->set_stroke_render_mode(STROKE_RENDER_MODE_NATIVE);
+                // g->set_stroke_render_mode(STROKE_RENDER_MODE_NATIVE);
+                g->set_stroke_render_mode(STROKE_RENDER_MODE_LINE_SHADER);
                 g->set_point_render_mode(POINT_RENDER_MODE_NATIVE);
             } break;
         }

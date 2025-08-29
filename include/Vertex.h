@@ -42,10 +42,10 @@ namespace umfeld {
         static constexpr auto ATTRIBUTE_NAME_TEXCOORD         = "aTexCoord";
         static constexpr auto ATTRIBUTE_NAME_TRANSFORM_ID     = "a_transform_id";
         static constexpr auto ATTRIBUTE_NAME_USERDATA         = "aUserdata";
-        static constexpr auto DEFAULT_POSITION                = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
-        static constexpr auto DEFAULT_NORMAL                  = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
-        static constexpr auto DEFAULT_COLOR                   = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
-        static constexpr auto DEFAULT_TEX_COORD               = glm::vec3(0.0f, 0.0f, 0.0f);
+        static inline auto    DEFAULT_POSITION                = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+        static inline auto    DEFAULT_NORMAL                  = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
+        static inline auto    DEFAULT_COLOR                   = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+        static inline auto    DEFAULT_TEX_COORD               = glm::vec3(0.0f, 0.0f, 0.0f);
         static constexpr auto DEFAULT_TRANSFORM_ID            = 0;
         static constexpr auto DEFAULT_USERDATA                = 0;
         glm::aligned_vec4     position;

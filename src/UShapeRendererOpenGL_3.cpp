@@ -1376,14 +1376,199 @@ namespace umfeld {
     }
 
     void UShapeRendererOpenGL_3::process_stroke_shape_for_line_shader(const UShape& stroke_shape, std::vector<Vertex>& line_vertices) {
+// #define LINE_SHADER_USE_MITER_JOINS
+#define LINE_SHADER_SCALE_EXTEND
+
         const auto&  v = stroke_shape.vertices;
         const size_t n = v.size();
+        
+#ifdef LINE_SHADER_SCALE_EXTEND
+        // extract uniform scale from model matrix
+        const auto  scale_vec = glm::vec3(glm::length(glm::vec3(stroke_shape.model_matrix[0])),
+                                          glm::length(glm::vec3(stroke_shape.model_matrix[1])),
+                                          glm::length(glm::vec3(stroke_shape.model_matrix[2])));
+        const float avg_scale = (scale_vec.x + scale_vec.y + scale_vec.z) / 3.0f;
+#endif
 
-        auto add_segment = [&](const size_t i, const size_t j) {
+        auto add_segment_extend = [&](const size_t i, const size_t j) {
+            if (i < n && j < n) {
+                Vertex start = v[i];
+                Vertex end   = v[j];
+
+                // Calculate direction and extend slightly
+                const float dx     = end.position.x - start.position.x;
+                const float dy     = end.position.y - start.position.y;
+                const float length = sqrt(dx * dx + dy * dy);
+                if (length > 0.0f) {
+#ifdef LINE_SHADER_SCALE_EXTEND
+                    const float extension = stroke_shape.stroke.stroke_weight / avg_scale;
+#else
+                    const float extension = stroke_shape.stroke.stroke_weight * 0.5f; // half stroke width
+#endif
+                    const float norm_dx = dx / length;
+                    const float norm_dy = dy / length;
+                    // Extend both ends slightly
+                    start.position.x -= norm_dx * extension;
+                    start.position.y -= norm_dy * extension;
+                    end.position.x += norm_dx * extension;
+                    end.position.y += norm_dy * extension;
+                }
+                PGraphicsOpenGL_3::OGL3_add_line_quad(start, end, stroke_shape.stroke.stroke_weight, line_vertices);
+            }
+        };
+
+        auto add_segment_simple = [&](const size_t i, const size_t j) {
             if (i < n && j < n) {
                 PGraphicsOpenGL_3::OGL3_add_line_quad(v[i], v[j], stroke_shape.stroke.stroke_weight, line_vertices);
             }
         };
+
+#ifdef LINE_SHADER_USE_MITER_JOINS
+        auto add_segment_with_miter = [&](const size_t prev_idx, const size_t curr_idx, const size_t next_idx) {
+            if (curr_idx >= n) {
+                return;
+            }
+
+            const Vertex& prev = (prev_idx < n) ? v[prev_idx] : v[curr_idx];
+            const Vertex& curr = v[curr_idx];
+            const Vertex& next = (next_idx < n) ? v[next_idx] : v[curr_idx];
+
+            // Skip if we don't have valid direction vectors
+            glm::vec3 dir1 = curr.position - prev.position;
+            glm::vec3 dir2 = next.position - curr.position;
+
+            float len1 = glm::length(dir1);
+            float len2 = glm::length(dir2);
+
+            if (len1 < 1e-6f || len2 < 1e-6f) {
+                // Fallback to simple segment
+                PGraphicsOpenGL_3::OGL3_add_line_quad(prev, curr, stroke_shape.stroke.stroke_weight, line_vertices);
+                return;
+            }
+
+            dir1 /= len1;
+            dir2 /= len2;
+
+            // Calculate miter vector (bisector of the angle)
+            glm::vec3 miter = glm::normalize(dir1 + dir2);
+
+            // Calculate miter length (how much to extend along miter direction)
+            float dot_product  = glm::dot(dir1, miter);
+            float miter_length = stroke_shape.stroke.stroke_weight * 0.5f / std::max(dot_product, 0.1f);
+
+            // Limit miter length to prevent extremely long spikes at sharp angles
+            miter_length = std::min(miter_length, stroke_shape.stroke.stroke_weight * 3.0f);
+
+            // Apply miter offset perpendicular to the line direction
+            glm::vec3 perp = glm::cross(miter, glm::vec3(0, 0, 1));
+
+            Vertex adjusted_prev = prev;
+            Vertex adjusted_curr = curr;
+
+            // Extend the joint point along the miter direction
+            adjusted_curr.position += miter * miter_length * 0.5f;
+
+            PGraphicsOpenGL_3::OGL3_add_line_quad(adjusted_prev, adjusted_curr, stroke_shape.stroke.stroke_weight, line_vertices);
+        };
+
+        auto add_segment = add_segment_simple;
+        switch (stroke_shape.mode) {
+            case LINES: {
+                line_vertices = stroke_shape.vertices; // NOTE already in line format
+            } break;
+
+            // Cases with individual triangles/quads - use simple segments
+            case TRIANGLE_FAN: {
+                if (n >= 3) {
+                    constexpr size_t center = 0;
+                    for (size_t i = 1; i + 1 < n; ++i) {
+                        const size_t a = center, b = i, c = i + 1;
+                        add_segment(a, b);
+                        add_segment(b, c);
+                        add_segment(c, a);
+                    }
+                }
+            } break;
+            case TRIANGLES: {
+                const size_t m = (n / 3) * 3;
+                for (size_t i = 0; i + 2 < m; i += 3) {
+                    const size_t a = i, b = i + 1, c = i + 2;
+                    add_segment(a, b);
+                    add_segment(b, c);
+                    add_segment(c, a);
+                }
+            } break;
+            case TRIANGLE_STRIP: {
+                if (n >= 3) {
+                    for (size_t k = 2; k < n; ++k) {
+                        const size_t a = k - 2, b = k - 1, c = k;
+                        add_segment(a, b);
+                        add_segment(b, c);
+                        add_segment(c, a);
+                    }
+                }
+            } break;
+            case QUAD_STRIP: {
+                for (size_t i = 0; i + 3 < n; i += 2) {
+                    const size_t a = i, b = i + 1, c = i + 2, d = i + 3;
+                    add_segment(a, b);
+                    add_segment(b, d);
+                    add_segment(d, c);
+                    add_segment(c, a);
+                }
+            } break;
+            case QUADS: {
+                const size_t q = (n / 4) * 4;
+                for (size_t i = 0; i + 3 < q; i += 4) {
+                    const size_t a = i, b = i + 1, c = i + 2, d = i + 3;
+                    add_segment(a, b);
+                    add_segment(b, c);
+                    add_segment(c, d);
+                    add_segment(d, a);
+                }
+            } break;
+
+            // Cases with continuous paths - use miter joints
+            default:
+            case LINE_STRIP:
+            case POLYGON: {
+                if (n < 2) {
+                    break;
+                }
+
+                const bool is_closed = stroke_shape.closed && n > 2;
+
+                if (is_closed) {
+                    // Closed path - each vertex connects to prev and next
+                    for (size_t i = 0; i < n; ++i) {
+                        const size_t prev = (i == 0) ? n - 1 : i - 1;
+                        const size_t curr = i;
+                        const size_t next = (i + 1) % n;
+                        add_segment_with_miter(prev, curr, next);
+                    }
+                } else {
+                    // Open path
+                    if (n >= 2) {
+                        // First segment (no previous point)
+                        add_segment_with_miter(0, 0, 1);
+
+                        // Middle segments (have both prev and next)
+                        for (size_t i = 1; i < n - 1; ++i) {
+                            add_segment_with_miter(i - 1, i, i + 1);
+                        }
+
+                        // Last segment (no next point)
+                        if (n > 1) {
+                            add_segment_with_miter(n - 2, n - 1, n - 1);
+                        }
+                    }
+                }
+                break;
+            }
+        }
+#else
+        auto add_segment = add_segment_extend;
+
         switch (stroke_shape.mode) {
             case LINES: {
                 line_vertices = stroke_shape.vertices; // NOTE already in line format
@@ -1451,6 +1636,7 @@ namespace umfeld {
                 break;
             }
         }
+#endif
     }
 
     void UShapeRendererOpenGL_3::convert_stroke_shape_for_line_shader(std::vector<UShape>& processed_line_shapes, UShape& stroke_shape) {

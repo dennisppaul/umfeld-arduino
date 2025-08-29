@@ -19,6 +19,8 @@
 
 #pragma once
 
+#include <cstdint>
+#include <limits>
 #include <string>
 
 // ReSharper disable once CppUnusedIncludeDirective

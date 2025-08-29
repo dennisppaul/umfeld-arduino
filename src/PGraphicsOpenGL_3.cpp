@@ -58,6 +58,8 @@ PGraphicsOpenGL_3::PGraphicsOpenGL_3(const bool render_to_offscreen) : PImage(0,
 }
 
 void PGraphicsOpenGL_3::OGL3_add_line_quad(const Vertex& p0, const Vertex& p1, float thickness, std::vector<Vertex>& out) {
+#define OPTIMIZE_LINE_QUAD
+#ifdef OPTIMIZE_LINE_QUAD
     // glm::vec3 dir = glm::normalize(p1 - p0);
     glm::vec3 dir = p1.position - p0.position; // NOTE no need to normalize, the shader will do it
 
@@ -96,6 +98,28 @@ void PGraphicsOpenGL_3::OGL3_add_line_quad(const Vertex& p0, const Vertex& p1, f
     out.push_back(v2);
     out.push_back(v1);
     out.push_back(v3);
+#else
+    // Calculate direction vector (shader will normalize)
+    const glm::vec3 dir = p1.position - p0.position;
+
+    // Pre-allocate space for 6 vertices to avoid multiple reallocations
+    out.reserve(out.size() + 6);
+
+    // Create normals with positive and negative thickness
+    const glm::aligned_vec4 normal_pos(dir, thickness);
+    const glm::aligned_vec4 normal_neg(dir, -thickness);
+
+    // Emplace vertices directly to avoid temporary objects
+    // First triangle: v0, v1, v2
+    out.emplace_back(p0.position, normal_pos, p0.color);
+    out.emplace_back(p1.position, normal_pos, p1.color);
+    out.emplace_back(p0.position, normal_neg, p0.color);
+
+    // Second triangle: v2, v1, v3
+    out.emplace_back(p0.position, normal_neg, p0.color);
+    out.emplace_back(p1.position, normal_pos, p1.color);
+    out.emplace_back(p1.position, normal_neg, p1.color);
+#endif
 }
 
 /* --- UTILITIES --- */
@@ -386,9 +410,8 @@ void PGraphicsOpenGL_3::init(uint32_t* pixels, const int width, const int height
     shader_batch_programs[UShapeRendererOpenGL_3::SHADER_PROGRAM_TEXTURE]        = loadShader(shader_source_texture.get_vertex_source(), shader_source_texture.get_fragment_source());
     shader_batch_programs[UShapeRendererOpenGL_3::SHADER_PROGRAM_COLOR_LIGHTS]   = loadShader(shader_source_color_lights.get_vertex_source(), shader_source_color_lights.get_fragment_source());
     shader_batch_programs[UShapeRendererOpenGL_3::SHADER_PROGRAM_TEXTURE_LIGHTS] = loadShader(shader_source_texture_lights.get_vertex_source(), shader_source_texture_lights.get_fragment_source());
-    // TODO add point and line shader
-    // shader_batch_programs[UShapeRendererOpenGL_3::SHADER_PROGRAM_POINT]          = loadShader(shader_source_point.get_vertex_source(), shader_source_point.get_fragment_source());
-    // shader_batch_programs[UShapeRendererOpenGL_3::SHADER_PROGRAM_LINE]           = loadShader(shader_source_line.get_vertex_source(), shader_source_line.get_fragment_source());
+    shader_batch_programs[UShapeRendererOpenGL_3::SHADER_PROGRAM_POINT]          = loadShader(shader_source_point.get_vertex_source(), shader_source_point.get_fragment_source());
+    shader_batch_programs[UShapeRendererOpenGL_3::SHADER_PROGRAM_LINE]           = loadShader(shader_source_line.get_vertex_source(), shader_source_line.get_fragment_source());
     shape_renderer_ogl3->init(this, shader_batch_programs);
     shape_renderer = shape_renderer_ogl3;
 
@@ -840,7 +863,7 @@ void PGraphicsOpenGL_3::download_colorbuffer(uint32_t* pixels) {
                                    0);
 
             // Step 2: Blit from MSAA FBO to non-MSAA FBO
-            glBindFramebuffer(GL_READ_FRAMEBUFFER, framebuffer.id);
+            glBindFramebuffer(GL_READ_FRAMEBUFFER, (GLuint) framebuffer.id);
             glBindFramebuffer(GL_DRAW_FRAMEBUFFER, tempFBO);
             glBlitFramebuffer(0, 0, framebuffer.width, framebuffer.height,
                               0, 0, framebuffer.width, framebuffer.height,

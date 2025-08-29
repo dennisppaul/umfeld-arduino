@@ -45,10 +45,13 @@ namespace umfeld {
         };
 
         Uniform u_model_matrix{.name = "u_model_matrix"};
-        Uniform u_view_matrix{.name = "u_view_matrix"};
         Uniform u_projection_matrix{.name = "u_projection_matrix"};
+        Uniform u_view_matrix{.name = "u_view_matrix"};
         Uniform u_view_projection_matrix{.name = "u_view_projection_matrix"};
         Uniform u_texture_unit{.name = "u_texture_unit"};
+        Uniform u_viewport{.name = "u_viewport"};
+        Uniform u_perspective{.name = "u_perspective"};
+        Uniform u_scale{.name = "u_scale"};
         Uniform ambient{.name = "ambient"}; /* lighting uniforms */
         Uniform specular{.name = "specular"};
         Uniform emissive{.name = "emissive"};

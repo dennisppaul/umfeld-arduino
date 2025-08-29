@@ -27,20 +27,21 @@ namespace umfeld {
 layout(location = 0) in vec4 aPosition;
 layout(location = 1) in vec4 aNormal;
 layout(location = 2) in vec4 aColor;
+layout(location = 4) in uint a_transform_id;
 
 layout(std140) uniform Transforms {
     mat4 uModel[256];
 };
 
-out vec4 vColor;
+out vec4 v_color;
 
 uniform mat4 u_model_matrix;
-uniform mat4 uProjection;
 uniform mat4 u_view_matrix;
+uniform mat4 u_projection_matrix;
 
-uniform vec4 viewport;
-uniform int perspective;
-uniform vec3 scale;
+uniform vec4 u_viewport;
+uniform int  u_perspective;
+uniform vec3 u_scale;
 
 void main() {
     mat4 M;
@@ -50,7 +51,7 @@ void main() {
         M = uModel[a_transform_id - 1u];
     }
     mat4 modelviewMatrix =  u_view_matrix * M;
-    mat4 projectionMatrix = uProjection;
+    mat4 projectionMatrix = u_projection_matrix;
     vec4 direction = aNormal;
     vec4 posp = modelviewMatrix * aPosition;
     vec4 posq = modelviewMatrix * (aPosition + vec4(direction.xyz, 0));
@@ -59,14 +60,14 @@ void main() {
     // to avoid depth-fighting with the fill triangles.
     // Discussed here:
     // http://www.opengl.org/discussion_boards/ubbthreads.php?ubb=showflat&Number=252848
-    posp.xyz = posp.xyz * scale;
-    posq.xyz = posq.xyz * scale;
+    posp.xyz = posp.xyz * u_scale;
+    posq.xyz = posq.xyz * u_scale;
 
     vec4 p = projectionMatrix * posp;
     vec4 q = projectionMatrix * posq;
 
     // formula to convert from clip space (range -1..1) to screen space (range 0..[width or height])
-    // screen_p = (p.xy/p.w + <1,1>) * 0.5 * viewport.zw
+    // screen_p = (p.xy/p.w + <1,1>) * 0.5 * u_viewport.zw
 
     // prevent division by W by transforming the tangent formula (div by 0 causes
     // the line to disappear, see https://github.com/processing/processing/issues/5183)
@@ -74,20 +75,20 @@ void main() {
     //
     // tangent is normalized and we don't care which direction it points to (+-)
     // t = +- normalize( screen_q - screen_p )
-    // t = +- normalize( (q.xy/q.w+<1,1>)*0.5*viewport.zw - (p.xy/p.w+<1,1>)*0.5*viewport.zw )
+    // t = +- normalize( (q.xy/q.w+<1,1>)*0.5*u_viewport.zw - (p.xy/p.w+<1,1>)*0.5*u_viewport.zw )
     //
     // extract common factor, <1,1> - <1,1> cancels out
-    // t = +- normalize( (q.xy/q.w - p.xy/p.w) * 0.5 * viewport.zw )
+    // t = +- normalize( (q.xy/q.w - p.xy/p.w) * 0.5 * u_viewport.zw )
     //
     // convert to common divisor
-    // t = +- normalize( ((q.xy*p.w - p.xy*q.w) / (p.w*q.w)) * 0.5 * viewport.zw )
+    // t = +- normalize( ((q.xy*p.w - p.xy*q.w) / (p.w*q.w)) * 0.5 * u_viewport.zw )
     //
     // remove the common scalar divisor/factor, not needed due to normalize and +-
     // (keep viewport - can't remove because it has different components for x and y
     //  and corrects for aspect ratio, see https://github.com/processing/processing/issues/5181)
-    // t = +- normalize( (q.xy*p.w - p.xy*q.w) * viewport.zw )
+    // t = +- normalize( (q.xy*p.w - p.xy*q.w) * u_viewport.zw )
 
-    vec2 tangent = (q.xy*p.w - p.xy*q.w) * viewport.zw;
+    vec2 tangent = (q.xy*p.w - p.xy*q.w) * u_viewport.zw;
 
     // don't normalize zero vector (line join triangles and lines perpendicular to the eye plane)
     tangent = length(tangent) == 0.0 ? vec2(0.0, 0.0) : normalize(tangent);
@@ -107,21 +108,21 @@ void main() {
     // No Perspective ---
     // multiply by W (to cancel out division by W later in the pipeline) and
     // convert from screen to clip (derived from clip to screen above)
-    vec2 noPerspScale = p.w / (0.5 * viewport.zw);
+    vec2 noPerspScale = p.w / (0.5 * u_viewport.zw);
 
-    gl_Position.xy = p.xy + offset.xy * mix(noPerspScale, perspScale, float(perspective > 0));
+    gl_Position.xy = p.xy + offset.xy * mix(noPerspScale, perspScale, float(u_perspective > 0));
     gl_Position.zw = p.zw;
 
-    vColor = aColor;
+    v_color = aColor;
 }
         )",
         .fragment = R"(
-in vec4 vColor;
+in vec4 v_color;
 
-out vec4 FragColor;
+out vec4 v_frag_color;
 
 void main() {
-    FragColor = vColor;
+    v_frag_color = v_color;
 }
         )"};
 }

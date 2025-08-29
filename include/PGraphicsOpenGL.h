@@ -34,6 +34,26 @@ namespace umfeld {
 #define GL_CALL(func) func;
 #endif
 
+#define CHECK_OPENGL_ERROR(NAME, CODE)                                               \
+    do {                                                                             \
+        bool   __ogl_err_found = false;                                              \
+        GLenum __ogl_err;                                                            \
+        while ((__ogl_err = glGetError()) != GL_NO_ERROR) {                          \
+            warning("[OpenGL Error BEFORE] @", __func__, ": ",                       \
+                    NAME, " -> ", PGraphicsOpenGL::OGL_get_error_string(__ogl_err)); \
+            __ogl_err_found = true;                                                  \
+        }                                                                            \
+        CODE while ((__ogl_err = glGetError()) != GL_NO_ERROR) {                     \
+            if (!__ogl_err_found)                                                    \
+                warning("--> " NAME);                                                \
+            warning("[OpenGL Error AFTER] @", __func__, ": ",                        \
+                    NAME, " -> ", PGraphicsOpenGL::OGL_get_error_string(__ogl_err)); \
+            __ogl_err_found = true;                                                  \
+        }                                                                            \
+        if (__ogl_err_found)                                                         \
+            warning("<-- " NAME);                                                    \
+    } while (0)
+
     class UFont;
 
     class PGraphicsOpenGL : public PGraphics {

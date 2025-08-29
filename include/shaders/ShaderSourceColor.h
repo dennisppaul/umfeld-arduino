@@ -35,7 +35,7 @@ layout(std140) uniform Transforms {
     mat4 uModel[256];
 };
 
-out vec4 vColor;
+out vec4 v_color;
 
 uniform mat4 u_model_matrix;
 uniform mat4 u_view_projection_matrix;
@@ -48,14 +48,16 @@ void main() {
         M = uModel[a_transform_id - 1u];
     }
     gl_Position = u_view_projection_matrix * M * aPosition;
-    vColor = aColor;
+    v_color = aColor;
 }
         )",
         .fragment = R"(
-in vec4 vColor;
-out vec4 fragColor;
+in vec4 v_color;
+
+out vec4 v_frag_color;
+
 void main() {
-    fragColor = vColor;
+    v_frag_color = v_color;
 }
         )",
         .geometry = ""};

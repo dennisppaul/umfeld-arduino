@@ -61,30 +61,30 @@ namespace umfeld {
         /* --- standard drawing functions --- */
 
         // void     mesh(VertexBuffer* mesh_shape) override;
-        void     shader(PShader* shader) override;
-        PShader* loadShader(const std::string& vertex_code, const std::string& fragment_code, const std::string& geometry_code = "") override;
-        void     resetShader() override;
-        void     lights() override;
-        void     noLights() override;
-        void     ambientLight(float r, float g, float b, float x = 0, float y = 0, float z = 0) override;
-        void     directionalLight(float r, float g, float b, float nx, float ny, float nz) override;
-        void     pointLight(float r, float g, float b, float x, float y, float z) override;
-        void     spotLight(float r, float g, float b, float x, float y, float z, float nx, float ny, float nz, float angle, float concentration) override;
-        void     lightFalloff(float constant, float linear, float quadratic) override;
-        void     lightSpecular(float r, float g, float b) override;
-        void     ambient(float r, float g, float b) override;
-        void     specular(float r, float g, float b) override;
-        void     emissive(float r, float g, float b) override;
-        void     shininess(float s) override;
-
+        void        shader(PShader* shader) override;
+        PShader*    loadShader(const std::string& vertex_code, const std::string& fragment_code, const std::string& geometry_code = "") override;
+        void        resetShader() override;
+        void        lights() override;
+        void        noLights() override;
+        void        ambientLight(float r, float g, float b, float x = 0, float y = 0, float z = 0) override;
+        void        directionalLight(float r, float g, float b, float nx, float ny, float nz) override;
+        void        pointLight(float r, float g, float b, float x, float y, float z) override;
+        void        spotLight(float r, float g, float b, float x, float y, float z, float nx, float ny, float nz, float angle, float concentration) override;
+        void        lightFalloff(float constant, float linear, float quadratic) override;
+        void        lightSpecular(float r, float g, float b) override;
+        void        ambient(float r, float g, float b) override;
+        void        specular(float r, float g, float b) override;
+        void        emissive(float r, float g, float b) override;
+        void        shininess(float s) override;
+        static void OGL3_add_line_quad(const Vertex& p0, const Vertex& p1, float thickness, std::vector<Vertex>& out);
 
     private:
         struct RenderBatch {
-            int    start_index;
-            int    num_vertices;
-            GLuint texture_id;
+            int      start_index;
+            int      num_vertices;
+            uint32_t texture_id;
 
-            RenderBatch(const int start, const int count, const GLuint texID)
+            RenderBatch(const int start, const int count, const uint32_t texID)
                 : start_index(start), num_vertices(count), texture_id(texID) {}
         };
 
@@ -93,10 +93,10 @@ namespace umfeld {
         static constexpr uint8_t NUM_FILL_VERTEX_ATTRIBUTES_XYZ_RGBA_UV = 9;
         static constexpr uint8_t NUM_STROKE_VERTEX_ATTRIBUTES_XYZ_RGBA  = 7;
         PShader*                 shader_fullscreen_texture{nullptr};
-        GLint                    previously_bound_read_FBO = 0;
-        GLint                    previously_bound_draw_FBO = 0;
-        GLint                    previous_viewport[4]{};
-        GLint                    previous_shader{0};
+        int32_t                  previously_bound_read_FBO = 0;
+        int32_t                  previously_bound_draw_FBO = 0;
+        int32_t                  previous_viewport[4]{};
+        int32_t                  previous_shader{0};
 
         /* --- lights --- */
 
@@ -117,8 +117,7 @@ namespace umfeld {
 
         // void        OGL3_update_shader_matrices(PShader* shader) const;
         // static void OGL3_reset_shader_matrices(PShader* shader);
-        static void OGL3_add_line_quad(const Vertex& p0, const Vertex& p1, float thickness, std::vector<Vertex>& out);
-        void        OGL3_flip_pixel_buffer(uint32_t* pixels);
-        void        OGL3_draw_fullscreen_texture(GLuint texture_id) const;
+        void OGL3_flip_pixel_buffer(uint32_t* pixels);
+        void OGL3_draw_fullscreen_texture(uint32_t texture_id) const;
     };
 } // namespace umfeld

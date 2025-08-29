@@ -20,12 +20,12 @@
 #pragma once
 
 #include <vector>
-    #include <iostream>
-    #include <algorithm>
+#include <iostream>
+#include <algorithm>
 
-    class CircularBuffer {
+class CircularBuffer {
 public:
-    CircularBuffer(size_t size) : buffer(size), max_size(size), head(0), count(0) {}
+    explicit CircularBuffer(const size_t size) : buffer(size), max_size(size), head(0), count(0) {}
 
     void push(const std::vector<float>& chunk) {
         const size_t chunk_size = chunk.size();
@@ -90,27 +90,27 @@ private:
 };
 
 inline int test() {
-        CircularBuffer cb(5);
-        std::vector<float> latestChunk;
+    CircularBuffer     cb(5);
+    std::vector<float> latestChunk;
 
-        cb.push({1.0, 2.0, 3.0});
-        cb.printBuffer();  // Expected: 1.0 2.0 3.0
+    cb.push({1.0, 2.0, 3.0});
+    cb.printBuffer(); // Expected: 1.0 2.0 3.0
 
-        cb.push({4.0, 5.0, 6.0});
-        cb.printBuffer();  // Expected: 2.0 3.0 4.0 5.0 6.0
+    cb.push({4.0, 5.0, 6.0});
+    cb.printBuffer(); // Expected: 2.0 3.0 4.0 5.0 6.0
 
-        cb.getLatestChunk(3, latestChunk);
-        for (const float f : latestChunk) {
-            std::cout << f << " ";  // Expected: 4.0 5.0 6.0
-        }
-        std::cout << "\n";
-
-        cb.push({7.0, 8.0});
-        cb.getLatestChunk(4, latestChunk);
-        for (const float f : latestChunk) {
-            std::cout << f << " ";  // Expected: 5.0 6.0 7.0 8.0
-        }
-        std::cout << "\n";
-
-        return 0;
+    cb.getLatestChunk(3, latestChunk);
+    for (const float f: latestChunk) {
+        std::cout << f << " "; // Expected: 4.0 5.0 6.0
     }
+    std::cout << "\n";
+
+    cb.push({7.0, 8.0});
+    cb.getLatestChunk(4, latestChunk);
+    for (const float f: latestChunk) {
+        std::cout << f << " "; // Expected: 5.0 6.0 7.0 8.0
+    }
+    std::cout << "\n";
+
+    return 0;
+}

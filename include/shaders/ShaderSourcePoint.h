@@ -27,19 +27,20 @@ namespace umfeld {
 layout(location = 0) in vec4 aPosition;
 layout(location = 1) in vec4 aNormal; // offset
 layout(location = 2) in vec4 aColor;
+layout(location = 4) in uint a_transform_id;
 
 layout(std140) uniform Transforms {
     mat4 uModel[256];
 };
 
-out vec4 vColor;
+out vec4 v_color;
 
 uniform mat4 u_model_matrix;
-uniform mat4 uProjection;
+uniform mat4 u_projection_matrix;
 uniform mat4 u_view_matrix;
 
-uniform vec4 viewport;
-uniform int perspective;
+uniform vec4 u_viewport;
+uniform int  u_perspective;
 
 void main() {
     mat4 M;
@@ -49,7 +50,7 @@ void main() {
         M = uModel[a_transform_id - 1u];
     }
     mat4 modelviewMatrix =  u_view_matrix * M;
-    mat4 projectionMatrix = uProjection;
+    mat4 projectionMatrix = u_projection_matrix;
     vec2 offset = aNormal.xy;
 
     vec4 pos = modelviewMatrix * aPosition;
@@ -61,26 +62,26 @@ void main() {
     vec2 perspScale = (projectionMatrix * vec4(1, -1, 0, 0)).xy;
 
     // formula to convert from clip space (range -1..1) to screen space (range 0..[width or height])
-    // screen_p = (p.xy/p.w + <1,1>) * 0.5 * viewport.zw
+    // screen_p = (p.xy/p.w + <1,1>) * 0.5 * u_viewport.zw
 
     // No Perspective ---
     // multiply by W (to cancel out division by W later in the pipeline) and
     // convert from screen to clip (derived from clip to screen above)
-    vec2 noPerspScale = clip.w / (0.5 * viewport.zw);
+    vec2 noPerspScale = clip.w / (0.5 * u_viewport.zw);
 
-    gl_Position.xy = clip.xy + offset.xy * mix(noPerspScale, perspScale, float(perspective > 0));
+    gl_Position.xy = clip.xy + offset.xy * mix(noPerspScale, perspScale, float(u_perspective > 0));
     gl_Position.zw = clip.zw;
 
-    vColor = aColor;
+    v_color = aColor;
 }
         )",
         .fragment = R"(
-in vec4 vColor;
+in vec4 v_color;
 
-out vec4 FragColor;
+out vec4 v_frag_color;
 
 void main() {
-    FragColor = vColor;
+    v_frag_color = v_color;
 }
         )"};
 }

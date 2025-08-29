@@ -1540,7 +1540,6 @@ void PGraphics::emit_shape_stroke_points(std::vector<Vertex>& point_vertices, co
     // IMPL_emit_shape_stroke_points(point_vertices, point_size);
 }
 
-// NOTE this is required by `ShapeRendererOpenGL_3::handle_stroke_shape`
 void PGraphics::convert_stroke_shape_to_line_strip(UShape& s, std::vector<UShape>& shapes) {
     std::vector<Vertex> shape_stroke_vertex_buffer = s.vertices;
     const int           shape_mode_cache           = s.mode;
@@ -1557,14 +1556,12 @@ void PGraphics::convert_stroke_shape_to_line_strip(UShape& s, std::vector<UShape
         auto processVertexGroup = [&](const VertexGroupConfig& config) {
             const int buffer_size = config.vertex_source->size() / config.vertices_per_group * config.vertices_per_group;
             shapes.reserve(buffer_size / config.vertices_per_group);
-
             for (int i = 0; i < buffer_size; i += config.vertices_per_group) {
                 std::vector<Vertex> vertices;
                 vertices.reserve(config.vertices_per_group);
                 for (int j = 0; j < config.vertices_per_group; ++j) {
                     vertices.push_back((*config.vertex_source)[i + j]);
                 }
-
                 UShape ns{
                     .mode         = LINE_STRIP,
                     .stroke       = s.stroke,
@@ -1577,41 +1574,34 @@ void PGraphics::convert_stroke_shape_to_line_strip(UShape& s, std::vector<UShape
                 shapes.emplace_back(std::move(ns));
             }
         };
-
         switch (shape_mode_cache) {
             case LINES: {
                 const VertexGroupConfig config{2, false, &shape_stroke_vertex_buffer};
                 processVertexGroup(config);
             } break;
-
             case TRIANGLE_FAN: {
                 const std::vector<Vertex> converted_vertices = convertTriangleFanToTriangles(shape_stroke_vertex_buffer);
                 const VertexGroupConfig   config{3, true, &converted_vertices};
                 processVertexGroup(config);
             } break;
-
             case TRIANGLES: {
                 const VertexGroupConfig config{3, true, &shape_stroke_vertex_buffer};
                 processVertexGroup(config);
             } break;
-
             case TRIANGLE_STRIP: {
                 const std::vector<Vertex> converted_vertices = convertTriangleStripToTriangles(shape_stroke_vertex_buffer);
                 const VertexGroupConfig   config{3, true, &converted_vertices};
                 processVertexGroup(config);
             } break;
-
             case QUAD_STRIP: {
                 const std::vector<Vertex> converted_vertices = convertQuadStripToQuads(shape_stroke_vertex_buffer);
                 const VertexGroupConfig   config{4, true, &converted_vertices};
                 processVertexGroup(config);
             } break;
-
             case QUADS: {
                 const VertexGroupConfig config{4, true, &shape_stroke_vertex_buffer};
                 processVertexGroup(config);
             } break;
-
             default:
             case LINE_STRIP:
             case POLYGON:

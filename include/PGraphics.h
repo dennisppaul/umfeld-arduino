@@ -41,11 +41,11 @@ namespace umfeld {
     class PGraphics : public virtual PImage {
     public:
         struct FrameBufferObject {
-            unsigned int id{};
-            unsigned int texture_id{};
-            int          width{};
-            int          height{};
-            bool         msaa{false};
+            uint32_t id{};
+            uint32_t texture_id{};
+            int      width{};
+            int      height{};
+            bool     msaa{false};
         };
 
         FrameBufferObject framebuffer{};

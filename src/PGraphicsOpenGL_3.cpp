@@ -122,6 +122,82 @@ void PGraphicsOpenGL_3::OGL3_add_line_quad(const Vertex& p0, const Vertex& p1, f
 #endif
 }
 
+void PGraphicsOpenGL_3::OGL3_add_line_quad_and_bevel(const Vertex& p0, const Vertex& p1, const Vertex& p2, float thickness, std::vector<Vertex>& out) {
+    glm::vec3         dir = p1.position - p0.position; // NOTE no need to normalize, the shader will do it
+    glm::aligned_vec4 normal(dir, thickness);
+    Vertex            v0, v1, v2, v3;
+
+    v0.position = p0.position;
+    v1.position = p1.position;
+    v2.position = p0.position;
+    v3.position = p1.position;
+
+    v0.color = p0.color;
+    v1.color = p1.color;
+    v2.color = p0.color;
+    v3.color = p1.color;
+
+    v0.normal = normal;
+    v1.normal = normal;
+    normal.w  = -thickness;
+    v2.normal = normal;
+    v3.normal = normal;
+
+    // Add first triangle
+    out.push_back(v0);
+    out.push_back(v1);
+    out.push_back(v2);
+
+    // Add second triangle
+    out.push_back(v2);
+    out.push_back(v1);
+    out.push_back(v3);
+
+    // add bevel triangles
+    glm::vec3         dir_next = p2.position - p1.position;
+    glm::aligned_vec4 normal_prev(dir, thickness);
+    glm::aligned_vec4 normal_next(dir_next, thickness);
+
+    // Bevel triangle 1: junction point + two positive extensions
+    Vertex bv0, bv1, bv2;
+    bv0.position = p1.position;
+    bv1.position = p1.position;
+    bv2.position = p1.position;
+
+    bv0.color = p1.color;
+    bv1.color = p1.color;
+    bv2.color = p1.color;
+
+    bv0.normal = glm::vec4(0, 0, 0, 0);  // Junction point (no offset)
+    bv1.normal = normal_prev;             // Extension along previous line
+    bv2.normal = normal_next;             // Extension along next line
+
+    out.push_back(bv0);
+    out.push_back(bv1);
+    out.push_back(bv2);
+
+    // Bevel triangle 2: junction point + two negative extensions
+    Vertex bv3, bv4, bv5;
+    bv3.position = p1.position;
+    bv4.position = p1.position;
+    bv5.position = p1.position;
+
+    bv3.color = p1.color;
+    bv4.color = p1.color;
+    bv5.color = p1.color;
+
+    normal_prev.w = -thickness;
+    normal_next.w = -thickness;
+
+    bv3.normal = glm::vec4(0, 0, 0, 0);  // Junction point (no offset)
+    bv4.normal = normal_next;             // Extension along next line (negative side)
+    bv5.normal = normal_prev;             // Extension along previous line (negative side)
+
+    out.push_back(bv3);
+    out.push_back(bv4);
+    out.push_back(bv5);
+}
+
 /* --- UTILITIES --- */
 
 void PGraphicsOpenGL_3::beginDraw() {

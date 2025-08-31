@@ -77,6 +77,7 @@ namespace umfeld {
         void        emissive(float r, float g, float b) override;
         void        shininess(float s) override;
         static void OGL3_add_line_quad(const Vertex& p0, const Vertex& p1, float thickness, std::vector<Vertex>& out);
+        static void OGL3_add_line_quad_and_bevel(const Vertex& p0, const Vertex& p1, const Vertex& p2, float thickness, std::vector<Vertex>& out);
 
     private:
         struct RenderBatch {

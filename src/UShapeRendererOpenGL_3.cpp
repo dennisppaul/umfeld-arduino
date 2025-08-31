@@ -177,7 +177,8 @@ namespace umfeld {
                 run_once({ print_frame_info({}, {}, processed_shapes); });
             }
         }
-        /* reserve capacity for next frame based on current usage */
+
+        console_once(format_label("draw_calls_per_frame"), frame_state_cache.draw_calls_per_frame);
         prepare_next_flush_frame();
     }
 
@@ -598,6 +599,22 @@ namespace umfeld {
 #endif
     }
 
+    void UShapeRendererOpenGL_3::render_shape_line_shader(const glm::mat4& view_matrix, const glm::mat4& projection_matrix, const UShape& shape) {
+        // OPTIMIZE set uniforms once per frame! use "transform block model matrix" use batching mechanism from texture batches to set transform ID
+        // NOTE always use fallback model_matrix matrix instead of UBO i.e vertex attribute 'a_transform_id' needs to be set to 0
+        CHECK_OPENGL_ERROR("model_matrix", {
+            if (uniform_available(shader_line.uniforms.u_model_matrix.id)) {
+                glUniformMatrix4fv(shader_line.uniforms.u_model_matrix.id, 1, GL_FALSE, &shape.model_matrix[0][0]);
+            }
+        });
+
+        /* light */
+        if (shape.light_enabled) {
+            warning_in_function_once("STROKE_RENDER_MODE_LINE_SHADER does not support light");
+        }
+        /* draw */
+        draw_vertex_buffer(shape);
+    }
     /**
      * render shapes in batches (preprocess).
      *
@@ -697,23 +714,11 @@ namespace umfeld {
             batch.shapes.push_back(&s);
             batch.max_vertices += s.vertices.size();
         }
-        /* determine if VBO needs to be resized */
-        for (auto& [textureID, batch]: flat_shape_batches) {
-            if (batch.max_vertices > frame_state_cache.cached_max_vertices_per_draw) {
-                frame_state_cache.cached_max_vertices_per_draw = batch.max_vertices;
-                frame_state_cache.cached_require_buffer_resize = true;
-            }
-        }
-        for (auto& [textureID, batch]: light_shape_batches) {
-            if (batch.max_vertices > frame_state_cache.cached_max_vertices_per_draw) {
-                frame_state_cache.cached_max_vertices_per_draw = batch.max_vertices;
-                frame_state_cache.cached_require_buffer_resize = true;
-            }
-        }
         /* reserve vertex buffer once per flush frame */
-        if (frame_state_cache.cached_require_buffer_resize) {
-            current_vertex_buffer.reserve(frame_state_cache.cached_max_vertices_per_draw);
-        }
+        // if (frame_state_cache.cached_require_buffer_resize) {
+        // TODO look into this ... not sure if this is still valid
+        // current_vertex_buffer.reserve(frame_state_cache.cached_max_vertices_per_draw);
+        // }
         /* compute depth and sort transparent shapes */
         if (frame_transparent_shapes_count > 0) {
             for (UShape& s: transparent_shapes) {
@@ -729,6 +734,7 @@ namespace umfeld {
 
         bind_default_vertex_array();
 
+        // OPTIMIZE only set uniforms that are really needed
         // NOTE some uniforms only need to be set once per (flush) frame
         set_per_frame_default_shader_uniforms(view_projection_matrix,
                                               view_matrix,
@@ -743,7 +749,7 @@ namespace umfeld {
             disable_blending();
             for (auto& [texture_id, batch]: flat_shape_batches) {
                 enable_flat_shaders_and_bind_texture(frame_state_cache.cached_shader_program.id, texture_id);
-                render_batch(batch.shapes);
+                render_batch(batch);
             }
         }
         /* render pass: opaque light shapes */
@@ -753,7 +759,7 @@ namespace umfeld {
             disable_blending();
             for (auto& [texture_id, batch]: light_shape_batches) {
                 enable_light_shaders_and_bind_texture(frame_state_cache.cached_shader_program.id, texture_id);
-                render_batch(batch.shapes);
+                render_batch(batch);
             }
         }
         /* render pass: opaque custom shapes */
@@ -769,6 +775,7 @@ namespace umfeld {
             graphics->get_stroke_render_mode() == STROKE_RENDER_MODE_NATIVE ||
             graphics->get_point_render_mode() == POINT_RENDER_MODE_NATIVE) {
             // TODO this is a bit of a HACK … need to address this properly at some point
+            //      e.g STROKE_RENDER_MODE_LINE_SHADER also handles this … redundancy
             enable_depth_testing();
             enable_depth_buffer_writing();
             disable_blending();
@@ -777,64 +784,43 @@ namespace umfeld {
             render_shape(shape);
         }
         if (graphics->get_stroke_render_mode() == STROKE_RENDER_MODE_LINE_SHADER) {
-            for (auto& shape: line_shapes) {
-                /* transparency */
-                if (g->hint_force_depth_test) {
-                    enable_depth_testing();
-                } else {
-                    disable_depth_testing();
+            /* shader */
+            use_shader_program_cached(shader_line);
+            /* set uniforms */
+            CHECK_OPENGL_ERROR("view_matrix", {
+                if (uniform_available(shader_line.uniforms.u_view_matrix.id)) {
+                    glUniformMatrix4fv(shader_line.uniforms.u_view_matrix.id, 1, GL_FALSE, &view_matrix[0][0]);
                 }
-                enable_depth_buffer_writing();
-                disable_blending();
-
-                /* shader */
-                use_shader_program_cached(shader_line);
-                // NOTE always use fallback model_matrix matrix instead of UBO i.e vertex attribute 'a_transform_id' needs to be set to 0
-                CHECK_OPENGL_ERROR("model_matrix", {
-                    if (uniform_available(shader_line.uniforms.u_model_matrix.id)) {
-                        glUniformMatrix4fv(shader_line.uniforms.u_model_matrix.id, 1, GL_FALSE, &shape.model_matrix[0][0]);
-                    }
-                });
-                CHECK_OPENGL_ERROR("view_matrix", {
-                    if (uniform_available(shader_line.uniforms.u_view_matrix.id)) {
-                        glUniformMatrix4fv(shader_line.uniforms.u_view_matrix.id, 1, GL_FALSE, &view_matrix[0][0]);
-                    }
-                });
-                CHECK_OPENGL_ERROR("projection_matrix", {
-                    if (uniform_available(shader_line.uniforms.u_projection_matrix.id)) {
-                        glUniformMatrix4fv(shader_line.uniforms.u_projection_matrix.id, 1, GL_FALSE, &projection_matrix[0][0]);
-                    }
-                });
-                CHECK_OPENGL_ERROR("viewport", {
-                    if (uniform_available(shader_line.uniforms.u_viewport.id)) {
-                        // OPTIMIZE do this once per frame
-                        GLint viewport[4];
-                        glGetIntegerv(GL_VIEWPORT, viewport);
-                        glm::vec4 view_port(static_cast<float>(viewport[0]),
-                                            static_cast<float>(viewport[1]),
-                                            static_cast<float>(viewport[2]),
-                                            static_cast<float>(viewport[3]));
-                        glUniform4fv(shader_line.uniforms.u_viewport.id, 1, &view_port[0]);
-                    }
-                });
-                CHECK_OPENGL_ERROR("perspective", {
-                    if (uniform_available(shader_line.uniforms.u_perspective.id)) {
-                        glUniform1i(shader_line.uniforms.u_perspective.id, 0); // TODO make option
-                    }
-                });
-                CHECK_OPENGL_ERROR("scale", {
-                    if (uniform_available(shader_line.uniforms.u_scale.id)) {
-                        glm::vec3 scale(1, 1, 1); // TODO make option
-                        glUniform3fv(shader_line.uniforms.u_scale.id, 1, &scale[0]);
-                    }
-                });
-                /* light */
-                if (shape.light_enabled) {
-                    warning_in_function_once("STROKE_RENDER_MODE_LINE_SHADER does not support light");
+            });
+            CHECK_OPENGL_ERROR("projection_matrix", {
+                if (uniform_available(shader_line.uniforms.u_projection_matrix.id)) {
+                    glUniformMatrix4fv(shader_line.uniforms.u_projection_matrix.id, 1, GL_FALSE, &projection_matrix[0][0]);
                 }
-                /* draw */
-                update_and_draw_vertex_buffer(shape);
-            }
+            });
+            CHECK_OPENGL_ERROR("viewport", {
+                if (uniform_available(shader_line.uniforms.u_viewport.id)) {
+                    GLint viewport[4];
+                    glGetIntegerv(GL_VIEWPORT, viewport);
+                    glm::vec4 view_port(static_cast<float>(viewport[0]),
+                                        static_cast<float>(viewport[1]),
+                                        static_cast<float>(viewport[2]),
+                                        static_cast<float>(viewport[3]));
+                    glUniform4fv(shader_line.uniforms.u_viewport.id, 1, &view_port[0]);
+                }
+            });
+            CHECK_OPENGL_ERROR("perspective", {
+                if (uniform_available(shader_line.uniforms.u_perspective.id)) {
+                    glUniform1i(shader_line.uniforms.u_perspective.id, 0); // TODO make option
+                }
+            });
+            CHECK_OPENGL_ERROR("scale", {
+                if (uniform_available(shader_line.uniforms.u_scale.id)) {
+                    glm::vec3 scale(0.99, 0.99, 0.99); // TODO make option
+                    glUniform3fv(shader_line.uniforms.u_scale.id, 1, &scale[0]);
+                }
+            });
+            /* draw shapes */
+            render_line_shader_batch(line_shapes);
         } else {
             for (auto& shape: line_shapes) {
                 render_shape(shape);
@@ -1376,12 +1362,12 @@ namespace umfeld {
     }
 
     void UShapeRendererOpenGL_3::process_stroke_shape_for_line_shader(const UShape& stroke_shape, std::vector<Vertex>& line_vertices) {
-// #define LINE_SHADER_USE_MITER_JOINS
-#define LINE_SHADER_SCALE_EXTEND
+        // #define LINE_SHADER_USE_MITER_JOINS
+        // #define LINE_SHADER_SCALE_EXTEND
 
         const auto&  v = stroke_shape.vertices;
         const size_t n = v.size();
-        
+
 #ifdef LINE_SHADER_SCALE_EXTEND
         // extract uniform scale from model matrix
         const auto  scale_vec = glm::vec3(glm::length(glm::vec3(stroke_shape.model_matrix[0])),
@@ -1567,7 +1553,7 @@ namespace umfeld {
             }
         }
 #else
-        auto add_segment = add_segment_extend;
+        auto add_segment = add_segment_simple;
 
         switch (stroke_shape.mode) {
             case LINES: {
@@ -1857,7 +1843,7 @@ namespace umfeld {
         }
     }
 
-    void UShapeRendererOpenGL_3::render_batch(const std::vector<UShape*>& shapes_to_render) {
+    void UShapeRendererOpenGL_3::render_batch(const TextureBatch& batch) {
         // NOTE assumes that ...
         //      - shader is in use
         //      - texture is bound
@@ -1866,8 +1852,16 @@ namespace umfeld {
         // TODO `render_batch` does not support custom shaders and custom vertex buffers
         //      or shape modes other than TRIANGLES
 
+        const std::vector<UShape*>& shapes_to_render = batch.shapes;
+
         if (shapes_to_render.empty()) {
             return;
+        }
+
+        /* resize VBO once per batch */
+        if (batch.max_vertices > frame_state_cache.cached_max_vertices_per_draw) {
+            frame_state_cache.cached_max_vertices_per_draw = batch.max_vertices;
+            frame_state_cache.cached_require_buffer_resize = true;
         }
 
         for (size_t i = 0; i < shapes_to_render.size(); ++i) {
@@ -1885,6 +1879,8 @@ namespace umfeld {
 
         /* process in chunks to respect MAX_TRANSFORMS limit */
         std::vector<glm::mat4> flush_frame_matrices;
+        std::vector<Vertex>    current_vertex_buffer;
+        current_vertex_buffer.reserve(batch.max_vertices);
         for (size_t offset = 0; offset < shapes_to_render.size(); offset += MAX_TRANSFORMS) {
             const size_t chunkSize = std::min(static_cast<size_t>(MAX_TRANSFORMS), shapes_to_render.size() - offset);
             /* upload transforms for this chunk */
@@ -1925,34 +1921,76 @@ namespace umfeld {
                     current_vertex_buffer.back().transform_id = transform_id;
                 }
             }
-            GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, vbo));
-            if (frame_state_cache.cached_require_buffer_resize) {
-                frame_state_cache.cached_require_buffer_resize = false;
-                GL_CALL(glBufferData(GL_ARRAY_BUFFER,
-                                     static_cast<GLsizeiptr>(frame_state_cache.cached_max_vertices_per_draw * sizeof(Vertex)),
-                                     nullptr,
-                                     GL_DYNAMIC_DRAW));
-            }
-            GL_CALL(glBufferSubData(GL_ARRAY_BUFFER,
-                                    0, current_vertex_buffer.size() * sizeof(Vertex),
-                                    current_vertex_buffer.data()));
-            GL_CALL(glDrawArrays(GL_TRIANGLES,
-                                 0,
-                                 static_cast<GLsizei>(current_vertex_buffer.size())));
+            /* adapt buffer size if necessary */
+            constexpr uint32_t opengl_shape_mode = GL_TRIANGLES;
+            const uint32_t     vertex_count      = current_vertex_buffer.size();
+            const Vertex*      vertex_data       = current_vertex_buffer.data();
+            OGL3_draw_vertex_buffer(opengl_shape_mode, vertex_count, vertex_data);
         }
     }
 
-    void UShapeRendererOpenGL_3::update_and_draw_vertex_buffer(const UShape& shape) {
-        const uint32_t opengl_shape_mode = PGraphicsOpenGL::OGL_get_draw_mode(shape.mode);
+    void UShapeRendererOpenGL_3::render_line_shader_batch(const std::vector<UShape>& line_shape_batch) {
+        // NOTE assumes that shader is already in use
+
+        if (line_shape_batch.empty()) {
+            return;
+        }
+
+        /* resize VBO once per batch */
+        uint32_t batch_max_vertices = 0;
+        for (size_t i = 0; i < line_shape_batch.size(); i++) {
+            const auto& s = line_shape_batch[i];
+            if (s.vertices.size() > batch_max_vertices) {
+                batch_max_vertices = s.vertices.size();
+            }
+        }
+        if (batch_max_vertices > frame_state_cache.cached_max_vertices_per_draw) {
+            frame_state_cache.cached_max_vertices_per_draw = batch_max_vertices;
+            frame_state_cache.cached_require_buffer_resize = true;
+        }
+
+        /* process in chunks to respect MAX_TRANSFORMS limit */
+        std::vector<glm::mat4> flush_frame_matrices;
+        std::vector<Vertex>    current_vertex_buffer;
+        current_vertex_buffer.reserve(batch_max_vertices);
+        for (size_t offset = 0; offset < line_shape_batch.size(); offset += MAX_TRANSFORMS) {
+            const size_t chunkSize = std::min(static_cast<size_t>(MAX_TRANSFORMS), line_shape_batch.size() - offset);
+            /* upload transforms for this chunk */
+            flush_frame_matrices.clear();
+            flush_frame_matrices.reserve(chunkSize);
+            current_vertex_buffer.clear();
+            /* prepare vertex buffer and set transform ID */
+            for (size_t i = 0; i < chunkSize; ++i) {
+                const auto&    s            = line_shape_batch[offset + i];
+                const auto&    v            = s.vertices;
+                const size_t   m            = (v.size() / 3) * 3; // NOTE combine size calculation and triangle alignment
+                const uint16_t transform_id = static_cast<uint16_t>(i + PER_VERTEX_TRANSFORM_ID_START);
+                for (size_t j = 0; j < m; ++j) {
+                    current_vertex_buffer.emplace_back(v[j]);
+                    current_vertex_buffer.back().transform_id = transform_id;
+                }
+                flush_frame_matrices.push_back(s.model_matrix);
+            }
+            glBindBuffer(GL_UNIFORM_BUFFER, ubo);
+            glBufferSubData(GL_UNIFORM_BUFFER, 0,
+                            static_cast<GLsizeiptr>(flush_frame_matrices.size() * sizeof(glm::mat4)),
+                            flush_frame_matrices.data());
+            /* adapt buffer size if necessary */
+            constexpr uint32_t opengl_shape_mode = GL_TRIANGLES;
+            const uint32_t     vertex_count      = current_vertex_buffer.size();
+            const Vertex*      vertex_data       = current_vertex_buffer.data();
+            OGL3_draw_vertex_buffer(opengl_shape_mode, vertex_count, vertex_data);
+        }
+    }
+
+    void UShapeRendererOpenGL_3::OGL3_draw_vertex_buffer(const uint32_t opengl_shape_mode, const uint32_t vertex_count, const Vertex* vertex_data) {
         /* adapt buffer size if necessary */
-        const uint32_t vertex_count = shape.vertices.size();
         if (vertex_count > frame_state_cache.cached_max_vertices_per_draw) {
             frame_state_cache.cached_max_vertices_per_draw = vertex_count;
             frame_state_cache.cached_require_buffer_resize = true;
         }
         /* draw vertex buffer */
         GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, vbo)); // NOTE explicitly binding VBO for data upload
-        PGraphicsOpenGL::OGL_check_error(__func__);
         if (frame_state_cache.cached_require_buffer_resize) {
             frame_state_cache.cached_require_buffer_resize = false;
             GL_CALL(glBufferData(GL_ARRAY_BUFFER,
@@ -1963,8 +2001,17 @@ namespace umfeld {
         GL_CALL(glBufferSubData(GL_ARRAY_BUFFER,
                                 0,
                                 static_cast<GLsizeiptr>(vertex_count * sizeof(Vertex)),
-                                shape.vertices.data()));
+                                vertex_data));
         GL_CALL(glDrawArrays(opengl_shape_mode, 0, static_cast<GLsizei>(vertex_count)));
+
+        frame_state_cache.draw_calls_per_frame++;
+    }
+
+    void UShapeRendererOpenGL_3::draw_vertex_buffer(const UShape& shape) {
+        const uint32_t opengl_shape_mode = PGraphicsOpenGL::OGL_get_draw_mode(shape.mode);
+        const uint32_t vertex_count      = shape.vertices.size();
+        const Vertex*  vertex_data       = shape.vertices.data();
+        OGL3_draw_vertex_buffer(opengl_shape_mode, vertex_count, vertex_data);
     }
 
     void UShapeRendererOpenGL_3::render_shape(const UShape& shape) {
@@ -2084,7 +2131,7 @@ namespace umfeld {
             //      - stroke shapes :: POINTS, LINES, LINE_STRIP, LINE_LOOP
             set_point_size_and_line_width(shape);
             // NOTE `bind_default_vertex_array()` default VAO should always be bound at this point
-            update_and_draw_vertex_buffer(shape);
+            draw_vertex_buffer(shape);
             // NOTE `unbind_default_vertex_array()` default VBO should always be bound at this point
         }
     }

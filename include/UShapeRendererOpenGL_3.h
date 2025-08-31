@@ -77,6 +77,7 @@ namespace umfeld {
             bool          cached_transparent_shape_enabled{false};
             bool          cached_require_buffer_resize{false};
             uint32_t      cached_max_vertices_per_draw{0};
+            uint32_t      draw_calls_per_frame{0};
             // TODO add more states like blend, depth_write/test …
 
             void reset() {
@@ -85,6 +86,7 @@ namespace umfeld {
                 cached_transparent_shape_enabled = false;
                 cached_require_buffer_resize     = false;
                 cached_max_vertices_per_draw     = 0;
+                draw_calls_per_frame             = 0;
             }
         };
 
@@ -104,7 +106,8 @@ namespace umfeld {
         int                        frame_transparent_shapes_count{0}; // NOTE set in 'submit_shape'
         int                        frame_opaque_shapes_count{0};      // NOTE set in 'submit_shape'
         int                        frame_textured_shapes_count{0};    // NOTE set in 'submit_shape'
-        std::vector<Vertex>        current_vertex_buffer;
+        // std::vector<Vertex>        current_vertex_buffer;
+
 
         void                 init_shaders(const std::vector<PShader*>& shader_programms);
         void                 init_buffers();
@@ -151,9 +154,12 @@ namespace umfeld {
         void                 process_stroke_shapes_submission_order(std::vector<UShape>& processed_stroke_shapes, UShape& stroke_shape) const;
         static size_t        estimate_triangle_count(const UShape& s);
         static void          convert_shapes_to_triangles_and_set_transform_id(const UShape& s, std::vector<Vertex>& out, uint16_t transformID);
-        void                 render_batch(const std::vector<UShape*>& shapes_to_render);
-        void                 update_and_draw_vertex_buffer(const UShape& shape);
+        void                 draw_vertex_buffer(const UShape& shape);
+        void                 render_batch(const TextureBatch& batch);
+        void                 render_line_shader_batch(const std::vector<UShape>& line_shape_batch);
+        void                 OGL3_draw_vertex_buffer(uint32_t opengl_shape_mode, uint32_t vertex_count, const Vertex* vertex_data);
         void                 render_shape(const UShape& shape);
-        static size_t               calculate_line_shader_vertex_count(const UShape& stroke_shape);
+        void                 render_shape_line_shader(const glm::mat4& view_matrix, const glm::mat4& projection_matrix, const UShape& shape);
+        static size_t        calculate_line_shader_vertex_count(const UShape& stroke_shape);
     };
 } // namespace umfeld

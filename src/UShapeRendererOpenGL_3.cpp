@@ -49,6 +49,20 @@ namespace umfeld {
         init_buffers();
     }
 
+    void UShapeRendererOpenGL_3::set_shader_program(PShader* shader, const ShaderProgramType shader_role) {
+        if (shader_role >= 0 && shader_role < NUM_SHADER_PROGRAMS) {
+            if (shader != nullptr) {
+                default_shader_programs[shader_role] = shader;
+                // TODO this is a bit crude … could be handled a bit more gracefully
+                init_shaders(default_shader_programs); // NOTE re-init shaders to update shader program
+            } else {
+                warning_in_function_once("cannot set shader program, shader is nullptr");
+            }
+        } else {
+            error_in_function("invalid shader role");
+        }
+    }
+
     bool UShapeRendererOpenGL_3::is_line_type(const UShape& s) { return s.mode == LINES || s.mode == LINE_STRIP || s.mode == LINE_LOOP; }
 
     bool UShapeRendererOpenGL_3::is_point_type(const UShape& s) { return s.mode == POINTS; }
@@ -253,7 +267,6 @@ namespace umfeld {
         }
 
         /* cache program IDs */
-
         shader_color.id          = shader_programms[SHADER_PROGRAM_COLOR]->get_program_id();
         shader_texture.id        = shader_programms[SHADER_PROGRAM_TEXTURE]->get_program_id();
         shader_color_lights.id   = shader_programms[SHADER_PROGRAM_COLOR_LIGHTS]->get_program_id();
@@ -333,8 +346,6 @@ namespace umfeld {
         if (!PGraphicsOpenGL::OGL_evaluate_shader_uniforms("texture_lights", shader_texture_lights.uniforms)) {
             warning("shader_texture_lights: some uniforms not found");
         }
-
-        // TODO add point + line shader program
     }
 
     void UShapeRendererOpenGL_3::init_buffers() {

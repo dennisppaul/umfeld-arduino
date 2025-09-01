@@ -20,7 +20,7 @@ option(DISABLE_MIDI "Disable MIDI support" OFF)
 
 option(DISABLE_MAIN "Disable main function" OFF)
 option(ENABLE_PEDANTIC_COMPILER "Enable pedantic compiler warnings" OFF)
-option(ENABLE_PROFILING "Enable Tracy Profiler" ON)
+option(ENABLE_PROFILING "Enable Tracy Profiler" OFF)
 
 ##########################################################################################################
 ### INTERNAL OPTIONS + VARIABLES                                                                       ###

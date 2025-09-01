@@ -481,13 +481,13 @@ void PGraphicsOpenGL_3::init(uint32_t* pixels, const int width, const int height
 
     /* initialize shape renderer */
     const auto            shape_renderer_ogl3 = new UShapeRendererOpenGL_3();
-    std::vector<PShader*> shader_batch_programs(UShapeRendererOpenGL_3::NUM_SHADER_PROGRAMS);
-    shader_batch_programs[UShapeRendererOpenGL_3::SHADER_PROGRAM_COLOR]          = loadShader(shader_source_color.get_vertex_source(), shader_source_color.get_fragment_source());
-    shader_batch_programs[UShapeRendererOpenGL_3::SHADER_PROGRAM_TEXTURE]        = loadShader(shader_source_texture.get_vertex_source(), shader_source_texture.get_fragment_source());
-    shader_batch_programs[UShapeRendererOpenGL_3::SHADER_PROGRAM_COLOR_LIGHTS]   = loadShader(shader_source_color_lights.get_vertex_source(), shader_source_color_lights.get_fragment_source());
-    shader_batch_programs[UShapeRendererOpenGL_3::SHADER_PROGRAM_TEXTURE_LIGHTS] = loadShader(shader_source_texture_lights.get_vertex_source(), shader_source_texture_lights.get_fragment_source());
-    shader_batch_programs[UShapeRendererOpenGL_3::SHADER_PROGRAM_POINT]          = loadShader(shader_source_point.get_vertex_source(), shader_source_point.get_fragment_source());
-    shader_batch_programs[UShapeRendererOpenGL_3::SHADER_PROGRAM_LINE]           = loadShader(shader_source_line.get_vertex_source(), shader_source_line.get_fragment_source());
+    std::vector<PShader*> shader_batch_programs(NUM_SHADER_PROGRAMS);
+    shader_batch_programs[SHADER_PROGRAM_COLOR]          = loadShader(shader_source_color.get_vertex_source(), shader_source_color.get_fragment_source());
+    shader_batch_programs[SHADER_PROGRAM_TEXTURE]        = loadShader(shader_source_texture.get_vertex_source(), shader_source_texture.get_fragment_source());
+    shader_batch_programs[SHADER_PROGRAM_COLOR_LIGHTS]   = loadShader(shader_source_color_lights.get_vertex_source(), shader_source_color_lights.get_fragment_source());
+    shader_batch_programs[SHADER_PROGRAM_TEXTURE_LIGHTS] = loadShader(shader_source_texture_lights.get_vertex_source(), shader_source_texture_lights.get_fragment_source());
+    shader_batch_programs[SHADER_PROGRAM_POINT]          = loadShader(shader_source_point.get_vertex_source(), shader_source_point.get_fragment_source());
+    shader_batch_programs[SHADER_PROGRAM_LINE]           = loadShader(shader_source_line.get_vertex_source(), shader_source_line.get_fragment_source());
     shape_renderer_ogl3->init(this, shader_batch_programs);
     shape_renderer = shape_renderer_ogl3;
 
@@ -939,7 +939,7 @@ void PGraphicsOpenGL_3::download_colorbuffer(uint32_t* pixels) {
                                    0);
 
             // Step 2: Blit from MSAA FBO to non-MSAA FBO
-            glBindFramebuffer(GL_READ_FRAMEBUFFER, (GLuint) framebuffer.id);
+            glBindFramebuffer(GL_READ_FRAMEBUFFER, static_cast<GLuint>(framebuffer.id));
             glBindFramebuffer(GL_DRAW_FRAMEBUFFER, tempFBO);
             glBlitFramebuffer(0, 0, framebuffer.width, framebuffer.height,
                               0, 0, framebuffer.width, framebuffer.height,

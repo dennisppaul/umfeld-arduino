@@ -217,4 +217,13 @@ namespace umfeld {
         PROFILE_2D,
         PROFILE_3D
     };
+    enum ShaderProgramType {
+        SHADER_PROGRAM_COLOR,
+        SHADER_PROGRAM_TEXTURE,
+        SHADER_PROGRAM_COLOR_LIGHTS,
+        SHADER_PROGRAM_TEXTURE_LIGHTS,
+        SHADER_PROGRAM_POINT, // TODO implement
+        SHADER_PROGRAM_LINE,
+        NUM_SHADER_PROGRAMS
+    };
 } // namespace umfeld

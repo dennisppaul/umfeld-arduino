@@ -202,7 +202,6 @@ namespace umfeld {
         virtual void     endCamera();
         virtual void     camera();
         virtual void     camera(float eyeX, float eyeY, float eyeZ, float centerX, float centerY, float centerZ, float upX, float upY, float upZ);
-        void             auto_flush_after_matrices_modified();
         virtual void     frustum(float left, float right, float bottom, float top, float near, float far);
         virtual void     ortho(float left, float right, float bottom, float top, float near, float far);
         virtual void     perspective(float fovy, float aspect, float near, float far);
@@ -261,6 +260,8 @@ namespace umfeld {
         virtual void        download_texture(PImage* img) {}
         virtual void        upload_colorbuffer(uint32_t* pixels) {}
         virtual void        download_colorbuffer(uint32_t* pixels) {}
+        virtual void        update_full_internal(PImage* img) {}
+        virtual void        set_shader_program(PShader* shader, ShaderProgramType shader_role);
 
         template<typename T>
         void text(const T& value, const float x, const float y, const float z = 0.0f) {
@@ -369,7 +370,8 @@ namespace umfeld {
         }
 
     protected:
-        int get_current_texture_id() const;
+        void auto_flush_on_matrix_change();
+        int  get_current_texture_id() const;
 
         static bool has_transparent_vertices(const std::vector<Vertex>& vertices) {
             for (auto& v: vertices) {

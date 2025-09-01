@@ -31,13 +31,6 @@ namespace umfeld {
 
     class UShapeRendererOpenGL_3 final : public UShapeRenderer {
     public:
-        static constexpr uint16_t SHADER_PROGRAM_COLOR          = 0;
-        static constexpr uint16_t SHADER_PROGRAM_TEXTURE        = 1;
-        static constexpr uint16_t SHADER_PROGRAM_COLOR_LIGHTS   = 2;
-        static constexpr uint16_t SHADER_PROGRAM_TEXTURE_LIGHTS = 3;
-        static constexpr uint16_t SHADER_PROGRAM_POINT          = 4; // TODO implement
-        static constexpr uint16_t SHADER_PROGRAM_LINE           = 5; // TODO implement
-        static constexpr uint16_t NUM_SHADER_PROGRAMS           = 6;
         static constexpr uint16_t FALLBACK_MODEL_MATRIX_ID      = 0;
         static constexpr uint16_t PER_VERTEX_TRANSFORM_ID_START = 1;
 
@@ -53,6 +46,7 @@ namespace umfeld {
         void init(PGraphics* g, const std::vector<PShader*>& shader_programs) override;
         void submit_shape(UShape& s) override;
         void flush(const glm::mat4& view_matrix, const glm::mat4& projection_matrix) override;
+        void set_shader_program(PShader* shader, ShaderProgramType shader_role) override;
 
     private:
         static constexpr int      DEFAULT_NUM_TEXTURES = 16;
@@ -93,12 +87,12 @@ namespace umfeld {
         GLuint                     vbo         = 0;
         GLuint                     ubo         = 0; // NOTE + FYI UBOs are supported in OpenGL ES 3.0+ and OpenGL 3.1+
         GLuint                     default_vao = 0;
-        ShaderProgram              shader_color{};
+        ShaderProgram              shader_color{}; // TODO clean this up it … maybe merge into `PShader`
         ShaderProgram              shader_texture{};
         ShaderProgram              shader_color_lights{};
         ShaderProgram              shader_texture_lights{};
         ShaderProgram              shader_point{}; // TODO implement
-        ShaderProgram              shader_line{};  // TODO implement
+        ShaderProgram              shader_line{};
         std::vector<UShape>        shapes;
         ShapeCenterComputeStrategy shape_center_compute_strategy = ZERO_CENTER;
         FrameState                 frame_state_cache{};

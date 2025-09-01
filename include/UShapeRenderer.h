@@ -32,31 +32,29 @@ namespace umfeld {
 
     class UShapeRenderer {
     public:
-        virtual ~UShapeRenderer()                                               = default;
-        virtual void init(PGraphics* g, const std::vector<PShader*>& shader_programs) = 0; // NOTE init shaders + buffers
-        // virtual void beginShape(ShapeMode        mode,
-        //                         bool             filled,
-        //                         bool             transparent,
-        //                         uint32_t         texture_id,
-        //                         const glm::mat4& model_transform_matrix)  = 0;
-        // virtual void vertex(const Vertex& v)                              = 0;
-        // virtual void setVertices(std::vector<Vertex>&& vertices)          = 0;
-        // virtual void setVertices(const std::vector<Vertex>& vertices)     = 0;
-        // virtual void endShape(bool closed)                                = 0;
-        virtual void submit_shape(UShape& s)   = 0;
-        // virtual int  texture_update_and_bind(PImage* img) = 0; // TODO move to PGraohicsOpenGL3 and rename to `prepare_texture()`?
-        // virtual void set_custom_shader(PShader* shader) = 0;
-
-        // NOTE `flush()` needs VP matrix and must be called to render batches at
-        //      1. at end of frame
-        //      2. before view or projection matrix are changed
-        //      3. before downloading pixels from GPU
-        //      4. before calls to `background()` ( or at least reject shapes? )
+        /**
+         * draw all submitted shapes. `flush()` must be called at the end of each frame
+         * and by default does so automatically. this behavior can be controlled with
+         * `PGraphics::setAutoFlushShapes()`.
+         *
+         * 1. at end of a frame
+         * 2. before view or projection matrix are changed ( e.g in `camera()` )
+         * 3. before downloading pixels from GPU
+         * 4. before calls to `background()` ( or at least clear shape buffer )
+         * 5. before changing render modes
+         *
+         * @param view_matrix
+         * @param projection_matrix
+         */
         virtual void flush(const glm::mat4& view_matrix, const glm::mat4& projection_matrix) = 0;
+        virtual ~UShapeRenderer()                                                            = default;
+        virtual void init(PGraphics* g, const std::vector<PShader*>& shader_programs)        = 0; // NOTE init shaders + buffers
+        virtual void submit_shape(UShape& shape)                                             = 0;
+        virtual void set_shader_program(PShader* shader, ShaderProgramType shader_role)      = 0;
+
 
     protected:
-        PGraphics* graphics{nullptr};
+        PGraphics*            graphics{nullptr};
         std::vector<PShader*> default_shader_programs;
-        // bool       shape_in_progress = false;
     };
 } // namespace umfeld

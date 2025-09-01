@@ -1311,7 +1311,7 @@ void PGraphics::endCamera() {
     }
 }
 
-void PGraphics::auto_flush_after_matrices_modified() {
+void PGraphics::auto_flush_on_matrix_change() {
     if (auto_flush) {
         flush();
         resetMatrix();
@@ -1319,12 +1319,12 @@ void PGraphics::auto_flush_after_matrices_modified() {
 }
 
 void PGraphics::update_view_matrix(const glm::mat4& view) {
-    auto_flush_after_matrices_modified();
+    auto_flush_on_matrix_change();
     view_matrix = view;
 }
 
 void PGraphics::update_projection_matrix(const glm::mat4& proj) {
-    auto_flush_after_matrices_modified();
+    auto_flush_on_matrix_change();
     projection_matrix = proj;
 }
 
@@ -1344,7 +1344,7 @@ void PGraphics::camera(const float eyeX, const float eyeY, const float eyeZ,
 }
 
 void PGraphics::camera() {
-    auto_flush_after_matrices_modified();
+    auto_flush_on_matrix_change();
     // from https://processing.org/reference/camera_.html with FOV 60°
     // camera(width / 2.0, height / 2.0, (height / 2.0) / tan(PI * 30.0 / 180.0),
     //        width / 2.0, height / 2.0, 0,
@@ -1657,5 +1657,11 @@ void PGraphics::convert_fill_shape_to_triangles(UShape& s) const {
             } break;
         }
         s.mode = TRIANGLES;
+    }
+}
+
+void PGraphics::set_shader_program(PShader* shader, ShaderProgramType shader_role) {
+    if (shape_renderer != nullptr) {
+        shape_renderer->set_shader_program(shader, shader_role);
     }
 }

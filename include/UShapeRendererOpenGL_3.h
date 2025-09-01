@@ -102,12 +102,15 @@ namespace umfeld {
         std::vector<UShape>        shapes;
         ShapeCenterComputeStrategy shape_center_compute_strategy = ZERO_CENTER;
         FrameState                 frame_state_cache{};
+        int                        frame_total_shapes_count{0};       // NOTE set in 'submit_shape'
+        int                        frame_flat_shapes_count{0};        // NOTE set in 'submit_shape'
         int                        frame_light_shapes_count{0};       // NOTE set in 'submit_shape'
         int                        frame_transparent_shapes_count{0}; // NOTE set in 'submit_shape'
         int                        frame_opaque_shapes_count{0};      // NOTE set in 'submit_shape'
         int                        frame_textured_shapes_count{0};    // NOTE set in 'submit_shape'
-        // std::vector<Vertex>        current_vertex_buffer;
-
+        int                        frame_point_shapes_count{0};       // NOTE set in 'submit_shape'
+        int                        frame_line_shapes_count{0};        // NOTE set in 'submit_shape'
+        // TODO move properties above to FrameState
 
         void                 init_shaders(const std::vector<PShader*>& shader_programms);
         void                 init_buffers();
@@ -126,15 +129,15 @@ namespace umfeld {
         void                 enable_light_shaders_and_bind_texture(GLuint& current_shader_program_id, unsigned texture_id) const;
         static void          setup_uniform_blocks(const std::string& shader_name, GLuint program);
         static bool          uniform_exists(const GLuint loc) { return loc != ShaderUniforms::NOT_FOUND; }
-        void                 set_per_frame_default_shader_uniforms(const glm::mat4& view_projection_matrix, const glm::mat4& view_matrix, int frame_has_light_shapes, int frame_has_transparent_shapes, int frame_has_opaque_shapes) const;
+        void                 set_per_frame_default_shader_uniforms(const glm::mat4& view_projection_matrix, const glm::mat4& view_matrix) const;
         static void          set_light_uniforms(const ShaderUniforms& uniforms, const LightingState& lighting);
         const ShaderProgram& get_shader_program_cached() const;
         bool                 use_shader_program_cached(const ShaderProgram& required_shader_program);
         static bool          set_uniform_model_matrix(const UShape& shape, const ShaderProgram& shader_program);
-        void                 set_point_size_and_line_width(const UShape& shape) const;
+        void                 OGL_set_point_size_and_line_width(const UShape& shape) const;
         static bool          uniform_available(const GLuint loc) { return loc != ShaderUniforms::UNINITIALIZED && loc != ShaderUniforms::NOT_FOUND; }
-        void                 flush_sort_by_z_order(const std::vector<UShape>& point_shapes, const std::vector<UShape>& line_shapes, std::vector<UShape>& triangulated_shapes, const glm::mat4& view_matrix, const glm::mat4& projection_matrix);
-        void                 flush_submission_order(const std::vector<UShape>& shapes, const glm::mat4& view_matrix, const glm::mat4& projection_matrix);
+        void                 flush_shapes_z_order(const std::vector<UShape>& point_shapes, const std::vector<UShape>& line_shapes, std::vector<UShape>& triangulated_shapes, const glm::mat4& view_matrix, const glm::mat4& projection_matrix);
+        void                 flush_shapes_submission_order(const std::vector<UShape>& shapes, const glm::mat4& view_matrix, const glm::mat4& projection_matrix);
         void                 flush_immediately(const std::vector<UShape>& shapes, const glm::mat4& view_matrix, const glm::mat4& projection_matrix);
         void                 process_shapes_z_order(std::vector<UShape>& processed_point_shapes, std::vector<UShape>& processed_line_shapes, std::vector<UShape>& processed_triangle_shapes);
         void                 process_shapes_submission_order(std::vector<UShape>& processed_shapes);
@@ -145,7 +148,7 @@ namespace umfeld {
         void                 convert_stroke_shape_to_triangles_2D(std::vector<UShape>& processed_triangle_shapes, UShape& stroke_shape) const;
         static void          convert_stroke_shape_to_triangles_3D_tube(std::vector<UShape>& processed_triangle_shapes, UShape& stroke_shape);
         static void          convert_stroke_shape_for_native(UShape& stroke_shape);
-        static void          process_stroke_shape_for_line_shader(const UShape& stroke_shape, std::vector<Vertex>& line_vertices);
+        static void          process_stroke_shape_for_line_shader(UShape& stroke_shape, std::vector<Vertex>& line_vertices);
         static void          convert_stroke_shape_for_line_shader(std::vector<UShape>& processed_line_shapes, UShape& stroke_shape);
         static void          convert_stroke_shape_for_barycentric_shader(std::vector<UShape>& processed_line_shapes, UShape& stroke_shape);
         static void          convert_stroke_shape_for_geometry_shader(std::vector<UShape>& processed_line_shapes, UShape& stroke_shape);
@@ -161,5 +164,8 @@ namespace umfeld {
         void                 render_shape(const UShape& shape);
         void                 render_shape_line_shader(const glm::mat4& view_matrix, const glm::mat4& projection_matrix, const UShape& shape);
         static size_t        calculate_line_shader_vertex_count(const UShape& stroke_shape);
+        static bool          is_line_type(const UShape& s);
+        static bool          is_point_type(const UShape& s);
+        static bool          is_triangle_type(const UShape& s);
     };
 } // namespace umfeld

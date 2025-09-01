@@ -31,6 +31,7 @@ namespace umfeld {
 
     struct UShape {
         ShapeMode           mode{POLYGON};
+        ShapeMode           draw_as{INHERIT};
         StrokeState         stroke;
         bool                filled{true};
         std::vector<Vertex> vertices;

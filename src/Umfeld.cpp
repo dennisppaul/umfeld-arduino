@@ -226,7 +226,7 @@ SDL_AppResult SDL_AppInit(void** appstate, const int argc, char* argv[]) {
 
     /* create/check graphics subsystem */
     if (umfeld::enable_graphics) {
-        if (umfeld::renderer > umfeld::RENDERER_DEFAULT) {
+        if (umfeld::renderer > umfeld::RENDERER_DEFAULT || umfeld::renderer > umfeld::P3D || umfeld::renderer > umfeld::P2D) {
             umfeld::console("setting renderer from paramter `size()` ( or `umfeld::renderer` ).");
             switch (umfeld::renderer) {
                 case umfeld::RENDERER_OPENGL_2_0:
@@ -400,6 +400,13 @@ SDL_AppResult SDL_AppInit(void** appstate, const int argc, char* argv[]) {
         if (umfeld::subsystem_graphics != nullptr) {
             if (umfeld::subsystem_graphics->create_native_graphics != nullptr) {
                 umfeld::g = umfeld::subsystem_graphics->create_native_graphics(umfeld::render_to_buffer);
+            }
+            /* NOTE interpret rennderer as profiles */
+            if (umfeld::renderer == umfeld::P2D) {
+                umfeld::profile(umfeld::PROFILE_2D);
+            }
+            if (umfeld::renderer == umfeld::P3D) {
+                umfeld::profile(umfeld::PROFILE_3D);
             }
         }
     }

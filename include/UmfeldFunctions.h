@@ -226,7 +226,7 @@ namespace umfeld {
 
     // ## Environment
 
-    void size(int width, int height, int renderer = DEFAULT);
+    void size(int width, int height, Renderer renderer = RENDERER_DEFAULT);
     void cursor();
     void noCursor();
 

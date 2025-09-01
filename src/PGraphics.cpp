@@ -107,12 +107,13 @@ void PGraphics::mesh(VertexBuffer* mesh_shape) {
 }
 
 void PGraphics::hint(const uint16_t property) {
+    // ReSharper disable once CppDefaultCaseNotHandledInSwitchStatement
     switch (property) {
         case ENABLE_DEPTH_TEST: {
-            hint_force_depth_test = true;
+            hint_force_enable_depth_test = true;
         } break;
         case DISABLE_DEPTH_TEST: {
-            hint_force_depth_test = false;
+            hint_force_enable_depth_test = false;
         } break;
     }
 }

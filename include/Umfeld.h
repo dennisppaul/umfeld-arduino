@@ -41,17 +41,17 @@ namespace umfeld {
     // inline int        audio_format       = 0; // TODO currently only supporting F32
 
     /* --- graphics --- */
-    inline bool        enable_graphics         = false;
-    inline bool        always_on_top           = false;
-    inline int         antialiasing            = DEFAULT;
-    inline bool        borderless              = false;
-    inline int         display                 = DEFAULT;
-    inline bool        fullscreen              = false;
-    inline bool        resizable               = false;
-    inline bool        retina_support          = true;
-    inline bool        vsync                   = false;
-    inline bool        render_to_buffer        = true;
-    inline int         save_image_jpeg_quailty = 100;
+    inline bool enable_graphics         = false;
+    inline bool always_on_top           = false;
+    inline int  antialiasing            = DEFAULT;
+    inline bool borderless              = false;
+    inline int  display                 = DEFAULT;
+    inline bool fullscreen              = false;
+    inline bool resizable               = false;
+    inline bool retina_support          = true;
+    inline bool vsync                   = false;
+    inline bool render_to_buffer        = true;
+    inline int  save_image_jpeg_quailty = 100;
 
     /* --- libraries + events --- */
     inline bool enable_libraries = true;
@@ -98,7 +98,7 @@ namespace umfeld {
     inline float      mouseY         = 0;
     inline float      pmouseX        = 0;
     inline float      pmouseY        = 0;
-    inline int        renderer       = DEFAULT;
+    inline Renderer   renderer       = RENDERER_DEFAULT;
     inline int        display_width  = DEFAULT;
     inline int        display_height = DEFAULT;
 

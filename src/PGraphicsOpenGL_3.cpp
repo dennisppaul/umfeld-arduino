@@ -168,9 +168,9 @@ void PGraphicsOpenGL_3::OGL3_add_line_quad_and_bevel(const Vertex& p0, const Ver
     bv1.color = p1.color;
     bv2.color = p1.color;
 
-    bv0.normal = glm::vec4(0, 0, 0, 0);  // Junction point (no offset)
-    bv1.normal = normal_prev;             // Extension along previous line
-    bv2.normal = normal_next;             // Extension along next line
+    bv0.normal = glm::vec4(0, 0, 0, 0); // Junction point (no offset)
+    bv1.normal = normal_prev;           // Extension along previous line
+    bv2.normal = normal_next;           // Extension along next line
 
     out.push_back(bv0);
     out.push_back(bv1);
@@ -189,9 +189,9 @@ void PGraphicsOpenGL_3::OGL3_add_line_quad_and_bevel(const Vertex& p0, const Ver
     normal_prev.w = -thickness;
     normal_next.w = -thickness;
 
-    bv3.normal = glm::vec4(0, 0, 0, 0);  // Junction point (no offset)
-    bv4.normal = normal_next;             // Extension along next line (negative side)
-    bv5.normal = normal_prev;             // Extension along previous line (negative side)
+    bv3.normal = glm::vec4(0, 0, 0, 0); // Junction point (no offset)
+    bv4.normal = normal_next;           // Extension along next line (negative side)
+    bv5.normal = normal_prev;           // Extension along previous line (negative side)
 
     out.push_back(bv3);
     out.push_back(bv4);
@@ -254,7 +254,7 @@ void PGraphicsOpenGL_3::render_framebuffer_to_screen(const bool use_blit) {
 }
 
 void PGraphicsOpenGL_3::hint(const uint16_t property) {
-    // TODO @MERGE
+    PGraphics::hint(property);
     switch (property) {
         case ENABLE_SMOOTH_LINES:
 #ifndef OPENGL_ES_3_0

@@ -429,7 +429,7 @@ namespace umfeld {
         return u * s;
     }
 
-    void size(const int width, const int height, const int renderer) {
+    void size(const int width, const int height, const Renderer renderer) {
         if (is_initialized()) {
             warning("`size()` must be called before or within `settings()`.");
             return;

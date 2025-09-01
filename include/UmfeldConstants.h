@@ -75,7 +75,8 @@ namespace umfeld {
     static constexpr int      MIDDLE                        = 0x03;
     static constexpr int      CENTER                        = 0x04;
     enum ShapeMode {
-        TRIANGLES = 0x10,
+        INHERIT = 0x10,
+        TRIANGLES,
         TRIANGLE_STRIP,
         TRIANGLE_FAN,
         QUADS,
@@ -179,10 +180,13 @@ namespace umfeld {
         DISABLE_DEPTH_TEST
     };
     enum Renderer {
-        RENDERER_DEFAULT = 0xB0,  // choose default renderer based on platform and configuration
-        RENDERER_OPENGL_3_3_CORE, // core profile
-        RENDERER_OPENGL_2_0,      // fixed-function pipeline
-        RENDERER_OPENGL_ES_3_0,   // iOS + Android + RPI4b+5
+        RENDERER_DEFAULT = DEFAULT,          // default renderer based on platform and configuration
+        OPENGL           = RENDERER_DEFAULT, // default renderer ... @deprecated in processing
+        P3D              = 0xB0,             // default renderer + 3D profile
+        P2D,                                 // default renderer + 2D profile
+        RENDERER_OPENGL_3_3_CORE,            // core profile
+        RENDERER_OPENGL_2_0,                 // fixed-function pipeline
+        RENDERER_OPENGL_ES_3_0,              // iOS + Android + RPI4b+5
         RENDERER_SDL_2D,
         RENDERER_TERMINAL,
         RENDERER_TEMPLATE,

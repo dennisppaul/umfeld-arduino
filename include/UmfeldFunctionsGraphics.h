@@ -93,6 +93,7 @@ namespace umfeld {
     void     scale(float x, float y);
     void     scale(float x, float y, float z);
     void     pixelDensity(int density);
+    void     blendMode(const BlendMode mode);
     void     hint(uint16_t property);
     void     rectMode(int mode);
     void     ellipseMode(int mode);

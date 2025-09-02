@@ -26,15 +26,16 @@
 
 namespace umfeld {
 
-#ifndef PGRAPHICS_OPENGL_DO_NOT_CHECK_ERRORS
-#define GL_CALL(func) \
+#if UMFELD_DEBUG_CHECK_OPENGL_ERROR
+#define CHECK_OPENGL_ERROR_FUNC(func) \
     func;             \
     PGraphicsOpenGL::OGL_check_error(#func)
 #else
-#define GL_CALL(func) func;
+#define CHECK_OPENGL_ERROR_FUNC(func) func;
 #endif
 
-#define CHECK_OPENGL_ERROR(NAME, CODE)                                               \
+#if UMFELD_DEBUG_CHECK_OPENGL_ERROR
+#define CHECK_OPENGL_ERROR_BLOCK(NAME, CODE)                                               \
     do {                                                                             \
         bool   __ogl_err_found = false;                                              \
         GLenum __ogl_err;                                                            \
@@ -53,6 +54,9 @@ namespace umfeld {
         if (__ogl_err_found)                                                         \
             warning("<-- " NAME);                                                    \
     } while (0)
+#else
+#define CHECK_OPENGL_ERROR_BLOCK(NAME, CODE)
+#endif
 
     class UFont;
 
@@ -95,7 +99,7 @@ namespace umfeld {
         void beginDraw() override;
         void endDraw() override;
         void bind_framebuffer_texture() const;
-        void blendMode(int mode) override;
+        void blendMode(BlendMode mode) override;
         void texture_filter(TextureFilter filter) override;
         void texture_wrap(TextureWrap wrap, glm::vec4 color_stroke) override;
         int  texture_update_and_bind(PImage* img) override;

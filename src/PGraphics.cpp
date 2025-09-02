@@ -52,7 +52,6 @@ PGraphics::PGraphics() : PImage(0, 0), debug_font(new UFont()) {
 
 void PGraphics::beginDraw() {
     reset_mvp_matrices();
-    blendMode(BLEND);
 }
 
 void PGraphics::endDraw() {

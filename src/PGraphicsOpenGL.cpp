@@ -65,7 +65,8 @@ namespace umfeld {
         glBindTexture(GL_TEXTURE_2D, framebuffer.texture_id);
     }
 
-    void PGraphicsOpenGL::blendMode(const int mode) {
+    void PGraphicsOpenGL::blendMode(const BlendMode mode) {
+        PGraphics::blendMode(mode);
         glEnable(GL_BLEND);
         switch (mode) {
             case REPLACE:
@@ -331,7 +332,7 @@ namespace umfeld {
     }
 
     void PGraphicsOpenGL::OGL_check_error(const std::string& functionName) {
-#ifndef PGRAPHICS_OPENGL_DO_NOT_CHECK_ERRORS
+#if UMFELD_DEBUG_CHECK_OPENGL_ERROR
         GLenum opengl_error;
         while ((opengl_error = glGetError()) != GL_NO_ERROR) {
             warning("[OpenGL Error] @", functionName, ": ", OGL_get_error_string(opengl_error));

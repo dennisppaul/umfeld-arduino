@@ -363,6 +363,11 @@ namespace umfeld {
         g->ellipseMode(mode);
     }
 
+    void blendMode(const BlendMode mode) {
+        if (g == nullptr) { return; }
+        g->blendMode(mode);
+    }
+
     void hint(const uint16_t property) {
         if (g == nullptr) { return; }
         g->hint(property);

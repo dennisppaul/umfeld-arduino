@@ -42,7 +42,7 @@
 #include "ShaderSourceTextureLights.h"
 #include "UShapeRendererOpenGL_3.h"
 
-#ifdef UMFELD_PGRAPHICS_OPENGL_3_3_CORE_ERRORS
+#if UMFELD_DEBUG_PGRAPHICS_OPENGL_3_ERRORS
 #define UMFELD_PGRAPHICS_OPENGL_3_3_CORE_CHECK_ERRORS(msg) \
     do {                                                   \
         checkOpenGLError(msg);                             \
@@ -55,6 +55,7 @@ using namespace umfeld;
 
 PGraphicsOpenGL_3::PGraphicsOpenGL_3(const bool render_to_offscreen) : PImage(0, 0) {
     this->render_to_offscreen = render_to_offscreen;
+    PGraphicsOpenGL::blendMode(BLEND); // NOTE set blend mode once
 }
 
 void PGraphicsOpenGL_3::OGL3_add_line_quad(const Vertex& p0, const Vertex& p1, float thickness, std::vector<Vertex>& out) {

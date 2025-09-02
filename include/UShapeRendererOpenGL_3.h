@@ -110,8 +110,8 @@ namespace umfeld {
         void                 init_buffers();
         void                 computeShapeCenter(UShape& s) const;
         static void          enable_depth_testing();
-        static void          enable_blending();
-        static void          disable_blending();
+        void                 OGL_enable_blending() const;
+        static void          OGL_disable_blending();
         static void          enable_depth_buffer_writing();
         static void          disable_depth_buffer_writing();
         static void          disable_depth_testing();

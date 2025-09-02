@@ -197,7 +197,7 @@ namespace umfeld {
         virtual PShader* loadShader(const std::string& vertex_code, const std::string& fragment_code, const std::string& geometry_code = "") { return nullptr; };
         virtual void     resetShader();
         virtual void     normal(float x, float y, float z, float w = 0);
-        virtual void     blendMode(int mode) {} // TODO MAYBE change parameter to `BlendMode mode`
+        virtual void     blendMode(const BlendMode mode) { current_blend_mode = mode; }
         virtual void     beginCamera();
         virtual void     endCamera();
         virtual void     camera();
@@ -262,6 +262,7 @@ namespace umfeld {
         virtual void        download_colorbuffer(uint32_t* pixels) {}
         virtual void        update_full_internal(PImage* img) {}
         virtual void        set_shader_program(PShader* shader, ShaderProgramType shader_role);
+        virtual BlendMode   get_blend_mode() const { return current_blend_mode; }
 
         template<typename T>
         void text(const T& value, const float x, const float y, const float z = 0.0f) {
@@ -289,6 +290,7 @@ namespace umfeld {
         PImage*                          texture_stack_top{nullptr}; // NOTE not really a stack yet ;)
         bool                             texture_stack_used{false};
         StrokeState                      current_stroke_state;
+        BlendMode                        current_blend_mode{BLEND};
         std::stack<StyleState>           style_stack;
         LightingState                    lightingState;
         bool                             lights_enabled{false};
@@ -365,7 +367,7 @@ namespace umfeld {
             }
         }
 
-        void set_shape_force_transparent(bool shape_force_transparent) {
+        void set_shape_force_transparent(const bool shape_force_transparent) {
             this->shape_force_transparent = shape_force_transparent;
         }
 

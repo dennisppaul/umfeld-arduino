@@ -30,8 +30,8 @@
 
 using namespace umfeld;
 
-#define UMFELD_VERTEX_BUFFER_DEBUG_OPENGL_ERRORS
-#ifdef UMFELD_VERTEX_BUFFER_DEBUG_OPENGL_ERRORS
+#if UMFELD_DEBUG_VERTEX_BUFFER_DEBUG_OPENGL_ERRORS
+// TODO remove this in favour of
 #define UMFELD_VERTEX_BUFFER_CHECK_ERROR(msg)  \
     do {                                       \
         PGraphicsOpenGL::OGL_check_error(msg); \
@@ -288,7 +288,7 @@ void VertexBuffer::upload_with_resize(const size_t current_size, const size_t re
         const size_t new_capacity    = grow_size_bytes / sizeof(Vertex);
         _vertices.reserve(new_capacity);
         glBufferData(GL_ARRAY_BUFFER, grow_size_bytes, _vertices.data(), GL_DYNAMIC_DRAW);
-#ifdef UMFELD_VERTEX_BUFFER_DEBUG_OPENGL_ERRORS
+#if UMFELD_DEBUG_VERTEX_BUFFER_DEBUG_OPENGL_ERRORS
         console("Growing vertex buffer from ", server_buffer_size * sizeof(Vertex), " to ", grow_size_bytes, " bytes");
 #endif
         server_buffer_size = grow_size_bytes / sizeof(Vertex);
@@ -298,7 +298,7 @@ void VertexBuffer::upload_with_resize(const size_t current_size, const size_t re
         const size_t new_capacity      = shrink_size_bytes / sizeof(Vertex);
         _vertices.reserve(new_capacity);
         glBufferData(GL_ARRAY_BUFFER, shrink_size_bytes, _vertices.data(), GL_DYNAMIC_DRAW);
-#ifdef UMFELD_VERTEX_BUFFER_DEBUG_OPENGL_ERRORS
+#if UMFELD_DEBUG_VERTEX_BUFFER_DEBUG_OPENGL_ERRORS
         console("Shrinking vertex buffer from ", server_buffer_size * sizeof(Vertex), " to ", shrink_size_bytes, " bytes");
 #endif
         server_buffer_size = shrink_size_bytes / sizeof(Vertex);

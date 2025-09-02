@@ -28,14 +28,14 @@ namespace umfeld {
 
 #if UMFELD_DEBUG_CHECK_OPENGL_ERROR
 #define CHECK_OPENGL_ERROR_FUNC(func) \
-    func;             \
+    func;                             \
     PGraphicsOpenGL::OGL_check_error(#func)
 #else
 #define CHECK_OPENGL_ERROR_FUNC(func) func;
 #endif
 
 #if UMFELD_DEBUG_CHECK_OPENGL_ERROR
-#define CHECK_OPENGL_ERROR_BLOCK(NAME, CODE)                                               \
+#define CHECK_OPENGL_ERROR_BLOCK(NAME, CODE)                                         \
     do {                                                                             \
         bool   __ogl_err_found = false;                                              \
         GLenum __ogl_err;                                                            \
@@ -55,7 +55,8 @@ namespace umfeld {
             warning("<-- " NAME);                                                    \
     } while (0)
 #else
-#define CHECK_OPENGL_ERROR_BLOCK(NAME, CODE)
+#define CHECK_OPENGL_ERROR_BLOCK(NAME, CODE) \
+    do { CODE } while (0)
 #endif
 
     class UFont;

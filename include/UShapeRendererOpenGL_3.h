@@ -125,6 +125,7 @@ namespace umfeld {
         static bool          uniform_exists(const GLuint loc) { return loc != ShaderUniforms::NOT_FOUND; }
         void                 set_per_frame_default_shader_uniforms(const glm::mat4& view_projection_matrix, const glm::mat4& view_matrix) const;
         static void          set_light_uniforms(const ShaderUniforms& uniforms, const LightingState& lighting);
+        void                 update_line_shader_uniforms(const glm::mat4& view_matrix, const glm::mat4& projection_matrix) const;
         const ShaderProgram& get_shader_program_cached() const;
         bool                 use_shader_program_cached(const ShaderProgram& required_shader_program);
         static bool          set_uniform_model_matrix(const UShape& shape, const ShaderProgram& shader_program);

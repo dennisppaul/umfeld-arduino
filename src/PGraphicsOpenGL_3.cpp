@@ -43,12 +43,12 @@
 #include "UShapeRendererOpenGL_3.h"
 
 #if UMFELD_DEBUG_PGRAPHICS_OPENGL_3_ERRORS
-#define UMFELD_PGRAPHICS_OPENGL_3_3_CORE_CHECK_ERRORS(msg) \
+#define UMFELD_PGRAPHICS_OPENGL_3_CHECK_ERRORS(msg) \
     do {                                                   \
-        checkOpenGLError(msg);                             \
+        PGraphicsOpenGL::OGL_check_error (msg);                             \
     } while (0)
 #else
-#define UMFELD_PGRAPHICS_OPENGL_3_3_CORE_CHECK_ERRORS(msg)
+#define UMFELD_PGRAPHICS_OPENGL_3_CHECK_ERRORS(msg)
 #endif
 
 using namespace umfeld;
@@ -395,7 +395,7 @@ void PGraphicsOpenGL_3::init(uint32_t* pixels, const int width, const int height
             const int samples = std::min(msaa_samples, maxSamples); // Number of MSAA samples
             console(format_label("number of used MSAA samples"), samples);
             glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, framebuffer.texture_id); // NOTE no need to use `OGL_bind_texture()`
-            UMFELD_PGRAPHICS_OPENGL_3_3_CORE_CHECK_ERRORS("glBindTexture");
+            UMFELD_PGRAPHICS_OPENGL_3_CHECK_ERRORS("glBindTexture");
 #ifndef OPENGL_ES_3_0
             glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE,
                                     samples,
@@ -404,12 +404,12 @@ void PGraphicsOpenGL_3::init(uint32_t* pixels, const int width, const int height
                                     framebuffer.height,
                                     GL_TRUE);
 #endif
-            UMFELD_PGRAPHICS_OPENGL_3_3_CORE_CHECK_ERRORS("glTexImage2DMultisample");
+            UMFELD_PGRAPHICS_OPENGL_3_CHECK_ERRORS("glTexImage2DMultisample");
             glFramebufferTexture2D(GL_FRAMEBUFFER,
                                    GL_COLOR_ATTACHMENT0,
                                    GL_TEXTURE_2D_MULTISAMPLE,
                                    framebuffer.texture_id, 0);
-            UMFELD_PGRAPHICS_OPENGL_3_3_CORE_CHECK_ERRORS("glFramebufferTexture2D");
+            UMFELD_PGRAPHICS_OPENGL_3_CHECK_ERRORS("glFramebufferTexture2D");
             // Create Multisampled Depth Buffer
             glGenRenderbuffers(1, &msaaDepthBuffer);
             glBindRenderbuffer(GL_RENDERBUFFER, msaaDepthBuffer);
@@ -535,13 +535,13 @@ void PGraphicsOpenGL_3::init(uint32_t* pixels, const int width, const int height
 // }
 
 // void PGraphicsOpenGL_3::mesh(VertexBuffer* mesh_shape) {
-//     UMFELD_PGRAPHICS_OPENGL_3_3_CORE_CHECK_ERRORS("mesh() begin");
+//     UMFELD_PGRAPHICS_OPENGL_3_CHECK_ERRORS("mesh() begin");
 //     if (mesh_shape == nullptr) {
 //         return;
 //     }
 //     warning_in_function_once("NOTE shader values are not properly set ATM");
 //     mesh_shape->draw();
-//     UMFELD_PGRAPHICS_OPENGL_3_3_CORE_CHECK_ERRORS("mesh() end");
+//     UMFELD_PGRAPHICS_OPENGL_3_CHECK_ERRORS("mesh() end");
 // #ifdef UMFELD_OGL33_RESET_MATRICES_ON_SHADER
 //     OGL3_reset_shader_matrices(current_custom_shader);
 // #endif

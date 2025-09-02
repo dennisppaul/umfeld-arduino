@@ -514,18 +514,7 @@ namespace umfeld {
             frame_line_shapes_count > 0) {
             // OPTIMIZE this is a nasty hack … need to handle this more elegantly … also see `flush_shapes_z_order()`
             glUseProgram(shader_line.id);
-            glUniformMatrix4fv(shader_line.uniforms.u_view_matrix.id, 1, GL_FALSE, glm::value_ptr(view_matrix));
-            glUniformMatrix4fv(shader_line.uniforms.u_projection_matrix.id, 1, GL_FALSE, glm::value_ptr(graphics->projection_matrix));
-            GLint viewport[4];
-            glGetIntegerv(GL_VIEWPORT, viewport);
-            glm::vec4 view_port(static_cast<float>(viewport[0]),
-                                static_cast<float>(viewport[1]),
-                                static_cast<float>(viewport[2]),
-                                static_cast<float>(viewport[3]));
-            glUniform4fv(shader_line.uniforms.u_viewport.id, 1, &view_port[0]);
-            glUniform1i(shader_line.uniforms.u_perspective.id, 0); // TODO make option
-            glm::vec3 scale(0.99, 0.99, 0.99);                     // TODO make option
-            glUniform3fv(shader_line.uniforms.u_scale.id, 1, glm::value_ptr(scale));
+            update_line_shader_uniforms(view_matrix, graphics->projection_matrix);
         }
         // TODO implement point shaders
     }
@@ -664,6 +653,43 @@ namespace umfeld {
         /* draw */
         draw_vertex_buffer(shape);
     }
+
+    void UShapeRendererOpenGL_3::update_line_shader_uniforms(const glm::mat4& view_matrix, const glm::mat4& projection_matrix) const {
+        /* set uniforms */
+        CHECK_OPENGL_ERROR_BLOCK("view_matrix", {
+            if (uniform_available(shader_line.uniforms.u_view_matrix.id)) {
+                glUniformMatrix4fv(shader_line.uniforms.u_view_matrix.id, 1, GL_FALSE, glm::value_ptr(view_matrix));
+            }
+        });
+        CHECK_OPENGL_ERROR_BLOCK("projection_matrix", {
+            if (uniform_available(shader_line.uniforms.u_projection_matrix.id)) {
+                glUniformMatrix4fv(shader_line.uniforms.u_projection_matrix.id, 1, GL_FALSE, glm::value_ptr(projection_matrix));
+            }
+        });
+        CHECK_OPENGL_ERROR_BLOCK("viewport", {
+            if (uniform_available(shader_line.uniforms.u_viewport.id)) {
+                GLint viewport[4];
+                glGetIntegerv(GL_VIEWPORT, viewport);
+                glm::vec4 view_port(static_cast<float>(viewport[0]),
+                                    static_cast<float>(viewport[1]),
+                                    static_cast<float>(viewport[2]),
+                                    static_cast<float>(viewport[3]));
+                glUniform4fv(shader_line.uniforms.u_viewport.id, 1, &view_port[0]);
+            }
+        });
+        CHECK_OPENGL_ERROR_BLOCK("perspective", {
+            if (uniform_available(shader_line.uniforms.u_perspective.id)) {
+                glUniform1i(shader_line.uniforms.u_perspective.id, 0); // TODO make option
+            }
+        });
+        CHECK_OPENGL_ERROR_BLOCK("scale", {
+            if (uniform_available(shader_line.uniforms.u_scale.id)) {
+                glm::vec3 scale(0.99, 0.99, 0.99); // TODO make option
+                glUniform3fv(shader_line.uniforms.u_scale.id, 1, glm::value_ptr(scale));
+            }
+        });
+    }
+
     /**
      * render shapes in batches (preprocess).
      *
@@ -838,39 +864,7 @@ namespace umfeld {
             // OPTIMIZE this is a nasty hack … need to handle this more elegantly … also see `set_per_frame_default_shader_uniforms()`
             /* shader */
             use_shader_program_cached(shader_line);
-            /* set uniforms */
-            CHECK_OPENGL_ERROR_BLOCK("view_matrix", {
-                if (uniform_available(shader_line.uniforms.u_view_matrix.id)) {
-                    glUniformMatrix4fv(shader_line.uniforms.u_view_matrix.id, 1, GL_FALSE, glm::value_ptr(view_matrix));
-                }
-            });
-            CHECK_OPENGL_ERROR_BLOCK("projection_matrix", {
-                if (uniform_available(shader_line.uniforms.u_projection_matrix.id)) {
-                    glUniformMatrix4fv(shader_line.uniforms.u_projection_matrix.id, 1, GL_FALSE, glm::value_ptr(projection_matrix));
-                }
-            });
-            CHECK_OPENGL_ERROR_BLOCK("viewport", {
-                if (uniform_available(shader_line.uniforms.u_viewport.id)) {
-                    GLint viewport[4];
-                    glGetIntegerv(GL_VIEWPORT, viewport);
-                    glm::vec4 view_port(static_cast<float>(viewport[0]),
-                                        static_cast<float>(viewport[1]),
-                                        static_cast<float>(viewport[2]),
-                                        static_cast<float>(viewport[3]));
-                    glUniform4fv(shader_line.uniforms.u_viewport.id, 1, &view_port[0]);
-                }
-            });
-            CHECK_OPENGL_ERROR_BLOCK("perspective", {
-                if (uniform_available(shader_line.uniforms.u_perspective.id)) {
-                    glUniform1i(shader_line.uniforms.u_perspective.id, 0); // TODO make option
-                }
-            });
-            CHECK_OPENGL_ERROR_BLOCK("scale", {
-                if (uniform_available(shader_line.uniforms.u_scale.id)) {
-                    glm::vec3 scale(0.99, 0.99, 0.99); // TODO make option
-                    glUniform3fv(shader_line.uniforms.u_scale.id, 1, &scale[0]);
-                }
-            });
+            update_line_shader_uniforms(view_matrix, projection_matrix);
             /* draw shapes */
             render_line_shader_batch(line_shapes);
         } else {
@@ -1432,11 +1426,6 @@ namespace umfeld {
             default:
             case LINE_STRIP:
             case POLYGON: {
-                if (stroke_shape.mode == POLYGON) {
-                    // NOTE always convert POLYGON to LINE_STRIP
-                    stroke_shape.mode = LINE_STRIP;
-                }
-
                 if (n < 2) {
                     break;
                 }
@@ -1465,6 +1454,8 @@ namespace umfeld {
                 break;
             }
         }
+        // NOTE always convert shapes to LINE_STRIP
+        stroke_shape.mode = LINE_STRIP;
     }
 
     void UShapeRendererOpenGL_3::convert_stroke_shape_for_line_shader(std::vector<UShape>& processed_line_shapes, UShape& stroke_shape) {
@@ -1940,19 +1931,25 @@ namespace umfeld {
         } else {
             /* default shaders */
             ShaderProgram required_shader_program;
+            // TODO handle `draw_as` properly
             if (is_line_type(shape) && graphics->get_stroke_render_mode() == STROKE_RENDER_MODE_LINE_SHADER) {
+                /* line shader */
                 // TODO this is VERY hackish ... we need a better way to propagate the fact that this is a *line shader* shape ... an what about points?
                 // TODO shader_line: what about point shapes? what about other uniforms ( model matrix is set later )
-                required_shader_program = shader_line;
+                required_shader_program           = shader_line;
+                const bool changed_shader_program = use_shader_program_cached(required_shader_program);
+                if (changed_shader_program) {
+                    update_line_shader_uniforms(graphics->view_matrix, graphics->projection_matrix); // TODO this only needs to happen once per (flush) frame
+                }
             } else {
-                required_shader_program = shape.light_enabled ? (shape.texture_id == TEXTURE_NONE ? shader_color_lights : shader_texture_lights) : (shape.texture_id == TEXTURE_NONE ? shader_color : shader_texture);
-            }
-            const bool changed_shader_program = use_shader_program_cached(required_shader_program);
-            if (changed_shader_program) {
+                /* all other shaders */
+                required_shader_program           = shape.light_enabled ? (shape.texture_id == TEXTURE_NONE ? shader_color_lights : shader_texture_lights) : (shape.texture_id == TEXTURE_NONE ? shader_color : shader_texture);
+                const bool changed_shader_program = use_shader_program_cached(required_shader_program);
+                if (changed_shader_program) {}
                 // TODO check if we need to update uniforms here?
                 // OPTIMIZE maybe use this to set a shader uniform ( e.g view matrix ) once per flush frame once it is reuqested for the first time
+                // NOTE always use fallback model_matrix matrix instead of UBO i.e vertex attribute 'a_transform_id' needs to be set to 0
             }
-            // NOTE always use fallback model_matrix matrix instead of UBO i.e vertex attribute 'a_transform_id' needs to be set to 0
             set_uniform_model_matrix(shape, required_shader_program);
         }
         /* set lights for this shape ( if enabled ) */

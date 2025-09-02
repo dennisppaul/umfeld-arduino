@@ -98,7 +98,9 @@ void PShape::draw() {
     //    glBindVertexArray(vertexArray);
     //    glDrawArrays(GL_TRIANGLES, 0, fVerticesSize / 6);  // TODO implement different shapes
     //    glBindVertexArray(0);
+#ifdef OPENGL_2_0
     int mShape = PGraphicsOpenGL::OGL_get_draw_mode(fShape);
+#endif
     // switch (fShape) {
     //     case TRIANGLES:
     //         mShape = GL_TRIANGLES;

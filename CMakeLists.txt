@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.20)
 
-project(umfeld-lib VERSION 2.3.0)
+project(umfeld-lib VERSION 2.4.0)
 
 message(STATUS "----------------------------------------")
 message(STATUS "UMFELD LIBRARY")

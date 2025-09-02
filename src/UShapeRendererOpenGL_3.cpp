@@ -734,7 +734,7 @@ namespace umfeld {
         opaque_custom_shapes.reserve(custom_count);
         opaque_flat_shapes.reserve(flat_count);
         /* sort opaque shapes into bins */
-        bool has_custom_transparent_shapes = false;
+        [[maybe_unused]] bool has_custom_transparent_shapes = false;
         for (auto& s: triangulated_shapes) {
             if (s.transparent) {
                 transparent_shapes.emplace_back(std::move(s));

@@ -220,6 +220,7 @@ namespace umfeld {
         virtual void     emissive(float r, float g, float b) {}
         virtual void     shininess(float s) {}
 
+        using PImage::loadPixels;
         void         loadPixels() { download_texture(this); }
         void         updatePixels() { update_full_internal(this); }
         virtual void pixelDensity(int density);

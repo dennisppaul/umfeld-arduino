@@ -33,7 +33,7 @@ extern int ESCDELAY;
 
 namespace umfeld {
 
-    static MEVENT curses_event;
+    [[maybe_unused]] static MEVENT curses_event;
 
     /* --- Subsystem --- */
 

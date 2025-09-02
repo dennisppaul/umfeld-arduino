@@ -192,13 +192,13 @@ namespace umfeld {
 
         SDL_Renderer* renderer;
 
-        float fPointSize             = 1;
-        float fStrokeWeight          = 1;
-        bool  fEnabledTextureInShape = false;
-        bool  fShapeBegun            = false;
-        int   fEllipseDetail         = 32;
-        int   fBezierDetail          = 20;
-        int   fPixelDensity          = 1;
-        int   fPreviousFBO{};
+        [[maybe_unused]] float fPointSize             = 1;
+        [[maybe_unused]] float fStrokeWeight          = 1;
+        [[maybe_unused]] bool  fEnabledTextureInShape = false;
+        [[maybe_unused]] bool  fShapeBegun            = false;
+        [[maybe_unused]] int   fEllipseDetail         = 32;
+        [[maybe_unused]] int   fBezierDetail          = 20;
+        [[maybe_unused]] int   fPixelDensity          = 1;
+        [[maybe_unused]] int   fPreviousFBO{};
     };
 } // namespace umfeld

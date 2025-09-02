@@ -31,14 +31,14 @@ PImage::PImage(const PImage& other)
     : width(other.width),
       height(other.height),
       pixels(nullptr),
+      flip_y_texcoords(other.flip_y_texcoords),
+      texture_id(TEXTURE_NOT_GENERATED), // we allocate our own buffer
       auto_generate_mipmap(other.auto_generate_mipmap),
-      clean_up_pixel_buffer(true), // we allocate our own buffer
+      clean_up_pixel_buffer(true),
       texture_wrap(other.texture_wrap),
       texture_wrap_dirty(other.texture_wrap_dirty),
       texture_filter(other.texture_filter),
-      texture_filter_dirty(other.texture_filter_dirty),
-      flip_y_texcoords(other.flip_y_texcoords),
-      texture_id(TEXTURE_NOT_GENERATED) { // do not copy GPU handle
+      texture_filter_dirty(other.texture_filter_dirty) { // do not copy GPU handle
     const int len = static_cast<int>(width * height);
     if (other.pixels && len > 0) {
         pixels = new uint32_t[len];
@@ -83,14 +83,14 @@ PImage::PImage(PImage&& other) noexcept
     : width(other.width),
       height(other.height),
       pixels(other.pixels),
+      flip_y_texcoords(other.flip_y_texcoords),
+      texture_id(other.texture_id),
       auto_generate_mipmap(other.auto_generate_mipmap),
       clean_up_pixel_buffer(other.clean_up_pixel_buffer),
       texture_wrap(other.texture_wrap),
       texture_wrap_dirty(other.texture_wrap_dirty),
       texture_filter(other.texture_filter),
-      texture_filter_dirty(other.texture_filter_dirty),
-      flip_y_texcoords(other.flip_y_texcoords),
-      texture_id(other.texture_id) {
+      texture_filter_dirty(other.texture_filter_dirty) {
     other.width = other.height  = 0;
     other.pixels                = nullptr;
     other.clean_up_pixel_buffer = false;
@@ -257,16 +257,16 @@ void PImage::update(PGraphics*   graphics,
                     const int    offset_x,
                     const int    offset_y) {
     /* NOTE pixel data must be 4 times the length of pixels */
-    const int length = width * height;
-    uint32_t  mPixels[length];
+    const int             length = width * height;
+    std::vector<uint32_t> _pixels(length);
     for (int i = 0; i < width * height; ++i) {
         const int j = i * 4;
-        mPixels[i]  = RGBA(clamp(pixel_data[j + 0]),
+        _pixels[i]  = RGBA(clamp(pixel_data[j + 0]),
                            clamp(pixel_data[j + 1]),
                            clamp(pixel_data[j + 2]),
                            clamp(pixel_data[j + 3]));
     }
-    update(graphics, mPixels, width, height, offset_x, offset_y);
+    update(graphics, _pixels.data(), width, height, offset_x, offset_y);
 }
 
 void PImage::update_full_internal(PGraphics* graphics) {

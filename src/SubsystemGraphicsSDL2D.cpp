@@ -67,14 +67,14 @@ namespace umfeld {
     }
 
     // ReSharper disable once CppParameterMayBeConstPtrOrRef
-    static void event(SDL_Event* event) {
+    [[maybe_unused]] static void event(SDL_Event* event) {
         if (event->type == SDL_EVENT_WINDOW_RESIZED) {
             warning("TODO implement resize in RENDERER_SDL_2D");
         }
     }
 
     // ReSharper disable once CppParameterMayBeConstPtrOrRef
-    static void event_in_update_loop(SDL_Event* event) {
+    [[maybe_unused]] static void event_in_update_loop(SDL_Event* event) {
         if (event->type == SDL_EVENT_WINDOW_RESIZED) {
             warning("TODO implement resize in RENDERER_SDL_2D");
         }

@@ -20,7 +20,7 @@
 #include "Umfeld.h"
 #include "PGraphicsDefault2D.h"
 
-namespace umfeld {
+namespace umfeld::subsystem {
     // TODO Ref https://github.com/libsdl-org/SDL/blob/main/docs/hello.c
 
     static SDL_Window*   window       = nullptr;
@@ -147,23 +147,23 @@ namespace umfeld {
 
 umfeld::SubsystemGraphics* umfeld_create_subsystem_graphics_sdl2d() {
     auto* graphics                   = new umfeld::SubsystemGraphics{};
-    graphics->set_flags              = umfeld::set_flags;
-    graphics->init                   = umfeld::init;
-    graphics->setup_pre              = umfeld::setup_pre;
-    graphics->setup_post             = umfeld::setup_post;
-    graphics->draw_pre               = umfeld::draw_pre;
-    graphics->draw_post              = umfeld::draw_post;
-    graphics->shutdown               = umfeld::shutdown;
-    graphics->create_native_graphics = umfeld::create_native_graphics;
-    graphics->set_title              = umfeld::set_title;
-    graphics->get_title              = umfeld::get_title;
-    graphics->set_window_size        = umfeld::set_window_size;
-    graphics->get_window_size        = umfeld::get_window_size;
-    graphics->set_window_position    = umfeld::set_window_position;
-    graphics->get_window_position    = umfeld::get_window_position;
-    graphics->get_sdl_window         = umfeld::get_sdl_window;
-    graphics->get_renderer           = umfeld::get_renderer;
-    graphics->get_renderer_type      = umfeld::get_renderer_type;
-    graphics->name                   = umfeld::name;
+    graphics->set_flags              = umfeld::subsystem::set_flags;
+    graphics->init                   = umfeld::subsystem::init;
+    graphics->setup_pre              = umfeld::subsystem::setup_pre;
+    graphics->setup_post             = umfeld::subsystem::setup_post;
+    graphics->draw_pre               = umfeld::subsystem::draw_pre;
+    graphics->draw_post              = umfeld::subsystem::draw_post;
+    graphics->shutdown               = umfeld::subsystem::shutdown;
+    graphics->create_native_graphics = umfeld::subsystem::create_native_graphics;
+    graphics->set_title              = umfeld::subsystem::set_title;
+    graphics->get_title              = umfeld::subsystem::get_title;
+    graphics->set_window_size        = umfeld::subsystem::set_window_size;
+    graphics->get_window_size        = umfeld::subsystem::get_window_size;
+    graphics->set_window_position    = umfeld::subsystem::set_window_position;
+    graphics->get_window_position    = umfeld::subsystem::get_window_position;
+    graphics->get_sdl_window         = umfeld::subsystem::get_sdl_window;
+    graphics->get_renderer           = umfeld::subsystem::get_renderer;
+    graphics->get_renderer_type      = umfeld::subsystem::get_renderer_type;
+    graphics->name                   = umfeld::subsystem::name;
     return graphics;
 }

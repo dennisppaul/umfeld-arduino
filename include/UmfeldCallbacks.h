@@ -25,28 +25,30 @@
 #include "Subsystems.h"
 #include "PAudio.h"
 
-/* NOTE weak implementations in `Umfeld.cpp` */
-void arguments(const std::vector<std::string>& args);
-void settings();
-void setup();
-void draw();
-void update();
-void windowResized(int width, int height);
-void post();
-void shutdown();
-
-/* NOTE weak implementations in `SubsystemHIDEvents`*/
-void keyPressed();
-void keyReleased();
-void mousePressed();
-void mouseReleased();
-void mouseDragged();
-void mouseMoved();
-void mouseWheel(float x, float y);
-void dropped(const char* dropped_filedir);
-bool sdl_event(const SDL_Event& event);
-
-void audioEvent();
-void audioEvent(const umfeld::PAudio& device);
-void callback_audioEvent(const umfeld::PAudio& device);
-void callback_audioEvent();
+namespace umfeld {
+    /* NOTE weak implementations in `Umfeld.cpp` */
+    void arguments(const std::vector<std::string>& args);
+    void settings();
+    void setup();
+    void draw();
+    void update();
+    void windowResized(int width, int height);
+    void post();
+    void shutdown();
+    
+    /* NOTE weak implementations in `SubsystemHIDEvents`*/
+    void keyPressed();
+    void keyReleased();
+    void mousePressed();
+    void mouseReleased();
+    void mouseDragged();
+    void mouseMoved();
+    void mouseWheel(float x, float y);
+    void dropped(const char* dropped_filedir);
+    bool sdl_event(const SDL_Event& event);
+    
+    void audioEvent();
+    void audioEvent(const umfeld::PAudio& device);
+    void callback_audioEvent(const umfeld::PAudio& device);
+    void callback_audioEvent();
+}

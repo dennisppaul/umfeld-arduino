@@ -37,7 +37,7 @@
 //     pthread_setaffinity_np(posix_id, sizeof(cpu_set_t), &cpuset);
 // }
 
-namespace umfeld {
+namespace umfeld::subsystem {
     struct PAudioSDL {
         PAudio*                           audio_device{nullptr};
         int                               logical_input_device_id{0};
@@ -46,7 +46,7 @@ namespace umfeld {
         SDL_AudioStream*                  sdl_output_stream{nullptr};
         SDL_Thread*                       audio_thread_handle{nullptr};
         bool                              is_running{true};
-        high_resolution_clock::time_point next_time = high_resolution_clock::now();
+        std::chrono::high_resolution_clock::time_point next_time = std::chrono::high_resolution_clock::now();
     };
 
     struct AudioUnitInfoSDL : AudioUnitInfo {
@@ -416,7 +416,7 @@ namespace umfeld {
         }
         while (audio_device_sdl->is_running) {
             const double frame_duration_ms = (1000.0 * audio_device_sdl->audio_device->buffer_size) / audio_device_sdl->audio_device->sample_rate;
-            audio_device_sdl->next_time += microseconds(static_cast<int>(frame_duration_ms * 1000));
+            audio_device_sdl->next_time += std::chrono::microseconds(static_cast<int>(frame_duration_ms * 1000));
             std::this_thread::sleep_until(audio_device_sdl->next_time);
             update_audio_streams(audio_device_sdl);
         }
@@ -654,14 +654,14 @@ namespace umfeld {
 
 umfeld::SubsystemAudio* umfeld_create_subsystem_audio_sdl() {
     auto* audio         = new umfeld::SubsystemAudio{};
-    audio->set_flags    = umfeld::set_flags;
-    audio->init         = umfeld::init;
-    audio->setup_post   = umfeld::setup_post;
-    audio->update_loop  = umfeld::update_loop;
-    audio->shutdown     = umfeld::shutdown;
-    audio->name         = umfeld::name;
-    audio->start        = umfeld::start;
-    audio->stop         = umfeld::stop;
-    audio->create_audio = umfeld::create_audio;
+    audio->set_flags    = umfeld::subsystem::set_flags;
+    audio->init         = umfeld::subsystem::init;
+    audio->setup_post   = umfeld::subsystem::setup_post;
+    audio->update_loop  = umfeld::subsystem::update_loop;
+    audio->shutdown     = umfeld::subsystem::shutdown;
+    audio->name         = umfeld::subsystem::name;
+    audio->start        = umfeld::subsystem::start;
+    audio->stop         = umfeld::subsystem::stop;
+    audio->create_audio = umfeld::subsystem::create_audio;
     return audio;
 }

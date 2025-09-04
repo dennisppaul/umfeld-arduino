@@ -7,7 +7,7 @@
 ###################################################################################################
 
 name=Umfeld
-version=2.3.0
+version=2.4.0
 
 ###################################################################################################
 #
@@ -26,9 +26,9 @@ recipe.hooks.prebuild.02.pattern=echo "Compiler: " {compiler.path}{compiler.c.cm
 #
 ###################################################################################################
 
-# compiler.path.macosx  = /usr/bin/
-# compiler.path.linux   = /usr/bin/
-# compiler.path.windows = C:\\msys64\\ucrt64\\bin\
+compiler.path.macosx  = /usr/bin/
+compiler.path.linux   = /usr/bin/
+compiler.path.windows = C:\\msys64\\ucrt64\\bin\
 
 ###################################################################################################
 #
@@ -74,7 +74,7 @@ compiler.SDL3_libs.windows    = -LC:/msys64/ucrt64/lib -lSDL3
 ###################################################################################################
 
 
-compiler.umfeld_flags = -I{runtime.platform.path}/cores/sdl3 -I{runtime.platform.path}/cores/sdl3/umfeld/include -I{runtime.platform.path}/cores/sdl3/umfeld/include/libraries -I{runtime.platform.path}/cores/sdl3/umfeld/include/libraries/clipper2 -I{runtime.platform.path}/cores/sdl3/umfeld/include/libraries/dr_libs -I{runtime.platform.path}/cores/sdl3/umfeld/include/libraries/ip -I{runtime.platform.path}/cores/sdl3/umfeld/include/libraries/libtess2 -I{runtime.platform.path}/cores/sdl3/umfeld/include/libraries/osc -I{runtime.platform.path}/cores/sdl3/umfeld/include/libraries/pffft -I{runtime.platform.path}/cores/sdl3/umfeld/include/shaders -I{runtime.platform.path}/cores/sdl3/umfeld/external/ -DDISABLE_VIDEO -DENABLE_PORTAUDIO
+compiler.umfeld_flags = -I{runtime.platform.path}/cores/sdl -I{runtime.platform.path}/cores/sdl/umfeld/include -I{runtime.platform.path}/cores/sdl/umfeld/include/libraries -I{runtime.platform.path}/cores/sdl/umfeld/include/libraries/clipper2 -I{runtime.platform.path}/cores/sdl/umfeld/include/libraries/dr_libs -I{runtime.platform.path}/cores/sdl/umfeld/include/libraries/ip -I{runtime.platform.path}/cores/sdl/umfeld/include/libraries/libtess2 -I{runtime.platform.path}/cores/sdl/umfeld/include/libraries/osc -I{runtime.platform.path}/cores/sdl/umfeld/include/libraries/pffft -I{runtime.platform.path}/cores/sdl/umfeld/include/shaders -I{runtime.platform.path}/cores/sdl/umfeld/external/ -DDISABLE_VIDEO -DENABLE_PORTAUDIO
 
 ###################################################################################################
 #
@@ -195,3 +195,4 @@ recipe.hooks.postbuild.01.pattern=printf "\n\nexecutable binary located at: {bui
 # sketches can also be compiled and run from CLI e.g:
 # 
 # arduino-cli compile -v -u -b umfeld-arduino:umfeld:UMFELD ./umfeld/examples/test
+# arduino-cli compile -v -u -b umfeld-arduino:umfeld:KLST_EMU ./umfeld/examples/test

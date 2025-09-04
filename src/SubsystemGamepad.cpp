@@ -26,7 +26,7 @@
 
 // TODO add more features like `SDL_GetGamepadProperties`, `SDL_RumbleGamepad`, `SDL_SetGamepadLED`, etc.
 
-namespace umfeld {
+namespace umfeld::subsystem {
 
     Subsystem* enable_gamepads() {
         Subsystem* subsystem = umfeld_create_subsystem_gamepad();
@@ -234,29 +234,29 @@ namespace umfeld {
 } // namespace umfeld
 
 UMFELD_FUNC_WEAK void gamepad_button(const int id, const int button, const bool down) {
-    if (umfeld::_print_debug) {
+    if (umfeld::subsystem::_print_debug) {
         umfeld::console("gamepad button", id, " : ", button, " : ", down ? "PRESSED" : "RELEASED");
     }
 }
 
 UMFELD_FUNC_WEAK void gamepad_axis(const int id, const int axis, const float value) {
-    if (umfeld::_print_debug) {
+    if (umfeld::subsystem::_print_debug) {
         umfeld::console("gamepad axis  ", id, " : ", axis, " : ", value);
     }
 }
 
 UMFELD_FUNC_WEAK void gamepad_event(const SDL_Event& event) {
-    if (umfeld::_print_debug) {
+    if (umfeld::subsystem::_print_debug) {
         umfeld::console("gamepad event ", event.type);
     }
 }
 
 umfeld::Subsystem* umfeld_create_subsystem_gamepad() {
     auto* libraries                 = new umfeld::Subsystem{};
-    libraries->shutdown             = umfeld::shutdown;
-    libraries->set_flags            = umfeld::set_flags;
-    libraries->event                = umfeld::event;
-    libraries->event_in_update_loop = umfeld::event_in_update_loop;
-    libraries->name                 = umfeld::name;
+    libraries->shutdown             = umfeld::subsystem::shutdown;
+    libraries->set_flags            = umfeld::subsystem::set_flags;
+    libraries->event                = umfeld::subsystem::event;
+    libraries->event_in_update_loop = umfeld::subsystem::event_in_update_loop;
+    libraries->name                 = umfeld::subsystem::name;
     return libraries;
 }

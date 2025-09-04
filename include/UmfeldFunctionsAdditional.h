@@ -89,17 +89,16 @@ namespace umfeld {
     /* --- utilities --- */
 
     SDL_WindowFlags get_SDL_WindowFlags(SDL_WindowFlags& flags);
-    using namespace std::chrono;
 
     template<typename Func, typename... Args>
     double time_function_ms(Func&& func, Args&&... args) {
-        const auto start = high_resolution_clock::now();
+        const auto start = std::chrono::high_resolution_clock::now();
 
         // Call the function with forwarded arguments
         std::invoke(std::forward<Func>(func), std::forward<Args>(args)...);
 
-        const auto                         end     = high_resolution_clock::now();
-        const duration<double, std::milli> elapsed = end - start;
+        const auto                         end     = std::chrono::high_resolution_clock::now();
+        const std::chrono::duration<double, std::milli> elapsed = end - start;
         return elapsed.count(); // in milliseconds
     }
 

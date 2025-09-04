@@ -79,14 +79,14 @@
 
 /* --- TOOLS --- */
 
-#ifndef RGBA255
-#define RGBA255(r, g, b, a) (((uint32_t) (a) << 24) | ((uint32_t) (b) << 16) | ((uint32_t) (g) << 8) | ((uint32_t) (r)))
+#ifndef RGBAi
+#define RGBAi(r, g, b, a) (((uint32_t) (a) << 24) | ((uint32_t) (b) << 16) | ((uint32_t) (g) << 8) | ((uint32_t) (r)))
 #endif
-#ifndef RGBA
-#define RGBA(r, g, b, a) (((uint32_t) (a * 255.0f) << 24) | ((uint32_t) (b * 255.0f) << 16) | ((uint32_t) (g * 255.0f) << 8) | ((uint32_t) (r * 255.0f)))
+#ifndef RGBAf
+#define RGBAf(r, g, b, a) (((uint32_t) (a * 255.0f) << 24) | ((uint32_t) (b * 255.0f) << 16) | ((uint32_t) (g * 255.0f) << 8) | ((uint32_t) (r * 255.0f)))
 #endif
-#ifndef HSBA
-#define HSBA(h, s, b, a) ({                         \
+#ifndef HSBAf
+#define HSBAf(h, s, b, a) ({                         \
     float _h = (h) * 360.0f, _s = (s), _b = (b);    \
     float _r, _g, _bb, _f, _p, _q, _t;              \
     int   _i = (int) (_h / 60.0f) % 6;              \
@@ -107,7 +107,7 @@
      (uint32_t) ((uint8_t) (_g * 255.0f) << 8) |    \
      (uint32_t) ((uint8_t) (_r * 255.0f)));         \
 })
-#endif // HSBA
+#endif // HSBAf
 
 #define TIME_FUNCTION_MS(fn) time_function_ms([&]() { fn; })
 

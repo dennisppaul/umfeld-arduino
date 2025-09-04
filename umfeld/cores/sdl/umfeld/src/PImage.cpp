@@ -222,9 +222,9 @@ uint32_t* PImage::convert_bytes_to_pixels(const int width, const int height, con
     for (int i = 0; i < width * height; ++i) {
         const int j = i * channels;
         if (channels == 4) {
-            pixels[i] = RGBA255(data[j + 0], data[j + 1], data[j + 2], data[j + 3]);
+            pixels[i] = RGBAi(data[j + 0], data[j + 1], data[j + 2], data[j + 3]);
         } else if (channels == 3) {
-            pixels[i] = RGBA255(data[j + 0], data[j + 1], data[j + 2], 0xFF);
+            pixels[i] = RGBAi(data[j + 0], data[j + 1], data[j + 2], 0xFF);
         }
     }
 
@@ -261,10 +261,10 @@ void PImage::update(PGraphics*   graphics,
     std::vector<uint32_t> _pixels(length);
     for (int i = 0; i < width * height; ++i) {
         const int j = i * 4;
-        _pixels[i]  = RGBA(clamp(pixel_data[j + 0]),
-                           clamp(pixel_data[j + 1]),
-                           clamp(pixel_data[j + 2]),
-                           clamp(pixel_data[j + 3]));
+        _pixels[i]  = RGBAf(clamp(pixel_data[j + 0]),
+                            clamp(pixel_data[j + 1]),
+                            clamp(pixel_data[j + 2]),
+                            clamp(pixel_data[j + 3]));
     }
     update(graphics, _pixels.data(), width, height, offset_x, offset_y);
 }

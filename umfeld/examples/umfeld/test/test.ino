@@ -230,10 +230,10 @@ void keyPressed() {
         strokeCap(SQUARE);
         console("SQUARE");
     }
-    if (key == ',') {
-        g->stroke_mode(STROKE_RENDER_MODE_TRIANGULATE_2D);
-    }
-    if (key == '.') {
-        g->stroke_mode(STROKE_RENDER_MODE_NATIVE);
-    }
+//     if (key == ',') {
+//         g->stroke_mode(STROKE_RENDER_MODE_TRIANGULATE_2D);
+//     }
+//     if (key == '.') {
+//         g->stroke_mode(STROKE_RENDER_MODE_NATIVE);
+//     }
 }

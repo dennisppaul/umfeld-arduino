@@ -43,6 +43,8 @@ compiler.umf_define.windows = {build.flags.opengl} -DSYSTEM_WINDOWS
 # compiler.umf_define.linux   = -DUMF_ENV={build.flags.board} {build.flags.opengl} -DSYSTEM_LINUX
 # compiler.umf_define.windows = -DUMF_ENV={build.flags.board} {build.flags.opengl} -DSYSTEM_WINDOWS
 
+compiler.klst_define=-DKLST_ENV={build.flags.board} -DKLST_EMU_SAMPLE_RATE={build.flags.sample_rate} -DKLST_EMU_AUDIO_BLOCK={build.flags.audioblock}
+
 ###################################################################################################
 #
 # INCLUDE FLAGS (SDL3 + SDL3_deps + glad)
@@ -99,9 +101,9 @@ compiler.SDL3_libs.windows      = # TODO add windows paths
 compiler.c.cmd                  = gcc
 compiler.c.std                  = c17
 
-compiler.c.flags.macosx         = -c -Wall -std={compiler.c.std} {compiler.umf_define}
-compiler.c.flags.linux          = -c -g -MMD -Wall -flto -std={compiler.c.std} {compiler.umf_define}
-compiler.c.flags.windows        = -c -g3 -Wall -std={compiler.c.std} {compiler.umf_define}
+compiler.c.flags.macosx         = -c -Wall -std={compiler.c.std} {compiler.umf_define} {compiler.klst_define}
+compiler.c.flags.linux          = -c -g -MMD -Wall -flto -std={compiler.c.std} {compiler.umf_define} {compiler.klst_define}
+compiler.c.flags.windows        = -c -g3 -Wall -std={compiler.c.std} {compiler.umf_define} {compiler.klst_define}
 
 recipe.c.o.pattern="{compiler.path}{compiler.c.cmd}" {compiler.c.flags} {includes} {compiler.SDL3_cflags} {compiler.umfeld_flags} "{source_file}" -o "{object_file}"
 
@@ -114,9 +116,9 @@ recipe.c.o.pattern="{compiler.path}{compiler.c.cmd}" {compiler.c.flags} {include
 compiler.cpp.cmd                = g++
 compiler.cpp.std                = c++17
 
-compiler.cpp.flags.macosx       = -c -Wall -std={compiler.cpp.std} -pthread {compiler.umf_define}
-compiler.cpp.flags.linux        = -c -g -MMD -Wall -flto -std={compiler.cpp.std} -Wno-long-long -pthread {compiler.umf_define}
-compiler.cpp.flags.windows      = -c -g3 -Wall -std={compiler.cpp.std} -Wno-long-long -pthread {compiler.umf_define}
+compiler.cpp.flags.macosx       = -c -Wall -std={compiler.cpp.std} -pthread {compiler.umf_define} {compiler.klst_define}
+compiler.cpp.flags.linux        = -c -g -MMD -Wall -flto -std={compiler.cpp.std} -Wno-long-long -pthread {compiler.umf_define} {compiler.klst_define}
+compiler.cpp.flags.windows      = -c -g3 -Wall -std={compiler.cpp.std} -Wno-long-long -pthread {compiler.umf_define} {compiler.klst_define}
                                                                # TODO maybe switch to -mthreads
 
 recipe.cpp.o.pattern="{compiler.path}{compiler.cpp.cmd}" {compiler.cpp.flags} {includes} {compiler.SDL3_cflags} {compiler.umfeld_flags} "{source_file}" -o "{object_file}"

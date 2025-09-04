@@ -1,7 +1,7 @@
 menu.upload_method=Upload method
 menu.OPENGL_VERSION=OpenGL Version
 # menu.compiler_path=C/C++ Compiler Path ( <- remove this? )
-menu.samplingrate=Sampling Rate
+menu.sample_rate=Sampling Rate
 menu.audioblock=Samples per Audio Block
 menu.board=Board
 
@@ -63,12 +63,12 @@ KLST_EMU.menu.OPENGL_VERSION.es_3_0.build.flags.opengl=-DOPENGL_ES_3_0 -I{runtim
 KLST_EMU.menu.OPENGL_VERSION.2_0=( OpenGL 2.0 ) (nA)
 KLST_EMU.menu.OPENGL_VERSION.2_0.build.flags.opengl=-DOPENGL_2_0 -I{runtime.platform.path}/cores/sdl/umfeld/external/glad_opengl_20/include
 
-KLST_EMU.menu.samplingrate.xx48000xx=48000Hz
-KLST_EMU.menu.samplingrate.xx48000xx.build.flags.samplingrate=48000
-KLST_EMU.menu.samplingrate.xx44100xx=44100Hz
-KLST_EMU.menu.samplingrate.xx44100xx.build.flags.samplingrate=44100
-KLST_EMU.menu.samplingrate.xx22050xx=22050Hz
-KLST_EMU.menu.samplingrate.xx22050xx.build.flags.samplingrate=22050
+KLST_EMU.menu.sample_rate.xx48000xx=48000Hz
+KLST_EMU.menu.sample_rate.xx48000xx.build.flags.sample_rate=48000
+KLST_EMU.menu.sample_rate.xx44100xx=44100Hz
+KLST_EMU.menu.sample_rate.xx44100xx.build.flags.sample_rate=44100
+KLST_EMU.menu.sample_rate.xx22050xx=22050Hz
+KLST_EMU.menu.sample_rate.xx22050xx.build.flags.sample_rate=22050
 
 KLST_EMU.menu.audioblock.4096=4096 samples
 KLST_EMU.menu.audioblock.4096.build.flags.audioblock=4096

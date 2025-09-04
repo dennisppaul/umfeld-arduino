@@ -31,7 +31,7 @@
 #include "UmfeldFunctionsAdditional.h"
 #include "PAudio.h"
 
-namespace umfeld {
+namespace umfeld::subsystem {
 
     struct AudioDevice {
         std::string name;
@@ -522,19 +522,19 @@ namespace umfeld {
 
 umfeld::SubsystemAudio* umfeld_create_subsystem_audio_portaudio() {
     auto* audio         = new umfeld::SubsystemAudio{};
-    audio->set_flags    = umfeld::set_flags;
-    audio->init         = umfeld::init;
-    audio->setup_pre    = umfeld::setup_pre;
-    audio->setup_post   = umfeld::setup_post;
-    audio->update_loop  = umfeld::update_loop;
-    audio->draw_pre     = umfeld::draw_pre;
-    audio->draw_post    = umfeld::draw_post;
-    audio->shutdown     = umfeld::shutdown;
-    audio->event        = umfeld::event;
-    audio->name         = umfeld::name;
-    audio->start        = umfeld::start;
-    audio->stop         = umfeld::stop;
-    audio->create_audio = umfeld::create_audio;
+    audio->set_flags    = umfeld::subsystem::set_flags;
+    audio->init         = umfeld::subsystem::init;
+    audio->setup_pre    = umfeld::subsystem::setup_pre;
+    audio->setup_post   = umfeld::subsystem::setup_post;
+    audio->update_loop  = umfeld::subsystem::update_loop;
+    audio->draw_pre     = umfeld::subsystem::draw_pre;
+    audio->draw_post    = umfeld::subsystem::draw_post;
+    audio->shutdown     = umfeld::subsystem::shutdown;
+    audio->event        = umfeld::subsystem::event;
+    audio->name         = umfeld::subsystem::name;
+    audio->start        = umfeld::subsystem::start;
+    audio->stop         = umfeld::subsystem::stop;
+    audio->create_audio = umfeld::subsystem::create_audio;
     return audio;
 }
 

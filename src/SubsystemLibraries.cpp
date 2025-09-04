@@ -23,7 +23,7 @@
 
 // TODO add functionality to (un-)register libraries
 
-namespace umfeld {
+namespace umfeld::subsystem {
 
     static std::vector<LibraryListener*> _listeners;
 
@@ -106,14 +106,14 @@ namespace umfeld {
 
 umfeld::Subsystem* umfeld_create_subsystem_libraries() {
     auto* libraries                 = new umfeld::Subsystem{};
-    libraries->shutdown             = umfeld::shutdown;
-    libraries->set_flags            = umfeld::set_flags;
-    libraries->setup_pre            = umfeld::setup_pre;
-    libraries->setup_post           = umfeld::setup_post;
-    libraries->draw_pre             = umfeld::draw_pre;
-    libraries->draw_post            = umfeld::draw_post;
-    libraries->event                = umfeld::event;
-    libraries->event_in_update_loop = umfeld::event_in_update_loop;
-    libraries->name                 = umfeld::name;
+    libraries->shutdown             = umfeld::subsystem::shutdown;
+    libraries->set_flags            = umfeld::subsystem::set_flags;
+    libraries->setup_pre            = umfeld::subsystem::setup_pre;
+    libraries->setup_post           = umfeld::subsystem::setup_post;
+    libraries->draw_pre             = umfeld::subsystem::draw_pre;
+    libraries->draw_post            = umfeld::subsystem::draw_post;
+    libraries->event                = umfeld::subsystem::event;
+    libraries->event_in_update_loop = umfeld::subsystem::event_in_update_loop;
+    libraries->name                 = umfeld::subsystem::name;
     return libraries;
 }

@@ -20,13 +20,13 @@
 #include "UmfeldDefines.h"
 #include "UmfeldCallbacks.h"
 
-UMFELD_FUNC_WEAK void audioEvent(const umfeld::PAudio& device) {}
-UMFELD_FUNC_WEAK void audioEvent() { /* NOTE same as above but for default audio device */ }
+UMFELD_FUNC_WEAK void umfeld::audioEvent(const umfeld::PAudio& device) {}
+UMFELD_FUNC_WEAK void umfeld::audioEvent() { /* NOTE same as above but for default audio device */ }
 
-void callback_audioEvent(const umfeld::PAudio& device) {
+void umfeld::callback_audioEvent(const umfeld::PAudio& device) {
     audioEvent(device);
 }
 
-void callback_audioEvent() {
+void umfeld::callback_audioEvent() {
     audioEvent();
 }

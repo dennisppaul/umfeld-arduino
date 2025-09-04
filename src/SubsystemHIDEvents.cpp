@@ -26,22 +26,22 @@
 // declare weak user hook
 // ... it seems that it must be implemented in the same translation unit
 // ... function cannot be in namespace
-UMFELD_FUNC_WEAK void keyPressed() { LOG_CALLBACK_MSG("default keyPressed"); }
-UMFELD_FUNC_WEAK void keyReleased() { LOG_CALLBACK_MSG("default keyReleased"); }
-UMFELD_FUNC_WEAK void mousePressed() { LOG_CALLBACK_MSG("default mousePressed"); }
-UMFELD_FUNC_WEAK void mouseReleased() { LOG_CALLBACK_MSG("default mouseReleased"); }
-UMFELD_FUNC_WEAK void mouseDragged() { LOG_CALLBACK_MSG("default mouseDragged"); }
-UMFELD_FUNC_WEAK void mouseMoved() { LOG_CALLBACK_MSG("default mouseMoved"); }
-UMFELD_FUNC_WEAK void mouseWheel(const float x, const float y) { LOG_CALLBACK_MSG("default mouseWheel"); }
-UMFELD_FUNC_WEAK void dropped(const char* dropped_filedir) { LOG_CALLBACK_MSG("default dropped"); }
-UMFELD_FUNC_WEAK bool sdl_event(const SDL_Event& event) {
+UMFELD_FUNC_WEAK void umfeld::keyPressed() { LOG_CALLBACK_MSG("default keyPressed"); }
+UMFELD_FUNC_WEAK void umfeld::keyReleased() { LOG_CALLBACK_MSG("default keyReleased"); }
+UMFELD_FUNC_WEAK void umfeld::mousePressed() { LOG_CALLBACK_MSG("default mousePressed"); }
+UMFELD_FUNC_WEAK void umfeld::mouseReleased() { LOG_CALLBACK_MSG("default mouseReleased"); }
+UMFELD_FUNC_WEAK void umfeld::mouseDragged() { LOG_CALLBACK_MSG("default mouseDragged"); }
+UMFELD_FUNC_WEAK void umfeld::mouseMoved() { LOG_CALLBACK_MSG("default mouseMoved"); }
+UMFELD_FUNC_WEAK void umfeld::mouseWheel(const float x, const float y) { LOG_CALLBACK_MSG("default mouseWheel"); }
+UMFELD_FUNC_WEAK void umfeld::dropped(const char* dropped_filedir) { LOG_CALLBACK_MSG("default dropped"); }
+UMFELD_FUNC_WEAK bool umfeld::sdl_event(const SDL_Event& event) {
     LOG_CALLBACK_MSG("sdl event");
     return false;
 }
 
 // UMFELD_FUNC_WEAK void callbackHook() { printf("default callbackHook\n"); }
 
-namespace umfeld {
+namespace umfeld::subsystem {
     static bool _handle_events_in_loop = true;
     static bool _mouse_is_pressed      = false;
 
@@ -152,10 +152,10 @@ namespace umfeld {
 
 umfeld::Subsystem* umfeld_create_subsystem_hid() {
     auto* libraries                 = new umfeld::Subsystem{};
-    libraries->shutdown             = umfeld::shutdown;
-    libraries->set_flags            = umfeld::set_flags;
-    libraries->event                = umfeld::event;
-    libraries->event_in_update_loop = umfeld::event_in_update_loop;
-    libraries->name                 = umfeld::name;
+    libraries->shutdown             = umfeld::subsystem::shutdown;
+    libraries->set_flags            = umfeld::subsystem::set_flags;
+    libraries->event                = umfeld::subsystem::event;
+    libraries->event_in_update_loop = umfeld::subsystem::event_in_update_loop;
+    libraries->name                 = umfeld::subsystem::name;
     return libraries;
 }

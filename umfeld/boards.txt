@@ -34,6 +34,8 @@ UMFELD.menu.pnum.UMFELD_TOOL.build.variant=UMFELD_TOOL
 
 # UMFELD.menu.board.GENERIC=GENERIC
 # UMFELD.menu.board.GENERIC.build.flags.board=0x00
+UMFELD.menu.board.UMFELD_APP=UMFELD_APP
+UMFELD.menu.board.UMFELD_APP.build.flags.board=0x00
 
 UMFELD.menu.OPENGL_VERSION.3_3_core=OpenGL 3.3 Core
 UMFELD.menu.OPENGL_VERSION.3_3_core.build.flags.opengl=-DOPENGL_3_3_CORE -I{runtime.platform.path}/cores/sdl/umfeld/external/glad_opengl_33/include
@@ -41,6 +43,30 @@ UMFELD.menu.OPENGL_VERSION.es_3_0=OpenGL ES 3.0
 UMFELD.menu.OPENGL_VERSION.es_3_0.build.flags.opengl=-DOPENGL_ES_3_0 -I{runtime.platform.path}/cores/sdl/umfeld/external/glad_opengles_30/include
 UMFELD.menu.OPENGL_VERSION.2_0=( OpenGL 2.0 ) (nA)
 UMFELD.menu.OPENGL_VERSION.2_0.build.flags.opengl=-DOPENGL_2_0 -I{runtime.platform.path}/cores/sdl/umfeld/external/glad_opengl_20/include
+
+UMFELD.menu.sample_rate.xx48000xx=48000Hz
+UMFELD.menu.sample_rate.xx48000xx.build.flags.sample_rate=48000
+UMFELD.menu.sample_rate.xx44100xx=44100Hz
+UMFELD.menu.sample_rate.xx44100xx.build.flags.sample_rate=44100
+UMFELD.menu.sample_rate.xx22050xx=22050Hz
+UMFELD.menu.sample_rate.xx22050xx.build.flags.sample_rate=22050
+
+UMFELD.menu.audioblock.4096=4096 samples
+UMFELD.menu.audioblock.4096.build.flags.audioblock=4096
+UMFELD.menu.audioblock.2048=2048 samples
+UMFELD.menu.audioblock.2048.build.flags.audioblock=2048
+UMFELD.menu.audioblock.1024=1024 samples
+UMFELD.menu.audioblock.1024.build.flags.audioblock=1024
+UMFELD.menu.audioblock.512=512 samples
+UMFELD.menu.audioblock.512.build.flags.audioblock=512
+UMFELD.menu.audioblock.256=256 samples
+UMFELD.menu.audioblock.256.build.flags.audioblock=256
+UMFELD.menu.audioblock.128=128 samples
+UMFELD.menu.audioblock.128.build.flags.audioblock=128
+UMFELD.menu.audioblock.64=64 samples
+UMFELD.menu.audioblock.64.build.flags.audioblock=64
+UMFELD.menu.audioblock.32=32 samples
+UMFELD.menu.audioblock.32.build.flags.audioblock=32
 
 # UMFELD.menu.compiler_path.macos=macOS default
 # UMFELD.menu.compiler_path.macos.compiler.path=/usr/bin/

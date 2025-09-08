@@ -37,44 +37,25 @@
 
 /* --- emulator implementation --- */
 
+#include "Arduino.h"
 #include "Umfeld.h"
-// #include "KlangstromEmulator.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif // __cplusplus
-
-#ifndef WEAK
-#define WEAK __attribute__((weak))
-#endif
-
-    extern void setup(void);
-    extern void loop(void);
-
-#ifdef __cplusplus
-} // extern "C"
-#endif // __cplusplus
-
-namespace umfeld_klst_emulator {
-    void emulator_settings() {
-        umfeld::size(1024, 768);
-        umfeld::warning("-> starting emulator");
-    }
-
-    void emulator_setup() {
-        setup();
-    }
-
-    void emulator_draw() {
-        loop(); // TODO or better put this in loop?!?
-    }
-}
+extern void klst_emulator_arguments(const std::vector<std::string>& args);
+extern void klst_emulator_settings();
+extern void klst_emulator_setup();
+extern void klst_emulator_draw();
+extern void klst_emulator_audioEvent();
+extern void klst_emulator_keyPressed();
+extern void klst_emulator_keyReleased();
 
 void umfeld_set_callbacks() {
-    umfeld::set_settings_callback(umfeld_klst_emulator::emulator_settings);
-    umfeld::set_setup_callback(umfeld_klst_emulator::emulator_setup);
-    umfeld::set_draw_callback(umfeld_klst_emulator::emulator_draw);
-//    umfeld::set_audioEvent_callback(audioEvent);
+    umfeld::set_arguments_callback(klst_emulator_arguments);
+    umfeld::set_settings_callback(klst_emulator_settings);
+    umfeld::set_setup_callback(klst_emulator_setup);
+    umfeld::set_draw_callback(klst_emulator_draw);
+    umfeld::set_audioEvent_callback(klst_emulator_audioEvent);
+    umfeld::set_keyPressed_callback(klst_emulator_keyPressed);
+    umfeld::set_keyReleased_callback(klst_emulator_keyReleased);
 }
 
 #endif

@@ -1,5 +1,9 @@
 # Umfeld-Arduino
 
+⚠️️️️⚠️️️️⚠️️️️ WIP the information below is outdated ⚠️️️️⚠️️️️⚠️️️️
+
+---
+
 Board definition to run [Umfeld](https://github.com/dennisppaul/umfeld) as a board from Arduino IDE or CLI.
 
 *Umfeld* is a lightweight C++ environment for small audio and graphics based applications. It is inspired by Processing.org and the like.

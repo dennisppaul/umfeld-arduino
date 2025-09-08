@@ -5,6 +5,7 @@
 #include "Arduino.h"
 //#include "System.h"
 //#include "Console.h"
+#include "KlangstromEmulator.h"
 
 void setup() {
 //    system_init();

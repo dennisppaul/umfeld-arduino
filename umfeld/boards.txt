@@ -5,6 +5,8 @@ menu.sample_rate=Sampling Rate
 menu.audioblock=Samples per Audio Block
 menu.board=Board
 
+menu.pnum=Board part number
+
 ##########################################################################################
 # UMFELD                                                                             #
 ##########################################################################################
@@ -16,12 +18,19 @@ UMFELD.build.board=UMFELD
 UMFELD.build.core=sdl
 # UMFELD.compiler.path=/usr/bin/
 UMFELD.build.variant_h=variant_Umfeld.h
+UMFELD.build.variant_defines=
 
 UMFELD.menu.upload_method.sdlexec=Execute Application
 UMFELD.menu.upload_method.sdlexec.upload.protocol=1
 UMFELD.menu.upload_method.sdlexec.upload.options=-g
 UMFELD.menu.upload_method.sdlexec.upload.tool=sdlexecprog
 UMFELD.menu.upload_method.sdlexec.upload.options=
+
+UMFELD.menu.pnum.UMFELD_APP=Umfeld Application
+UMFELD.menu.pnum.UMFELD_APP.build.variant=UMFELD
+# TODO 'UMFELD_TOOL' is just a proof of concept and WIP
+UMFELD.menu.pnum.UMFELD_TOOL=Umfeld Tool
+UMFELD.menu.pnum.UMFELD_TOOL.build.variant=UMFELD_TOOL
 
 # UMFELD.menu.board.GENERIC=GENERIC
 # UMFELD.menu.board.GENERIC.build.flags.board=0x00
@@ -51,12 +60,16 @@ KLST_EMU.build.board=KLST_EMU
 KLST_EMU.build.core=sdl
 # KLST_EMU.compiler.path=/usr/bin/
 KLST_EMU.build.variant_h=variant_KLST_Emulator.h
+KLST_EMU.build.variant_defines=-DUMFELD_SET_DEFAULT_CALLBACK=0
 
 KLST_EMU.menu.upload_method.sdlexec=Execute Application
 KLST_EMU.menu.upload_method.sdlexec.upload.protocol=1
 KLST_EMU.menu.upload_method.sdlexec.upload.options=-g
 KLST_EMU.menu.upload_method.sdlexec.upload.tool=sdlexecprog
 KLST_EMU.menu.upload_method.sdlexec.upload.options=
+
+KLST_EMU.menu.pnum.KLST_EMU=Klangstrom Emulator
+KLST_EMU.menu.pnum.KLST_EMU.build.variant=KLST_EMU
 
 KLST_EMU.menu.OPENGL_VERSION.3_3_core=OpenGL 3.3 Core
 KLST_EMU.menu.OPENGL_VERSION.3_3_core.build.flags.opengl=-DOPENGL_3_3_CORE -I{runtime.platform.path}/cores/sdl/umfeld/external/glad_opengl_33/include

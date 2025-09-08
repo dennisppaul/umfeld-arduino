@@ -39,8 +39,7 @@ compiler.path.windows = C:\\msys64\\ucrt64\\bin\
 #
 ###################################################################################################
 
-compiler.variant_define     = -DVARIANT_H="{runtime.platform.path}/variants/{build.board}/{build.variant_h}" 
-                               # TODO why construct manually … something s wrong here
+compiler.variant_define     = {build.variant_defines} -DBOARD_NAME_{build.board} -DVARIANT_H="{build.variant.path}/{build.variant_h}"
 compiler.umf_define.macosx  = {build.flags.opengl} -DSYSTEM_MACOS {compiler.variant_define}
 compiler.umf_define.linux   = {build.flags.opengl} -DSYSTEM_LINUX  {compiler.variant_define}
 compiler.umf_define.windows = {build.flags.opengl} -DSYSTEM_WINDOWS  {compiler.variant_define}
@@ -57,7 +56,7 @@ compiler.klst_define=-DKLST_ENV={build.flags.board} -DKLST_EMU_SAMPLE_RATE={buil
 ###################################################################################################
 
 compiler.SDL3_cflags.macosx  = -I/opt/homebrew/include/ -I/usr/local/include/ -I/opt/homebrew/include/SDL3 -I/usr/local/include/SDL3 -I/opt/homebrew/include/rtmidi/ -I/usr/local/include/rtmidi/ -I/opt/homebrew/include/freetype2/ -I/usr/local/include/freetype2/ -D_THREAD_SAFE -DGLM_ENABLE_EXPERIMENTAL -DSDL_MAIN_USE_CALLBACKS
-compiler.SDL3_cflags.linux   = -I/usr/include/SDL3 -I/usr/include/rtmidi -I/usr/include/freetype2 -D_THREAD_SAFE -DGLM_ENABLE_EXPERIMENTAL -DSDL_MAIN_USE_CALLBACKS
+compiler.SDL3_cflags.linux   = -I/usr/include/ -I/usr/include/SDL3 -I/usr/include/rtmidi -I/usr/include/freetype2 -D_THREAD_SAFE -DGLM_ENABLE_EXPERIMENTAL -DSDL_MAIN_USE_CALLBACKS
 compiler.SDL3_cflags.windows = -IC:/msys64/ucrt64/include -IC:/msys64/ucrt64/include/SDL3 -IC:/msys64/ucrt64/include/freetype2 -D_THREAD_SAFE -DGLM_ENABLE_EXPERIMENTAL -DSDL_MAIN_USE_CALLBACKS
 
 ###################################################################################################
@@ -80,7 +79,6 @@ compiler.SDL3_libs.windows    = -LC:/msys64/ucrt64/lib -lSDL3
 #
 ###################################################################################################
 
-
 compiler.umfeld_flags = -I{runtime.platform.path}/cores/sdl -I{runtime.platform.path}/cores/sdl/umfeld/include -I{runtime.platform.path}/cores/sdl/umfeld/include/libraries -I{runtime.platform.path}/cores/sdl/umfeld/include/libraries/clipper2 -I{runtime.platform.path}/cores/sdl/umfeld/include/libraries/dr_libs -I{runtime.platform.path}/cores/sdl/umfeld/include/libraries/ip -I{runtime.platform.path}/cores/sdl/umfeld/include/libraries/libtess2 -I{runtime.platform.path}/cores/sdl/umfeld/include/libraries/osc -I{runtime.platform.path}/cores/sdl/umfeld/include/libraries/pffft -I{runtime.platform.path}/cores/sdl/umfeld/include/shaders -I{runtime.platform.path}/cores/sdl/umfeld/external/ -DDISABLE_VIDEO -DENABLE_PORTAUDIO
 
 ###################################################################################################
@@ -88,10 +86,6 @@ compiler.umfeld_flags = -I{runtime.platform.path}/cores/sdl -I{runtime.platform.
 # SDL3 UMFELD FLAGS
 #
 ###################################################################################################
-
-compiler.SDL3_cflags.macosx     = -I/opt/homebrew/include/ -I/usr/local/include/ -I/opt/homebrew/include/SDL3 -I/usr/local/include/SDL3 -I/opt/homebrew/include/rtmidi/ -I/usr/local/include/rtmidi/ -I/opt/homebrew/include/freetype2/ -I/usr/local/include/freetype2/ -D_THREAD_SAFE -DGLM_ENABLE_EXPERIMENTAL -DSDL_MAIN_USE_CALLBACKS
-compiler.SDL3_cflags.linux      = -I/usr/include/ -I/usr/include/SDL3 -I/usr/include/rtmidi/ -I/usr/include/freetype2/ -D_THREAD_SAFE -DGLM_ENABLE_EXPERIMENTAL -DSDL_MAIN_USE_CALLBACKS
-compiler.SDL3_cflags.windows    = # TODO add windows paths
 
 compiler.SDL3_libs.macosx       = -L/opt/homebrew/lib -L/usr/local/lib -lSDL3
 compiler.SDL3_libs.linux        = -L/usr/lib -lSDL3

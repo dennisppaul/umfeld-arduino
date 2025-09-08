@@ -19,4 +19,4 @@
 
 #pragma once
 
-#warning "including Umfeld variant"
+#warning "including Umfeld Tool variant"

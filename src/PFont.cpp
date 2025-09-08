@@ -170,7 +170,7 @@ void PFont::draw(PGraphics* g, const std::string& text, const float x, const flo
         }
 
         generate_text_quads(*font, line, text_quads);
-
+        // TODO maybe deactive stroke shape here to avoid outline artifacts
         g->pushMatrix();
         g->translate(x_offset, i * text_leading, 0); // baseline offset for current line
         g->beginShape(TRIANGLES);

@@ -382,8 +382,7 @@ namespace umfeld {
             int profile = 0;
             glGetIntegerv(GL_CONTEXT_PROFILE_MASK, &profile);
             if (profile & GL_CONTEXT_CORE_PROFILE_BIT) {
-                profile_str = "core";
-                console("OpenGL Core Profile detected. Deprecated functions are not available.");
+                profile_str          = "core";
                 capabilities.profile = OPENGL_PROFILE_CORE;
             }
             if (profile & GL_CONTEXT_COMPATIBILITY_PROFILE_BIT) {
@@ -393,6 +392,10 @@ namespace umfeld {
         }
 #endif // OPENGL_3_3_CORE
         console(fl("Profile"), profile_str);
+        if (capabilities.profile == OPENGL_PROFILE_CORE) {
+            console(fl(""), "OpenGL Core Profile detected.");
+            console(fl(""), "Deprecated functions are not available.");
+        }
     }
 
     void PGraphicsOpenGL::OGL_query_capabilities(OpenGLCapabilities& capabilities) {
@@ -414,8 +417,7 @@ namespace umfeld {
         console(fl("line size max"), capabilities.line_size_max);
         if (capabilities.line_size_min == 1.0f && capabilities.line_size_max == 1.0f) {
             console(fl("line support"), "since min and max line size is 1.0");
-            console(fl(""), "it is likely that lines are not");
-            console(fl(""), "properly supported.");
+            console(fl(""), "lines support is probably only rudimentary.");
         }
 
         GLfloat line_size_granularity{0};

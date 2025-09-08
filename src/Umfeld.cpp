@@ -25,17 +25,37 @@
 #include "UmfeldDefines.h"
 #include "Umfeld.h"
 #include "PAudio.h"
+#include "UmfeldFunctionsAdditional.h"
 
 using namespace std::chrono;
 
-UMFELD_FUNC_WEAK void arguments(const std::vector<std::string>& args) { LOG_CALLBACK_MSG("default arguments"); }
-UMFELD_FUNC_WEAK void settings() { LOG_CALLBACK_MSG("default settings"); }
-UMFELD_FUNC_WEAK void setup() { LOG_CALLBACK_MSG("default setup"); }
-UMFELD_FUNC_WEAK void draw() { LOG_CALLBACK_MSG("default draw"); }
-UMFELD_FUNC_WEAK void update() { LOG_CALLBACK_MSG("default update"); }
-UMFELD_FUNC_WEAK void windowResized(int width, int height) { LOG_CALLBACK_MSG("default windowResized"); }
+#if UMFELD_SET_DEFAULT_CALLBACK
+/* default callback stubs */
+// NOTE provide weak callback implementation if default callbacks are used.
+// TODO new callback mechanism
+UMFELD_FUNC_WEAK void settings() { LOG_CALLBACK_MSG(umfeld::to_string("default: ", __func__)); }
+UMFELD_FUNC_WEAK void arguments(const std::vector<std::string>& args) { LOG_CALLBACK_MSG(umfeld::to_string("default: ", __func__)); }
+UMFELD_FUNC_WEAK void setup() { LOG_CALLBACK_MSG(umfeld::to_string("default: ", __func__)); }
+UMFELD_FUNC_WEAK void draw() { LOG_CALLBACK_MSG(umfeld::to_string("default: ", __func__)); }
+UMFELD_FUNC_WEAK void update() { LOG_CALLBACK_MSG(umfeld::to_string("default: ", __func__)); }
+UMFELD_FUNC_WEAK void windowResized(int width, int height) { LOG_CALLBACK_MSG(umfeld::to_string("default: ", __func__)); }
 UMFELD_FUNC_WEAK void post() { LOG_CALLBACK_MSG("default post"); }
-UMFELD_FUNC_WEAK void shutdown() { LOG_CALLBACK_MSG("default shutdown"); }
+UMFELD_FUNC_WEAK void shutdown() { LOG_CALLBACK_MSG(umfeld::to_string("default: ", __func__)); }
+UMFELD_FUNC_WEAK void audioEvent(const umfeld::PAudio& device) { LOG_CALLBACK_MSG(umfeld::to_string("default: ", __func__)); }
+UMFELD_FUNC_WEAK void audioEvent() { LOG_CALLBACK_MSG(umfeld::to_string("default: ", __func__)); }
+UMFELD_FUNC_WEAK void keyPressed() { LOG_CALLBACK_MSG(umfeld::to_string("default: ", __func__)); }
+UMFELD_FUNC_WEAK void keyReleased() { LOG_CALLBACK_MSG(umfeld::to_string("default: ", __func__)); }
+UMFELD_FUNC_WEAK void mousePressed() { LOG_CALLBACK_MSG(umfeld::to_string("default: ", __func__)); }
+UMFELD_FUNC_WEAK void mouseReleased() { LOG_CALLBACK_MSG(umfeld::to_string("default: ", __func__)); }
+UMFELD_FUNC_WEAK void mouseDragged() { LOG_CALLBACK_MSG(umfeld::to_string("default: ", __func__)); }
+UMFELD_FUNC_WEAK void mouseMoved() { LOG_CALLBACK_MSG(umfeld::to_string("default: ", __func__)); }
+UMFELD_FUNC_WEAK void mouseWheel(float x, float y) { LOG_CALLBACK_MSG(umfeld::to_string("default: ", __func__)); }
+UMFELD_FUNC_WEAK void dropped(const char* dropped_filedir) { LOG_CALLBACK_MSG(umfeld::to_string("default: ", __func__)); }
+UMFELD_FUNC_WEAK bool sdl_event(const SDL_Event& event) {
+    LOG_CALLBACK_MSG(umfeld::to_string("default: ", __func__));
+    return false;
+}
+#endif
 
 namespace umfeld {
     static high_resolution_clock::time_point lastFrameTime                       = {};
@@ -86,7 +106,7 @@ namespace umfeld {
         }
     }
 
-    void getLocation(const int& x, int& y) {
+    void getLocation(const int& x, const int& y) {
         if (subsystem_graphics) {
             if (subsystem_graphics->set_window_position) {
                 subsystem_graphics->set_window_position(x, y);
@@ -180,7 +200,7 @@ static void handle_arguments(const int argc, char* argv[]) {
             args.emplace_back(argv[i]);
         }
     }
-    arguments(args);
+    umfeld::run_arguments_callback(args);
 }
 
 static uint32_t compile_subsystems_flag() {
@@ -204,14 +224,32 @@ static uint32_t compile_subsystems_flag() {
 }
 
 SDL_AppResult SDL_AppInit(void** appstate, const int argc, char* argv[]) {
-
     /*
+     * 0. setup callbacks
      * 1. prepare umfeld application ( e.g args, settings )
      * 2. initialize SDL
      * 3. initialize graphics
      * 4. initialize audio
      * 5. setup application
      */
+
+    /* 0. setup callbacks */
+#if UMFELD_SET_DEFAULT_CALLBACK
+    // TODO new callback mechanism
+    umfeld::set_settings_callback(settings);
+    umfeld::set_arguments_callback(arguments);
+    umfeld::set_setup_callback(setup);
+    umfeld::set_draw_callback(draw);
+    umfeld::set_update_callback(update);
+    umfeld::set_windowResized_callback(windowResized);
+    umfeld::set_post_callback(post);
+    umfeld::set_shutdown_callback(shutdown);
+    umfeld::set_audioEventPAudio_callback(audioEvent);
+    umfeld::set_audioEvent_callback(audioEvent);
+#else
+    // NOTE application is required to set callbacks in `umfeld_set_callbacks()`
+    umfeld_set_callbacks();
+#endif
 
     /* 1. prepare umfeld application */
 
@@ -222,7 +260,7 @@ SDL_AppResult SDL_AppInit(void** appstate, const int argc, char* argv[]) {
                     ".", umfeld::VERSION_PATCH);
     umfeld::console(umfeld::separator(false));
     handle_arguments(argc, argv);
-    settings();
+    umfeld::run_settings_callback();
 
     /* create/check graphics subsystem */
     if (umfeld::enable_graphics) {
@@ -487,7 +525,7 @@ SDL_AppResult SDL_AppInit(void** appstate, const int argc, char* argv[]) {
         umfeld::audio_threaded           = umfeld::a->threaded;
     }
 
-    setup();
+    umfeld::run_setup_callback();
 
     /* - setup_post */
 
@@ -509,7 +547,7 @@ static void handle_event(const SDL_Event& event, bool& app_is_running) {
         case SDL_EVENT_WINDOW_RESIZED:
             // // TODO implement window resize … how will the subsystems be updated?
             umfeld::warning("TODO window resized. subsystem needs to be update …");
-            windowResized(-1, -1);
+            umfeld::run_windowResized_callback(-1, -1);
             break;
         case SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED:
             // // TODO implement
@@ -563,7 +601,7 @@ static void handle_draw() {
         }
     }
 
-    draw();
+    umfeld::run_draw_callback();
 
     for (const umfeld::Subsystem* subsystem: umfeld::subsystems) {
         if (subsystem != nullptr) {
@@ -579,7 +617,7 @@ static void handle_draw() {
         }
     }
 
-    post();
+    umfeld::run_post_callback();
 }
 
 SDL_AppResult SDL_AppIterate(void* appstate) {
@@ -606,7 +644,7 @@ SDL_AppResult SDL_AppIterate(void* appstate) {
             }
         }
 
-        update();
+        umfeld::run_update_callback();
 
         if (frame_duration >= umfeld::target_frame_duration) {
             handle_draw();
@@ -680,6 +718,7 @@ void SDL_AppQuit(void* appstate, SDL_AppResult result) {
 
     umfeld::subsystems.clear();
 
-    shutdown();
+    umfeld::run_shutdown_callback();
+
     SDL_Quit();
 }

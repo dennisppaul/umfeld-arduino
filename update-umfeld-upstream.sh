@@ -2,6 +2,7 @@
 
 git fetch umfeld-upstream
 git subtree pull --prefix=umfeld/cores/sdl/umfeld umfeld-upstream main --squash
+git push
 
 # check upstream for new commits:
 # ```sh

@@ -27,6 +27,9 @@
 
 void umfeld_set_callbacks();
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 /* NOTE weak implementations in `Umfeld.cpp` */
 // TODO new callback mechanism
 void settings();
@@ -36,10 +39,7 @@ void draw();
 void update();
 void windowResized(int width, int height);
 void post();
-void shutdown();
 void audioEvent();
-void audioEvent(const umfeld::PAudio& device);
-// TODO also move to new callback mechanism
 /* NOTE weak implementations in `SubsystemHIDEvents`*/
 void keyPressed();
 void keyReleased();
@@ -50,6 +50,12 @@ void mouseMoved();
 void mouseWheel(float x, float y);
 void dropped(const char* dropped_filedir);
 bool sdl_event(const SDL_Event& event);
+#ifdef __cplusplus
+} // extern "C"
+#endif
+// NOTE
+void shutdown();                               // NOTE cannot be `extern "C"` due to conflict with function in `socket.h`
+void audioEvent(const umfeld::PAudio& device); // TODO cannot be `extern "C"` due to overloading ... maybe rename to `audioEventDevice`?
 
 /* declare callbacks */
 namespace umfeld {

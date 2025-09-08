@@ -19,14 +19,14 @@
 
 #pragma once
 
+// SYSTEM
+
 #ifndef TRUE
 #define TRUE 1
 #endif
 #ifndef FALSE
 #define FALSE 0
 #endif
-
-#define ENABLE_UMFELD_CALLBACK_LOGGING FALSE
 
 // DEBUGGING
 
@@ -36,36 +36,26 @@
 #define UMFELD_DEBUG_PGRAPHICS_OPENGL_3_ERRORS                       FALSE
 #define UMFELD_DEBUG_VERTEX_BUFFER_DEBUG_OPENGL_ERRORS               FALSE
 #define UMFELD_DEBUG_SHAPE_RENDERER_OGL_3                            FALSE
+#define UMFELD_DEBUG_PIXEL_DENSITY_FRAME_BUFFER                      FALSE
 
 // CALLBACKS
-
-#if ENABLE_UMFELD_CALLBACK_LOGGING
-#define LOG_CALLBACK_MSG(msg) SDL_Log(msg)
-#else
-#define LOG_CALLBACK_MSG(msg) ((void) 0)
-#endif
-
-// // TODO remove WEAK define asap
-// #ifndef SYSTEM_WINDOWS
-// #ifndef WEAK
-// #define WEAK __attribute__((weak))
-// #endif
-// #else
-// #define WEAK
-// #endif
 
 #ifndef UMFELD_FUNC_WEAK
 #define UMFELD_FUNC_WEAK __attribute__((weak))
 #endif
 
-#ifndef TRUE
-#define TRUE 1
+#ifndef UMFELD_SET_DEFAULT_CALLBACK
+#define UMFELD_SET_DEFAULT_CALLBACK TRUE
 #endif
-#ifndef FALSE
-#define FALSE 0
+#define ENABLE_UMFELD_CALLBACK_LOGGING FALSE
+
+#if ENABLE_UMFELD_CALLBACK_LOGGING
+#define LOG_CALLBACK_MSG(msg) warning_in_function_once(msg)
+#else
+#define LOG_CALLBACK_MSG(msg) ((void) 0)
 #endif
 
-/* --- DEFAULTS --- */
+/* --- CONSOLE OUTPUT --- */
 
 #ifndef UMFELD_PRINT_ERRORS
 #define UMFELD_PRINT_ERRORS TRUE
@@ -86,7 +76,7 @@
 #define RGBAf(r, g, b, a) (((uint32_t) (a * 255.0f) << 24) | ((uint32_t) (b * 255.0f) << 16) | ((uint32_t) (g * 255.0f) << 8) | ((uint32_t) (r * 255.0f)))
 #endif
 #ifndef HSBAf
-#define HSBAf(h, s, b, a) ({                         \
+#define HSBAf(h, s, b, a) ({                        \
     float _h = (h) * 360.0f, _s = (s), _b = (b);    \
     float _r, _g, _bb, _f, _p, _q, _t;              \
     int   _i = (int) (_h / 60.0f) % 6;              \

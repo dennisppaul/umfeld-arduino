@@ -25,30 +25,78 @@
 #include "Subsystems.h"
 #include "PAudio.h"
 
+void umfeld_set_callbacks();
+
+/* NOTE weak implementations in `Umfeld.cpp` */
+// TODO new callback mechanism
+void settings();
+void arguments(const std::vector<std::string>& args);
+void setup();
+void draw();
+void update();
+void windowResized(int width, int height);
+void post();
+void shutdown();
+void audioEvent();
+void audioEvent(const umfeld::PAudio& device);
+// TODO also move to new callback mechanism
+/* NOTE weak implementations in `SubsystemHIDEvents`*/
+void keyPressed();
+void keyReleased();
+void mousePressed();
+void mouseReleased();
+void mouseDragged();
+void mouseMoved();
+void mouseWheel(float x, float y);
+void dropped(const char* dropped_filedir);
+bool sdl_event(const SDL_Event& event);
+
+/* declare callbacks */
 namespace umfeld {
-    /* NOTE weak implementations in `Umfeld.cpp` */
-    void arguments(const std::vector<std::string>& args);
-    void settings();
-    void setup();
-    void draw();
-    void update();
-    void windowResized(int width, int height);
-    void post();
-    void shutdown();
-    
-    /* NOTE weak implementations in `SubsystemHIDEvents`*/
-    void keyPressed();
-    void keyReleased();
-    void mousePressed();
-    void mouseReleased();
-    void mouseDragged();
-    void mouseMoved();
-    void mouseWheel(float x, float y);
-    void dropped(const char* dropped_filedir);
-    bool sdl_event(const SDL_Event& event);
-    
-    void audioEvent();
-    void audioEvent(const umfeld::PAudio& device);
-    void callback_audioEvent(const umfeld::PAudio& device);
-    void callback_audioEvent();
-}
+    // TODO new callback mechanism
+    using FnVoid         = void();
+    using FnIntInt       = void(int, int);
+    using FnFloatFloat   = void(float, float);
+    using FnStrings      = void(const std::vector<std::string>&);
+    using FnPAudio       = void(const PAudio&);
+    using FnConstCharPtr = void(const char*);
+    using FnSDLEvent     = bool(const SDL_Event& event);
+    void set_settings_callback(FnVoid* f);
+    void run_settings_callback();
+    void set_arguments_callback(FnStrings* f);
+    void run_arguments_callback(const std::vector<std::string>&);
+    void set_setup_callback(FnVoid* f);
+    void run_setup_callback();
+    void set_draw_callback(FnVoid* f);
+    void run_draw_callback();
+    void set_update_callback(FnVoid* f);
+    void run_update_callback();
+    void set_windowResized_callback(FnIntInt* f);
+    void run_windowResized_callback(int, int);
+    void set_post_callback(FnVoid* f);
+    void run_post_callback();
+    void set_shutdown_callback(FnVoid* f);
+    void run_shutdown_callback();
+    void set_audioEvent_callback(FnVoid* f);
+    void run_audioEvent_callback();
+    void set_audioEventPAudio_callback(FnPAudio* f);
+    void run_audioEventPAudio_callback(const PAudio&);
+    void set_keyPressed_callback(FnVoid* f);
+    void run_keyPressed_callback();
+    void set_keyReleased_callback(FnVoid* f);
+    void run_keyReleased_callback();
+    void set_mousePressed_callback(FnVoid* f);
+    void run_mousePressed_callback();
+    void set_mouseReleased_callback(FnVoid* f);
+    void run_mouseReleased_callback();
+    void set_mouseDragged_callback(FnVoid* f);
+    void run_mouseDragged_callback();
+    void set_mouseMoved_callback(FnVoid* f);
+    void run_mouseMoved_callback();
+    void set_mouseWheel_callback(FnFloatFloat* f);
+    void run_mouseWheel_callback(float x, float y);
+    void set_dropped_callback(FnConstCharPtr* f);
+    void run_dropped_callback(const char* dropped_filedir);
+    void set_sdl_event_callback(FnSDLEvent* f);
+    bool run_sdl_event_callback(const SDL_Event& event);
+}; // namespace umfeld

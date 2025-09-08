@@ -15,10 +15,13 @@ version=2.4.0
 #
 ###################################################################################################
 
-recipe.hooks.prebuild.01.pattern=echo "Umfeld  : " {version}
+recipe.hooks.prebuild.01.pattern=echo "Umfeld               : " {version}
 # TODO WIP this could be a way to be a bit more flexible with compiler paths
-recipe.hooks.prebuild.02.pattern=echo "Compiler: " {compiler.path}{compiler.c.cmd} 
-#recipe.hooks.prebuild.02.pattern=sh "{runtime.platform.path}/extras/check-for-tools.sh" # TODO <- could check for compiler here
+recipe.hooks.prebuild.02.pattern=echo "Compiler             : " {compiler.path}{compiler.c.cmd} 
+recipe.hooks.prebuild.03.pattern=echo "Build Path           : " {build.path}
+recipe.hooks.prebuild.04.pattern=echo "Build Variant Path   : " {build.variant.path}
+recipe.hooks.prebuild.05.pattern=echo "Runtime Platform Path: " {runtime.platform.path}
+#recipe.hooks.prebuild.XX.pattern=sh "{runtime.platform.path}/extras/check-for-tools.sh" # TODO <- could check for compiler here
 
 ###################################################################################################
 #
@@ -36,9 +39,11 @@ compiler.path.windows = C:\\msys64\\ucrt64\\bin\
 #
 ###################################################################################################
 
-compiler.umf_define.macosx  = {build.flags.opengl} -DSYSTEM_MACOS
-compiler.umf_define.linux   = {build.flags.opengl} -DSYSTEM_LINUX
-compiler.umf_define.windows = {build.flags.opengl} -DSYSTEM_WINDOWS
+compiler.variant_define     = -DVARIANT_H="{runtime.platform.path}/variants/{build.board}/{build.variant_h}" 
+                               # TODO why construct manually … something s wrong here
+compiler.umf_define.macosx  = {build.flags.opengl} -DSYSTEM_MACOS {compiler.variant_define}
+compiler.umf_define.linux   = {build.flags.opengl} -DSYSTEM_LINUX  {compiler.variant_define}
+compiler.umf_define.windows = {build.flags.opengl} -DSYSTEM_WINDOWS  {compiler.variant_define}
 # compiler.umf_define.macosx  = -DUMF_ENV={build.flags.board} {build.flags.opengl} -DSYSTEM_MACOS
 # compiler.umf_define.linux   = -DUMF_ENV={build.flags.board} {build.flags.opengl} -DSYSTEM_LINUX
 # compiler.umf_define.windows = -DUMF_ENV={build.flags.board} {build.flags.opengl} -DSYSTEM_WINDOWS
@@ -47,7 +52,7 @@ compiler.klst_define=-DKLST_ENV={build.flags.board} -DKLST_EMU_SAMPLE_RATE={buil
 
 ###################################################################################################
 #
-# INCLUDE FLAGS (SDL3 + SDL3_deps + glad)
+# INCLUDE FLAGS (SDL3 + dependencies)
 #
 ###################################################################################################
 

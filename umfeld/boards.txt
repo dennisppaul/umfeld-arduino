@@ -15,6 +15,7 @@ UMFELD.upload.wait_for_upload_port=false
 UMFELD.build.board=UMFELD
 UMFELD.build.core=sdl
 # UMFELD.compiler.path=/usr/bin/
+UMFELD.build.variant_h=variant_Umfeld.h
 
 UMFELD.menu.upload_method.sdlexec=Execute Application
 UMFELD.menu.upload_method.sdlexec.upload.protocol=1
@@ -49,6 +50,7 @@ KLST_EMU.upload.wait_for_upload_port=false
 KLST_EMU.build.board=KLST_EMU
 KLST_EMU.build.core=sdl
 # KLST_EMU.compiler.path=/usr/bin/
+KLST_EMU.build.variant_h=variant_KLST_Emulator.h
 
 KLST_EMU.menu.upload_method.sdlexec=Execute Application
 KLST_EMU.menu.upload_method.sdlexec.upload.protocol=1

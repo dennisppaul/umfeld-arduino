@@ -60,6 +60,9 @@
 #ifndef _USE_MATH_DEFINES
 #  define _USE_MATH_DEFINES // ask gently MSVC to define M_PI, M_SQRT2 etc.
 #endif
+#ifndef _GNU_SOURCE
+#  define _GNU_SOURCE   // enables M_PI, M_SQRT1_2, etc. on glibc
+#endif
 
 #include "pffft.h"
 #include <stdlib.h>

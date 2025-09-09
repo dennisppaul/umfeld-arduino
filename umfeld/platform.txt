@@ -42,10 +42,10 @@ compiler.path.windows = C:\\msys64\\ucrt64\\bin\
 
 compiler.variant_define     = {build.variant_defines} -DBOARD_NAME_{build.board} -DVARIANT_H="{build.variant.path}/{build.variant_h}"
 compiler.umf_define.macosx  = {build.flags.opengl} -DSYSTEM_MACOS {compiler.variant_define}
-compiler.umf_define.linux   = {build.flags.opengl} -DSYSTEM_LINUX  {compiler.variant_define}
+compiler.umf_define.linux   = {build.flags.opengl} -DSYSTEM_UNIX  {compiler.variant_define}
 compiler.umf_define.windows = {build.flags.opengl} -DSYSTEM_WINDOWS  {compiler.variant_define}
 # compiler.umf_define.macosx  = -DUMF_ENV={build.flags.board} {build.flags.opengl} -DSYSTEM_MACOS
-# compiler.umf_define.linux   = -DUMF_ENV={build.flags.board} {build.flags.opengl} -DSYSTEM_LINUX
+# compiler.umf_define.linux   = -DUMF_ENV={build.flags.board} {build.flags.opengl} -DSYSTEM_UNIX
 # compiler.umf_define.windows = -DUMF_ENV={build.flags.board} {build.flags.opengl} -DSYSTEM_WINDOWS
 
 compiler.klst_define=-DKLST_ENV={build.flags.board} -DKLST_EMU_SAMPLE_RATE={build.flags.sample_rate} -DKLST_EMU_AUDIO_BLOCK={build.flags.audioblock}

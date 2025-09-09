@@ -30,9 +30,10 @@
 using namespace std::chrono;
 
 #if UMFELD_SET_DEFAULT_CALLBACK
+// TODO new callback mechanism
 /* default callback stubs */
 // NOTE provide weak callback implementation if default callbacks are used.
-// TODO new callback mechanism
+// NOTE callbacks are set with `umfeld::set_XXX_callback()` in `SDL_AppInit`
 UMFELD_FUNC_WEAK void settings() { LOG_CALLBACK_MSG(umfeld::to_string("default: ", __func__)); }
 UMFELD_FUNC_WEAK void arguments(const std::vector<std::string>& args) { LOG_CALLBACK_MSG(umfeld::to_string("default: ", __func__)); }
 UMFELD_FUNC_WEAK void setup() { LOG_CALLBACK_MSG(umfeld::to_string("default: ", __func__)); }
@@ -246,6 +247,15 @@ SDL_AppResult SDL_AppInit(void** appstate, const int argc, char* argv[]) {
     umfeld::set_shutdown_callback(shutdown);
     umfeld::set_audioEventPAudio_callback(audioEvent);
     umfeld::set_audioEvent_callback(audioEvent);
+    umfeld::set_keyPressed_callback(keyPressed);
+    umfeld::set_keyReleased_callback(keyReleased);
+    umfeld::set_mousePressed_callback(mousePressed);
+    umfeld::set_mouseReleased_callback(mouseReleased);
+    umfeld::set_mouseDragged_callback(mouseDragged);
+    umfeld::set_mouseMoved_callback(mouseMoved);
+    umfeld::set_mouseWheel_callback(mouseWheel);
+    umfeld::set_dropped_callback(dropped);
+    umfeld::set_sdl_event_callback(sdl_event);
 #else
     // NOTE application is required to set callbacks in `umfeld_set_callbacks()`
     umfeld_set_callbacks();

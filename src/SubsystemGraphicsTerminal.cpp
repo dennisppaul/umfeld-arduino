@@ -34,6 +34,15 @@ extern int ESCDELAY;
 namespace umfeld::subsystem {
 
     [[maybe_unused]] static MEVENT curses_event;
+    constexpr int                  NO_KEY_PRESSED    = -1;
+    static int                     key_last_pressed  = NO_KEY_PRESSED;
+    static int                     debounce_interval = 5;
+    static int                     debounce_counter  = 0;
+
+    // NOTE expose this function to allow setting debounce interval from example application in terminal renderer
+    void graphics_terminal::set_debounce_interval(int interval) {
+        debounce_interval = interval;
+    }
 
     /* --- Subsystem --- */
 
@@ -122,10 +131,35 @@ namespace umfeld::subsystem {
         // mvaddstr(3, 0, to_string(rows, ", ", cols).c_str());
 
         const int ch = getch();
-        int       mx, my;
+
+        if (ch != KEY_MOUSE) {
+            int key_ch = ch;
+            key_ch     = key_ch <= NO_KEY_PRESSED ? NO_KEY_PRESSED : key_ch;
+            key_ch     = key_ch >= KEY_MIN ? NO_KEY_PRESSED : key_ch;
+            if (key_ch != NO_KEY_PRESSED) {
+                if (!isKeyPressed) {
+                    key          = key_ch;
+                    isKeyPressed = true;
+                    run_keyPressed_callback();
+                    debounce_counter = debounce_interval;
+                }
+                key_last_pressed = key_ch;
+            } else if (isKeyPressed && key_last_pressed != NO_KEY_PRESSED) {
+                if (debounce_counter <= 0) {
+                    isKeyPressed = false;
+                    run_keyReleased_callback();
+                    key_last_pressed = NO_KEY_PRESSED;
+                }
+            }
+        }
+        if ((ch == KEY_MOUSE || ch == NO_KEY_PRESSED) && debounce_counter > 0) {
+            debounce_counter--;
+        }
+
+        int mx, my;
         if (get_mouse_event(ch, mx, my)) {
-            mouseX = (float) mx;
-            mouseY = (float) my;
+            mouseX = static_cast<float>(mx);
+            mouseY = static_cast<float>(my);
         }
 
         if (use_esc_key_to_quit) {
@@ -181,7 +215,7 @@ namespace umfeld::subsystem {
 
     static int get_renderer_type() { return RENDERER_TERMINAL; }
 
-} // namespace umfeld
+} // namespace umfeld::subsystem
 
 umfeld::SubsystemGraphics* umfeld_create_subsystem_graphics_terminal() {
     auto* graphics                   = new umfeld::SubsystemGraphics{};

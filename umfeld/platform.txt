@@ -32,7 +32,7 @@ recipe.hooks.prebuild.06.pattern=echo "KLST_ENV             : " {build.flags.boa
 
 compiler.path.macosx  = /usr/bin/
 compiler.path.linux   = /usr/bin/
-compiler.path.windows = C:\\msys64\\ucrt64\\bin\
+compiler.path.windows = C:/msys64/ucrt64/bin/
 
 ###################################################################################################
 #
@@ -58,7 +58,7 @@ compiler.klst_define=-DKLST_ENV={build.flags.board} -DKLST_EMU_SAMPLE_RATE={buil
 
 compiler.SDL3_cflags.macosx  = -I/opt/homebrew/include/ -I/usr/local/include/ -I/opt/homebrew/include/SDL3 -I/usr/local/include/SDL3 -I/opt/homebrew/include/rtmidi/ -I/usr/local/include/rtmidi/ -I/opt/homebrew/include/freetype2/ -I/usr/local/include/freetype2/ -D_THREAD_SAFE -DGLM_ENABLE_EXPERIMENTAL -DSDL_MAIN_USE_CALLBACKS
 compiler.SDL3_cflags.linux   = -I/usr/include/ -I/usr/include/SDL3 -I/usr/include/rtmidi -I/usr/include/freetype2 -D_THREAD_SAFE -DGLM_ENABLE_EXPERIMENTAL -DSDL_MAIN_USE_CALLBACKS
-compiler.SDL3_cflags.windows = -IC:/msys64/ucrt64/include -IC:/msys64/ucrt64/include/SDL3 -IC:/msys64/ucrt64/include/freetype2 -D_THREAD_SAFE -DGLM_ENABLE_EXPERIMENTAL -DSDL_MAIN_USE_CALLBACKS
+compiler.SDL3_cflags.windows = -IC:/msys64/ucrt64/include -IC:/msys64/ucrt64/include/SDL3 -IC:/msys64/ucrt64/include/freetype2 -IC:/msys64/ucrt64/include/rtmidi -D_THREAD_SAFE -DGLM_ENABLE_EXPERIMENTAL -DSDL_MAIN_USE_CALLBACKS
 
 ###################################################################################################
 #
@@ -68,7 +68,7 @@ compiler.SDL3_cflags.windows = -IC:/msys64/ucrt64/include -IC:/msys64/ucrt64/inc
 
 compiler.umfeld_libs.macosx   = -L/opt/homebrew/lib -L/usr/local/lib -framework OpenGL -lharfbuzz -lfreetype -lportaudio -lcurl -lncurses
 compiler.umfeld_libs.linux    = -L/usr/lib -L/usr/local/lib -lGL -lharfbuzz -lfreetype -lportaudio -lcurl -lncurses
-compiler.umfeld_libs.windows  = -LC:/msys64/ucrt64/lib -lopengl32 -lharfbuzz -lfreetype -lportaudio -lncurses
+compiler.umfeld_libs.windows  = -LC:/msys64/ucrt64/lib -lopengl32 -lharfbuzz -lfreetype -lportaudio -lncurses -lcurl -lssl -lcrypto -lidn2 -lssh2 -lpsl -lzstd -lnghttp2 -lbrotlidec -lcares -lz -lws2_32 -lbcrypt -lcrypt32 -lole32 -lcomdlg32 -lwinmm
 
 compiler.SDL3_libs.macosx     = -L/opt/homebrew/lib -L/usr/local/lib -lSDL3
 compiler.SDL3_libs.linux      = -L/usr/lib -lSDL3
@@ -81,16 +81,6 @@ compiler.SDL3_libs.windows    = -LC:/msys64/ucrt64/lib -lSDL3
 ###################################################################################################
 
 compiler.umfeld_flags = -I{runtime.platform.path}/cores/sdl -I{runtime.platform.path}/cores/sdl/umfeld/include -I{runtime.platform.path}/cores/sdl/umfeld/include/libraries -I{runtime.platform.path}/cores/sdl/umfeld/include/libraries/clipper2 -I{runtime.platform.path}/cores/sdl/umfeld/include/libraries/dr_libs -I{runtime.platform.path}/cores/sdl/umfeld/include/libraries/ip -I{runtime.platform.path}/cores/sdl/umfeld/include/libraries/libtess2 -I{runtime.platform.path}/cores/sdl/umfeld/include/libraries/osc -I{runtime.platform.path}/cores/sdl/umfeld/include/libraries/pffft -I{runtime.platform.path}/cores/sdl/umfeld/include/shaders -I{runtime.platform.path}/cores/sdl/umfeld/external/ -DDISABLE_VIDEO -DENABLE_PORTAUDIO
-
-###################################################################################################
-#
-# SDL3 UMFELD FLAGS
-#
-###################################################################################################
-
-compiler.SDL3_libs.macosx       = -L/opt/homebrew/lib -L/usr/local/lib -lSDL3
-compiler.SDL3_libs.linux        = -L/usr/lib -lSDL3
-compiler.SDL3_libs.windows      = # TODO add windows paths
 
 ###################################################################################################
 #
@@ -161,11 +151,13 @@ recipe.c.combine.pattern="{compiler.path}{compiler.c.linker.cmd}" {compiler.ldfl
 
 preproc.includes.cmd.macosx=g++
 preproc.includes.cmd.linux=g++
+preproc.includes.cmd.windows=g++
 preproc.includes.flags=-w -x c++ -M -MG -MP
 recipe.preproc.includes="{compiler.path}{preproc.includes.cmd}" {compiler.cpp.flags} {preproc.includes.flags} {compiler.cpp.extra_flags} {build.extra_flags} {includes} {compiler.SDL3_cflags} {compiler.umfeld_flags} "{source_file}"
 
 preproc.macros.cmd.macosx=g++
 preproc.macros.cmd.linux=g++
+preproc.macros.cmd.windows=g++
 preproc.macros.flags=-w -x c++ -E -CC
 recipe.preproc.macros="{compiler.path}{preproc.macros.cmd}" {compiler.cpp.flags} {preproc.macros.flags} {compiler.cpp.extra_flags} {build.extra_flags} {includes} {compiler.SDL3_cflags} {compiler.umfeld_flags} "{source_file}" -o "{preprocessed_file_path}"
 
@@ -185,7 +177,8 @@ tools.sdlexecprog.upload.pattern="{build.path}/{build.project_name}.exec" {uploa
 tools.sdlexecprog.upload.params.verbose=
 tools.sdlexecprog.upload.params.quiet=
 
-recipe.hooks.postbuild.01.pattern=printf "\n\nexecutable binary located at: {build.path}/{build.project_name}.exec "
+recipe.hooks.postbuild.01.pattern=echo && echo Executable binary located at: "{build.path}/{build.project_name}.exec"
+#recipe.hooks.postbuild.01.pattern=printf "\n\nexecutable binary located at: {build.path}/{build.project_name}.exec "
 # recipe.hooks.postbuild.02.pattern={build.path}/{build.project_name}.exec
 
 ###################################################################################################

@@ -24,7 +24,13 @@
 #include "PGraphics.h"
 #include "PAudio.h"
 
+
 namespace umfeld {
+
+    namespace subsystem::graphics_terminal {
+        // NOTE expose this function to allow setting debounce interval from example application in terminal renderer
+        void set_debounce_interval(int interval);
+    } // namespace subsystem::graphics_terminal
 
     struct Subsystem {
         void (*set_flags)(uint32_t& subsystem_flags);

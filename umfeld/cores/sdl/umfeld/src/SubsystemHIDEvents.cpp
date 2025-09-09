@@ -37,8 +37,8 @@ namespace umfeld::subsystem {
         switch (event.type) {
             case SDL_EVENT_KEY_DOWN:
                 key = static_cast<int>(event.key.key);
-                run_keyPressed_callback();
                 isKeyPressed = true;
+                run_keyPressed_callback();
                 break;
             case SDL_EVENT_KEY_UP:
                 key          = static_cast<int>(event.key.key);
@@ -48,26 +48,24 @@ namespace umfeld::subsystem {
             case SDL_EVENT_MOUSE_BUTTON_DOWN:
                 mouseButton       = event.button.button; // TODO not sure how consistent these are across platforms
                 _mouse_is_pressed = true;
-                run_mousePressed_callback();
                 isMousePressed = true;
-
+                run_mousePressed_callback();
                 // callbackHook();
                 // if (callbackHook_func) {
                 //     callbackHook_func();
                 // }
                 break;
             case SDL_EVENT_MOUSE_BUTTON_UP:
-                _mouse_is_pressed = false;
                 mouseButton       = -1;
-                run_mouseReleased_callback();
+                _mouse_is_pressed = false;
                 isMousePressed = false;
+                run_mouseReleased_callback();
                 break;
             case SDL_EVENT_MOUSE_MOTION:
                 pmouseX = mouseX;
                 pmouseY = mouseY;
                 mouseX  = static_cast<float>(event.motion.x);
                 mouseY  = static_cast<float>(event.motion.y);
-
                 if (_mouse_is_pressed) {
                     run_mouseDragged_callback();
                 } else {

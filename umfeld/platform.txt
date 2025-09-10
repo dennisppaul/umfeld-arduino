@@ -174,7 +174,7 @@ recipe.preproc.macros="{compiler.path}{preproc.macros.cmd}" {compiler.cpp.flags}
 # tools.sdlexecprog.exec.windows=
 # TODO problem with dialog box quitting 
 # cannot use the upload script when also using the dialog box with e.g `Card.begin()`
-tools.sdlexecprog.upload.pattern="{build.path}/{build.project_name}.exec" {upload.options} --fontpath={runtime.platform.path}/../fonts
+tools.sdlexecprog.upload.pattern="{build.path}/{build.project_name}.exec" {upload.options} --fontpath={runtime.platform.path}/fonts
 tools.sdlexecprog.upload.params.verbose=
 tools.sdlexecprog.upload.params.quiet=
 

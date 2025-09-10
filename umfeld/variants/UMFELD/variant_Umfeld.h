@@ -1,5 +1,5 @@
 /*
-* Umfeld
+ * Umfeld
  *
  * This file is part of the *Umfeld* library (https://github.com/dennisppaul/umfeld).
  * Copyright (c) 2025 Dennis P Paul.
@@ -19,4 +19,3 @@
 
 #pragma once
 
-#warning "including Umfeld variant"

@@ -15,14 +15,15 @@ version=2.4.0
 #
 ###################################################################################################
 
-recipe.hooks.prebuild.01.pattern=echo "Umfeld               : " {version}
-# TODO WIP this could be a way to be a bit more flexible with compiler paths
-recipe.hooks.prebuild.02.pattern=echo "Compiler             : " {compiler.path}{compiler.c.cmd} 
-recipe.hooks.prebuild.03.pattern=echo "Build Path           : " {build.path}
-recipe.hooks.prebuild.04.pattern=echo "Build Variant Path   : " {build.variant.path}
-recipe.hooks.prebuild.05.pattern=echo "Runtime Platform Path: " {runtime.platform.path}
-recipe.hooks.prebuild.06.pattern=echo "KLST_ENV             : " {build.flags.board}
-#recipe.hooks.prebuild.XX.pattern=sh "{runtime.platform.path}/extras/check-for-tools.sh" # TODO <- could check for compiler here
+# TODO find a way for `echo` to work on Windows too
+# recipe.hooks.prebuild.01.pattern=echo "Umfeld               : " {version}
+# # TODO WIP this could be a way to be a bit more flexible with compiler paths
+# recipe.hooks.prebuild.02.pattern=echo "Compiler             : " {compiler.path}{compiler.c.cmd} 
+# recipe.hooks.prebuild.03.pattern=echo "Build Path           : " {build.path}
+# recipe.hooks.prebuild.04.pattern=echo "Build Variant Path   : " {build.variant.path}
+# recipe.hooks.prebuild.05.pattern=echo "Runtime Platform Path: " {runtime.platform.path}
+# recipe.hooks.prebuild.06.pattern=echo "KLST_ENV             : " {build.flags.board}
+# #recipe.hooks.prebuild.XX.pattern=sh "{runtime.platform.path}/extras/check-for-tools.sh" # TODO <- could check for compiler here
 
 ###################################################################################################
 #
@@ -177,9 +178,10 @@ tools.sdlexecprog.upload.pattern="{build.path}/{build.project_name}.exec" {uploa
 tools.sdlexecprog.upload.params.verbose=
 tools.sdlexecprog.upload.params.quiet=
 
-recipe.hooks.postbuild.01.pattern=echo && echo Executable binary located at: "{build.path}/{build.project_name}.exec"
-#recipe.hooks.postbuild.01.pattern=printf "\n\nexecutable binary located at: {build.path}/{build.project_name}.exec "
-# recipe.hooks.postbuild.02.pattern={build.path}/{build.project_name}.exec
+# TODO find a way for `echo` to work on Windows too
+# recipe.hooks.postbuild.01.pattern=echo && echo Executable binary located at: "{build.path}/{build.project_name}.exec"
+# #recipe.hooks.postbuild.01.pattern=printf "\n\nexecutable binary located at: {build.path}/{build.project_name}.exec "
+# # recipe.hooks.postbuild.02.pattern={build.path}/{build.project_name}.exec
 
 ###################################################################################################
 #

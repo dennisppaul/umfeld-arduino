@@ -19,6 +19,4 @@
 
 #pragma once
 
-#warning "including KLST_Emulator variant"
-
 // #include "ArduinoFunctions.h"

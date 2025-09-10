@@ -21,8 +21,6 @@
 
 /* --- debugging define configuration --- */
 
-#warning "BOARD_NAME_KLST_EMU is defined"
-
 #ifndef UMFELD_SET_DEFAULT_CALLBACK
 #error "need to to define UMFELD_SET_DEFAULT_CALLBACK"
 #endif

@@ -1,5 +1,18 @@
 # RELEASE NOTES
 
+## v2.4.0 (2025-09-10)
+
+- translated examples from Processing ( thank you [haram choi @oudeis01](https://github.com/oudeis01) )
+- major ( under the hood ) rework of the OpenGL renderer. a few core points are:
+    - renderer is now MUCH faster than before ( faster than Processing in some cases )
+    - has two different strategies: render shapes by *order of submission* and by *depth-order*
+    - can handle transparency properly ( depth sorting )
+    - optimized rendering for shapes without or with similar textures 
+- `size()` can now handle `P2D` and `P3D` options
+- added optional profiler ( see [tracy](https://github.com/wolfpld/tracy) )
+- `umfeld-arduino` has matured a LOT. it works now with `arduino-cli` and *Arduino IDE* and surprisingly, it even works on Windows (UCRT64)
+- callback functions ( e.g `settings()`, `setup()`, `draw()`, … ) can now be configured with `umfeld_set_callbacks()` and `#define UMFELD_SET_DEFAULT_CALLBACK FALSE`
+
 ## v2.3.0 (2025-07-24)
 
 - textures now have filtering and wrapping options with `texture_filter` and `texture_wrap`

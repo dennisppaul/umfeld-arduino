@@ -65,8 +65,8 @@ fi
 
 # ---- confirm/install-dir ----------------------------------------------------
 if [[ "$AUTO_YES" == false ]]; then
-  printf "Install into: %s ? [Y/n] (auto-accept in 10s) " "$TARGET_DIR"
-  if read -r -t 10 confirm; then
+  printf "Install Umfeld into: %s ? [Y/n] ( waiting for 20sec )" "$TARGET_DIR"
+  if read -r -t 20 confirm; then
     confirm=$(printf "%s" "${confirm:-}" | tr '[:upper:]' '[:lower:]')
   else
     confirm="y"

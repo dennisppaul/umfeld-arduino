@@ -54,6 +54,9 @@ run_script() {
 echo "-------------------------------"
 echo "--- installing dependencies"
 echo "-------------------------------"
+echo
+echo "from: $UMFELD_REF"
+echo 
 fetch "${BASE_URL}/install-dependencies.sh" "$TMP_DEP"
 run_script "$TMP_DEP"
 

@@ -58,7 +58,6 @@ echo
 fetch "${BASE_URL}/install-dependencies.sh" "$TMP_DEP"
 run_script "$TMP_DEP"
 echo
-
 echo "-------------------------------"
 echo "--- installing umfeld"
 echo "-------------------------------"
@@ -69,7 +68,7 @@ if [[ "$UMFELD_REF" != "main" ]]; then
 else
   run_script "$TMP_UMF"
 fi
-
+echo
 echo "-------------------------------"
 echo "--- installation complete"
 echo "-------------------------------"

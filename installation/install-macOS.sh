@@ -114,6 +114,6 @@ command -v pkg-config >/dev/null || { echo "ERROR: pkg-config missing after brew
 pkg-config --exists sdl3 || { echo "ERROR: SDL3 not found via pkg-config"; exit 1; }
 
 log "--- setup complete."
-log "If this is a new Homebrew install, make sure to follow the Homebrew install instructions or run:"
+log "    If this is a new Homebrew install, make sure to follow the Homebrew install instructions or run:"
+log "        source \"$(detect_profile_file)\""
 log
-log "    source \"$(detect_profile_file)\""

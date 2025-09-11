@@ -55,7 +55,7 @@ echo "-------------------------------"
 echo "--- installing dependencies"
 echo "-------------------------------"
 echo
-echo "from: $UMFELD_REF"
+echo "from remote: $UMFELD_REF"
 echo 
 fetch "${BASE_URL}/install-dependencies.sh" "$TMP_DEP"
 run_script "$TMP_DEP"
@@ -63,8 +63,18 @@ run_script "$TMP_DEP"
 echo "-------------------------------"
 echo "--- installing umfeld"
 echo "-------------------------------"
+echo
+
+U_ARGS=()
+if [[ "${UMFELD_REF}" != "main" ]]; then
+  U_ARGS+=(--tag "${UMFELD_REF}")
+fi
+fetch "${BASE_URL}/install-umfeld.sh" "$TMP_UMF"
+bash "$TMP_UMF" "${U_ARGS[@]}"
+
 fetch "${BASE_URL}/install-umfeld.sh" "$TMP_UMF"
 run_script "$TMP_UMF"
+echo 
 
 echo "-------------------------------"
 echo "--- installation complete"

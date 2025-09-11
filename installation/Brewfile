@@ -1,7 +1,9 @@
 brew 'curl'
 brew 'cmake'
+brew 'ninja'
+brew 'pkg-config'
 brew 'dylibbundler'
-brew 'pkgconfig'
+
 brew 'ffmpeg'
 brew 'harfbuzz'
 brew 'freetype'
@@ -10,4 +12,5 @@ brew 'glm'
 brew 'portaudio'
 brew 'cairo'
 brew 'ncurses'
+
 brew 'sdl3'

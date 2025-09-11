@@ -64,13 +64,14 @@ echo "--- installing umfeld"
 echo "-------------------------------"
 echo
 
-U_ARGS=()
+declare -a U_ARGS=()
 if [[ "${UMFELD_REF}" != "main" ]]; then
   U_ARGS+=(--tag "${UMFELD_REF}")
 fi
+
 fetch "${BASE_URL}/install-umfeld.sh" "$TMP_UMF"
-bash "$TMP_UMF" "${U_ARGS[@]}"
-echo 
+# expands to nothing if U_ARGS is empty/unset
+bash "$TMP_UMF" ${U_ARGS+"${U_ARGS[@]}"}
 
 echo "-------------------------------"
 echo "--- installation complete"

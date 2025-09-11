@@ -1,124 +1,181 @@
 #!/usr/bin/env bash
 
-set -e
+set -euo pipefail
+IFS=$'\n\t'
 
+# defaults (overridable by flags)
 AUTO_YES=false
 TARGET_DIR="$(pwd)"
 TAG=""
 DEPTH=""
 
-# parse optional arguments
-while [[ $# -gt 0 ]]; do
+usage() {
+  cat <<'EOF'
+Usage: install-umfeld.sh [options]
+
+Options:
+  -y, --yes                 Non-interactive; accept prompts
+      --install-dir <path>  Installation directory (default: current directory)
+      --tag <vX.Y.Z|ref>    Tag/ref to clone (v2.2.0+ applies to all repos)
+      --depth <N>           Shallow clone depth (positive integer)
+  -h, --help                Show this help and exit
+
+Examples:
+  ./install-umfeld.sh
+  ./install-umfeld.sh --tag v2.4.0 --depth 1 -y
+  ./install-umfeld.sh --install-dir /opt/umfeld -y
+EOF
+}
+
+# ---- parse args -------------------------------------------------------------
+if [[ $# -gt 0 ]]; then
+  while [[ $# -gt 0 ]]; do
     case "$1" in
-        -y|--yes)
-            AUTO_YES=true
-            shift
-            ;;
-        --install-dir)
-            TARGET_DIR="$2"
-            AUTO_YES=true
-            shift 2
-            ;;
-        --tag)
-            TAG="$2"
-            shift 2
-            ;;
-        --depth)
-            DEPTH="$2"
-            shift 2
-            ;;
-        *)
-            echo "Unknown option: $1"
-            echo "Usage: $0 [--tag <tag-name>] [--depth <depth>] [--install-dir <path>] [--yes|-y]"
-            exit 1
-            ;;
+      -y|--yes) AUTO_YES=true; shift ;;
+      --install-dir)
+        [[ $# -ge 2 ]] || { echo "ERROR: --install-dir needs a path" >&2; exit 1; }
+        TARGET_DIR=$2; AUTO_YES=true; shift 2 ;;
+      --tag)
+        [[ $# -ge 2 ]] || { echo "ERROR: --tag needs a value" >&2; exit 1; }
+        TAG=$2; shift 2 ;;
+      --depth)
+        [[ $# -ge 2 ]] || { echo "ERROR: --depth needs a value" >&2; exit 1; }
+        DEPTH=$2
+        if ! [[ "$DEPTH" =~ ^[1-9][0-9]*$ ]]; then
+          echo "ERROR: --depth must be a positive integer" >&2
+          exit 1
+        fi
+        shift 2 ;;
+      -h|--help) usage; exit 0 ;;
+      *)
+        echo "Unknown option: $1" >&2
+        usage; exit 1 ;;
     esac
-done
+  done
+fi
 
-if [ "$AUTO_YES" = false ]; then
-    echo "Do you want to install into the current folder: $TARGET_DIR ? [Y/n]"
-    read -r confirm
-    confirm=$(printf "%s" "$confirm" | tr '[:upper:]' '[:lower:]')
-    if [[ "$confirm" =~ ^(n|no)$ ]]; then
-        BASH_VERSION_MAJOR=$(echo "$BASH_VERSION" | cut -d. -f1)
-        BASH_VERSION_MINOR=$(echo "$BASH_VERSION" | cut -d. -f2)
+# ---- prerequisites ----------------------------------------------------------
+if ! command -v git >/dev/null 2>&1; then
+  echo "ERROR: 'git' is not installed. Please install git and try again." >&2
+  echo "  macOS            : brew install git"
+  echo "  Debian/Ubuntu    : sudo apt-get install git"
+  echo "  Windows (MSYS2)  : pacman -S git"
+  exit 1
+fi
 
-        if [ "$BASH_VERSION_MAJOR" -gt 4 ] || { [ "$BASH_VERSION_MAJOR" -eq 4 ] && [ "$BASH_VERSION_MINOR" -ge 4 ]; }; then
-            read -erp "Enter a different installation path: " custom_path
-        else
-            read -rp "Enter a different installation path: " custom_path
-        fi
-        if [ -n "$custom_path" ]; then
-            TARGET_DIR="$custom_path"
-        fi
+# ---- confirm/install-dir ----------------------------------------------------
+if [[ "$AUTO_YES" == false ]]; then
+  printf "Install into: %s ? [Y/n] (auto-accept in 10s) " "$TARGET_DIR"
+  if read -r -t 10 confirm; then
+    confirm=$(printf "%s" "${confirm:-}" | tr '[:upper:]' '[:lower:]')
+  else
+    confirm="y"
+    echo    # move to next line after timeout
+  fi
+
+  if [[ "$confirm" =~ ^(n|no)$ ]]; then
+    # -e (readline) if available on this bash
+    if [[ ${BASH_VERSINFO[0]} -gt 4 || ( ${BASH_VERSINFO[0]} -eq 4 && ${BASH_VERSINFO[1]} -ge 4 ) ]]; then
+      read -erp "Enter a different installation path: " custom_path
+    else
+      read -rp  "Enter a different installation path: " custom_path
     fi
+    [[ -n "${custom_path:-}" ]] && TARGET_DIR=$custom_path
+  fi
 fi
 
-# abort if the target directory already exists and is not empty
-if [ -d "$TARGET_DIR/umfeld" ] && [ "$(ls -A "$TARGET_DIR/umfeld")" ]; then
-    echo "Warning: '$TARGET_DIR/umfeld' already exists and is not empty. Aborting."
-    exit 1
+# Create target dir if needed
+if [[ ! -d "$TARGET_DIR" ]]; then
+  echo "Creating directory: $TARGET_DIR"
+  mkdir -p "$TARGET_DIR"
 fi
 
-if [ ! -d "$TARGET_DIR" ]; then
-    echo "Creating directory: $TARGET_DIR"
-    mkdir -p "$TARGET_DIR" || { echo "Failed to create directory: $TARGET_DIR"; exit 1; }
+# Abort if a non-empty 'umfeld' dir already exists
+if [[ -d "$TARGET_DIR/umfeld" ]] && [[ -n "$(ls -A "$TARGET_DIR/umfeld" 2>/dev/null || true)" ]]; then
+  echo "Warning: '$TARGET_DIR/umfeld' already exists and is not empty. Aborting." >&2
+  exit 1
 fi
 
-cd "$TARGET_DIR" || { echo "Failed to change directory to $TARGET_DIR"; exit 1; }
+cd "$TARGET_DIR"
 
 echo "-------------------------------"
 echo "--- cloning umfeld repositories"
 echo "-------------------------------"
 
-# check if git is installed
-
-if ! command -v git >/dev/null 2>&1; then
-    echo "ERROR: 'git' is not installed. Please install git and try again."
-    echo
-    echo "on macOS            : 'brew install git'"
-    echo "on Debian/Ubuntu    : 'sudo apt-get install git'"
-    echo "on Windows (MSYS2)  : 'pacman -S git'"
-    exit 1
-fi
-
-# helper: compare semantic version numbers
+# ---- helpers ---------------------------------------------------------------
 version_ge() {
-    # returns 0 (true) if $1 >= $2
-    [ "$(printf '%s\n' "$1" "$2" | sort -V | head -n1)" = "$2" ]
+  # returns 0 (true) if $1 >= $2 (semver-ish)
+  [[ "$(printf '%s\n' "$1" "$2" | sort -V | head -n1)" == "$2" ]]
 }
 
-# prepare clone arguments
-UMFELD_CLONE_ARGS=()
-EXAMPLES_CLONE_ARGS=()
-LIBRARIES_CLONE_ARGS=(--recurse-submodules)
-
-# only use tag for all repos if it's >= v2.2.0
-if [[ -n "$TAG" ]]; then
-    TAG_CLEAN="${TAG#v}"  # remove 'v' prefix
-    if version_ge "$TAG_CLEAN" "2.2.0"; then
-        echo "Tag '$TAG' is >= v2.2.0 — using for all repositories"
-        UMFELD_CLONE_ARGS+=(--branch "$TAG")
-        EXAMPLES_CLONE_ARGS+=(--branch "$TAG")
-        LIBRARIES_CLONE_ARGS+=(--branch "$TAG")
-    else
-        echo "Tag '$TAG' is < v2.2.0 — using only for 'umfeld'"
-        UMFELD_CLONE_ARGS+=(--branch "$TAG")
+retry_git() {
+  # usage: retry_git <git> <args...>
+  local attempt=1
+  local max=3
+  until "$@"; do
+    rc=$?
+    if (( attempt >= max )); then
+      echo "ERROR: git command failed after $max attempts: $*" >&2
+      return "$rc"
     fi
+    echo "git failed (rc=$rc). Retrying in 2s... (attempt $((attempt+1))/$max)"
+    sleep 2
+    attempt=$(( attempt + 1 ))
+  done
+}
+
+# Prepare common clone speedups (safe for old gits; unknown options are errors, hence guarded)
+FILTER_OPTS=(--filter=blob:none)
+SINGLE_BRANCH=("--single-branch")
+
+# Prepare per-repo args
+UMFELD_CLONE_ARGS=("${FILTER_OPTS[@]}" "${SINGLE_BRANCH[@]}")
+EXAMPLES_CLONE_ARGS=("${FILTER_OPTS[@]}" "${SINGLE_BRANCH[@]}")
+LIBRARIES_CLONE_ARGS=("${FILTER_OPTS[@]}" "--recurse-submodules")
+
+# Apply tag/ref
+if [[ -n "$TAG" ]]; then
+  TAG_CLEAN="${TAG#v}"
+  if version_ge "$TAG_CLEAN" "2.2.0"; then
+    echo "Tag '$TAG' is >= v2.2.0 — applying to all repositories"
+    UMFELD_CLONE_ARGS+=(--branch "$TAG")
+    EXAMPLES_CLONE_ARGS+=(--branch "$TAG")
+    LIBRARIES_CLONE_ARGS+=(--branch "$TAG")
+  else
+    echo "Tag '$TAG' is < v2.2.0 — applying only to 'umfeld'"
+    UMFELD_CLONE_ARGS+=(--branch "$TAG")
+  fi
 fi
 
+# Apply depth/shallow options
 if [[ -n "$DEPTH" ]]; then
-    echo "Using depth '$DEPTH' for all repositories..."
-    UMFELD_CLONE_ARGS+=(--depth "$DEPTH")
-    EXAMPLES_CLONE_ARGS+=(--depth "$DEPTH")
-    LIBRARIES_CLONE_ARGS+=(--depth "$DEPTH" --shallow-submodules)
+  echo "Using depth '$DEPTH' for all repositories"
+  UMFELD_CLONE_ARGS+=(--depth "$DEPTH")
+  EXAMPLES_CLONE_ARGS+=(--depth "$DEPTH")
+  LIBRARIES_CLONE_ARGS+=(--depth "$DEPTH" --shallow-submodules)
 fi
 
-# clone repositories
-git clone "${UMFELD_CLONE_ARGS[@]}" https://github.com/dennisppaul/umfeld
-git clone "${EXAMPLES_CLONE_ARGS[@]}" https://github.com/dennisppaul/umfeld-examples
-git clone "${LIBRARIES_CLONE_ARGS[@]}" https://github.com/dennisppaul/umfeld-libraries.git
+# Environment to avoid interactive prompts
+export GIT_TERMINAL_PROMPT=0
+export GIT_ASKPASS=echo
+
+# If empty directories already exist (e.g., created earlier), remove them so clone can proceed
+for d in umfeld umfeld-examples umfeld-libraries; do
+  if [[ -d "$d" ]] && [[ -z "$(ls -A "$d" 2>/dev/null || true)" ]]; then
+    rmdir "$d" || true
+  fi
+done
+
+# ---- clone -----------------------------------------------------------------
+retry_git git clone "${UMFELD_CLONE_ARGS[@]}"      https://github.com/dennisppaul/umfeld
+retry_git git clone "${EXAMPLES_CLONE_ARGS[@]}"    https://github.com/dennisppaul/umfeld-examples
+retry_git git clone "${LIBRARIES_CLONE_ARGS[@]}"   https://github.com/dennisppaul/umfeld-libraries.git
 
 echo "-------------------------------"
 echo "--- download complete"
 echo "-------------------------------"
+
+# Optional: quick visibility check
+echo "Installed into: $TARGET_DIR"
+printf "Repos:\n  - %s\n  - %s\n  - %s\n" \
+  "$TARGET_DIR/umfeld" "$TARGET_DIR/umfeld-examples" "$TARGET_DIR/umfeld-libraries"

@@ -63,7 +63,7 @@ echo "-------------------------------"
 echo "--- installing umfeld"
 echo "-------------------------------"
 echo
-
+curl -fsSL "${BASE_URL}/install-umfeld.sh"       > "$TMP" && bash "$TMP"
 if [[ "$UMFELD_REF" != "main" ]]; then
   bash "$TMP_UMF" --tag "$UMFELD_REF"
 else

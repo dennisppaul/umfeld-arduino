@@ -10,7 +10,7 @@ option(DISABLE_GRAPHICS "Disable graphics support" OFF)
 option(DISABLE_AUDIO "Disable audio ( SDL3 + portaudio ) support" OFF)
 option(DISABLE_VIDEO "Disable video ( ffmpeg ) support" OFF)
 option(DISABLE_PDF "Disable PDF export ( cairo )" OFF)
-option(ENABLE_PORTAUDIO "Enable PortAudio output" ON) # TODO currently portaudio is the default audio engine
+option(ENABLE_PORTAUDIO "Enable PortAudio output" ON)
 option(ENABLE_CAPTURE "Enable Capture" OFF)
 option(ENABLE_ANGLE "Enable ANGLE OpenGL ES emulation on macOS ( apple silicon )" OFF)
 option(DISABLE_NCURSES "Disable ncurses support" OFF)

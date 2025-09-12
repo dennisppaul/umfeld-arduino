@@ -1,12 +1,11 @@
 #!/usr/bin/env bash
-
 set -euo pipefail
 IFS=$'\n\t'
 
 export DEBIAN_FRONTEND=noninteractive
 
 log(){ printf "%s\n" "$*"; }
-retry(){ local n=0; local max=${2:-3}; until "$1"; do ((n++>=max)) && return 1; sleep 2; done; }
+# retry(){ local n=0; local max=${2:-3}; until "$1"; do ((n++>=max)) && return 1; sleep 2; done; }
 apt_run(){ sudo apt-get -y "$@" ; }
 
 # --- Detect headless vs GUI ---------------------------------------------------
@@ -17,8 +16,11 @@ fi
 
 # --- Update/upgrade with a small retry ---------------------------------------
 log "--- updating apt"
-retry "apt_run update" 3 || apt_run update
-retry "apt_run dist-upgrade" 3 || apt_run -f install
+# TODO retry is broken ATM
+# retry "apt_run update" 3 || apt_run update
+# retry "apt_run dist-upgrade" 3 || apt_run -f install
+apt_run update
+apt_run -f install
 
 # --- Base toolchain & deps ----------------------------------------------------
 log "--- installing base dependencies"

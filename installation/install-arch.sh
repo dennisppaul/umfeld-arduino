@@ -1,73 +1,79 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-# fail fast if any command fails and elevate privileges
-set -e
-echo "--- requesting sudo access once"
+set -euo pipefail
+IFS=$'\n\t'
+
+log(){ printf "%s\n" "$*"; }
+
+# --- Sudo warmup + keepalive (auto-cleans on exit)
+log "--- requesting sudo access once"
 sudo -v
-# keep-alive: update existing `sudo` time stamp until script is done
-# (this runs in background and exits when this script finishes)
-while true; do sudo -n true; sleep 60; done 2>/dev/null &
-KEEP_SUDO_ALIVE_PID="$!"
-# trap exit to clean up background sudo keeper
-trap 'kill "$KEEP_SUDO_ALIVE_PID"' EXIT
+# refresh sudo timestamp every 60s in background
+KEEP_SUDO_ALIVE_PID=
+{
+  while true; do
+    sudo -n true 2>/dev/null || exit
+    sleep 60
+  done
+} &
+KEEP_SUDO_ALIVE_PID=$!
+cleanup_keepalive(){ [[ -n "${KEEP_SUDO_ALIVE_PID:-}" ]] && kill "$KEEP_SUDO_ALIVE_PID" 2>/dev/null || true; }
+trap cleanup_keepalive EXIT
 
-echo "--- updating pacman"
+# --- System update
+log "--- updating pacman"
 sudo pacman -Syu --noconfirm
 
-echo "--- installing dependencies (Arch Linux)"
+# --- Base toolchain & deps (idempotent)
+log "--- installing dependencies (Arch Linux)"
 sudo pacman -S --noconfirm --needed \
-  git \
-  clang \
-  cmake \
-  curl \
-  mesa \
-  libxext \
-  libxrandr \
-  libxcursor \
-  libxi \
-  libxinerama \
-  wayland \
-  libxkbcommon \
-  wayland-protocols
+  base-devel git clang cmake ninja pkgconf curl \
+  mesa libxext libxrandr libxcursor libxi libxinerama \
+  wayland libxkbcommon wayland-protocols
 
-echo "--- installing umfeld dependencies"
+log "--- installing umfeld dependencies"
 sudo pacman -S --noconfirm --needed \
-  pkg-config \
-  ffmpeg \
-  harfbuzz \
-  freetype2 \
-  rtmidi \
-  glm \
-  portaudio \
-  cairo \
-  libcurl-gnutls \
-  ncurses
+  ffmpeg harfbuzz freetype2 rtmidi glm portaudio cairo \
+  libcurl-gnutls ncurses
 
-# install SDL3 from source into system
-echo "--- building SDL3 from source..."
+hash -r
 
-TMP_DIR=$(mktemp -d)
-cd "$TMP_DIR"
+# --- SDL3: prefer repo, else build from source
+if pacman -Si sdl3 >/dev/null 2>&1; then
+  log "--- installing SDL3 from Arch repo"
+  sudo pacman -S --noconfirm --needed sdl3
+else
+  log "--- SDL3 not in repo; building from source"
+  SDL_TAG="${SDL_TAG:-main}"   # e.g. SDL_TAG=v3.2.0 to pin
 
-git clone --depth=1 https://github.com/libsdl-org/SDL.git
-cd SDL
+  TMP_DIR="$(mktemp -d)"
+  cleanup_tmp(){ rm -rf "$TMP_DIR"; }
+  trap 'cleanup_keepalive; cleanup_tmp' EXIT
 
-cmake -S . -B build \
-  -DSDL_KMSDRM=ON \
-  -DSDL_OPENGL=ON \
-  -DSDL_OPENGLES=ON \
-  -DSDL_WAYLAND=ON \
-  -DSDL_X11=ON \
-  -DCMAKE_BUILD_TYPE=Release
-cmake --build build -j
-sudo cmake --install build
+  git clone --depth=1 --branch "$SDL_TAG" https://github.com/libsdl-org/SDL.git "$TMP_DIR/SDL"
+  # Build with Ninja (faster) and modest parallelism
+  JOBS="$(nproc 2>/dev/null || echo 1)"
+  if [ "$JOBS" -gt 4 ]; then JOBS=4; fi # cap default to 4; adjust if you like
 
-echo "--- testing SDL3 pkg-config:"
-pkg-config --libs --cflags sdl3
+  cmake -S "$TMP_DIR/SDL" -B "$TMP_DIR/build" -G Ninja \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DSDL_KMSDRM=ON \
+    -DSDL_OPENGL=ON \
+    -DSDL_OPENGLES=ON \
+    -DSDL_WAYLAND=ON \
+    -DSDL_X11=ON
 
-cd ~
-rm -rf "$TMP_DIR"
-echo "--- installed SDL3 successfully"
+  cmake --build "$TMP_DIR/build" --parallel "$JOBS"
+  sudo cmake --install "$TMP_DIR/build"
+fi
 
-echo "--- Arch Linux environment set up for 'umfeld'."
-echo
+# --- Verify SDL3 visibility via pkg-config
+if ! pkg-config --exists sdl3; then
+  echo "ERROR: SDL3 pkg-config not found after install" >&2
+  exit 1
+fi
+
+log "--- testing SDL3 pkg-config:"
+pkg-config --libs --cflags sdl3 || true
+
+log "--- Arch Linux environment set up for 'umfeld'."

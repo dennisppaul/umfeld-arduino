@@ -283,16 +283,26 @@ namespace umfeld::subsystem {
                     _audio_input_device, "/",
                     _audio_output_device, ")");
 
-            const PaDeviceInfo*  _device_info   = Pa_GetDeviceInfo(_audio_output_device);
-            const PaHostApiInfo* _host_api_info = Pa_GetHostApiInfo(_device_info->hostApi);
+            const PaDeviceInfo*  _input_device_info          = Pa_GetDeviceInfo(_audio_input_device);
+            const PaHostApiInfo* _input_device_host_api_info = Pa_GetHostApiInfo(_input_device_info->hostApi);
+            console("Opening input stream for device with ID : ", _input_device_info->name,
+                    "( Host API: ", _input_device_host_api_info->name,
+                    ", Channels (input): ", audio->input_channels,
+                    " ) ... ");
 
-            console("Opening stream for device with ID: ", _device_info->name,
-                    "( Host API: ", _host_api_info->name,
-                    ", Channels (input/output): (", audio->input_channels,
-                    "/", audio->output_channels, ")",
+            const PaDeviceInfo*  _output_device_info          = Pa_GetDeviceInfo(_audio_output_device);
+            const PaHostApiInfo* _output_device_host_api_info = Pa_GetHostApiInfo(_output_device_info->hostApi);
+            console("Opening output stream for device with ID: ", _output_device_info->name,
+                    "( Host API: ", _output_device_host_api_info->name,
+                    ", Channels (output): ", audio->output_channels,
                     " ) ... ");
 
             /* input */
+
+            constexpr PaTime         LATENCY_SCALER                 = 2.0;
+            constexpr PaSampleFormat SAMPLE_FORMAT                  = paFloat32; // TODO maybe also support other formats? if e.g `paInt16` is supported remove `paDitherOff` flag
+            constexpr PaStreamFlags  STREAM_FLAGS_NON_BLOCKING_MODE = paDitherOff | paPrimeOutputBuffersUsingStreamCallback; // NOTE not using `paClipOff`
+            constexpr PaStreamFlags  STREAM_FLAGS_BLOCKING_MODE     = paDitherOff;
 
             PaStreamParameters inputParams;
             if (audio->input_channels > 0) {
@@ -302,7 +312,13 @@ namespace umfeld::subsystem {
                     return false;
                 }
 
-                const int input_channels = Pa_GetDeviceInfo(inputParams.device)->maxInputChannels;
+                const PaDeviceInfo* input_device_info = Pa_GetDeviceInfo(inputParams.device);
+                if (input_device_info == nullptr) {
+                    error("No output device info found.");
+                    return false;
+                }
+
+                const int input_channels = input_device_info->maxInputChannels;
                 if (input_channels < audio->input_channels) {
                     warning("Requested input channels: ", audio->input_channels,
                             " but device only supports: ", input_channels, ".",
@@ -311,13 +327,15 @@ namespace umfeld::subsystem {
                 }
 
                 inputParams.channelCount              = audio->input_channels;
-                inputParams.sampleFormat              = paFloat32; // TODO maybe also support other formats?
-                inputParams.suggestedLatency          = Pa_GetDeviceInfo(inputParams.device)->defaultLowInputLatency;
+                inputParams.sampleFormat              = SAMPLE_FORMAT;
+                inputParams.suggestedLatency          = input_device_info->defaultLowInputLatency * LATENCY_SCALER;
                 inputParams.hostApiSpecificStreamInfo = nullptr;
 
-                const char* device_name  = Pa_GetDeviceInfo(inputParams.device)->name;
+                const char* device_name  = input_device_info->name;
                 audio->input_device_name = device_name;
             } else {
+                inputParams.device       = paNoDevice; // NOTE a bit of a hack to avoid issues with no input device
+                inputParams.channelCount = 0;
                 audio->input_device_name = DEFAULT_AUDIO_DEVICE_NOT_USED;
             }
 
@@ -353,13 +371,15 @@ namespace umfeld::subsystem {
                 }
 
                 outputParams.channelCount              = audio->output_channels;
-                outputParams.sampleFormat              = paFloat32;
-                outputParams.suggestedLatency          = output_device_info->defaultLowOutputLatency;
+                outputParams.sampleFormat              = SAMPLE_FORMAT;
+                outputParams.suggestedLatency          = output_device_info->defaultLowOutputLatency * LATENCY_SCALER;
                 outputParams.hostApiSpecificStreamInfo = nullptr;
 
                 const char* device_name   = output_device_info->name;
                 audio->output_device_name = device_name;
             } else {
+                outputParams.device       = paNoDevice; // NOTE a bit of a hack to avoid issues with no input device
+                outputParams.channelCount = 0;
                 audio->output_device_name = DEFAULT_AUDIO_DEVICE_NOT_USED;
             }
 
@@ -373,9 +393,9 @@ namespace umfeld::subsystem {
                     audio->output_channels > 0 ? &outputParams : nullptr,
                     audio->sample_rate,
                     audio->buffer_size,
-                    paClipOff,      // TODO check what the best flags are here
-                    audio_callback, // Pointer to your callback function
-                    audio           // Pointer to your audio struct (as user data)
+                    STREAM_FLAGS_NON_BLOCKING_MODE,
+                    audio_callback,
+                    audio // pointer to audio struct (as user data)
                 );
             } else {
                 console("Opening audio stream in non-threaded mode");
@@ -385,9 +405,9 @@ namespace umfeld::subsystem {
                     audio->output_channels > 0 ? &outputParams : nullptr,
                     audio->sample_rate,
                     audio->buffer_size,
-                    paClipOff, // No clipping  // TODO check what the best flags are here
-                    nullptr,   // No callback (blocking mode)
-                    nullptr    // No user data
+                    STREAM_FLAGS_BLOCKING_MODE,
+                    nullptr, // No callback (blocking mode)
+                    nullptr  // No user data
                 );
             }
 

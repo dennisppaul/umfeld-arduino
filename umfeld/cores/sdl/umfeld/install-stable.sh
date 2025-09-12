@@ -1,23 +1,30 @@
 #!/usr/bin/env bash
 
-set -e
+set -euo pipefail
+IFS=$'\n\t'
 
-BASE_URL="https://raw.githubusercontent.com/dennisppaul/umfeld/main/installation"
-UMFELD_VERSION="v2.3.0"
+readonly BASE_URL="https://raw.githubusercontent.com/dennisppaul/umfeld/main/installation"
+readonly UMFELD_VERSION="v2.4.0"
+
+# Always clean up temp files, even on error/CTRL-C
+TMP_DEP=$(mktemp) ; TMP_UMF=$(mktemp)
+cleanup() { rm -f "$TMP_DEP" "$TMP_UMF"; }
+trap cleanup EXIT
 
 echo "-------------------------------"
 echo "--- installing dependencies"
 echo "-------------------------------"
-/bin/bash -c "$(curl -fsSL ${BASE_URL}/install-dependencies.sh)"
+curl -fsSL "${BASE_URL}/install-dependencies.sh" > "$TMP_DEP"
+bash "$TMP_DEP"
 
 echo "-------------------------------"
 echo "--- installing umfeld"
 echo "-------------------------------"
-# NOTE this command will clone the latest version of the umfeld repositories with full commit history
-# /bin/bash -c "$(curl -fsSL ${BASE_URL}/install-umfeld.sh)"
-# NOTE this command will install a specific version with shallow history ( only works with v2.2.0 and later ).
-#      if the repositories were cloned with the `--depth` flag, the full commit history can be retrieved later using `git fetch --unshallow`.
-/bin/bash -c "$(curl -fsSL ${BASE_URL}/install-umfeld.sh)" -- --tag $UMFELD_VERSION --depth 1
+# latest with full history:
+#   curl -fsSL "${BASE_URL}/install-umfeld.sh" > "$TMP_UMF" && bash "$TMP_UMF"
+# pinned + shallow (v2.2.0+):
+curl -fsSL "${BASE_URL}/install-umfeld.sh" > "$TMP_UMF"
+bash "$TMP_UMF" --tag "$UMFELD_VERSION" --depth 1
 
 echo "-------------------------------"
 echo "--- installation complete"

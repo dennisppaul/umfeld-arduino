@@ -10,7 +10,7 @@ A ready-to-use Raspberry Pi OS ( and Raspberry Pi OS Lite ) (64-bit) ( *Debian B
 
 **Download:** http://dm-hb.de/umfeld-rpi or http://dm-hb.de/umfeld-rpi-lite ( no GUI )
 
-You can install the image using tools such as the [Raspberry Pi Imager](https://www.raspberrypi.com/software/).
+You can install the image using tools such as the [Raspberry Pi Imager](https://www.raspberrypi.com/software/). Make sure the SD Card you are using is at least 8 GB in size.
 
 **Default login:**
 
@@ -154,9 +154,48 @@ note, the first time might take a bit on a small machine. note, examples can not
 
 ## Running Applications Outside the Windowing System
 
-- to leave the windowing system to a console (TTY) press `CTRL+ALT+F3` ( or any `+F[1–6]` )
+- leave the windowing system into a console (TTY) press `CTRL+ALT+F1` ( or any `+F[1–6]` )
 - run application from console e.g: `./build/minimal` ( make sure the application was built with OpenGL ES 3.0 )
 - to return to the desktop press `CTRL+ALT+F7`
+
+## Running KMSDRM Applications from Remote SSH session
+
+it is possible to run an application from a remote SSH session on a headless Raspberry PI ( i.e no windowing system like X11/Wayland ).
+
+TL;DR log in via SSH and run `my_application`:
+
+```sh
+sudo systemd-run --tty --same-dir --uid=$USER ./my_application
+```
+
+if something goes wrong or if you prefer the verbose, *proper* way do this:
+
+- make sure application runs *locally* in fullscreen ( with keyboard and HDMI )
+    ```sh
+    ./my_application
+    ```
+- grant SSH session user access to DRM device nodes ( `/dev/dri`, usually owned by `root:video` ) @optional
+    ```sh
+    sudo usermod -aG video $USER
+    ```
+- log out of SSH session and back in again @optional
+- bind to current virtual terminal (VT) with `systemd-run`
+    ```sh
+    sudo systemd-run --tty --same-dir --uid=$USER ./my_application
+    ```
+
+on some setups SDL might complain about the absence of keyboard or audio driver. set these environment variables to rectify this:
+
+```sh
+export SDL_INPUT_LINUX_KEEPKBD=1
+```
+
+if audio and video drivers are not recognized you can also set these with environment variables:
+
+```sh
+export SDL_VIDEODRIVER=kmsdrm
+export SDL_AUDIODRIVER=alsa   # or dummy
+```
 
 ## X11 Forwarding
 

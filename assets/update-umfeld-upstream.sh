@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+# NOTE run this script from the toplevel of the working tree.
+
 git fetch umfeld-upstream
 git subtree pull --prefix=umfeld/cores/sdl/umfeld umfeld-upstream main --squash
 

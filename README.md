@@ -35,6 +35,12 @@ Board definition to run [Umfeld](https://github.com/dennisppaul/umfeld) as a boa
     - `cd $HOME/Documents/Arduino/hardware/` navigate to hardware folder e.g on macOS
     - `arduino-cli compile -u -b umfeld-arduino:umfeld:UMFELD ./umfeld-arduino/umfeld/examples/umfeld/minimal` build (`-b`) run ( i.e *upload* `-u` ) `minimal` example
 
+either way you should see something like this:
+
+![minimal--arduino-ide](assets/minimal--arduino-ide.png)
+
+![assets/minimal--arduino-ide](assets/minimal--app.png)
+
 ### A Note on *Arduino IDE* on Windows
 
 TL;DR if you want to use *Arudino IDE* include *MSYS UCRT64* into `PATH`.

@@ -28,7 +28,7 @@
 open a console, navigate to the desired installation folder, and run the following script:
 
 ```sh
-/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/dennisppaul/umfeld/refs/heads/main/install.sh)"
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/dennisppaul/umfeld/main/install.sh)"
 ```
 
 this script installs all required packages ( on *macOS*, *Linux* ( including *Raspberry Pi OS* ), and *Windows ( MSYS2 UCRT64 )* ) and downloads *Umfeld* with examples and external libraries into the current directory.

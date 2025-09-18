@@ -25,6 +25,7 @@
 #include <cmath>
 
 #include VARIANT_H
+#include "ArduinoFunctions.h"
 
 /* sketch */
 

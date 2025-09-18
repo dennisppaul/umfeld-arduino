@@ -195,7 +195,7 @@ namespace umfeld {
     do {                                          \
         static bool _once_flag_##counter = false; \
         if (!_once_flag_##counter) {              \
-            console(__VA_ARGS__);                 \
+            umfeld::console(__VA_ARGS__);                 \
             _once_flag_##counter = true;          \
         }                                         \
     } while (0)

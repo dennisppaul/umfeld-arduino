@@ -21,12 +21,8 @@
 
 /* --- debugging define configuration --- */
 
-#ifndef UMFELD_SET_DEFAULT_CALLBACK
-#error "need to to define UMFELD_SET_DEFAULT_CALLBACK"
-#endif
-
-#if UMFELD_SET_DEFAULT_CALLBACK
-#error "UMFELD_SET_DEFAULT_CALLBACK must be false"
+#if !defined(UMFELD_SET_DEFAULT_CALLBACK) || UMFELD_SET_DEFAULT_CALLBACK != 0
+#error "UMFELD_SET_DEFAULT_CALLBACK must be defined as 0"
 #endif
 
 #ifndef KLST_ENV
@@ -42,6 +38,7 @@ extern void klst_emulator_arguments(const std::vector<std::string>& args);
 extern void klst_emulator_settings();
 extern void klst_emulator_setup();
 extern void klst_emulator_draw();
+extern void klst_emulator_update();
 extern void klst_emulator_audioEvent();
 extern void klst_emulator_keyPressed();
 extern void klst_emulator_keyReleased();
@@ -51,6 +48,7 @@ void umfeld_set_callbacks() {
     umfeld::set_settings_callback(klst_emulator_settings);
     umfeld::set_setup_callback(klst_emulator_setup);
     umfeld::set_draw_callback(klst_emulator_draw);
+    umfeld::set_update_callback(klst_emulator_update);
     umfeld::set_audioEvent_callback(klst_emulator_audioEvent);
     umfeld::set_keyPressed_callback(klst_emulator_keyPressed);
     umfeld::set_keyReleased_callback(klst_emulator_keyReleased);

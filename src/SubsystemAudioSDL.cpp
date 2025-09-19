@@ -254,7 +254,7 @@ namespace umfeld::subsystem {
     }
 
     static bool init() {
-        // NOTE not sure if we should use the AudioStream concept. currently the mental model_matrix
+        // NOTE not sure if we should use the AudioStream concept. currently the mental model
         //     is slightly different: a subsystem correlates to an audio driver ( e.g SDL or PortAudio )
         //     and the actual audio devices are represented by `PAudio`. so each `create_audio` call
         //     would need to open a device and create a single stream for that device. this is different
@@ -547,6 +547,9 @@ namespace umfeld::subsystem {
                         error("could not read audio stream channels: ", SDL_GetError());
                     }
                     console("binding audio input stream to device: [", _device->logical_input_device_id, "]");
+                    if (src_spec.freq != dst_spec.freq) {
+                        warning("sample rate conversion from ", src_spec.freq, " to ", dst_spec.freq, " not working ... yet");
+                    }
                 } else {
                     error("could not bind input stream to device: ", SDL_GetError());
                 }
@@ -580,6 +583,9 @@ namespace umfeld::subsystem {
                         console("    driver side channels ( physical or 'dst' )   : ", dst_spec.channels, ", ", dst_spec.freq, ", ", SDL_GetAudioFormatName(dst_spec.format));
                     }
                     console("binding audio input stream to device: [", _device->logical_output_device_id, "]");
+                    if (src_spec.freq != dst_spec.freq) {
+                        warning("sample rate conversion from ", src_spec.freq, " to ", dst_spec.freq, " not working ... yet");
+                    }
                 }
                 /* --- */
             } else {

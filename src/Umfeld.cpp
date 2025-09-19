@@ -21,6 +21,10 @@
 #include <SDL3/SDL_main.h>
 
 #include <string>
+#include <thread>
+#include <atomic>
+#include <condition_variable>
+#include <mutex>
 
 #include "UmfeldDefines.h"
 #include "Umfeld.h"
@@ -193,6 +197,62 @@ namespace umfeld {
         return flags;
     }
 } // namespace umfeld
+
+/* update in thread section :: START */
+
+namespace {
+    std::thread             g_updateThread;
+    std::atomic_bool        g_updateRequested{false};
+    std::atomic_bool        g_updateRunning{true};
+    std::mutex              g_updateMtx;
+    std::condition_variable g_updateCv;
+} // namespace
+
+// NOTE thread update function
+static void update_thread_function() {
+    while (g_updateRunning.load(std::memory_order_acquire)) {
+        // wait until requested or shutdown
+        std::unique_lock<std::mutex> lk(g_updateMtx);
+        g_updateCv.wait(lk, [] { return !g_updateRunning.load(std::memory_order_acquire) || g_updateRequested.load(std::memory_order_acquire); });
+        if (!g_updateRunning.load(std::memory_order_acquire)) {
+            break;
+        }
+        g_updateRequested.store(false, std::memory_order_release);
+        lk.unlock();
+
+        // run update work (no rendering or SDL window calls here)
+        umfeld::run_update_callback();
+    }
+}
+
+// NOTE call once after setup is complete ( i.e end of 'SDL_AppInit' )
+static void start_update_thread() {
+    g_updateRunning.store(true, std::memory_order_release);
+    g_updateThread = std::thread(update_thread_function);
+}
+
+// NOTE call during shutdown ( i.e in SDL_AppQuit )
+static void stop_update_thread() {
+    {
+        std::lock_guard<std::mutex> lk(g_updateMtx);
+        g_updateRunning.store(false, std::memory_order_release);
+    }
+    g_updateCv.notify_all();
+    if (g_updateThread.joinable()) {
+        g_updateThread.join();
+    }
+}
+
+// NOTE call periodically ( i.e in SDL_AppIterate )
+static void request_update_thread() {
+    {
+        std::lock_guard<std::mutex> lk(g_updateMtx);
+        g_updateRequested.store(true, std::memory_order_release);
+    }
+    g_updateCv.notify_one();
+}
+
+/* update in thread section :: END */
 
 static void handle_arguments(const int argc, char* argv[]) {
     std::vector<std::string> args;
@@ -549,6 +609,11 @@ SDL_AppResult SDL_AppInit(void** appstate, const int argc, char* argv[]) {
 
     umfeld::lastFrameTime = std::chrono::high_resolution_clock::now();
 
+    /* start update thread */
+    if (umfeld::run_update_in_thread) {
+        start_update_thread();
+    }
+
     return SDL_APP_CONTINUE;
 }
 
@@ -654,7 +719,11 @@ SDL_AppResult SDL_AppIterate(void* appstate) {
             }
         }
 
-        umfeld::run_update_callback();
+        if (umfeld::run_update_in_thread) {
+            request_update_thread();
+        } else {
+            umfeld::run_update_callback();
+        }
 
         if (frame_duration >= umfeld::target_frame_duration) {
             handle_draw();
@@ -678,6 +747,11 @@ SDL_AppResult SDL_AppIterate(void* appstate) {
 }
 
 void SDL_AppQuit(void* appstate, SDL_AppResult result) {
+    /* stop update thread */
+    if (umfeld::run_update_in_thread) {
+        stop_update_thread();
+    }
+
     // NOTE 1. call `void umfeld::shutdown()`(?)
     //      2. clean up subsytems e.g audio, graphics, ...
     for (const umfeld::Subsystem* subsystem: umfeld::subsystems) {

@@ -421,15 +421,18 @@ namespace umfeld {
             return nullptr;
         }
 
-        unsigned int channels;
-        unsigned int sample_rate;
-        drwav_uint64 length;
-        float*       sample_buffer = AudioFileReader::load(absolute_path, channels, sample_rate, length);
-        console("loading sample: ");
-        console("channels   : ", channels);
-        console("audio_sample_rate: ", sample_rate);
-        console("length     : ", length);
-        console("size       : ", channels * length);
+        unsigned int          channels;
+        unsigned int          sample_rate;
+        drwav_uint64          length;
+        float*                sample_buffer        = AudioFileReader::load(absolute_path, channels, sample_rate, length);
+        static constexpr bool print_debug_messages = false;
+        if (print_debug_messages) {
+            console("LOADED SAMPLE INFO");
+            console("channels         : ", channels);
+            console("audio_sample_rate: ", sample_rate);
+            console("length           : ", length);
+            console("size             : ", channels * length);
+        }
         if (channels > 1) {
             warning("only mono samples are supported for sampler. using first channel only.");
             const auto single_buffer = new float[length];

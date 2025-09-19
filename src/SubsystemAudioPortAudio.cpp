@@ -35,7 +35,7 @@ namespace umfeld::subsystem {
 
     struct AudioDevice {
         std::string name;
-        int         max_input_channels;
+        int         max_channels;
         float       sample_rate;
         int         logical_device_id;
     };
@@ -51,22 +51,25 @@ namespace umfeld::subsystem {
         PaStream* stream{nullptr};
 
         explicit PAudioPortAudio(PAudio* audio) : audio(audio),
-                                                  update_interval((audio->buffer_size * 1000) / (audio->sample_rate * 4)) {
-            if (audio == nullptr) {
+                                                  update_interval((audio == nullptr ? 0 : audio->buffer_size) * 1000 / ((audio == nullptr ? 1 : audio->sample_rate) * 4)) {
+            if (this->audio == nullptr) {
                 error("PAudioPortAudio: audio is nullptr");
                 return;
             }
-            this->audio = audio;
+
             if (audio->threaded) {
                 console("PAudioPortAudio: threaded audio processing enabled");
             } else {
                 console("PAudioPortAudio: threaded audio processing disabled");
             }
+
             console("PAudioPortAudio: update interval: ", update_interval.count(), "ms");
+
             if (!init()) {
                 error("PAudioPortAudio: could not intialize");
                 return;
             }
+
             if (audio->input_channels > 0) {
                 audio->input_buffer = new float[audio->buffer_size * audio->input_channels]{0};
             } else {
@@ -83,10 +86,16 @@ namespace umfeld::subsystem {
             if (stream == nullptr) {
                 return;
             }
-
-            isPaused = false;
-            if (Pa_IsStreamStopped(stream)) {
-                Pa_StartStream(stream);
+            isPaused        = false;
+            const PaError s = Pa_IsStreamStopped(stream);
+            // NOTE           ^^^ "Returns one (1) when the stream is stopped, ..."
+            if (s == 1) {
+                const PaError e = Pa_StartStream(stream);
+                if (e != paNoError) {
+                    error("Pa_StartStream failed: ", Pa_GetErrorText(e));
+                }
+            } else if (s < 0) {
+                error("Pa_IsStreamStopped failed: ", Pa_GetErrorText(s));
             }
         }
 
@@ -94,67 +103,93 @@ namespace umfeld::subsystem {
             if (stream == nullptr) {
                 return;
             }
-            isPaused = true;
-            if (Pa_IsStreamActive(stream)) {
-                Pa_StopStream(stream);
+            isPaused        = true;
+            const PaError a = Pa_IsStreamActive(stream);
+            if (a == 1) {
+                const PaError e = Pa_StopStream(stream);
+                if (e != paNoError) {
+                    error("Pa_StopStream failed: ", Pa_GetErrorText(e));
+                }
+            } else if (a < 0) {
+                error("Pa_IsStreamActive failed: ", Pa_GetErrorText(a));
             }
         }
 
         void loop() {
-            if (audio == nullptr) {
+            if (audio == nullptr || audio->threaded) {
+                return;
+            }
+            if (isPaused) {
+                return;
+            }
+            if (stream == nullptr) {
                 return;
             }
 
-            if (!audio->threaded) {
+            const auto now = std::chrono::high_resolution_clock::now();
+            if (now - last_audio_update < update_interval) {
+                return;
+            }
 
-                if (isPaused) {
+            // Input availability
+            const long availIn = Pa_GetStreamReadAvailable(stream);
+            if (availIn < 0) {
+                error("Pa_GetStreamReadAvailable failed: ", Pa_GetErrorText(availIn));
+                last_audio_update = now;
+                return;
+            }
+            if (audio->input_channels > 0 && availIn >= audio->buffer_size) {
+                const PaError err = Pa_ReadStream(stream, audio->input_buffer, audio->buffer_size);
+                if (err != paNoError) {
+                    error("Error reading from stream: ", Pa_GetErrorText(err));
+                    last_audio_update = now;
                     return;
                 }
+            }
 
-                const auto now = std::chrono::high_resolution_clock::now();
-                if (now - last_audio_update >= update_interval) {
-                    // check if input is available
-                    const long availableInputFrames = Pa_GetStreamReadAvailable(stream);
-                    if (availableInputFrames >= audio->buffer_size) {
-                        const PaError err = Pa_ReadStream(stream, audio->input_buffer, audio->buffer_size);
-                        if (err != paNoError) {
-                            error("Error reading from stream: ", Pa_GetErrorText(err));
-                            return;
-                        }
-                    }
+            // Output availability
+            const long availOut = Pa_GetStreamWriteAvailable(stream);
+            if (availOut < 0) {
+                error("Pa_GetStreamWriteAvailable failed: ", Pa_GetErrorText(availOut));
+                last_audio_update = now;
+                return;
+            }
 
-                    // check if output buffer has space
-                    const long availableOutputFrames = Pa_GetStreamWriteAvailable(stream);
+            // Run callbacks only when enough frames for both sides (or side unused)
+            if ((availIn >= audio->buffer_size || audio->input_channels == 0) &&
+                (availOut >= audio->buffer_size || audio->output_channels == 0)) {
+                if (a != nullptr && audio == umfeld::a) {
+                    run_audioEvent_callback();
+                }
+                run_audioEventPAudio_callback(*audio);
+            }
 
-                    // call `audioevent` respecting non-present audio devices and available frames
-                    if ((availableInputFrames >= audio->buffer_size || audio->input_channels == 0) &&
-                        (availableOutputFrames >= audio->buffer_size || audio->output_channels == 0)) {
-                        if (a != nullptr && audio == umfeld::a) {
-                            run_audioEvent_callback();
-                        }
-                        run_audioEventPAudio_callback(*audio);
-                    }
-
-                    if (availableOutputFrames >= audio->buffer_size) {
-                        const PaError err = Pa_WriteStream(stream, audio->output_buffer, audio->buffer_size);
-                        if (err != paNoError) {
-                            error("Error writing to stream: ", Pa_GetErrorText(err), "");
-                            return;
-                        }
-                    }
-
-                    last_audio_update = now;
+            if (audio->output_channels > 0 && availOut >= audio->buffer_size) {
+                const PaError err = Pa_WriteStream(stream, audio->output_buffer, audio->buffer_size);
+                if (err != paNoError) {
+                    error("Error writing to stream: ", Pa_GetErrorText(err));
                 }
             }
+
+            last_audio_update = now;
         }
 
-        void shutdown() const {
-            Pa_StopStream(stream);
-            Pa_CloseStream(stream);
-            delete[] audio->input_buffer;
-            delete[] audio->output_buffer;
-            audio->input_buffer  = nullptr;
-            audio->output_buffer = nullptr;
+        void shutdown() {
+            if (stream != nullptr) {
+                const PaError a = Pa_IsStreamActive(stream);
+                // NOTE          ^^^ "Returns one (1) when the stream is active (ie playing or recording audio) ..."
+                if (a == 1) {
+                    Pa_StopStream(stream);
+                }
+                Pa_CloseStream(stream);
+                stream = nullptr;
+            }
+            if (audio != nullptr) {
+                delete[] audio->input_buffer;
+                delete[] audio->output_buffer;
+                audio->input_buffer  = nullptr;
+                audio->output_buffer = nullptr;
+            }
         }
 
     private:
@@ -162,7 +197,7 @@ namespace umfeld::subsystem {
         std::chrono::milliseconds                                   update_interval;
         std::chrono::time_point<std::chrono::high_resolution_clock> last_audio_update;
 
-        int find_logical_device_id_by_name(const std::vector<AudioDevice>& devices, const std::string& name) const {
+        static int find_logical_device_id_by_name(const std::vector<AudioDevice>& devices, const std::string& name) {
             for (int i = 0; i < devices.size(); i++) {
                 if (begins_with(devices[i].name, name)) {
                     console("found device ", devices[i].name);
@@ -173,7 +208,7 @@ namespace umfeld::subsystem {
             return DEFAULT_AUDIO_DEVICE;
         }
 
-        int find_logical_device_id_by_id(const std::vector<AudioDevice>& devices, const int device_id) const {
+        static int find_logical_device_id_by_id(const std::vector<AudioDevice>& devices, const int device_id) {
             if (device_id >= 0 && device_id < devices.size()) {
                 console("found device by id: ", device_id, "[", devices[device_id].logical_device_id, "] ", devices[device_id].name);
                 return devices[device_id].logical_device_id;
@@ -182,32 +217,32 @@ namespace umfeld::subsystem {
             return DEFAULT_AUDIO_DEVICE;
         }
 
-        static int audio_callback(const void*                     inputBuffer,
-                                  void*                           outputBuffer,
-                                  unsigned long                   framesPerBuffer,
-                                  const PaStreamCallbackTimeInfo* timeInfo,
-                                  PaStreamCallbackFlags           statusFlags,
-                                  void*                           userData) {
-            PAudio* audio = (PAudio*) userData;
+        static int audio_callback(const void*         inputBuffer,
+                                  void*               outputBuffer,
+                                  const unsigned long framesPerBuffer,
+                                  const PaStreamCallbackTimeInfo* /*timeInfo*/,
+                                  PaStreamCallbackFlags /*statusFlags*/,
+                                  void* userData) {
+            auto* audio = static_cast<PAudio*>(userData);
 
-            // Copy input data into your buffer (if any input)
             if (audio->input_channels > 0 && inputBuffer != nullptr) {
                 memcpy(audio->input_buffer, inputBuffer, framesPerBuffer * audio->input_channels * sizeof(float));
             }
 
-            // Call your event/callback function
             if (audio == umfeld::a) {
-                run_audioEvent_callback();
+                if (a != nullptr) {
+                    run_audioEvent_callback();
+                }
             }
             run_audioEventPAudio_callback(*audio);
 
-            // Copy output data from your buffer (if any output)
             if (audio->output_channels > 0 && outputBuffer != nullptr) {
                 memcpy(outputBuffer, audio->output_buffer, framesPerBuffer * audio->output_channels * sizeof(float));
             }
 
-            return paContinue; // Keep going
+            return paContinue;
         }
+
 
         bool init() {
             if (audio == nullptr) {
@@ -248,16 +283,26 @@ namespace umfeld::subsystem {
                     _audio_input_device, "/",
                     _audio_output_device, ")");
 
-            const PaDeviceInfo*  _device_info   = Pa_GetDeviceInfo(_audio_output_device);
-            const PaHostApiInfo* _host_api_info = Pa_GetHostApiInfo(_device_info->hostApi);
+            const PaDeviceInfo*  _input_device_info          = Pa_GetDeviceInfo(_audio_input_device);
+            const PaHostApiInfo* _input_device_host_api_info = Pa_GetHostApiInfo(_input_device_info->hostApi);
+            console("Opening input stream for device with ID : ", _input_device_info->name,
+                    "( Host API: ", _input_device_host_api_info->name,
+                    ", Channels (input): ", audio->input_channels,
+                    " ) ... ");
 
-            console("Opening stream for device with ID: ", _device_info->name,
-                    "( Host API: ", _host_api_info->name,
-                    ", Channels (input/output): (", audio->input_channels,
-                    "/", audio->output_channels, ")",
+            const PaDeviceInfo*  _output_device_info          = Pa_GetDeviceInfo(_audio_output_device);
+            const PaHostApiInfo* _output_device_host_api_info = Pa_GetHostApiInfo(_output_device_info->hostApi);
+            console("Opening output stream for device with ID: ", _output_device_info->name,
+                    "( Host API: ", _output_device_host_api_info->name,
+                    ", Channels (output): ", audio->output_channels,
                     " ) ... ");
 
             /* input */
+
+            constexpr PaTime         LATENCY_SCALER                 = 2.0;
+            constexpr PaSampleFormat SAMPLE_FORMAT                  = paFloat32; // TODO maybe also support other formats? if e.g `paInt16` is supported remove `paDitherOff` flag
+            constexpr PaStreamFlags  STREAM_FLAGS_NON_BLOCKING_MODE = paDitherOff | paPrimeOutputBuffersUsingStreamCallback; // NOTE not using `paClipOff`
+            constexpr PaStreamFlags  STREAM_FLAGS_BLOCKING_MODE     = paDitherOff;
 
             PaStreamParameters inputParams;
             if (audio->input_channels > 0) {
@@ -267,7 +312,13 @@ namespace umfeld::subsystem {
                     return false;
                 }
 
-                const int input_channels = Pa_GetDeviceInfo(inputParams.device)->maxInputChannels;
+                const PaDeviceInfo* input_device_info = Pa_GetDeviceInfo(inputParams.device);
+                if (input_device_info == nullptr) {
+                    error("No output device info found.");
+                    return false;
+                }
+
+                const int input_channels = input_device_info->maxInputChannels;
                 if (input_channels < audio->input_channels) {
                     warning("Requested input channels: ", audio->input_channels,
                             " but device only supports: ", input_channels, ".",
@@ -276,13 +327,15 @@ namespace umfeld::subsystem {
                 }
 
                 inputParams.channelCount              = audio->input_channels;
-                inputParams.sampleFormat              = paFloat32;
-                inputParams.suggestedLatency          = Pa_GetDeviceInfo(inputParams.device)->defaultLowInputLatency;
+                inputParams.sampleFormat              = SAMPLE_FORMAT;
+                inputParams.suggestedLatency          = input_device_info->defaultLowInputLatency * LATENCY_SCALER;
                 inputParams.hostApiSpecificStreamInfo = nullptr;
 
-                const char* device_name  = Pa_GetDeviceInfo(inputParams.device)->name;
+                const char* device_name  = input_device_info->name;
                 audio->input_device_name = device_name;
             } else {
+                inputParams.device       = paNoDevice; // NOTE a bit of a hack to avoid issues with no input device
+                inputParams.channelCount = 0;
                 audio->input_device_name = DEFAULT_AUDIO_DEVICE_NOT_USED;
             }
 
@@ -296,7 +349,20 @@ namespace umfeld::subsystem {
                     return false;
                 }
 
-                const int output_channels = Pa_GetDeviceInfo(outputParams.device)->maxOutputChannels;
+                const PaDeviceInfo* output_device_info = Pa_GetDeviceInfo(outputParams.device);
+                if (output_device_info == nullptr) {
+                    error("No output device info found.");
+                    return false;
+                }
+                const double output_device_sample_rate = output_device_info->defaultSampleRate;
+                if (output_device_sample_rate != audio->sample_rate) {
+                    warning("Requested sample rate: ", audio->sample_rate,
+                            " but device only supports: ", output_device_sample_rate, ".",
+                            " Setting sample rate to: ", output_device_sample_rate);
+                    audio->sample_rate = static_cast<int>(output_device_sample_rate);
+                }
+
+                const int output_channels = output_device_info->maxOutputChannels;
                 if (output_channels < audio->output_channels) {
                     warning("Requested output channels: ", audio->output_channels,
                             " but device only supports: ", output_channels, ".",
@@ -305,13 +371,15 @@ namespace umfeld::subsystem {
                 }
 
                 outputParams.channelCount              = audio->output_channels;
-                outputParams.sampleFormat              = paFloat32;
-                outputParams.suggestedLatency          = Pa_GetDeviceInfo(outputParams.device)->defaultLowOutputLatency;
+                outputParams.sampleFormat              = SAMPLE_FORMAT;
+                outputParams.suggestedLatency          = output_device_info->defaultLowOutputLatency * LATENCY_SCALER;
                 outputParams.hostApiSpecificStreamInfo = nullptr;
 
-                const char* device_name   = Pa_GetDeviceInfo(outputParams.device)->name;
+                const char* device_name   = output_device_info->name;
                 audio->output_device_name = device_name;
             } else {
+                outputParams.device       = paNoDevice; // NOTE a bit of a hack to avoid issues with no input device
+                outputParams.channelCount = 0;
                 audio->output_device_name = DEFAULT_AUDIO_DEVICE_NOT_USED;
             }
 
@@ -325,9 +393,9 @@ namespace umfeld::subsystem {
                     audio->output_channels > 0 ? &outputParams : nullptr,
                     audio->sample_rate,
                     audio->buffer_size,
-                    paClipOff,
-                    audio_callback, // Pointer to your callback function
-                    audio           // Pointer to your audio struct (as user data)
+                    STREAM_FLAGS_NON_BLOCKING_MODE,
+                    audio_callback,
+                    audio // pointer to audio struct (as user data)
                 );
             } else {
                 console("Opening audio stream in non-threaded mode");
@@ -337,9 +405,9 @@ namespace umfeld::subsystem {
                     audio->output_channels > 0 ? &outputParams : nullptr,
                     audio->sample_rate,
                     audio->buffer_size,
-                    paClipOff, // No clipping
-                    nullptr,   // No callback (blocking mode)
-                    nullptr    // No user data
+                    STREAM_FLAGS_BLOCKING_MODE,
+                    nullptr, // No callback (blocking mode)
+                    nullptr  // No user data
                 );
             }
 
@@ -350,7 +418,11 @@ namespace umfeld::subsystem {
                 return false;
             }
 
-            Pa_StartStream(stream);
+            const PaError result = Pa_StartStream(stream);
+            if (result != paNoError) {
+                error("Failed to start stream: ", Pa_GetErrorText(result), "");
+                return false;
+            }
             last_audio_update = std::chrono::high_resolution_clock::now();
 
             return true;
@@ -363,7 +435,8 @@ namespace umfeld::subsystem {
     static void event(SDL_Event* event) {}
 
     static void set_flags(uint32_t& subsystem_flags) {
-        subsystem_flags |= SDL_INIT_AUDIO;
+        // NOTE no need to init audio when using portaudio
+        // subsystem_flags |= SDL_INIT_AUDIO;
     }
 
     int print_audio_devices() {
@@ -392,18 +465,13 @@ namespace umfeld::subsystem {
     }
 
     static bool init() {
-        // TODO this is a bit hacky, but it works for now. look into this …
-        Pa_Initialize();
-        print_audio_devices();
-        Pa_Terminate();
-
         console("initializing PortAudio audio system");
         const PaError err = Pa_Initialize();
         if (err != paNoError) {
             error("Error message: ", Pa_GetErrorText(err));
             return false;
         }
-
+        print_audio_devices();
         return true;
     }
 
@@ -423,7 +491,13 @@ namespace umfeld::subsystem {
                 delete device;
             }
         }
-        Pa_Terminate();
+        if (!audio_devices.empty()) {
+            audio_devices.clear();
+        }
+        const PaError result = Pa_Terminate();
+        if (result != paNoError) {
+            error("Failed to terminate PortAudio: ", Pa_GetErrorText(result), "");
+        }
     }
 
     static PAudioPortAudio* find_device(const PAudio* device) {
@@ -470,18 +544,18 @@ namespace umfeld::subsystem {
             const PaDeviceInfo* deviceInfo = Pa_GetDeviceInfo(i);
             if (deviceInfo->maxInputChannels > 0) {
                 AudioDevice _audio_device_info;
-                _audio_device_info.name               = deviceInfo->name;
-                _audio_device_info.max_input_channels = deviceInfo->maxInputChannels;
-                _audio_device_info.sample_rate        = deviceInfo->defaultSampleRate;
-                _audio_device_info.logical_device_id  = i;
+                _audio_device_info.name              = deviceInfo->name;
+                _audio_device_info.max_channels      = deviceInfo->maxInputChannels;
+                _audio_device_info.sample_rate       = deviceInfo->defaultSampleRate;
+                _audio_device_info.logical_device_id = i;
                 audio_input_devices.push_back(_audio_device_info);
             }
             if (deviceInfo->maxOutputChannels > 0) {
                 AudioDevice _audio_device_info;
-                _audio_device_info.name               = deviceInfo->name;
-                _audio_device_info.max_input_channels = deviceInfo->maxOutputChannels;
-                _audio_device_info.sample_rate        = deviceInfo->defaultSampleRate;
-                _audio_device_info.logical_device_id  = i;
+                _audio_device_info.name              = deviceInfo->name;
+                _audio_device_info.max_channels      = deviceInfo->maxOutputChannels;
+                _audio_device_info.sample_rate       = deviceInfo->defaultSampleRate;
+                _audio_device_info.logical_device_id = i;
                 audio_output_devices.push_back(_audio_device_info);
             }
         }
@@ -493,13 +567,13 @@ namespace umfeld::subsystem {
         int i = 0;
         console("    INPUT DEVICES");
         for (auto ad: audio_input_devices) {
-            console("    [", i, "]::", ad.name, " (", ad.max_input_channels, " channels, ", ad.sample_rate, " Hz)");
+            console("    [", i, "]::", ad.name, " (", ad.max_channels, " channels, ", ad.sample_rate, " Hz)");
             i++;
         }
         i = 0;
         console("    OUTPUT DEVICES");
         for (auto ad: audio_output_devices) {
-            console("    [", i, "]::", ad.name, " (", ad.max_input_channels, " channels, ", ad.sample_rate, " Hz)");
+            console("    [", i, "]::", ad.name, " (", ad.max_channels, " channels, ", ad.sample_rate, " Hz)");
             i++;
         }
 

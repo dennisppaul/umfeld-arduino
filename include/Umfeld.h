@@ -54,8 +54,9 @@ namespace umfeld {
     inline int  save_image_jpeg_quailty = 100;
 
     /* --- libraries + events --- */
-    inline bool enable_libraries = true;
-    inline bool enable_events    = true;
+    inline bool enable_libraries     = true;
+    inline bool enable_events        = true;
+    inline bool run_update_in_thread = DEFAULT_UPDATE_RUN_IN_THREAD;
 
     /* public variables ( updated by system ) */
 
@@ -71,7 +72,9 @@ namespace umfeld {
     inline std::string audio_input_device_name  = DEFAULT_AUDIO_DEVICE_NAME;
     inline int         audio_output_device_id   = DEFAULT_AUDIO_DEVICE;
     inline std::string audio_output_device_name = DEFAULT_AUDIO_DEVICE_NAME;
-    inline bool        audio_threaded           = DEFAULT_AUDIO_RUN_IN_THREAD;
+    inline bool        run_audio_in_thread      = DEFAULT_AUDIO_RUN_IN_THREAD;
+    inline bool&       audio_threaded           = run_audio_in_thread;
+    // [[deprecated("use 'run_audio_in_thread' instead")]]
 
     // TODO consider renaming `a` to `audio` … which would however conflict with the `audio` function
     // [[deprecated("use audio instead")]]

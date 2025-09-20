@@ -19,6 +19,9 @@
 
 #pragma once
 
+// TODO functions are implemented in 'Klangstrom_Emulator' library … that s a bit scattered.
+//      maybe there is a way to consolidate core and emulator?
+
 #include <cstdint>
 
 // implement all functions from https://www.arduino.cc/reference/

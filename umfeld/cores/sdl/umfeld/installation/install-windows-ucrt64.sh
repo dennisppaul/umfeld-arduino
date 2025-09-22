@@ -30,34 +30,34 @@ pacman -Syu --noconfirm || true
 # --- Base toolchain & core deps ----------------------------------------------
 log "--- installing base toolchain and core dependencies"
 pacman -S --noconfirm --needed \
-  mingw-w64-ucrt-x86_64-toolchain \
+  ucrt64/mingw-w64-ucrt-x86_64-toolchain \
   git \
-  mingw-w64-ucrt-x86_64-cmake \
-  mingw-w64-ucrt-x86_64-ninja \
-  mingw-w64-ucrt-x86_64-curl \
-  mingw-w64-ucrt-x86_64-mesa \
-  mingw-w64-ucrt-x86_64-pkgconf
+  ucrt64/mingw-w64-ucrt-x86_64-cmake \
+  ucrt64/mingw-w64-ucrt-x86_64-ninja \
+  ucrt64/mingw-w64-ucrt-x86_64-curl \
+  ucrt64/mingw-w64-ucrt-x86_64-mesa \
+  ucrt64/mingw-w64-ucrt-x86_64-pkgconf
 
 # --- Umfeld deps --------------------------------------------------------------
 log "--- installing Umfeld dependencies"
 pacman -S --noconfirm --needed \
-  mingw-w64-ucrt-x86_64-ffmpeg \
-  mingw-w64-ucrt-x86_64-harfbuzz \
-  mingw-w64-ucrt-x86_64-freetype \
-  mingw-w64-ucrt-x86_64-rtmidi \
-  mingw-w64-ucrt-x86_64-glm \
-  mingw-w64-ucrt-x86_64-portaudio \
-  mingw-w64-ucrt-x86_64-cairo \
-  mingw-w64-ucrt-x86_64-pdcurses
+  ucrt64/mingw-w64-ucrt-x86_64-ffmpeg \
+  ucrt64/mingw-w64-ucrt-x86_64-harfbuzz \
+  ucrt64/mingw-w64-ucrt-x86_64-freetype \
+  ucrt64/mingw-w64-ucrt-x86_64-rtmidi \
+  ucrt64/mingw-w64-ucrt-x86_64-glm \
+  ucrt64/mingw-w64-ucrt-x86_64-portaudio \
+  ucrt64/mingw-w64-ucrt-x86_64-cairo \
+  ucrt64/mingw-w64-ucrt-x86_64-pdcurses
 
 # (removed duplicate plain `pkgconf` token and unnecessary `cairomm` unless you need C++ bindings)
 
 # --- SDL3 (prefer official packages) ------------------------------------------
 log "--- installing SDL3 packages"
 pacman -S --noconfirm --needed \
-  mingw-w64-ucrt-x86_64-SDL3 \
-  mingw-w64-ucrt-x86_64-SDL3_image \
-  mingw-w64-ucrt-x86_64-SDL3_ttf
+  ucrt64/mingw-w64-ucrt-x86_64-sdl3 \
+  ucrt64/mingw-w64-ucrt-x86_64-sdl3-image \
+  ucrt64/mingw-w64-ucrt-x86_64-sdl3-ttf
 
 # --- Make newly installed commands visible ------------------------------------
 hash -r
@@ -72,8 +72,8 @@ command -v pkg-config >/dev/null || { echo "ERROR: pkg-config (pkgconf) missing"
 # pkg-config names in MSYS2 UCRT64:
 #   sdl3, SDL3_image, SDL3_ttf
 pkg-config --exists sdl3 || { echo "ERROR: pkg-config 'sdl3' not found"; exit 1; }
-pkg-config --exists SDL3_image || { echo "ERROR: pkg-config 'SDL3_image' not found"; exit 1; }
-pkg-config --exists SDL3_ttf   || { echo "ERROR: pkg-config 'SDL3_ttf' not found"; exit 1; }
+pkg-config --exists sdl3-image || { echo "ERROR: pkg-config 'SDL3_image' not found"; exit 1; }
+pkg-config --exists sdl3-ttf   || { echo "ERROR: pkg-config 'SDL3_ttf' not found"; exit 1; }
 
 log "--- printing SDL3 cflags/libs for visibility"
 pkg-config --cflags --libs sdl3 || true

@@ -55,9 +55,9 @@ pacman -S --noconfirm --needed \
 # --- SDL3 (prefer official packages) ------------------------------------------
 log "--- installing SDL3 packages"
 pacman -S --noconfirm --needed \
-  ucrt64/mingw-w64-ucrt-x86_64-SDL3 \
-  ucrt64/mingw-w64-ucrt-x86_64-SDL3_image \
-  ucrt64/mingw-w64-ucrt-x86_64-SDL3_ttf
+  ucrt64/mingw-w64-ucrt-x86_64-sdl3 \
+  ucrt64/mingw-w64-ucrt-x86_64-sdl3_image \
+  ucrt64/mingw-w64-ucrt-x86_64-sdl3_ttf
 
 # --- Make newly installed commands visible ------------------------------------
 hash -r

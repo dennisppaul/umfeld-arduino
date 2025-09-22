@@ -56,8 +56,8 @@ pacman -S --noconfirm --needed \
 log "--- installing SDL3 packages"
 pacman -S --noconfirm --needed \
   ucrt64/mingw-w64-ucrt-x86_64-sdl3 \
-  ucrt64/mingw-w64-ucrt-x86_64-sdl3_image \
-  ucrt64/mingw-w64-ucrt-x86_64-sdl3_ttf
+  ucrt64/mingw-w64-ucrt-x86_64-sdl3-image \
+  ucrt64/mingw-w64-ucrt-x86_64-sdl3-ttf
 
 # --- Make newly installed commands visible ------------------------------------
 hash -r
@@ -72,8 +72,8 @@ command -v pkg-config >/dev/null || { echo "ERROR: pkg-config (pkgconf) missing"
 # pkg-config names in MSYS2 UCRT64:
 #   sdl3, SDL3_image, SDL3_ttf
 pkg-config --exists sdl3 || { echo "ERROR: pkg-config 'sdl3' not found"; exit 1; }
-pkg-config --exists SDL3_image || { echo "ERROR: pkg-config 'SDL3_image' not found"; exit 1; }
-pkg-config --exists SDL3_ttf   || { echo "ERROR: pkg-config 'SDL3_ttf' not found"; exit 1; }
+pkg-config --exists sdl3-image || { echo "ERROR: pkg-config 'SDL3_image' not found"; exit 1; }
+pkg-config --exists sdl3-ttf   || { echo "ERROR: pkg-config 'SDL3_ttf' not found"; exit 1; }
 
 log "--- printing SDL3 cflags/libs for visibility"
 pkg-config --cflags --libs sdl3 || true

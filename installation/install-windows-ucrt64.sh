@@ -30,34 +30,34 @@ pacman -Syu --noconfirm || true
 # --- Base toolchain & core deps ----------------------------------------------
 log "--- installing base toolchain and core dependencies"
 pacman -S --noconfirm --needed \
-  mingw-w64-ucrt-x86_64-toolchain \
+  ucrt64/mingw-w64-ucrt-x86_64-toolchain \
   git \
-  mingw-w64-ucrt-x86_64-cmake \
-  mingw-w64-ucrt-x86_64-ninja \
-  mingw-w64-ucrt-x86_64-curl \
-  mingw-w64-ucrt-x86_64-mesa \
-  mingw-w64-ucrt-x86_64-pkgconf
+  ucrt64/mingw-w64-ucrt-x86_64-cmake \
+  ucrt64/mingw-w64-ucrt-x86_64-ninja \
+  ucrt64/mingw-w64-ucrt-x86_64-curl \
+  ucrt64/mingw-w64-ucrt-x86_64-mesa \
+  ucrt64/mingw-w64-ucrt-x86_64-pkgconf
 
 # --- Umfeld deps --------------------------------------------------------------
 log "--- installing Umfeld dependencies"
 pacman -S --noconfirm --needed \
-  mingw-w64-ucrt-x86_64-ffmpeg \
-  mingw-w64-ucrt-x86_64-harfbuzz \
-  mingw-w64-ucrt-x86_64-freetype \
-  mingw-w64-ucrt-x86_64-rtmidi \
-  mingw-w64-ucrt-x86_64-glm \
-  mingw-w64-ucrt-x86_64-portaudio \
-  mingw-w64-ucrt-x86_64-cairo \
-  mingw-w64-ucrt-x86_64-pdcurses
+  ucrt64/mingw-w64-ucrt-x86_64-ffmpeg \
+  ucrt64/mingw-w64-ucrt-x86_64-harfbuzz \
+  ucrt64/mingw-w64-ucrt-x86_64-freetype \
+  ucrt64/mingw-w64-ucrt-x86_64-rtmidi \
+  ucrt64/mingw-w64-ucrt-x86_64-glm \
+  ucrt64/mingw-w64-ucrt-x86_64-portaudio \
+  ucrt64/mingw-w64-ucrt-x86_64-cairo \
+  ucrt64/mingw-w64-ucrt-x86_64-pdcurses
 
 # (removed duplicate plain `pkgconf` token and unnecessary `cairomm` unless you need C++ bindings)
 
 # --- SDL3 (prefer official packages) ------------------------------------------
 log "--- installing SDL3 packages"
 pacman -S --noconfirm --needed \
-  mingw-w64-ucrt-x86_64-SDL3 \
-  mingw-w64-ucrt-x86_64-SDL3_image \
-  mingw-w64-ucrt-x86_64-SDL3_ttf
+  ucrt64/mingw-w64-ucrt-x86_64-SDL3 \
+  ucrt64/mingw-w64-ucrt-x86_64-SDL3_image \
+  ucrt64/mingw-w64-ucrt-x86_64-SDL3_ttf
 
 # --- Make newly installed commands visible ------------------------------------
 hash -r

@@ -133,7 +133,8 @@ recipe.ar.pattern="{compiler.path}{compiler.ar.cmd}" {compiler.ar.flags} "{archi
 ###################################################################################################
 
 compiler.c.linker.cmd=g++
-compiler.ldflags=-v
+# compiler.ldflags=-v
+compiler.ldflags=
 recipe.c.combine.pattern="{compiler.path}{compiler.c.linker.cmd}" {compiler.ldflags} -o "{build.path}/{build.project_name}.exec" {object_files} {archive_file_path} {compiler.umfeld_libs} {compiler.SDL3_libs} -lm
 
 # copy run script to `/tmp/` ( or similar )

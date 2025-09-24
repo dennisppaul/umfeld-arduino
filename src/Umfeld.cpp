@@ -34,7 +34,6 @@
 using namespace std::chrono;
 
 #if UMFELD_SET_DEFAULT_CALLBACK
-// TODO new callback mechanism
 /* default callback stubs */
 // NOTE provide weak callback implementation if default callbacks are used.
 // NOTE callbacks are set with `umfeld::set_XXX_callback()` in `SDL_AppInit`
@@ -296,7 +295,6 @@ SDL_AppResult SDL_AppInit(void** appstate, const int argc, char* argv[]) {
 
     /* 0. setup callbacks */
 #if UMFELD_SET_DEFAULT_CALLBACK
-    // TODO new callback mechanism
     umfeld::set_settings_callback(settings);
     umfeld::set_arguments_callback(arguments);
     umfeld::set_setup_callback(setup);

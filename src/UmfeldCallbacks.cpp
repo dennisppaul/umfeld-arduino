@@ -65,7 +65,6 @@ namespace umfeld {
     } // namespace
 } // namespace umfeld
 
-// TODO new callback mechanism
 void umfeld::set_settings_callback(FnVoid* f) { callback_settings_fn = f ? f : callback_settings_default; }
 void umfeld::run_settings_callback() { callback_settings_fn(); }
 void umfeld::set_arguments_callback(FnStrings* f) { callback_arguments_fn = f ? f : callback_arguments_default; }

@@ -31,7 +31,6 @@ void umfeld_set_callbacks();
 extern "C" {
 #endif
 /* NOTE weak implementations in `Umfeld.cpp` */
-// TODO new callback mechanism
 void settings();
 void arguments(const std::vector<std::string>& args);
 void setup();
@@ -53,13 +52,12 @@ bool sdl_event(const SDL_Event& event);
 #ifdef __cplusplus
 } // extern "C"
 #endif
-// NOTE
+
 void shutdown();                               // NOTE cannot be `extern "C"` due to conflict with function in `socket.h`
 void audioEvent(const umfeld::PAudio& device); // TODO cannot be `extern "C"` due to overloading ... maybe rename to `audioEventDevice`?
 
 /* declare callbacks */
 namespace umfeld {
-    // TODO new callback mechanism
     using FnVoid         = void();
     using FnIntInt       = void(int, int);
     using FnFloatFloat   = void(float, float);

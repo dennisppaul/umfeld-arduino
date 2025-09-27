@@ -33,7 +33,7 @@
 
 namespace umfeld {
 
-    /* public variables *for initialization only*  */
+    /* public variables used for *initialization only*  */
 
     /* --- audio  --- */
     inline bool enable_audio           = false;
@@ -61,30 +61,47 @@ namespace umfeld {
     /* public variables ( updated by system ) */
 
     /* --- audio  --- */
-    inline PAudio*     a                        = nullptr; // TODO consider renaming `a` to `audio` … which would however conflict with the `audio` function
+    /**
+     * @brief global pointer to current audio device. is set by audio subsystem after initialization.
+     */
+    inline PAudio* audio_device = nullptr; // TODO consider renaming `a` to `audio` … which would however conflict with the `audio` function
+    [[deprecated("use 'audio_device' instead")]]
+    inline PAudio*&    a                        = audio_device;
+    inline bool        run_audio_in_thread      = DEFAULT_AUDIO_RUN_IN_THREAD;
     inline float*      audio_input_buffer       = nullptr;
-    inline int         audio_input_channels     = DEFAULT_INPUT_CHANNELS;
+    inline int8_t      audio_input_channels     = DEFAULT_INPUT_CHANNELS;
     inline float*      audio_output_buffer      = nullptr;
-    inline int         audio_output_channels    = DEFAULT_OUTPUT_CHANNELS;
-    inline int         audio_sample_rate        = DEFAULT_SAMPLE_RATE;
-    inline int         audio_buffer_size        = DEFAULT_AUDIO_BUFFER_SIZE;
+    inline int8_t      audio_output_channels    = DEFAULT_OUTPUT_CHANNELS;
+    inline uint32_t    audio_sample_rate        = DEFAULT_SAMPLE_RATE;
+    inline uint32_t    audio_buffer_size        = DEFAULT_AUDIO_BUFFER_SIZE;
     inline int         audio_input_device_id    = DEFAULT_AUDIO_DEVICE;
     inline std::string audio_input_device_name  = DEFAULT_AUDIO_DEVICE_NAME;
     inline int         audio_output_device_id   = DEFAULT_AUDIO_DEVICE;
     inline std::string audio_output_device_name = DEFAULT_AUDIO_DEVICE_NAME;
-    inline bool        run_audio_in_thread      = DEFAULT_AUDIO_RUN_IN_THREAD;
-    inline bool&       audio_threaded           = run_audio_in_thread;
-    // [[deprecated("use 'run_audio_in_thread' instead")]]
 
-    // TODO consider renaming `a` to `audio` … which would however conflict with the `audio` function
-    // [[deprecated("use audio instead")]]
-    // inline PAudio*&     a                        = audio;
+    // NOTE duplicate variables for backward compatibility
+    [[deprecated("use 'run_audio_in_thread' instead")]]
+    inline bool& audio_threaded = run_audio_in_thread;
+    [[deprecated("use audio_input_buffer instead")]]
+    inline float*& input_buffer = audio_input_buffer;
     [[deprecated("use audio_input_channels instead")]]
-    inline int& input_channels = audio_input_channels;
+    inline int8_t& input_channels = audio_input_channels;
+    [[deprecated("use audio_output_buffer instead")]]
+    inline float*& output_buffer = audio_output_buffer;
     [[deprecated("use audio_output_channels instead")]]
-    inline int& output_channels = audio_output_channels;
+    inline int8_t& output_channels = audio_output_channels;
     [[deprecated("use audio_sample_rate instead")]]
-    inline int& sample_rate = audio_sample_rate;
+    inline uint32_t& sample_rate = audio_sample_rate;
+    [[deprecated("use audio_buffer_size instead")]]
+    inline uint32_t& buffer_size = audio_buffer_size;
+    [[deprecated("use audio_input_device_id instead")]]
+    inline int& input_device_id = audio_input_device_id;
+    [[deprecated("use audio_input_device_name instead")]]
+    inline std::string& input_device_name = audio_input_device_name;
+    [[deprecated("use audio_output_device_id instead")]]
+    inline int& output_device_id = audio_output_device_id;
+    [[deprecated("use audio_output_device_name instead")]]
+    inline std::string& output_device_name = audio_output_device_name;
 
     /* --- graphics --- */
     inline PGraphics* g              = nullptr;

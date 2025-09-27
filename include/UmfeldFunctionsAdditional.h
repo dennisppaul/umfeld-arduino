@@ -59,8 +59,8 @@ namespace umfeld {
                                    int  output_channels = DEFAULT_OUTPUT_CHANNELS,
                                    int  sample_rate     = DEFAULT_SAMPLE_RATE,
                                    int  buffer_size     = DEFAULT_AUDIO_BUFFER_SIZE,
-                                   int  input_device    = DEFAULT_AUDIO_DEVICE,
-                                   int  output_device   = DEFAULT_AUDIO_DEVICE,
+                                   int  input_device_id    = DEFAULT_AUDIO_DEVICE,
+                                   int  output_device_id   = DEFAULT_AUDIO_DEVICE,
                                    bool threaded        = DEFAULT_AUDIO_RUN_IN_THREAD);
     void                     audio(int                input_channels,
                                    int                output_channels,

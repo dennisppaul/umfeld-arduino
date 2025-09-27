@@ -47,10 +47,10 @@ namespace umfeld {
     static constexpr int      DEFAULT_AUDIO_DEVICE          = -1;
     static constexpr auto     DEFAULT_AUDIO_DEVICE_NAME     = "";
     static constexpr auto     DEFAULT_AUDIO_DEVICE_NOT_USED = "NOOP";
-    static constexpr int      DEFAULT_SAMPLE_RATE           = 48000;
-    static constexpr int      DEFAULT_AUDIO_BUFFER_SIZE     = 2048;
-    static constexpr int      DEFAULT_INPUT_CHANNELS        = 1;
-    static constexpr int      DEFAULT_OUTPUT_CHANNELS       = 2;
+    static constexpr uint32_t DEFAULT_SAMPLE_RATE           = 48000;
+    static constexpr uint32_t DEFAULT_AUDIO_BUFFER_SIZE     = 2048;
+    static constexpr int8_t   DEFAULT_INPUT_CHANNELS        = 1;
+    static constexpr int8_t   DEFAULT_OUTPUT_CHANNELS       = 2;
     static constexpr bool     DEFAULT_AUDIO_RUN_IN_THREAD   = false;
     static constexpr bool     DEFAULT_UPDATE_RUN_IN_THREAD  = false;
     static constexpr int      DEFAULT_BYTES_PER_PIXELS      = 4;

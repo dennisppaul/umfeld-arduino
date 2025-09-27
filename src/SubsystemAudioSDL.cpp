@@ -382,8 +382,8 @@ namespace umfeld::subsystem {
                     const int request_num_sample_frames = _device->audio_device->buffer_size;
                     if (SDL_GetAudioStreamQueued(_stream) < request_num_sample_frames) {
                         // NOTE for main audio device
-                        if (a != nullptr) {
-                            if (_device->audio_device == a) {
+                        if (audio_device != nullptr) {
+                            if (_device->audio_device == audio_device) {
                                 run_audioEvent_callback();
                             }
                         }

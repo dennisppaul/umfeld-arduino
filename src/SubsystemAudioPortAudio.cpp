@@ -158,8 +158,10 @@ namespace umfeld::subsystem {
             // Run callbacks only when enough frames for both sides (or side unused)
             if ((availIn >= audio->buffer_size || audio->input_channels == 0) &&
                 (availOut >= audio->buffer_size || audio->output_channels == 0)) {
-                if (a != nullptr && audio == umfeld::a) {
-                    run_audioEvent_callback();
+                if (audio_device != nullptr) {
+                    if (audio == audio_device) {
+                        run_audioEvent_callback();
+                    }
                 }
                 run_audioEventPAudio_callback(*audio);
             }
@@ -229,8 +231,8 @@ namespace umfeld::subsystem {
                 memcpy(audio->input_buffer, inputBuffer, framesPerBuffer * audio->input_channels * sizeof(float));
             }
 
-            if (audio == umfeld::a) {
-                if (a != nullptr) {
+            if (audio_device != nullptr) {
+                if (audio == audio_device) {
                     run_audioEvent_callback();
                 }
             }
@@ -300,7 +302,7 @@ namespace umfeld::subsystem {
             /* input */
 
             constexpr PaTime         LATENCY_SCALER                 = 2.0;
-            constexpr PaSampleFormat SAMPLE_FORMAT                  = paFloat32; // TODO maybe also support other formats? if e.g `paInt16` is supported remove `paDitherOff` flag
+            constexpr PaSampleFormat SAMPLE_FORMAT                  = paFloat32;                                             // TODO maybe also support other formats? if e.g `paInt16` is supported remove `paDitherOff` flag
             constexpr PaStreamFlags  STREAM_FLAGS_NON_BLOCKING_MODE = paDitherOff | paPrimeOutputBuffersUsingStreamCallback; // NOTE not using `paClipOff`
             constexpr PaStreamFlags  STREAM_FLAGS_BLOCKING_MODE     = paDitherOff;
 

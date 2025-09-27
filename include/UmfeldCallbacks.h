@@ -38,6 +38,7 @@ void draw();
 void update();
 void windowResized(int width, int height);
 void post();
+[[deprecated("use 'audioEvent(PAudio& audio)' instead")]]
 void audioEvent();
 /* NOTE weak implementations in `SubsystemHIDEvents`*/
 void keyPressed();
@@ -53,8 +54,9 @@ bool sdl_event(const SDL_Event& event);
 } // extern "C"
 #endif
 
-void shutdown();                               // NOTE cannot be `extern "C"` due to conflict with function in `socket.h`
-void audioEvent(const umfeld::PAudio& device); // TODO cannot be `extern "C"` due to overloading ... maybe rename to `audioEventDevice`?
+void shutdown();                              // NOTE cannot be `extern "C"` due to conflict with function in `socket.h`
+void audioEvent(const umfeld::PAudio& audio); // NOTE cannot be `extern "C"` due to overloading
+// TODO maybe rename to `audioEventDevice` or remove audioEvent()?
 
 /* declare callbacks */
 namespace umfeld {

@@ -45,7 +45,8 @@ UMFELD_FUNC_WEAK void update() { LOG_CALLBACK_MSG(umfeld::to_string("default: ",
 UMFELD_FUNC_WEAK void windowResized(int width, int height) { LOG_CALLBACK_MSG(umfeld::to_string("default: ", __func__)); }
 UMFELD_FUNC_WEAK void post() { LOG_CALLBACK_MSG("default post"); }
 UMFELD_FUNC_WEAK void shutdown() { LOG_CALLBACK_MSG(umfeld::to_string("default: ", __func__)); }
-UMFELD_FUNC_WEAK void audioEvent(const umfeld::PAudio& device) { LOG_CALLBACK_MSG(umfeld::to_string("default: ", __func__)); }
+UMFELD_FUNC_WEAK void audioEvent(const umfeld::PAudio& audio) { LOG_CALLBACK_MSG(umfeld::to_string("default: ", __func__)); }
+[[deprecated("use 'audioEvent(PAudio& audio)' instead")]]
 UMFELD_FUNC_WEAK void audioEvent() { LOG_CALLBACK_MSG(umfeld::to_string("default: ", __func__)); }
 UMFELD_FUNC_WEAK void keyPressed() { LOG_CALLBACK_MSG(umfeld::to_string("default: ", __func__)); }
 UMFELD_FUNC_WEAK void keyReleased() { LOG_CALLBACK_MSG(umfeld::to_string("default: ", __func__)); }
@@ -304,7 +305,12 @@ SDL_AppResult SDL_AppInit(void** appstate, const int argc, char* argv[]) {
     umfeld::set_post_callback(post);
     umfeld::set_shutdown_callback(shutdown);
     umfeld::set_audioEventPAudio_callback(audioEvent);
+    // disable in compiler
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+    // ReSharper disable once CppDeprecatedEntity
     umfeld::set_audioEvent_callback(audioEvent);
+#pragma clang diagnostic pop
     umfeld::set_keyPressed_callback(keyPressed);
     umfeld::set_keyReleased_callback(keyReleased);
     umfeld::set_mousePressed_callback(mousePressed);
@@ -533,8 +539,8 @@ SDL_AppResult SDL_AppInit(void** appstate, const int argc, char* argv[]) {
                 _audio_unit_info.output_channels    = umfeld::audio_output_channels;
                 _audio_unit_info.buffer_size        = umfeld::audio_buffer_size;
                 _audio_unit_info.sample_rate        = umfeld::audio_sample_rate;
-                _audio_unit_info.threaded           = umfeld::audio_threaded;
-                umfeld::a                           = umfeld::subsystem_audio->create_audio(&_audio_unit_info);
+                _audio_unit_info.threaded           = umfeld::run_audio_in_thread;
+                umfeld::audio_device                = umfeld::subsystem_audio->create_audio(&_audio_unit_info);
             }
         }
     }
@@ -578,19 +584,19 @@ SDL_AppResult SDL_AppInit(void** appstate, const int argc, char* argv[]) {
         // NOTE umfeld now owns the pixel buffer and takes care of deleting it
     }
 
-    if (umfeld::a != nullptr && umfeld::enable_audio) {
+    if (umfeld::audio_device != nullptr && umfeld::enable_audio) {
         // NOTE copy values back to global variables after initialization … a bit hackish but well.
-        umfeld::audio_input_device_id    = umfeld::a->input_device_id;
-        umfeld::audio_input_device_name  = umfeld::a->input_device_name;
-        umfeld::audio_input_buffer       = umfeld::a->input_buffer;
-        umfeld::audio_input_channels     = umfeld::a->input_channels;
-        umfeld::audio_output_device_id   = umfeld::a->output_device_id;
-        umfeld::audio_output_device_name = umfeld::a->output_device_name;
-        umfeld::audio_output_buffer      = umfeld::a->output_buffer;
-        umfeld::audio_output_channels    = umfeld::a->output_channels;
-        umfeld::audio_buffer_size        = umfeld::a->buffer_size;
-        umfeld::audio_sample_rate        = umfeld::a->sample_rate;
-        umfeld::audio_threaded           = umfeld::a->threaded;
+        umfeld::audio_input_device_id    = umfeld::audio_device->input_device_id;
+        umfeld::audio_input_device_name  = umfeld::audio_device->input_device_name;
+        umfeld::audio_input_buffer       = umfeld::audio_device->input_buffer;
+        umfeld::audio_input_channels     = umfeld::audio_device->input_channels;
+        umfeld::audio_output_device_id   = umfeld::audio_device->output_device_id;
+        umfeld::audio_output_device_name = umfeld::audio_device->output_device_name;
+        umfeld::audio_output_buffer      = umfeld::audio_device->output_buffer;
+        umfeld::audio_output_channels    = umfeld::audio_device->output_channels;
+        umfeld::audio_buffer_size        = umfeld::audio_device->buffer_size;
+        umfeld::audio_sample_rate        = umfeld::audio_device->sample_rate;
+        umfeld::run_audio_in_thread      = umfeld::audio_device->threaded;
     }
 
     umfeld::run_setup_callback();

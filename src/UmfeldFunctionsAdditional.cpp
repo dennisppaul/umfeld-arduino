@@ -414,7 +414,7 @@ namespace umfeld {
         return material ? loadOBJ_with_material(absolute_path) : loadOBJ_no_material(absolute_path);
     }
 
-    Sampler* loadSample(const std::string& file) {
+    Sampler* loadSample(const std::string& file, const bool resample_to_audio_device) {
         const std::string absolute_path = resolveDataPath(file);
         if (!file_exists(absolute_path)) {
             error("loadSample() failed! file not found: '", file, "'. the 'sketchPath()' is currently set to '", sketchPath(), "'. looking for file at: '", absolute_path, "'");
@@ -442,8 +442,19 @@ namespace umfeld {
             delete[] sample_buffer;
             sample_buffer = single_buffer;
         }
-        const auto sampler = new Sampler(sample_rate);
+        uint32_t _sample_rate;
+        if (audio_device != nullptr) {
+            _sample_rate = audio_device->sample_rate;
+        } else {
+            warning_in_function("no audio device available. using sample rate of the sample: ", sample_rate, " Hz.");
+            _sample_rate = sample_rate;
+        }
+        const auto sampler = new Sampler(_sample_rate);
         sampler->set_buffer(sample_buffer, static_cast<int32_t>(length), false);
+        if (resample_to_audio_device && _sample_rate != sample_rate) {
+            console_in_function("resampling sample from ", sample_rate, " Hz to ", _sample_rate, " Hz.");
+            sampler->resample(sample_rate, _sample_rate);
+        }
         return sampler;
     }
 } // namespace umfeld

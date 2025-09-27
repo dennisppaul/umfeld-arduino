@@ -55,13 +55,13 @@ namespace umfeld {
     int                      get_int_from_argument(const std::string& argument);
     std::string              get_string_from_argument(const std::string& argument);
     std::string              timestamp();
-    void                     audio(int  input_channels  = DEFAULT_INPUT_CHANNELS,
-                                   int  output_channels = DEFAULT_OUTPUT_CHANNELS,
-                                   int  sample_rate     = DEFAULT_SAMPLE_RATE,
-                                   int  buffer_size     = DEFAULT_AUDIO_BUFFER_SIZE,
-                                   int  input_device_id    = DEFAULT_AUDIO_DEVICE,
-                                   int  output_device_id   = DEFAULT_AUDIO_DEVICE,
-                                   bool threaded        = DEFAULT_AUDIO_RUN_IN_THREAD);
+    void                     audio(int  input_channels   = DEFAULT_INPUT_CHANNELS,
+                                   int  output_channels  = DEFAULT_OUTPUT_CHANNELS,
+                                   int  sample_rate      = DEFAULT_SAMPLE_RATE,
+                                   int  buffer_size      = DEFAULT_AUDIO_BUFFER_SIZE,
+                                   int  input_device_id  = DEFAULT_AUDIO_DEVICE,
+                                   int  output_device_id = DEFAULT_AUDIO_DEVICE,
+                                   bool threaded         = DEFAULT_AUDIO_RUN_IN_THREAD);
     void                     audio(int                input_channels,
                                    int                output_channels,
                                    int                sample_rate,
@@ -81,7 +81,7 @@ namespace umfeld {
     void                     register_library(LibraryListener* listener);         /* implemented in subsystems */
     void                     unregister_library(const LibraryListener* listener); /* implemented in subsystems */
     std::vector<Vertex>      loadOBJ(const std::string& file, bool material = true);
-    Sampler*                 loadSample(const std::string& file);
+    Sampler*                 loadSample(const std::string& file, bool resample_to_audio_device = true);
     void                     saveImage(const PImage* image, const std::string& filename);
     PAudio*                  createAudio(const AudioUnitInfo* device_info);
     void                     profile(Profile profile_name);

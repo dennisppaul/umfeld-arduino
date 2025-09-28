@@ -90,6 +90,10 @@ namespace umfeld {
         return std::filesystem::exists(path, ec) && std::filesystem::is_regular_file(path, ec);
     }
 
+    bool resource_file_exists(const std::string& resource_file_path) {
+        return file_exists(resolve_data_path(resource_file_path));
+    }
+
     bool directory_exists(const std::string& dir_path) {
         std::error_code             ec;
         const std::filesystem::path path(dir_path);
@@ -406,7 +410,7 @@ namespace umfeld {
     }
 
     std::vector<Vertex> loadOBJ(const std::string& file, const bool material) {
-        const std::string absolute_path = resolveDataPath(file);
+        const std::string absolute_path = resolve_data_path(file);
         if (!file_exists(absolute_path)) {
             error("loadOBJ() failed! file not found: '", file, "'. the 'sketchPath()' is currently set to '", sketchPath(), "'. looking for file at: '", absolute_path, "'");
             return {};
@@ -415,7 +419,7 @@ namespace umfeld {
     }
 
     Sampler* loadSample(const std::string& file, const bool resample_to_audio_device) {
-        const std::string absolute_path = resolveDataPath(file);
+        const std::string absolute_path = resolve_data_path(file);
         if (!file_exists(absolute_path)) {
             error("loadSample() failed! file not found: '", file, "'. the 'sketchPath()' is currently set to '", sketchPath(), "'. looking for file at: '", absolute_path, "'");
             return nullptr;

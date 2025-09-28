@@ -47,6 +47,7 @@ namespace umfeld {
     uint32_t                 color_pack(float r, float g, float b, float a);
     void                     color_unpack(uint32_t color, float& r, float& g, float& b, float& a);
     bool                     file_exists(const std::string& file_path);
+    bool                     resource_file_exists(const std::string& resource_file_path);
     bool                     directory_exists(const std::string& dir_path);
     std::string              find_file_in_paths(const std::vector<std::string>& paths, const std::string& filename);
     std::string              find_in_environment_path(const std::string& filename);

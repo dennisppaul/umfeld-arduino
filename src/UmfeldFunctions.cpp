@@ -865,7 +865,7 @@ namespace umfeld {
         }
 
         // LOCAL: no scheme → assume it's a local path
-        const std::string absolute_path = resolveDataPath(file_path);
+        const std::string absolute_path = resolve_data_path(file_path);
         return loadBytesFromFile(absolute_path);
     }
 
@@ -937,7 +937,7 @@ namespace umfeld {
 
     void noCursor() { SDL_HideCursor(); }
 
-    std::string resolveDataPath(const std::string& path) {
+    std::string resolve_data_path(const std::string& path) {
         std::filesystem::path p(path);
 
         if (p.is_absolute()) {
@@ -945,7 +945,7 @@ namespace umfeld {
         }
 
         // treat as relative to "data" directory next to executable
-        return sketchPath() + (std::filesystem::path("data") / p).string();
+        return sketchPath() + (std::filesystem::path(UMFELD_DATA_PATH) / p).string();
     }
 
     PImage* loadImage(const std::string& file) {
@@ -955,7 +955,7 @@ namespace umfeld {
             return new PImage(data.data(), data.size());
         }
 
-        const std::string absolute_path = resolveDataPath(file);
+        const std::string absolute_path = resolve_data_path(file);
         if (!file_exists(absolute_path)) {
             error("loadImage() failed! file not found: '", file, "'. the 'sketchPath()' is currently set to '", sketchPath(), "'. looking for file at: '", absolute_path, "'");
             return nullptr;

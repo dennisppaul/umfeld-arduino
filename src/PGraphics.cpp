@@ -845,7 +845,7 @@ void PGraphics::circle(const float x, const float y, const float diameter) {
 // }
 
 PFont* PGraphics::loadFont(const std::string& file, const float size) {
-    const std::string absolute_path = resolveDataPath(file);
+    const std::string absolute_path = resolve_data_path(file);
     if (!file_exists(absolute_path)) {
         error("loadFont() failed! file not found: '", file, "'. the 'sketchPath()' is currently set to '", sketchPath(), "'. looking for file at: '", absolute_path, "'");
         return nullptr;

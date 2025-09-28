@@ -312,6 +312,6 @@ namespace umfeld {
     // ( part of original processing but not in the Reference )
 
     std::string sketchPath();
-    std::string resolveDataPath(const std::string& path);
+    std::string resolve_data_path(const std::string& path);
 
 } // namespace umfeld

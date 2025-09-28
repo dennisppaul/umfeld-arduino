@@ -19,7 +19,7 @@
 
 #pragma once
 
-// SYSTEM
+/* --- SYSTEM --- */
 
 #ifndef TRUE
 #define TRUE 1
@@ -28,7 +28,11 @@
 #define FALSE 0
 #endif
 
-// DEBUGGING
+#ifndef UMFELD_DATA_PATH
+#define UMFELD_DATA_PATH "data/"
+#endif
+
+/* --- DEBUGGING --- */
 
 #define UMFELD_DEBUG_PRINT_FLUSH_SORT_BY_Z_ORDER_STATS               FALSE
 #define UMFELD_DEBUG_CHECK_OPENGL_ERROR                              FALSE
@@ -38,7 +42,7 @@
 #define UMFELD_DEBUG_SHAPE_RENDERER_OGL_3                            FALSE
 #define UMFELD_DEBUG_PIXEL_DENSITY_FRAME_BUFFER                      FALSE
 
-// CALLBACKS
+/* --- CALLBACKS --- */
 
 #ifndef UMFELD_FUNC_WEAK
 #define UMFELD_FUNC_WEAK __attribute__((weak))

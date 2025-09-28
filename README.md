@@ -46,7 +46,7 @@ cmake --build build
 ./build/minimal
 ```
 
-if everything works fine look into [Developing-Applications](Developing-Applications.md).
+if everything works fine look into [Developing-Applications](documentation/Developing-Applications.md).
 
 > tip: if something goes wrong, consult the notes below or the detailed [DOCUMENTATION](documentation/DOCUMENTATION.md).
 

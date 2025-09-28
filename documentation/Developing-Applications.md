@@ -7,13 +7,13 @@ the easiest way to start a new application is to:
 1. copy the folder `umfeld/template-application` to a desired location  
 2. rename the folder to a desired name e.g `my-application`  
 3. in the folder, find and open `CMakeLists.txt`  
-4. change `project(template)` to a desired application name e.g `project( my-application )`  
-5. set `UMFELD_PATH` ( `set(UMFELD_PATH "${CMAKE_CURRENT_SOURCE_DIR}/..")` ) to the location of the `umfeld` folder. the location can be relative ( e.g `../` ), relative to the application ( e.g `${CMAKE_CURRENT_SOURCE_DIR}/..` ), or absolute ( e.g `/usr/home/myusername/umfeld` )  
-6. save changes to `CMakeLists.txt`  
-7. open a terminal and navigate to the application folder ( e.g `cd my-application` )  
-8. configure build folder `cmake -B build`  
-9. compile application `cmake --build build`  
-10. run application `./build/my-application`
+    1. change `project(template)` to a desired application name e.g `project(my-application)`  
+    2. set `UMFELD_PATH` ( `set(UMFELD_PATH "${CMAKE_CURRENT_SOURCE_DIR}/..")` ) to the location of the `umfeld` folder. the location can be relative ( e.g `../` ), relative to the application ( e.g `${CMAKE_CURRENT_SOURCE_DIR}/..` ), or absolute ( e.g `/usr/home/myusername/umfeld` )  
+    3. save changes to `CMakeLists.txt`  
+4. open a terminal and navigate to the application folder ( e.g `cd my-application` )  
+5. configure build folder `cmake -B build`  
+6. compile application `cmake --build build`  
+7. run application `./build/my-application`
 
 > tip: if compilation fails, make sure the `umfeld` path is correct and all dependencies are installed ( see [DOCUMENTATION](documentation/DOCUMENTATION.md) ).
 

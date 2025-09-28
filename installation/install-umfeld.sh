@@ -108,22 +108,6 @@ version_ge() {
   [[ "$(printf '%s\n' "$1" "$2" | sort -V | head -n1)" == "$2" ]]
 }
 
-retry_git() {
-  # usage: retry_git <git> <args...>
-  local attempt=1
-  local max=3
-  until "$@"; do
-    rc=$?
-    if (( attempt >= max )); then
-      echo "ERROR: git command failed after $max attempts: $*" >&2
-      return "$rc"
-    fi
-    echo "git failed (rc=$rc). Retrying in 2s... (attempt $((attempt+1))/$max)"
-    sleep 2
-    attempt=$(( attempt + 1 ))
-  done
-}
-
 # Prepare common clone speedups (safe for old gits; unknown options are errors, hence guarded)
 FILTER_OPTS=(--filter=blob:none)
 SINGLE_BRANCH=("--single-branch")
@@ -132,6 +116,7 @@ SINGLE_BRANCH=("--single-branch")
 UMFELD_CLONE_ARGS=("${FILTER_OPTS[@]}" "${SINGLE_BRANCH[@]}")
 EXAMPLES_CLONE_ARGS=("${FILTER_OPTS[@]}" "${SINGLE_BRANCH[@]}")
 LIBRARIES_CLONE_ARGS=("${FILTER_OPTS[@]}" "--recurse-submodules")
+ARDUINO_CLONE_ARGS=("${FILTER_OPTS[@]}" "${SINGLE_BRANCH[@]}")
 
 # Apply tag/ref
 if [[ -n "$TAG" ]]; then
@@ -141,6 +126,7 @@ if [[ -n "$TAG" ]]; then
     UMFELD_CLONE_ARGS+=(--branch "$TAG")
     EXAMPLES_CLONE_ARGS+=(--branch "$TAG")
     LIBRARIES_CLONE_ARGS+=(--branch "$TAG")
+    ARDUINO_CLONE_ARGS+=(--branch "$TAG")
   else
     echo "Tag '$TAG' is < v2.2.0 — applying only to 'umfeld'"
     UMFELD_CLONE_ARGS+=(--branch "$TAG")
@@ -153,6 +139,7 @@ if [[ -n "$DEPTH" ]]; then
   UMFELD_CLONE_ARGS+=(--depth "$DEPTH")
   EXAMPLES_CLONE_ARGS+=(--depth "$DEPTH")
   LIBRARIES_CLONE_ARGS+=(--depth "$DEPTH" --shallow-submodules)
+  ARDUINO_CLONE_ARGS+=(--depth "$DEPTH")
 fi
 
 # Environment to avoid interactive prompts
@@ -167,9 +154,10 @@ for d in umfeld umfeld-examples umfeld-libraries; do
 done
 
 # ---- clone -----------------------------------------------------------------
-retry_git git clone "${UMFELD_CLONE_ARGS[@]}"      https://github.com/dennisppaul/umfeld
-retry_git git clone "${EXAMPLES_CLONE_ARGS[@]}"    https://github.com/dennisppaul/umfeld-examples
-retry_git git clone "${LIBRARIES_CLONE_ARGS[@]}"   https://github.com/dennisppaul/umfeld-libraries.git
+git clone "${UMFELD_CLONE_ARGS[@]}"      https://github.com/dennisppaul/umfeld
+git clone "${EXAMPLES_CLONE_ARGS[@]}"    https://github.com/dennisppaul/umfeld-examples
+git clone "${LIBRARIES_CLONE_ARGS[@]}"   https://github.com/dennisppaul/umfeld-libraries
+git clone "${ARDUINO_CLONE_ARGS[@]}"     https://github.com/dennisppaul/umfeld-arduino
 
 echo "-------------------------------"
 echo "--- download complete"
@@ -179,3 +167,39 @@ echo "-------------------------------"
 echo "Installed into: $TARGET_DIR"
 printf "Repos:\n  - %s\n  - %s\n  - %s\n" \
   "$TARGET_DIR/umfeld" "$TARGET_DIR/umfeld-examples" "$TARGET_DIR/umfeld-libraries"
+  
+echo "-------------------------------"
+echo "--- test run example"
+echo "-------------------------------"
+
+RUN_DURATION=3
+: "${CHECK:=✅}"
+: "${CROSS:=❌}"
+: "${REL_PATH:=umfeld-examples/Basics/load-image}"
+: "${EXECUTABLE:=./build/load-image}"
+
+cd $REL_PATH
+cmake -B build ; cmake --build build
+
+
+# start and capture PID (send stdout/stderr somewhere predictable; nohup defaults to nohup.out)
+nohup "$EXECUTABLE" > /dev/null 2> /dev/tty &
+# nohup "$EXECUTABLE" >> nohup.out 2>&1 &
+PID=$!
+
+# run for a limited time
+sleep "$RUN_DURATION"
+
+# terminate politely; ignore errors if already exited
+kill "$PID" 2>/dev/null || true
+
+# collect exit status of the process
+wait "$PID"
+EXIT_CODE=$?
+
+# consider SIGTERM (143) as success as you already do
+if [ "$EXIT_CODE" -eq 0 ] || [ "$EXIT_CODE" -eq 143 ]; then
+  echo -e "--- $CHECK $REL_PATH test ran OK"
+else
+  echo -e "--- $CROSS $REL_PATH test failed: exit code $EXIT_CODE)"
+fi

@@ -513,7 +513,7 @@ SDL_AppResult SDL_AppInit(void** appstate, const int argc, char* argv[]) {
             if (umfeld::subsystem_graphics->create_native_graphics != nullptr) {
                 umfeld::g = umfeld::subsystem_graphics->create_native_graphics(umfeld::render_to_buffer);
             }
-            /* NOTE interpret rennderer as profiles */
+            /* NOTE interpret renderer as profiles */
             if (umfeld::renderer == umfeld::P2D) {
                 umfeld::profile(umfeld::PROFILE_2D);
             }
@@ -621,15 +621,27 @@ SDL_AppResult SDL_AppInit(void** appstate, const int argc, char* argv[]) {
     return SDL_APP_CONTINUE;
 }
 
+static void handle_event_window_resize() {
+    if (umfeld::g != nullptr && umfeld::enable_graphics) {
+        // TODO implement window resize … how will the subsystems be updated?
+        int new_width  = -1;
+        int new_height = -1;
+        umfeld::getWindowSize(new_width, new_height);
+        if (new_width > 0 && new_height > 0) {
+            umfeld::warning("TODO resize PGraphics ( e.g update viewport, projection, … )");
+            // umfeld::g->resize(new_width, new_height);
+            umfeld::run_windowResized_callback(new_width, new_height);
+        }
+    }
+}
+
 static void handle_event(const SDL_Event& event, bool& app_is_running) {
     switch (event.type) {
         case SDL_EVENT_WINDOW_RESIZED:
-            // // TODO implement window resize … how will the subsystems be updated?
-            umfeld::warning("TODO window resized. subsystem needs to be update …");
-            umfeld::run_windowResized_callback(-1, -1);
+            handle_event_window_resize();
             break;
         case SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED:
-            // // TODO implement
+            // TODO implement
             break;
         case SDL_EVENT_WINDOW_SHOWN:
         case SDL_EVENT_WINDOW_HIDDEN:

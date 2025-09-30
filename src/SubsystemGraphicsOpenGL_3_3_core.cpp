@@ -69,14 +69,14 @@ namespace umfeld::subsystem {
     // ReSharper disable once CppParameterMayBeConstPtrOrRef
     static void event(SDL_Event* event) {
         if (event->type == SDL_EVENT_WINDOW_RESIZED) {
-            warning("TODO implement resize in OGLv33");
+            warning("TODO implement resize in OGLv33 (event)");
         }
     }
 
     // ReSharper disable once CppParameterMayBeConstPtrOrRef
     static void event_in_update_loop(SDL_Event* event) {
         if (event->type == SDL_EVENT_WINDOW_RESIZED) {
-            warning("TODO implement resize in OGLv33");
+            warning("TODO implement resize in OGLv33 (event_in_update_loop)");
         }
     }
 

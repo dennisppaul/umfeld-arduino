@@ -226,7 +226,7 @@ namespace umfeld {
     float    hue(uint32_t color);
     float    saturation(uint32_t color);
     uint32_t lerpColor(uint32_t c1, uint32_t c2, float amt);
-    void     rgb_to_hsb(const float r, const float g, const float b, float& h, float& s, float& v);
+    void     rgb_to_hsb(float r, float g, float b, float& h, float& s, float& v);
 
     // ## Environment
 
@@ -268,6 +268,8 @@ namespace umfeld {
         return value * value;
     }
 
+    template<typename T>
+    T     mapT(T value, T start0, T stop0, T start1, T stop1);
     float map(float value, float start0, float stop0, float start1, float stop1);
 
     template<typename T>

@@ -199,17 +199,35 @@ namespace umfeld {
         return result;
     }
 
-    float map(const float value,
-              const float start0,
-              const float stop0,
-              const float start1,
-              const float stop1) {
-        const float a = value - start0;
-        const float b = stop0 - start0;
-        const float c = stop1 - start1;
-        const float d = a / b;
-        const float e = d * c;
+    // float map(const float value,
+    //           const float start0,
+    //           const float stop0,
+    //           const float start1,
+    //           const float stop1) {
+    //     const float a = value - start0;
+    //     const float b = stop0 - start0;
+    //     const float c = stop1 - start1;
+    //     const float d = a / b;
+    //     const float e = d * c;
+    //     return e + start1;
+    // }
+
+    template<typename T>
+    T mapT(const T value,
+           const T start0,
+           const T stop0,
+           const T start1,
+           const T stop1) {
+        const T a = value - start0;
+        const T b = stop0 - start0;
+        const T c = stop1 - start1;
+        const T d = a / b;
+        const T e = d * c;
         return e + start1;
+    }
+
+    float map(const float value, const float start0, const float stop0, const float start1, const float stop1) {
+        return mapT<float>(value, start0, stop0, start1, stop1);
     }
 
     std::vector<std::string> match(const std::string& text, const std::regex& regexp) {
@@ -576,7 +594,7 @@ namespace umfeld {
         return str.substr(first, last - first + 1);
     }
 
-    PGraphics* createGraphics(const int width, const int height, int renderer) {
+    PGraphics* createGraphics(const int width, const int height, const int renderer) {
         if (subsystem_graphics == nullptr) {
             return nullptr;
         }

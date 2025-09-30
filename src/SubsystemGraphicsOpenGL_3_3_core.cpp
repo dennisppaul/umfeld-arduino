@@ -113,7 +113,7 @@ namespace umfeld::subsystem {
     // ReSharper disable once CppParameterMayBeConstPtrOrRef
     static void event_in_update_loop(SDL_Event* event) {
         // NOTE only call window resize in update loop to avoid conflicts with rendering
-        if (event->type == SDL_EVENT_WINDOW_RESIZED) {
+        if (event->type == SDL_EVENT_WINDOW_RESIZED || event->type == SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED) {
             resize_graphics(window);
         }
     }

@@ -122,10 +122,8 @@ int PGraphics::displayDensity() {
 }
 
 void PGraphics::pixelDensity(const int density) {
-    static bool emitted_warning = false;
-    if (!emitted_warning && init_properties_locked) {
-        warning("`pixelDensity()` should not be set after context is created. use `retina_support` in settings instead to control pixel density.");
-        emitted_warning = true;
+    if (init_properties_locked) {
+        resize(width, height);
     }
     pixel_density = density;
 }

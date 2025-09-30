@@ -149,13 +149,17 @@ namespace umfeld {
             return;
         }
 
-        int        framebuffer_width;
-        int        framebuffer_height;
+        int        framebuffer_width, framebuffer_height;
         const bool success = SDL_GetWindowSizeInPixels(window, &framebuffer_width, &framebuffer_height);
         if (!success) {
             warning("Failed to get window size in pixels.");
         }
-        const float pixel_density = SDL_GetWindowPixelDensity(window);
+
+        float pixel_density = SDL_GetWindowPixelDensity(window);
+        if (pixel_density <= 0) {
+            warning("failed to get valid pixel density: ", pixel_density, " defaulting to 1.0");
+            pixel_density = 1.0f;
+        }
 
         console(fl("renderer"), g->name());
         console(fl("render to offscreen"), g->render_to_offscreen ? "true" : "false");

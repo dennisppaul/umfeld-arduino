@@ -623,13 +623,10 @@ SDL_AppResult SDL_AppInit(void** appstate, const int argc, char* argv[]) {
 
 static void handle_event_window_resize() {
     if (umfeld::g != nullptr && umfeld::enable_graphics) {
-        // TODO implement window resize … how will the subsystems be updated?
         int new_width  = -1;
         int new_height = -1;
         umfeld::getWindowSize(new_width, new_height);
         if (new_width > 0 && new_height > 0) {
-            umfeld::warning("TODO resize PGraphics ( e.g update viewport, projection, … )");
-            // umfeld::g->resize(new_width, new_height);
             umfeld::run_windowResized_callback(new_width, new_height);
         }
     }

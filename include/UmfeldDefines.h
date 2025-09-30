@@ -41,6 +41,7 @@
 #define UMFELD_DEBUG_VERTEX_BUFFER_DEBUG_OPENGL_ERRORS               FALSE
 #define UMFELD_DEBUG_SHAPE_RENDERER_OGL_3                            FALSE
 #define UMFELD_DEBUG_PIXEL_DENSITY_FRAME_BUFFER                      FALSE
+#define UMFELD_DEBUG_WINDOW_RESIZE                                   FALSE
 
 /* --- CALLBACKS --- */
 

@@ -59,8 +59,11 @@ uint32_t millis();
 template<typename T>
 T abs(T value);
 template<typename T>
-T    constrain(T value, T min, T max);
-long map(long value, long fromLow, long fromHigh, long toLow, long toHigh);
+T constrain(T value, T min, T max);
+template<typename T>
+T     mapT(T value, T start0, T stop0, T start1, T stop1);
+float mapf(float value, float start0, float stop0, float start1, float stop1);
+long  map(long value, long fromLow, long fromHigh, long toLow, long toHigh);
 template<typename T>
 T max(T a, T b);
 template<typename T>

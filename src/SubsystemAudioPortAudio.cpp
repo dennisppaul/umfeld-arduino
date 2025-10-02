@@ -41,45 +41,56 @@ namespace umfeld::subsystem {
     };
 
     class PAudioPortAudio;
-    static std::vector<AudioDevice>      audio_input_devices;
-    static std::vector<AudioDevice>      audio_output_devices;
-    static std::vector<PAudioPortAudio*> audio_devices;
+    static std::vector<AudioDevice>      _audio_input_devices;
+    static std::vector<AudioDevice>      _audio_output_devices;
+    static std::vector<PAudioPortAudio*> _audio_devices;
 
     class PAudioPortAudio {
     public:
         PAudio*   audio{nullptr};
         PaStream* stream{nullptr};
 
-        explicit PAudioPortAudio(PAudio* audio) : audio(audio),
-                                                  update_interval((audio == nullptr ? 0 : audio->buffer_size) * 1000 / ((audio == nullptr ? 1 : audio->sample_rate) * 4)) {
+        explicit PAudioPortAudio(PAudio* audio) : audio(audio) {
             if (this->audio == nullptr) {
-                error("PAudioPortAudio: audio is nullptr");
+                error_in_function("PAudioPortAudio: audio is nullptr");
                 return;
             }
 
             if (audio->threaded) {
-                console("PAudioPortAudio: threaded audio processing enabled");
+                console_in_function("threaded audio processing enabled");
             } else {
-                console("PAudioPortAudio: threaded audio processing disabled");
+                console_in_function("PAudioPortAudio: threaded audio processing disabled");
             }
 
-            console("PAudioPortAudio: update interval: ", update_interval.count(), "ms");
+            console_in_function("PAudioPortAudio: update interval: ", update_interval.count(), "ms");
 
             if (!init()) {
-                error("PAudioPortAudio: could not intialize");
+                error_in_function("PAudioPortAudio: could not intialize");
                 return;
             }
 
-            if (audio->input_channels > 0) {
+            update_interval = std::chrono::milliseconds(audio->buffer_size * 1000 / (audio->sample_rate * 4));
+
+            if (audio->input_channels > 0 && audio->buffer_size > 0) {
                 audio->input_buffer = new float[audio->buffer_size * audio->input_channels]{0};
             } else {
+                if (audio->input_channels > 0 && audio->buffer_size == 0) {
+                    warning_in_function("no input buffer created ( this might be intentional ). channel count > 0 but buffer size = ", audio->buffer_size);
+                }
                 audio->input_buffer = nullptr;
             }
-            if (audio->output_channels > 0) {
+            if (audio->output_channels > 0 && audio->buffer_size > 0) {
                 audio->output_buffer = new float[audio->buffer_size * audio->output_channels]{0};
             } else {
+                if (audio->output_channels > 0 && audio->buffer_size == 0) {
+                    warning_in_function("no output buffer created ( this might be intentional ). channel count > 0 but buffer size = ", audio->buffer_size);
+                }
                 audio->output_buffer = nullptr;
             }
+        }
+
+        ~PAudioPortAudio() {
+            shutdown();
         }
 
         void start() {
@@ -186,11 +197,16 @@ namespace umfeld::subsystem {
                 Pa_CloseStream(stream);
                 stream = nullptr;
             }
+            // TODO not entirely sure about the ownership of the 'audio'
             if (audio != nullptr) {
                 delete[] audio->input_buffer;
                 delete[] audio->output_buffer;
                 audio->input_buffer  = nullptr;
                 audio->output_buffer = nullptr;
+            }
+            if (audio != nullptr) {
+                delete audio;
+                audio = nullptr;
             }
         }
 
@@ -225,7 +241,7 @@ namespace umfeld::subsystem {
                                   const PaStreamCallbackTimeInfo* /*timeInfo*/,
                                   PaStreamCallbackFlags /*statusFlags*/,
                                   void* userData) {
-            auto* audio = static_cast<PAudio*>(userData);
+            const auto* audio = static_cast<PAudio*>(userData);
 
             if (audio->input_channels > 0 && inputBuffer != nullptr) {
                 memcpy(audio->input_buffer, inputBuffer, framesPerBuffer * audio->input_channels * sizeof(float));
@@ -261,43 +277,76 @@ namespace umfeld::subsystem {
 
             /* try to find audio devices */
             if (audio->input_device_id == AUDIO_DEVICE_FIND_BY_NAME && audio->input_device_name != DEFAULT_AUDIO_DEVICE_NAME) {
-                _audio_input_device = find_logical_device_id_by_name(audio_input_devices, audio->input_device_name);
+                _audio_input_device = find_logical_device_id_by_name(_audio_input_devices, audio->input_device_name);
             } else if (audio->input_device_id > DEFAULT_AUDIO_DEVICE) {
-                _audio_input_device = find_logical_device_id_by_id(audio_input_devices, audio->input_device_id);
+                _audio_input_device = find_logical_device_id_by_id(_audio_input_devices, audio->input_device_id);
             }
             if (audio->output_device_id == AUDIO_DEVICE_FIND_BY_NAME && audio->output_device_name != DEFAULT_AUDIO_DEVICE_NAME) {
-                _audio_output_device = find_logical_device_id_by_name(audio_output_devices, audio->output_device_name);
+                _audio_output_device = find_logical_device_id_by_name(_audio_output_devices, audio->output_device_name);
             } else if (audio->output_device_id > DEFAULT_AUDIO_DEVICE) {
-                _audio_output_device = find_logical_device_id_by_id(audio_output_devices, audio->output_device_id);
+                _audio_output_device = find_logical_device_id_by_id(_audio_output_devices, audio->output_device_id);
             }
 
             /* use default devices */
+
             if (_audio_input_device == DEFAULT_AUDIO_DEVICE) {
                 _audio_input_device = Pa_GetDefaultInputDevice();
-                console("using default input device with ID : ", _audio_input_device);
+                console(fl("using default input device with ID"), _audio_input_device);
             }
             if (_audio_output_device == DEFAULT_AUDIO_DEVICE) {
                 _audio_output_device = Pa_GetDefaultOutputDevice();
-                console("using default output device with ID: ", _audio_output_device);
+                console(fl("using default output device with ID"), _audio_output_device);
             }
 
-            console("Opening audio device (input/output): (",
-                    _audio_input_device, "/",
-                    _audio_output_device, ")");
+            console("Opening audio device (input/output): (", _audio_input_device, "/", _audio_output_device, ")");
 
             const PaDeviceInfo*  _input_device_info          = Pa_GetDeviceInfo(_audio_input_device);
             const PaHostApiInfo* _input_device_host_api_info = Pa_GetHostApiInfo(_input_device_info->hostApi);
             console("Opening input stream for device with ID : ", _input_device_info->name,
                     "( Host API: ", _input_device_host_api_info->name,
-                    ", Channels (input): ", audio->input_channels,
+                    ", Channels (input): ", static_cast<int>(audio->input_channels),
                     " ) ... ");
 
             const PaDeviceInfo*  _output_device_info          = Pa_GetDeviceInfo(_audio_output_device);
             const PaHostApiInfo* _output_device_host_api_info = Pa_GetHostApiInfo(_output_device_info->hostApi);
             console("Opening output stream for device with ID: ", _output_device_info->name,
                     "( Host API: ", _output_device_host_api_info->name,
-                    ", Channels (output): ", audio->output_channels,
+                    ", Channels (output): ", static_cast<int>(audio->output_channels),
                     " ) ... ");
+
+            /* handle default values: input channels, output channels, sample_rate, audio_buffer_size */
+            if (audio->input_channels == DEFAULT_INPUT_CHANNELS) {
+                // NOTE default to stereo if possible
+                const int default_input_channels = _input_device_info->maxInputChannels < DEFAULT_INPUT_CHANNELS_FALLBACK ? _input_device_info->maxInputChannels : DEFAULT_INPUT_CHANNELS_FALLBACK;
+                console(fl("input channels set to default"), default_input_channels);
+                audio->input_channels = default_input_channels;
+            }
+            if (audio->output_channels == DEFAULT_OUTPUT_CHANNELS) {
+                // NOTE default to stereo if possible
+                const int default_output_channels = _output_device_info->maxOutputChannels < DEFAULT_OUTPUT_CHANNELS_FALLBACK ? _output_device_info->maxOutputChannels : DEFAULT_OUTPUT_CHANNELS_FALLBACK;
+                console(fl("output channels set to default"), default_output_channels);
+                audio->output_channels = default_output_channels;
+            }
+            if (audio->sample_rate == DEFAULT_SAMPLE_RATE) {
+                console(fl("sample rate set to default"), "in(", _input_device_info->defaultSampleRate, ") out(", _output_device_info->defaultSampleRate, ")");
+                if (_input_device_info->defaultSampleRate != _output_device_info->defaultSampleRate) {
+                    warning("input and output sample rate differ (", _input_device_info->defaultSampleRate, " != ", _output_device_info->defaultSampleRate, ") using max value");
+                }
+                audio->sample_rate = std::max(_input_device_info->defaultSampleRate, _output_device_info->defaultSampleRate);
+            }
+            if (audio->buffer_size == DEFAULT_AUDIO_BUFFER_SIZE) {
+                const int input_block_size  = static_cast<int>(_input_device_info->defaultHighInputLatency * audio->sample_rate + 0.5);
+                const int output_block_size = static_cast<int>(_output_device_info->defaultHighOutputLatency * audio->sample_rate + 0.5);
+                console(fl("buffer size set to default:"), "in(", input_block_size, ") out(", output_block_size, ")");
+                if (input_block_size != output_block_size) {
+                    warning("input and output block size differ (", input_block_size, " != ", output_block_size, ") using max value");
+                }
+                audio->buffer_size = std::max(input_block_size, output_block_size);
+                // TODO not sure with the computed buffer sizes
+                warning("computed buffer size seems off, falling back to ", DEFAULT_AUDIO_BUFFER_SIZE_FALLBACK, " (WIP)");
+                audio->buffer_size = DEFAULT_AUDIO_BUFFER_SIZE_FALLBACK;
+                warning("default buffer size: ", audio->buffer_size);
+            }
 
             /* input */
 
@@ -478,7 +527,7 @@ namespace umfeld::subsystem {
     }
 
     static void update_loop() {
-        for (const auto device: audio_devices) {
+        for (const auto device: _audio_devices) {
             if (device != nullptr) {
                 device->loop();
             }
@@ -486,15 +535,15 @@ namespace umfeld::subsystem {
     }
 
     static void shutdown() {
-        for (const auto device: audio_devices) {
+        for (const auto device: _audio_devices) {
             if (device != nullptr) {
                 device->shutdown();
                 // TODO again … who cleans up the buffers in PAudio i.e `ad->audio`? align with SDL
                 delete device;
             }
         }
-        if (!audio_devices.empty()) {
-            audio_devices.clear();
+        if (!_audio_devices.empty()) {
+            _audio_devices.clear();
         }
         const PaError result = Pa_Terminate();
         if (result != paNoError) {
@@ -503,7 +552,7 @@ namespace umfeld::subsystem {
     }
 
     static PAudioPortAudio* find_device(const PAudio* device) {
-        for (const auto d: audio_devices) {
+        for (const auto d: _audio_devices) {
             if (d->audio == device) {
                 return d;
             }
@@ -528,7 +577,7 @@ namespace umfeld::subsystem {
     }
 
     static void setup_pre() {
-        for (const auto _device: audio_devices) {
+        for (const auto _device: _audio_devices) {
             if (_device != nullptr) {
                 _device->start();
             }
@@ -536,8 +585,8 @@ namespace umfeld::subsystem {
     }
 
     static void update_audio_devices() {
-        audio_input_devices.clear();
-        audio_output_devices.clear();
+        _audio_input_devices.clear();
+        _audio_output_devices.clear();
         const int numDevices = Pa_GetDeviceCount();
         if (numDevices < 0) {
             error("+++ PortAudio error when counting devices: ", numDevices, ": ", Pa_GetErrorText(numDevices));
@@ -550,7 +599,7 @@ namespace umfeld::subsystem {
                 _audio_device_info.max_channels      = deviceInfo->maxInputChannels;
                 _audio_device_info.sample_rate       = deviceInfo->defaultSampleRate;
                 _audio_device_info.logical_device_id = i;
-                audio_input_devices.push_back(_audio_device_info);
+                _audio_input_devices.push_back(_audio_device_info);
             }
             if (deviceInfo->maxOutputChannels > 0) {
                 AudioDevice _audio_device_info;
@@ -558,7 +607,7 @@ namespace umfeld::subsystem {
                 _audio_device_info.max_channels      = deviceInfo->maxOutputChannels;
                 _audio_device_info.sample_rate       = deviceInfo->defaultSampleRate;
                 _audio_device_info.logical_device_id = i;
-                audio_output_devices.push_back(_audio_device_info);
+                _audio_output_devices.push_back(_audio_device_info);
             }
         }
     }
@@ -568,13 +617,13 @@ namespace umfeld::subsystem {
         console("update_audio_devices");
         int i = 0;
         console("    INPUT DEVICES");
-        for (auto ad: audio_input_devices) {
+        for (auto ad: _audio_input_devices) {
             console("    [", i, "]::", ad.name, " (", ad.max_channels, " channels, ", ad.sample_rate, " Hz)");
             i++;
         }
         i = 0;
         console("    OUTPUT DEVICES");
-        for (auto ad: audio_output_devices) {
+        for (auto ad: _audio_output_devices) {
             console("    [", i, "]::", ad.name, " (", ad.max_channels, " channels, ", ad.sample_rate, " Hz)");
             i++;
         }
@@ -584,7 +633,7 @@ namespace umfeld::subsystem {
         // ReSharper disable once CppDFAMemoryLeak
         const auto _audio = new PAudioPortAudio{_device};
         _audio->stop();
-        audio_devices.push_back(_audio);
+        _audio_devices.push_back(_audio);
         // NOTE newing the arrays happens in class … need to check and align with SDL implementation
         // audio_device->input_buffer  = new float[audio_device->audio_input_channels * audio_device->buffer_size]{};
         // audio_device->output_buffer = new float[audio_device->audio_output_channels * audio_device->buffer_size]{};

@@ -37,6 +37,14 @@
 //     pthread_setaffinity_np(posix_id, sizeof(cpu_set_t), &cpuset);
 // }
 
+// NOTE currently only F32 is supported
+#ifndef UMFELD_SDL_AUDIO_FORMAT
+#define UMFELD_SDL_AUDIO_FORMAT SDL_AUDIO_F32
+#endif
+// TODO would be nice to add support for other formats like 'SDL_AUDIO_S16' or 'SDL_AUDIO_S32'
+//      but this would however require conversion in the audio callback function 'update_audio_streams'
+//      also consider handling format on device ( not subsystem ) level.
+
 namespace umfeld::subsystem {
     struct PAudioSDL {
         PAudio*                                        audio_device{nullptr};
@@ -54,10 +62,6 @@ namespace umfeld::subsystem {
     };
 
     static std::vector<PAudioSDL*> _audio_devices;
-    // TODO callback mode is not working well.
-    //      also it appears to be slightly deprecated by SDL devs.
-    //      maybe drop it at some point ...
-    // static bool _audio_device_callback_mode = false;
 
     static const char* name() {
         return "SDL Audio";
@@ -66,64 +70,6 @@ namespace umfeld::subsystem {
     static void set_flags(uint32_t& subsystem_flags) {
         subsystem_flags |= SDL_INIT_AUDIO;
     }
-
-    // static bool request_audio_samples(PAudioSDL* const _device) {
-    //     if (SDL_AudioDevicePaused(_device->logical_device_id)) {
-    //         return true;
-    //     }
-    //     if (SDL_AudioStreamDevicePaused(_device->sdl_stream)) {
-    //         return true;
-    //     }
-    //
-    //     const int request_num_sample_frames = _device->audio_device->buffer_size;
-    //     if (SDL_GetAudioStreamQueued(_device->sdl_stream) < request_num_sample_frames) {
-    //         // NOTE for default audio device
-    //         if (_device->audio_device == a) {
-    //             audioEvent();
-    //         }
-    //
-    //         // NOTE for all registered audio devices ( including default audio device )
-    //         audioEvent(*_device->audio_device);
-    //
-    //         const float* buffer      = _device->audio_device->output_buffer;
-    //         const int    buffer_size = _device->audio_device->buffer_size * _device->audio_device->audio_output_channels;
-    //         SDL_PutAudioStreamData(_device->sdl_stream, buffer, buffer_size * sizeof(float));
-    //     }
-    //     return false;
-    // }
-
-    // static SDL_AudioDeviceID _TMP_input_device_id = -1;
-    // static SDL_AudioStream*  _TMP_input_stream = nullptr;
-
-    // static void SDLCALL received_audio_samples_callback(void* userdata, SDL_AudioStream* astream, int additional_amount, int total_amount) {
-    //     int input_bytes_available = SDL_GetAudioStreamAvailable(_TMP_input_stream);
-    //     console("input_bytes_available [", _TMP_input_device_id, "]: ", input_bytes_available);
-    //     console("additional_amount: ", additional_amount, " :: total_amount: ", total_amount);
-    //     float buffer[input_bytes_available / sizeof(float)];
-    //     SDL_GetAudioStreamData(astream, buffer, input_bytes_available);
-    //     // extern SDL_DECLSPEC int SDLCALL SDL_GetAudioStreamData(SDL_AudioStream *stream, void *buf, int len);
-    //     // SDL_GetAudioStreamData(_TMP_input_stream,,);
-    // }
-
-    // static void SDLCALL request_audio_samples_callback(void* userdata, SDL_AudioStream* astream, int additional_amount, int total_amount) {
-    //
-    //     /* total_amount is how much data the audio stream is eating right now, additional_amount is how much more it needs
-    //     than what it currently has queued (which might be zero!). You can supply any amount of data here; it will take what
-    //     it needs and use the extra later. If you don't give it enough, it will take everything and then feed silence to the
-    //     hardware for the rest. Ideally, though, we always give it what it needs and no extra, so we aren't buffering more
-    //     than necessary. */
-    //
-    //     for (const auto _device: _audio_devices) {
-    //         if (_device != nullptr &&
-    //             _device->audio_device != nullptr &&
-    //             _device->sdl_stream != nullptr &&
-    //             _device->sdl_stream == astream) {
-    //             if (request_audio_samples(_device)) {
-    //                 continue;
-    //             }
-    //         }
-    //     }
-    // }
 
     static void find_audio_devices(std::vector<AudioUnitInfoSDL>& devices,
                                    const int                      _num_playback_devices,
@@ -210,9 +156,11 @@ namespace umfeld::subsystem {
 
     static void print_device_info(const AudioUnitInfoSDL& device) {
         // TODO there is an inconsistency here: AudioUnitInfoSDL only stores one logical device id although a unit is made up of two logical devices
-        console(format_label("- [" + to_string(device.logical_device_id) + "]" + (device.logical_device_id > 9 ? " " : "") + device.input_device_name + "/" + device.output_device_name, format_width),
-                "in: ", device.input_channels, ", ",
-                "out: ", device.output_channels, ", ",
+        const std::string device_name_divider = device.input_device_name.empty() || device.output_device_name.empty() ? "" : " + ";
+        console(fl("- [" + to_string(device.logical_device_id) + "]" + (device.logical_device_id > 9 ? " " : "") +
+                   device.input_device_name + device_name_divider + device.output_device_name),
+                device.input_device_name.empty() ? "" : ("input channels: " + std::to_string(device.input_channels) + ", "),
+                device.output_device_name.empty() ? "" : ("output channels: " + std::to_string(device.output_channels) + ", "),
                 device.sample_rate, " Hz");
     }
 
@@ -350,7 +298,7 @@ namespace umfeld::subsystem {
         }
     }
 
-    static void update_audio_streams(PAudioSDL* const _device) {
+    static void update_audio_streams(const PAudioSDL* const _device) {
         const int _num_sample_frames = _device->audio_device->buffer_size;
 
         /* prepare samples from input stream */
@@ -365,7 +313,10 @@ namespace umfeld::subsystem {
                         float* buffer = _device->audio_device->input_buffer;
                         if (buffer != nullptr) {
                             if (SDL_GetAudioStreamData(_stream, buffer, num_required_bytes) < 0) {
-                                console("could not get data from ", _device->audio_device->input_device_name, " input stream: ", SDL_GetError());
+                                warning_in_function("could not acquire data from ", _device->audio_device->input_device_name, " input stream: ", SDL_GetError());
+                            }
+                            if constexpr (UMFELD_SDL_AUDIO_FORMAT != SDL_AUDIO_F32) {
+                                warning_in_function("currently only 'SDL_AUDIO_F32' is supported ( as defined in 'UMFELD_SDL_AUDIO_FORMAT' )");
                             }
                         }
                     }
@@ -394,8 +345,11 @@ namespace umfeld::subsystem {
                         const int    num_processed_bytes = static_cast<int>(_num_sample_frames) * _device->audio_device->output_channels * sizeof(float);
                         const float* buffer              = _device->audio_device->output_buffer;
                         if (buffer != nullptr) {
+                            if constexpr (UMFELD_SDL_AUDIO_FORMAT != SDL_AUDIO_F32) {
+                                warning_in_function("currently only 'SDL_AUDIO_F32' is supported ( as defined in 'UMFELD_SDL_AUDIO_FORMAT' )");
+                            }
                             if (!SDL_PutAudioStreamData(_stream, buffer, num_processed_bytes)) {
-                                console("could not send data to ", _device->audio_device->output_device_name, " output stream: ", SDL_GetError());
+                                warning_in_function("could not send data to ", _device->audio_device->output_device_name, " output stream: ", SDL_GetError());
                             }
                         }
                     }
@@ -415,7 +369,7 @@ namespace umfeld::subsystem {
             return -1;
         }
         while (audio_device_sdl->is_running) {
-            const double frame_duration_ms = (1000.0 * audio_device_sdl->audio_device->buffer_size) / audio_device_sdl->audio_device->sample_rate;
+            const double frame_duration_ms = 1000.0 * audio_device_sdl->audio_device->buffer_size / audio_device_sdl->audio_device->sample_rate;
             audio_device_sdl->next_time += std::chrono::microseconds(static_cast<int>(frame_duration_ms * 1000));
             std::this_thread::sleep_until(audio_device_sdl->next_time);
             update_audio_streams(audio_device_sdl);
@@ -473,12 +427,13 @@ namespace umfeld::subsystem {
             return; // NOTE this should never happen …
         }
 
-        // if (device->audio_input_channels > 0 && device->audio_output_channels > 0) {
-        //     warning("NOT IMPLEMENTED: trying to create device with input and output. ",
-        //             "currently only either out or input works. ",
-        //             "defaulting to just output device.");
-        //     device->audio_input_channels = 0;
-        // }
+        if (device->input_channels == 0 && device->output_channels == 0) {
+            error("either input channels or output channels must be greater than 0 or set to `DEFAULT`. ",
+                  "not creating audio device: ", device->input_device_name, "/", device->output_device_name);
+            return;
+        }
+
+        /* find and open audio devices and streams */
 
         // if (device->id == DEFAULT_AUDIO_DEVICE) {
         //     console("trying to create default audio device");
@@ -505,20 +460,59 @@ namespace umfeld::subsystem {
         //     }
         // }
 
-        if (device->input_channels < 1 && device->output_channels < 1) {
-            error("either input channels or output channels must be greater than 0. ",
-                  "not creating audio device: ", device->input_device_name, "/", device->output_device_name);
-            return;
-        }
-
-        /* find and open audio devices and streams */
-
         // ReSharper disable once CppDFAMemoryLeak
         const auto _device = new PAudioSDL();
 
-        warning("currently only default devices are supported");
-        _device->logical_input_device_id  = SDL_AUDIO_DEVICE_DEFAULT_RECORDING; // TODO get this info from PAudio device
-        _device->logical_output_device_id = SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK;  // TODO get this info from PAudio device
+        // TODO add support for custom device IDs and finding devices by name
+        warning(fl("SDL AUDIO"), "currently only default devices are supported");
+        _device->logical_input_device_id  = SDL_AUDIO_DEVICE_DEFAULT_RECORDING;
+        _device->logical_output_device_id = SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK;
+
+        /* query the actual device formats */
+
+        SDL_AudioSpec output_device, input_device;
+        int           output_block_size, input_block_size;
+
+        /* input device info */
+
+        if (!SDL_GetAudioDeviceFormat(_device->logical_input_device_id, &input_device, &input_block_size)) {
+            warning("Get input format failed:", SDL_GetError());
+        }
+        console(fl("input device format"), input_device.channels, " channels, ", input_device.freq, " Hz, ", SDL_GetAudioFormatName(input_device.format), " block size: ", input_block_size);
+
+        /* output device info */
+
+        if (!SDL_GetAudioDeviceFormat(_device->logical_output_device_id, &output_device, &output_block_size)) {
+            warning("Get output format failed: ", SDL_GetError());
+        }
+        console(fl("output device format"), output_device.channels, " channels, ", output_device.freq, " Hz, ", SDL_GetAudioFormatName(output_device.format), " block size: ", output_block_size);
+
+        /* handle default values: input channels, output channels, sample_rate, audio_buffer_size */
+
+        if (device->input_channels == DEFAULT) {
+            console(fl("input channels set to DEFAULT"), input_device.channels);
+            device->input_channels = input_device.channels;
+        }
+        if (device->output_channels == DEFAULT) {
+            console(fl("output channels set to default:"), output_device.channels);
+            device->output_channels = output_device.channels;
+        }
+        if (device->sample_rate == DEFAULT_SAMPLE_RATE) {
+            console(fl("sample rate set to default:"), "in(", input_device.freq, ") out(", output_device.freq, ")");
+            if (input_device.freq != output_device.freq) {
+                warning("input and output sample rate differ (", input_device.freq, " != ", output_device.freq, ") using max value");
+            }
+            device->sample_rate = std::max(input_device.freq, output_device.freq);
+        }
+        if (device->buffer_size == DEFAULT_AUDIO_BUFFER_SIZE) {
+            console(fl("buffer size set to default:"), "in(", input_block_size, ") out(", output_block_size, ")");
+            if (input_block_size != output_block_size) {
+                warning("input and output block size differ (", input_block_size, " != ", output_block_size, ") using max value");
+            }
+            device->buffer_size = std::max(input_block_size, output_block_size);
+        }
+
+        /* open, create and bind input and output streams */
 
         if (device->input_channels > 0) {
             // TODO do we want the callback way still? maybe just for input?
@@ -528,7 +522,7 @@ namespace umfeld::subsystem {
             // TODO find logical id from name … or name
             SDL_AudioSpec stream_specs; // NOTE these will be used as stream specs for input and output streams
             SDL_zero(stream_specs);
-            stream_specs.format              = SDL_AUDIO_F32; // NOTE currently only F32 is supported
+            stream_specs.format              = UMFELD_SDL_AUDIO_FORMAT;
             stream_specs.freq                = device->sample_rate;
             stream_specs.channels            = device->input_channels;
             _device->logical_input_device_id = static_cast<int>(SDL_OpenAudioDevice(_device->logical_input_device_id, nullptr));
@@ -548,7 +542,7 @@ namespace umfeld::subsystem {
                     }
                     console("binding audio input stream to device: [", _device->logical_input_device_id, "]");
                     if (src_spec.freq != dst_spec.freq) {
-                        warning("sample rate conversion from ", src_spec.freq, " to ", dst_spec.freq, " not working ... yet");
+                        warning("sample rate conversion from ", src_spec.freq, " to ", dst_spec.freq, " not working ... ATM");
                     }
                 } else {
                     error("could not bind input stream to device: ", SDL_GetError());
@@ -566,7 +560,7 @@ namespace umfeld::subsystem {
             // TODO find logical id from name … or name
             SDL_AudioSpec stream_specs; // NOTE these will be used as stream specs for input and output streams
             SDL_zero(stream_specs);
-            stream_specs.format               = SDL_AUDIO_F32; // NOTE currently only F32 is supported
+            stream_specs.format               = UMFELD_SDL_AUDIO_FORMAT;
             stream_specs.freq                 = device->sample_rate;
             stream_specs.channels             = device->output_channels;
             _device->logical_output_device_id = static_cast<int>(SDL_OpenAudioDevice(_device->logical_output_device_id, nullptr));
@@ -584,7 +578,7 @@ namespace umfeld::subsystem {
                     }
                     console("binding audio input stream to device: [", _device->logical_output_device_id, "]");
                     if (src_spec.freq != dst_spec.freq) {
-                        warning("sample rate conversion from ", src_spec.freq, " to ", dst_spec.freq, " not working ... yet");
+                        warning("sample rate conversion from ", src_spec.freq, " to ", dst_spec.freq, " not working ... ATM");
                     }
                 }
                 /* --- */

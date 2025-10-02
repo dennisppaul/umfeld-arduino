@@ -23,9 +23,9 @@
 
 namespace umfeld {
     static constexpr int   VERSION_MAJOR  = 2; // SemVer: increase when introducing breaking changes
-    static constexpr int   VERSION_MINOR  = 4; // SemVer: increase when introducing new features
-    static constexpr int   VERSION_PATCH  = 3; // SemVer: increase when introducing bug fixes
-    static constexpr auto  VERSION_STRING = "2.4.3";
+    static constexpr int   VERSION_MINOR  = 5; // SemVer: increase when introducing new features
+    static constexpr int   VERSION_PATCH  = 0; // SemVer: increase when introducing bug fixes
+    static constexpr auto  VERSION_STRING = "2.5.0";
 
     // Helper functions for version comparison
     static constexpr int version_number() {

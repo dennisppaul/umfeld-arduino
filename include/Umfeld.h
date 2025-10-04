@@ -116,23 +116,27 @@ namespace umfeld {
     // ReSharper restore CppDeprecatedEntity
 
     /* --- graphics --- */
-    inline PGraphics* g              = nullptr;
-    inline uint32_t*  pixels         = nullptr;
-    inline float      width          = DEFAULT_WINDOW_WIDTH;
-    inline float      height         = DEFAULT_WINDOW_HEIGHT;
-    inline int        frameCount     = 0;
-    inline float      frameRate      = DEFAULT_FRAME_RATE;
-    inline int        key            = 0; // events
-    inline bool       isKeyPressed   = false;
-    inline int        mouseButton    = DEFAULT;
-    inline bool       isMousePressed = false;
-    inline float      mouseX         = 0;
-    inline float      mouseY         = 0;
-    inline float      pmouseX        = 0;
-    inline float      pmouseY        = 0;
-    inline Renderer   renderer       = RENDERER_DEFAULT;
-    inline int        display_width  = DEFAULT;
-    inline int        display_height = DEFAULT;
+    inline PGraphics* g                    = nullptr;
+    inline uint32_t*  pixels               = nullptr;
+    inline float      width                = DEFAULT_WINDOW_WIDTH;
+    inline float      height               = DEFAULT_WINDOW_HEIGHT;
+    inline int        frameCount           = 0;
+    inline float      frameRate            = DEFAULT_FRAME_RATE;
+    inline int        key                  = 0; // events
+    inline bool       isKeyPressed         = false;
+    inline int        mouseButton          = DEFAULT;
+    inline bool       isMousePressed       = false;
+    inline float      mouseX               = 0;
+    inline float      mouseY               = 0;
+    inline float      pmouseX              = 0;
+    inline float      pmouseY              = 0;
+    inline Renderer   renderer             = RENDERER_DEFAULT;
+    inline int        display_width        = DEFAULT;
+    inline int        display_height       = DEFAULT;
+    inline int        depth_buffer_depth   = 24;
+    inline int        stencil_buffer_depth = 8;
+    inline bool       double_buffered      = true;
+
 
     /* public variables *mainly for internal use* */
 

@@ -35,9 +35,9 @@ namespace umfeld::subsystem {
         info.profile              = SDL_GL_CONTEXT_PROFILE_CORE;
         info.width                = width;
         info.height               = height;
-        info.depth_buffer_depth   = 24;
-        info.stencil_buffer_depth = 8;
-        info.double_buffered      = true;
+        info.depth_buffer_depth   = depth_buffer_depth;
+        info.stencil_buffer_depth = stencil_buffer_depth;
+        info.double_buffered      = double_buffered;
         return OGL_init(window, gl_context, info);
     }
 

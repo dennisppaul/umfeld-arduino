@@ -71,6 +71,12 @@ namespace umfeld {
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, info.major_version);
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, info.minor_version);
 
+        console(fl("OpenGL version"), info.major_version, ".", info.minor_version);
+        console(fl("window size"), info.width, "x", info.height);
+        console(fl("depth buffer depth"), info.depth_buffer_depth, "bit");
+        console(fl("stencil buffer depth"), info.stencil_buffer_depth, "bit");
+        console(fl("double buffered"), info.double_buffered ? "true" : "false");
+
         SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, info.double_buffered ? 1 : 0);
         SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, info.depth_buffer_depth);
         SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, info.stencil_buffer_depth);

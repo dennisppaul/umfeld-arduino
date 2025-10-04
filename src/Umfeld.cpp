@@ -46,6 +46,7 @@ UMFELD_FUNC_WEAK void windowResized(int width, int height) { LOG_CALLBACK_MSG(um
 UMFELD_FUNC_WEAK void post() { LOG_CALLBACK_MSG("default post"); }
 UMFELD_FUNC_WEAK void shutdown() { LOG_CALLBACK_MSG(umfeld::to_string("default: ", __func__)); }
 UMFELD_FUNC_WEAK void audioEvent(const umfeld::PAudio& audio) { LOG_CALLBACK_MSG(umfeld::to_string("default: ", __func__)); }
+UMFELD_FUNC_WEAK void audioEvent(float& left, float& right) { LOG_CALLBACK_MSG(umfeld::to_string("default: ", __func__)); }
 [[deprecated("use 'audioEvent(PAudio& audio)' instead")]]
 UMFELD_FUNC_WEAK void audioEvent() { LOG_CALLBACK_MSG(umfeld::to_string("default: ", __func__)); }
 UMFELD_FUNC_WEAK void keyPressed() { LOG_CALLBACK_MSG(umfeld::to_string("default: ", __func__)); }
@@ -305,12 +306,12 @@ SDL_AppResult SDL_AppInit(void** appstate, const int argc, char* argv[]) {
     umfeld::set_post_callback(post);
     umfeld::set_shutdown_callback(shutdown);
     umfeld::set_audioEventPAudio_callback(audioEvent);
-    // disable in compiler
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+    umfeld::set_audioEventFloatRefFloatRef_callback(audioEvent);
+    DISABLE_WARNING_PUSH
+    DISABLE_WARNING_DEPRECATED
     // ReSharper disable once CppDeprecatedEntity
     umfeld::set_audioEvent_callback(audioEvent);
-#pragma clang diagnostic pop
+    DISABLE_WARNING_POP
     umfeld::set_keyPressed_callback(keyPressed);
     umfeld::set_keyReleased_callback(keyReleased);
     umfeld::set_mousePressed_callback(mousePressed);
@@ -529,6 +530,9 @@ SDL_AppResult SDL_AppInit(void** appstate, const int argc, char* argv[]) {
                 // NOTE fill in the values from `Umfeld.h`
                 umfeld::AudioUnitInfo _audio_unit_info;
                 // _audio_unit_info.unique_id       = 0; // NOTE set by subsystem
+                DISABLE_WARNING_PUSH
+                DISABLE_WARNING_DEPRECATED
+                // ReSharper disable CppDeprecatedEntity
                 _audio_unit_info.input_device_id    = umfeld::audio_input_device_id;
                 _audio_unit_info.input_device_name  = umfeld::audio_input_device_name;
                 _audio_unit_info.input_buffer       = nullptr;
@@ -539,8 +543,10 @@ SDL_AppResult SDL_AppInit(void** appstate, const int argc, char* argv[]) {
                 _audio_unit_info.output_channels    = umfeld::audio_output_channels;
                 _audio_unit_info.buffer_size        = umfeld::audio_buffer_size;
                 _audio_unit_info.sample_rate        = umfeld::audio_sample_rate;
-                _audio_unit_info.threaded           = umfeld::run_audio_in_thread;
-                umfeld::audio_device                = umfeld::subsystem_audio->create_audio(&_audio_unit_info);
+                // ReSharper restore CppDeprecatedEntity
+                DISABLE_WARNING_POP
+                _audio_unit_info.threaded = umfeld::run_audio_in_thread;
+                umfeld::audio_device      = umfeld::subsystem_audio->create_audio(&_audio_unit_info);
             }
         }
     }
@@ -586,6 +592,9 @@ SDL_AppResult SDL_AppInit(void** appstate, const int argc, char* argv[]) {
 
     if (umfeld::audio_device != nullptr && umfeld::enable_audio) {
         // NOTE copy values back to global variables after initialization … a bit hackish but well.
+        DISABLE_WARNING_PUSH
+        DISABLE_WARNING_DEPRECATED
+        // ReSharper disable CppDeprecatedEntity
         umfeld::audio_input_device_id    = umfeld::audio_device->input_device_id;
         umfeld::audio_input_device_name  = umfeld::audio_device->input_device_name;
         umfeld::audio_input_buffer       = umfeld::audio_device->input_buffer;
@@ -597,6 +606,8 @@ SDL_AppResult SDL_AppInit(void** appstate, const int argc, char* argv[]) {
         umfeld::audio_buffer_size        = umfeld::audio_device->buffer_size;
         umfeld::audio_sample_rate        = umfeld::audio_device->sample_rate;
         umfeld::run_audio_in_thread      = umfeld::audio_device->threaded;
+        // ReSharper restore CppDeprecatedEntity
+        DISABLE_WARNING_POP
     }
 
     umfeld::run_setup_callback();

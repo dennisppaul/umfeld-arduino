@@ -158,4 +158,27 @@
 #define PROFILE_PG_OGL33_SCOPE_N(name)
 #endif
 
+/* --- WARNINGS --- */
+
+#if defined(__clang__)
+    #define DISABLE_WARNING_PUSH           _Pragma("clang diagnostic push")
+    #define DISABLE_WARNING_POP            _Pragma("clang diagnostic pop")
+    #define DISABLE_WARNING_DEPRECATED     _Pragma("clang diagnostic ignored \"-Wdeprecated-declarations\"")
+
+#elif defined(__GNUC__)
+    #define DISABLE_WARNING_PUSH           _Pragma("GCC diagnostic push")
+    #define DISABLE_WARNING_POP            _Pragma("GCC diagnostic pop")
+    #define DISABLE_WARNING_DEPRECATED     _Pragma("GCC diagnostic ignored \"-Wdeprecated-declarations\"")
+
+#elif defined(_MSC_VER)
+    #define DISABLE_WARNING_PUSH           __pragma(warning(push))
+    #define DISABLE_WARNING_POP            __pragma(warning(pop))
+    #define DISABLE_WARNING_DEPRECATED     __pragma(warning(disable: 4996))
+
+#else
+    #define DISABLE_WARNING_PUSH
+    #define DISABLE_WARNING_POP
+    #define DISABLE_WARNING_DEPRECATED
+#endif
+
 /* --- */

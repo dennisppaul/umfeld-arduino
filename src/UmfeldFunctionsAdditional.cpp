@@ -17,6 +17,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+// ReSharper disable CppDeprecatedEntity
 #include <filesystem>
 
 #if defined(__APPLE__) || defined(__linux__)
@@ -141,7 +142,7 @@ namespace umfeld {
         Dl_info info;
         // Get the address of a function within the library (can be any function)
         if (dladdr((void*) &get_executable_location, &info)) {
-            std::filesystem::path lib_path(info.dli_fname);                                      // Full path to the library
+            const std::filesystem::path lib_path(info.dli_fname);                                // Full path to the library
             return lib_path.parent_path().string() + std::filesystem::path::preferred_separator; // Return the directory without the library name
         } else {
             std::cerr << "Could not retrieve library location (dladdr)" << std::endl;
@@ -221,6 +222,9 @@ namespace umfeld {
             warning("`audio()` must be called before or within `settings()`.");
             return;
         }
+        DISABLE_WARNING_PUSH
+        DISABLE_WARNING_DEPRECATED
+        // ReSharper disable CppDeprecatedEntity
         umfeld::enable_audio           = true;
         umfeld::audio_input_device_id  = input_device_id;
         umfeld::audio_input_channels   = input_channels;
@@ -229,6 +233,8 @@ namespace umfeld {
         umfeld::audio_buffer_size      = buffer_size;
         umfeld::audio_sample_rate      = sample_rate;
         umfeld::run_audio_in_thread    = threaded;
+        // ReSharper restore CppDeprecatedEntity
+        DISABLE_WARNING_POP
     }
 
     void audio(const int          input_channels,
@@ -242,6 +248,9 @@ namespace umfeld {
             warning("`audio()` must be called before or within `settings()`.");
             return;
         }
+        DISABLE_WARNING_PUSH
+        DISABLE_WARNING_DEPRECATED
+        // ReSharper disable CppDeprecatedEntity
         umfeld::enable_audio             = true;
         umfeld::audio_input_device_id    = AUDIO_DEVICE_FIND_BY_NAME;
         umfeld::audio_input_device_name  = input_device_name;
@@ -252,6 +261,8 @@ namespace umfeld {
         umfeld::audio_buffer_size        = buffer_size;
         umfeld::audio_sample_rate        = sample_rate;
         umfeld::run_audio_in_thread      = threaded;
+        // ReSharper restore CppDeprecatedEntity
+        DISABLE_WARNING_POP
     }
 
     void audio(const AudioUnitInfo& info) {
@@ -259,7 +270,11 @@ namespace umfeld {
             warning("`audio()` must be called before or within `settings()`.");
             return;
         }
+        DISABLE_WARNING_PUSH
+        DISABLE_WARNING_DEPRECATED
+        // ReSharper disable CppDeprecatedEntity
         umfeld::enable_audio             = true;
+        umfeld::audio_input_device_id    = info.input_device_id;
         umfeld::audio_input_device_id    = info.input_device_id;
         umfeld::audio_input_device_name  = info.input_device_name;
         umfeld::audio_input_channels     = info.input_channels;
@@ -269,6 +284,8 @@ namespace umfeld {
         umfeld::audio_buffer_size        = info.buffer_size;
         umfeld::audio_sample_rate        = info.sample_rate;
         umfeld::run_audio_in_thread      = info.threaded;
+        // ReSharper restore CppDeprecatedEntity
+        DISABLE_WARNING_POP
     }
 
     void audio_start(PAudio* device) {
@@ -285,6 +302,22 @@ namespace umfeld {
         } else {
             subsystem_audio->stop(device);
         }
+    }
+
+    uint32_t get_audio_sample_rate() {
+        return audio_device != nullptr ? audio_device->sample_rate : 0;
+    }
+
+    int8_t get_audio_input_channels() {
+        return audio_device != nullptr ? audio_device->input_channels : 0;
+    }
+
+    int8_t get_audio_output_channels() {
+        return audio_device != nullptr ? audio_device->output_channels : 0;
+    }
+
+    uint32_t get_audio_buffer_size() {
+        return audio_device != nullptr ? audio_device->buffer_size : 0;
     }
 
     std::vector<Vertex> loadOBJ_with_material(const std::string& filename) {

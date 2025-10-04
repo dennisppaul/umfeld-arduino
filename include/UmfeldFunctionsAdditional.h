@@ -73,6 +73,10 @@ namespace umfeld {
     void                     audio(const AudioUnitInfo& info);
     void                     audio_start(PAudio* device = nullptr);
     void                     audio_stop(PAudio* device = nullptr);
+    uint32_t                 get_audio_sample_rate();
+    int8_t                   get_audio_input_channels();
+    int8_t                   get_audio_output_channels();
+    uint32_t                 get_audio_buffer_size();
     bool                     is_initialized();
     std::string              getTitle();
     void                     getLocation(const int& x, const int& y);

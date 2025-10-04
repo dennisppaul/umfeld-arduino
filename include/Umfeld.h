@@ -36,8 +36,9 @@ namespace umfeld {
     /* public variables used for *initialization only*  */
 
     /* --- audio  --- */
-    inline bool enable_audio           = false;
-    inline int  audio_unique_device_id = 0x0010;
+    inline bool enable_audio                       = false;
+    inline int  audio_unique_device_id             = 0x0010;
+    inline bool enable_audio_per_sample_processing = false;
     // inline int        audio_format       = 0; // TODO currently only supporting F32
 
     /* --- graphics --- */
@@ -66,20 +67,30 @@ namespace umfeld {
      */
     inline PAudio* audio_device = nullptr; // TODO consider renaming `a` to `audio` … which would however conflict with the `audio` function
     [[deprecated("use 'audio_device' instead")]]
-    inline PAudio*&    a                        = audio_device;
-    inline bool        run_audio_in_thread      = DEFAULT_AUDIO_RUN_IN_THREAD;
-    inline float*      audio_input_buffer       = nullptr;
-    inline int8_t      audio_input_channels     = DEFAULT_INPUT_CHANNELS;
-    inline float*      audio_output_buffer      = nullptr;
-    inline int8_t      audio_output_channels    = DEFAULT_OUTPUT_CHANNELS;
-    inline uint32_t    audio_sample_rate        = DEFAULT_SAMPLE_RATE;
-    inline uint32_t    audio_buffer_size        = DEFAULT_AUDIO_BUFFER_SIZE;
-    inline int         audio_input_device_id    = DEFAULT_AUDIO_DEVICE;
-    inline std::string audio_input_device_name  = DEFAULT_AUDIO_DEVICE_NAME;
-    inline int         audio_output_device_id   = DEFAULT_AUDIO_DEVICE;
+    inline PAudio*& a                   = audio_device;
+    inline bool     run_audio_in_thread = DEFAULT_AUDIO_RUN_IN_THREAD;
+    [[deprecated("use 'void audioEvent(const PAudio& audio) {}' instead")]]
+    inline float* audio_input_buffer = nullptr;
+    [[deprecated("use 'void audioEvent(const PAudio& audio) {}' instead")]]
+    inline int8_t audio_input_channels = DEFAULT_INPUT_CHANNELS;
+    [[deprecated("use 'void audioEvent(const PAudio& audio) {}' instead")]]
+    inline float* audio_output_buffer = nullptr;
+    [[deprecated("use 'void audioEvent(const PAudio& audio) {}' instead")]]
+    inline int8_t audio_output_channels = DEFAULT_OUTPUT_CHANNELS;
+    [[deprecated("use 'void audioEvent(const PAudio& audio) {}' instead")]]
+    inline uint32_t audio_sample_rate = DEFAULT_SAMPLE_RATE;
+    [[deprecated("use 'void audioEvent(const PAudio& audio) {}' instead")]]
+    inline uint32_t audio_buffer_size = DEFAULT_AUDIO_BUFFER_SIZE;
+    [[deprecated("use 'void audioEvent(const PAudio& audio) {}' instead")]]
+    inline int audio_input_device_id = DEFAULT_AUDIO_DEVICE;
+    [[deprecated("use 'void audioEvent(const PAudio& audio) {}' instead")]]
+    inline std::string audio_input_device_name = DEFAULT_AUDIO_DEVICE_NAME;
+    [[deprecated("use 'void audioEvent(const PAudio& audio) {}' instead")]]
+    inline int audio_output_device_id = DEFAULT_AUDIO_DEVICE;
+    [[deprecated("use 'void audioEvent(const PAudio& audio) {}' instead")]]
     inline std::string audio_output_device_name = DEFAULT_AUDIO_DEVICE_NAME;
-
     // NOTE duplicate variables for backward compatibility
+    // ReSharper disable CppDeprecatedEntity
     [[deprecated("use 'run_audio_in_thread' instead")]]
     inline bool& audio_threaded = run_audio_in_thread;
     [[deprecated("use audio_input_buffer instead")]]
@@ -102,6 +113,7 @@ namespace umfeld {
     inline int& output_device_id = audio_output_device_id;
     [[deprecated("use audio_output_device_name instead")]]
     inline std::string& output_device_name = audio_output_device_name;
+    // ReSharper restore CppDeprecatedEntity
 
     /* --- graphics --- */
     inline PGraphics* g              = nullptr;

@@ -172,6 +172,9 @@ namespace umfeld::subsystem {
                 if (audio_device != nullptr) {
                     if (audio == audio_device) {
                         run_audioEvent_callback();
+                        if (enable_audio_per_sample_processing) {
+                            PAudio::acquire_audio_buffer_per_sample(audio);
+                        }
                     }
                 }
                 run_audioEventPAudio_callback(*audio);

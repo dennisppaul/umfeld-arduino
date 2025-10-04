@@ -25,6 +25,17 @@
 
 namespace umfeld {
 
+    struct OpenGLGraphicsInfo {
+        int  major_version        = 0;
+        int  minor_version        = 0;
+        int  profile              = 0;
+        int  width                = 0;
+        int  height               = 0;
+        int  depth_buffer_depth   = 24;
+        int  stencil_buffer_depth = 8;
+        bool double_buffered      = true;
+    };
+
     void OGL_draw_pre();
 
     static void center_display(SDL_Window* window) {
@@ -46,11 +57,9 @@ namespace umfeld {
         SDL_SetWindowPosition(window, mDisplayLocation, mDisplayLocation);
     }
 
-    inline bool OGL_init(SDL_Window*&   window,
-                         SDL_GLContext& gl_context,
-                         const int      major_version,
-                         const int      minor_version,
-                         const int      profile) {
+    inline bool OGL_init(SDL_Window*&              window,
+                         SDL_GLContext&            gl_context,
+                         const OpenGLGraphicsInfo& info) {
         /* setup opengl */
 
 #ifndef OPENGL_ES_3_0
@@ -58,17 +67,16 @@ namespace umfeld {
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG); // always required on Mac?
 #endif
 #endif
-        SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, profile);
-        SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, major_version);
-        SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, minor_version);
+        SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, info.profile);
+        SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, info.major_version);
+        SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, info.minor_version);
 
-        SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-        SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
-        SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
+        SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, info.double_buffered ? 1 : 0);
+        SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, info.depth_buffer_depth);
+        SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, info.stencil_buffer_depth);
 
         if (antialiasing > 0) {
-            // TODO querry number of available buffers and samples
-            //      code below this always returns 0 :(
+            // TODO querry number of available buffers and samples code below this always returns 0 :(
             // GLint available_buffers, available_samples;
             // SDL_GL_GetAttribute(SDL_GL_MULTISAMPLEBUFFERS, &available_buffers);
             // SDL_GL_GetAttribute(SDL_GL_MULTISAMPLESAMPLES, &available_samples);
@@ -86,8 +94,8 @@ namespace umfeld {
 
         SDL_WindowFlags flags = SDL_WINDOW_OPENGL;
         window                = SDL_CreateWindow(DEFAULT_WINDOW_TITLE,
-                                                 static_cast<int>(umfeld::width),  // TODO would be better if this is passed as a parameter
-                                                 static_cast<int>(umfeld::height), // TODO would be better if this is passed as a parameter
+                                                 info.width,
+                                                 info.height,
                                                  get_SDL_WindowFlags(flags));
 
         if (window == nullptr) {

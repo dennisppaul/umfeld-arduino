@@ -43,13 +43,13 @@ namespace umfeld {
 
     /* --- graphics --- */
     inline bool enable_graphics         = false;
-    inline bool always_on_top           = false;
     inline int  antialiasing            = DEFAULT;
-    inline bool borderless              = false;
     inline int  display                 = DEFAULT;
     inline bool fullscreen              = false;
+    inline bool borderless              = false;
     inline bool resizable               = false;
     inline bool retina_support          = true;
+    inline bool always_on_top           = false;
     inline bool vsync                   = false;
     inline bool render_to_buffer        = true;
     inline int  save_image_jpeg_quailty = 100;

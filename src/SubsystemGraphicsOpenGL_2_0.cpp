@@ -28,7 +28,16 @@ namespace umfeld::subsystem {
     static void draw_post();
 
     static bool init() {
-        return OGL_init(window, gl_context, 2, 0, SDL_GL_CONTEXT_PROFILE_COMPATIBILITY);
+        OpenGLGraphicsInfo info;
+        info.major_version        = 2;
+        info.minor_version        = 0;
+        info.profile              = SDL_GL_CONTEXT_PROFILE_COMPATIBILITY;
+        info.width                = width;
+        info.height               = height;
+        info.depth_buffer_depth   = 24;
+        info.stencil_buffer_depth = 8;
+        info.double_buffered      = true;
+        return OGL_init(window, gl_context, info);
     }
 
     static void setup_pre() {

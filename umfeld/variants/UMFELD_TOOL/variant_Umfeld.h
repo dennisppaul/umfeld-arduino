@@ -19,3 +19,9 @@
 
 #pragma once
 
+#include "Arduino.h"
+
+#ifndef UMFELD_OMIT_GLOBAL_NAMESPACE_INCLUDE
+#include "Umfeld.h"
+using namespace umfeld;
+#endif

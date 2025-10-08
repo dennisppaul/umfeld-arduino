@@ -123,6 +123,7 @@ namespace umfeld {
     inline int        frameCount           = 0;
     inline float      frameRate            = DEFAULT_FRAME_RATE;
     inline int        key                  = 0; // events
+    inline int        keyCode              = 0; // events
     inline bool       isKeyPressed         = false;
     inline int        mouseButton          = DEFAULT;
     inline bool       isMousePressed       = false;

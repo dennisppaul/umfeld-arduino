@@ -28,6 +28,8 @@
 #include "UmfeldVersion.h"
 
 namespace umfeld {
+    typedef uint32_t color_32;
+
 #ifndef UMFELD_APP_NAME
     static constexpr auto DEFAULT_WINDOW_TITLE = "Umfeld";
 #else

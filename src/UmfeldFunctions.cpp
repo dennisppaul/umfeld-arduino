@@ -49,66 +49,66 @@ namespace umfeld {
 
     using namespace std::chrono;
 
-    uint32_t color(const float gray) {
-        return color(gray, gray, gray, 1);
+    color_32 color(const float brightness) {
+        return color(brightness, brightness, brightness, 1);
     }
 
-    uint32_t color(const float gray, const float alpha) {
-        return color(gray, gray, gray, alpha);
+    color_32 color(const float brightness, const float alpha) {
+        return color(brightness, brightness, brightness, alpha);
     }
 
-    uint32_t color(const float r, const float g, const float b) {
+    color_32 color(const float r, const float g, const float b) {
         return color(r, g, b, 1);
     }
 
-    uint32_t color(const float r, const float g, const float b, const float a) {
+    color_32 color(const float r, const float g, const float b, const float a) {
         return static_cast<uint32_t>(a * 255) << 24 |
                static_cast<uint32_t>(b * 255) << 16 |
                static_cast<uint32_t>(g * 255) << 8 |
                static_cast<uint32_t>(r * 255);
     }
 
-    uint32_t color_i(const uint32_t gray) {
+    color_32 color_8(const uint8_t gray) {
         return gray << 24 |
                gray << 16 |
                gray << 8 |
                255;
     }
 
-    uint32_t color_i(const uint32_t gray, const uint32_t alpha) {
+    color_32 color_8(const uint8_t gray, const uint8_t alpha) {
         return gray << 24 |
                gray << 16 |
                gray << 8 |
                alpha;
     }
 
-    uint32_t color_i(const uint32_t v1, const uint32_t v2, const uint32_t v3) {
+    color_32 color_8(const uint8_t r, const uint8_t g, const uint8_t b) {
         return 255 << 24 |
-               v3 << 16 |
-               v2 << 8 |
-               v1;
+               b << 16 |
+               g << 8 |
+               r;
     }
 
-    uint32_t color_i(const uint32_t v1, const uint32_t v2, const uint32_t v3, const uint32_t alpha) {
-        return alpha << 24 |
-               v3 << 16 |
-               v2 << 8 |
-               v1;
+    color_32 color_8(const uint8_t r, const uint8_t g, const uint8_t b, const uint8_t a) {
+        return a << 24 |
+               b << 16 |
+               g << 8 |
+               r;
     }
 
-    float red(const uint32_t color) {
+    float red(const color_32 color) {
         return static_cast<float>((color & 0x000000FF) >> 0) / 255.0f;
     }
 
-    float green(const uint32_t color) {
+    float green(const color_32 color) {
         return static_cast<float>((color & 0x0000FF00) >> 8) / 255.0f;
     }
 
-    float blue(const uint32_t color) {
+    float blue(const color_32 color) {
         return static_cast<float>((color & 0x00FF0000) >> 16) / 255.0f;
     }
 
-    float alpha(const uint32_t color) {
+    float alpha(const color_32 color) {
         return static_cast<float>((color & 0xFF000000) >> 24) / 255.0f;
     }
 

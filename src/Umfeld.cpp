@@ -140,6 +140,22 @@ namespace umfeld {
         target_frame_duration = 1.0 / fps;
     }
 
+    void register_library(LibraryListener* listener) {
+        if (subsystem_libraries == nullptr) {
+            warning("no library subsystem available (yet). make sure to NOT call this function in 'settings()'");
+            return;
+        }
+        subsystem_libraries->register_library(listener);
+    }
+
+    void unregister_library(const LibraryListener* listener) {
+        if (subsystem_libraries == nullptr) {
+            warning("no library subsystem available (yet). make sure to NOT call this function in 'settings()'");
+            return;
+        }
+        subsystem_libraries->unregister_library(listener);
+    }
+
     static bool set_display_size() {
         const SDL_DisplayID display_id = SDL_GetPrimaryDisplay();
         if (display_id == 0) {

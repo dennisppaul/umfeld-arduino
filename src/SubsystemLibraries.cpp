@@ -21,8 +21,6 @@
 
 #include "Umfeld.h"
 
-// TODO add functionality to (un-)register libraries
-
 namespace umfeld::subsystem {
 
     static std::vector<LibraryListener*> _listeners;
@@ -54,6 +52,7 @@ namespace umfeld::subsystem {
     static void setup_pre() {
         for (const auto l: _listeners) {
             if (l != nullptr) {
+        warning("setup_pre");
                 l->setup_pre();
             }
         }
@@ -102,10 +101,10 @@ namespace umfeld::subsystem {
     static const char* name() {
         return "Client Libraries";
     }
-} // namespace umfeld
+} // namespace umfeld::subsystem
 
-umfeld::Subsystem* umfeld_create_subsystem_libraries() {
-    auto* libraries                 = new umfeld::Subsystem{};
+umfeld::SubsystemLibraries* umfeld_create_subsystem_libraries() {
+    auto* libraries                 = new umfeld::SubsystemLibraries{};
     libraries->shutdown             = umfeld::subsystem::shutdown;
     libraries->set_flags            = umfeld::subsystem::set_flags;
     libraries->setup_pre            = umfeld::subsystem::setup_pre;
@@ -115,5 +114,7 @@ umfeld::Subsystem* umfeld_create_subsystem_libraries() {
     libraries->event                = umfeld::subsystem::event;
     libraries->event_in_update_loop = umfeld::subsystem::event_in_update_loop;
     libraries->name                 = umfeld::subsystem::name;
+    libraries->register_library     = umfeld::subsystem::register_library;
+    libraries->unregister_library   = umfeld::subsystem::unregister_library;
     return libraries;
 }

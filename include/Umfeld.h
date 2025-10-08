@@ -145,7 +145,7 @@ namespace umfeld {
     inline std::vector<Subsystem*> subsystems;
     inline SubsystemGraphics*      subsystem_graphics   = nullptr;
     inline SubsystemAudio*         subsystem_audio      = nullptr;
-    inline Subsystem*              subsystem_libraries  = nullptr;
+    inline SubsystemLibraries*     subsystem_libraries  = nullptr;
     inline Subsystem*              subsystem_hid_events = nullptr;
 
     // TODO move these functions to `UmfeldFunctions`

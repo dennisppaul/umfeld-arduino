@@ -66,6 +66,11 @@ namespace umfeld {
         PAudio* (*create_audio)(const AudioUnitInfo* device_info);
     };
 
+    struct SubsystemLibraries : Subsystem {
+        void (*register_library)(LibraryListener* listener);
+        void (*unregister_library)(const LibraryListener* listener);
+    };
+
     /**
     * this function pointer is used to create an audio subsystem.
     *
@@ -106,11 +111,11 @@ namespace umfeld {
 
 /* implemented subsystems */
 
-umfeld::SubsystemGraphics* umfeld_create_subsystem_graphics_sdl2d();
-umfeld::SubsystemGraphics* umfeld_create_subsystem_graphics_openglv20();
-umfeld::SubsystemGraphics* umfeld_create_subsystem_graphics_openglves30();
-umfeld::SubsystemGraphics* umfeld_create_subsystem_graphics_openglv33();
-umfeld::SubsystemAudio*    umfeld_create_subsystem_audio_sdl();
-umfeld::SubsystemAudio*    umfeld_create_subsystem_audio_portaudio();
-umfeld::Subsystem*         umfeld_create_subsystem_hid();
-umfeld::Subsystem*         umfeld_create_subsystem_libraries();
+umfeld::SubsystemGraphics*  umfeld_create_subsystem_graphics_sdl2d();
+umfeld::SubsystemGraphics*  umfeld_create_subsystem_graphics_openglv20();
+umfeld::SubsystemGraphics*  umfeld_create_subsystem_graphics_openglves30();
+umfeld::SubsystemGraphics*  umfeld_create_subsystem_graphics_openglv33();
+umfeld::SubsystemAudio*     umfeld_create_subsystem_audio_sdl();
+umfeld::SubsystemAudio*     umfeld_create_subsystem_audio_portaudio();
+umfeld::Subsystem*          umfeld_create_subsystem_hid();
+umfeld::SubsystemLibraries* umfeld_create_subsystem_libraries();

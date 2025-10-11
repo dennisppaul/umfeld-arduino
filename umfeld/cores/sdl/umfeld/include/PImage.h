@@ -50,6 +50,7 @@ namespace umfeld {
 
         virtual void loadPixels(PGraphics* graphics);
         virtual void init(uint32_t* pixels, int width, int height);
+        virtual void resize(int width, int height);
 
         void updatePixels(PGraphics* graphics);
         void updatePixels(PGraphics* graphics, int x, int y, int w, int h);

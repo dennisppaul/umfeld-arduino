@@ -29,7 +29,7 @@ using namespace umfeld;
 #include "UmfeldSDLOpenGL.h"
 #include "PGraphicsOpenGL.h"
 
-void PShape::beginShape(int shape) {
+void PShape::beginShape(const int shape) {
     isRecording = true;
     fShape      = shape; // TODO implement
 }
@@ -73,7 +73,7 @@ void PShape::endShape() {
     //    vertices.clear(); // TODO can it be cleared here?
 }
 
-void PShape::vertex(float x, float y, float z, float r, float g, float b) {
+void PShape::vertex(const float x, const float y, const float z, const float r, const float g, const float b) {
     if (!isRecording) {
         return;
     }

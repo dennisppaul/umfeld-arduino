@@ -28,7 +28,16 @@ namespace umfeld::subsystem {
     static void draw_post();
 
     static bool init() {
-        return OGL_init(window, gl_context, 2, 0, SDL_GL_CONTEXT_PROFILE_COMPATIBILITY);
+        OpenGLGraphicsInfo info;
+        info.major_version        = 2;
+        info.minor_version        = 0;
+        info.profile              = SDL_GL_CONTEXT_PROFILE_COMPATIBILITY;
+        info.width                = width;
+        info.height               = height;
+        info.depth_buffer_depth   = depth_buffer_depth;
+        info.stencil_buffer_depth = stencil_buffer_depth;
+        info.double_buffered      = double_buffered;
+        return OGL_init(window, gl_context, info);
     }
 
     static void setup_pre() {
@@ -146,7 +155,7 @@ namespace umfeld::subsystem {
     static const char* name() {
         return "OpenGL 2.0";
     }
-} // namespace umfeld
+} // namespace umfeld::subsystem
 
 umfeld::SubsystemGraphics* umfeld_create_subsystem_graphics_openglv20() {
     auto* graphics                   = new umfeld::SubsystemGraphics{};

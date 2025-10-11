@@ -1,5 +1,10 @@
 # RELEASE NOTES
 
+## v2.4.2 (2025-09-22)
+
+- `update` can run in own thread now with `run_update_in_thread = true`
+- fixed *Windows UCRT64* installer
+
 ## v2.4.0 (2025-09-10)
 
 - translated examples from Processing ( thank you [haram choi @oudeis01](https://github.com/oudeis01) )

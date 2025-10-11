@@ -44,8 +44,8 @@
 
 #if UMFELD_DEBUG_PGRAPHICS_OPENGL_3_ERRORS
 #define UMFELD_PGRAPHICS_OPENGL_3_CHECK_ERRORS(msg) \
-    do {                                                   \
-        PGraphicsOpenGL::OGL_check_error (msg);                             \
+    do {                                            \
+        PGraphicsOpenGL::OGL_check_error(msg);      \
     } while (0)
 #else
 #define UMFELD_PGRAPHICS_OPENGL_3_CHECK_ERRORS(msg)
@@ -226,8 +226,8 @@ void PGraphicsOpenGL_3::texture(PImage* img) {
 }
 
 void PGraphicsOpenGL_3::render_framebuffer_to_screen(const bool use_blit) {
-    // modern OpenGL framebuffer rendering method
     if (use_blit) {
+        // NOTE modern OpenGL framebuffer rendering method
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         glBindFramebuffer(GL_READ_FRAMEBUFFER, framebuffer.id);
         glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
@@ -500,52 +500,145 @@ void PGraphicsOpenGL_3::init(uint32_t* pixels, const int width, const int height
     }
 }
 
+void PGraphicsOpenGL_3::resize(const int new_width, const int new_height) {
+    if (new_width <= 0 || new_height <= 0) {
+        error_in_function("invalid size for resize: ", new_width, " x ", new_height);
+        return;
+    }
+
+    // Save previous GL state if we manage an offscreen FBO
+    if (render_to_offscreen) {
+        store_fbo_state();
+    }
+
+    // Update logical sizes
+    this->width        = new_width;
+    this->height       = new_height;
+    framebuffer.width  = new_width;
+    framebuffer.height = new_height;
+
+    // Recreate color target(s)
+    if (render_to_offscreen) {
+        // Recreate framebuffer resources
+        if (framebuffer.id == 0) {
+            glGenFramebuffers(1, &framebuffer.id);
+        }
+        glBindFramebuffer(GL_FRAMEBUFFER, framebuffer.id);
+
+        // Recreate color texture
+        if (framebuffer.texture_id == 0) {
+            glGenTextures(1, &framebuffer.texture_id);
+        }
+
+#ifdef OPENGL_ES_3_0
+        if (framebuffer.msaa) {
+            warning("MSAA not supported in OpenGL ES 3.0 ... disabling MSAA on resize.");
+            framebuffer.msaa = false;
+        }
+#endif
+
+        if (framebuffer.msaa) {
+#ifndef OPENGL_ES_3_0
+            glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, framebuffer.texture_id);
+            GLint maxSamples;
+            glGetIntegerv(GL_MAX_SAMPLES, &maxSamples);
+            const int samples = std::min(antialiasing, maxSamples);
+            glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE,
+                                    samples,
+                                    UMFELD_DEFAULT_INTERNAL_PIXEL_FORMAT,
+                                    framebuffer.width,
+                                    framebuffer.height,
+                                    GL_TRUE);
+            glFramebufferTexture2D(GL_FRAMEBUFFER,
+                                   GL_COLOR_ATTACHMENT0,
+                                   GL_TEXTURE_2D_MULTISAMPLE,
+                                   framebuffer.texture_id, 0);
+            // Depth/stencil renderbuffer (recreate each resize)
+            GLuint msaaDepthBuffer;
+            glGenRenderbuffers(1, &msaaDepthBuffer);
+            glBindRenderbuffer(GL_RENDERBUFFER, msaaDepthBuffer);
+            glRenderbufferStorageMultisample(GL_RENDERBUFFER,
+                                             samples,
+                                             GL_DEPTH24_STENCIL8,
+                                             framebuffer.width,
+                                             framebuffer.height);
+            glFramebufferRenderbuffer(GL_FRAMEBUFFER,
+                                      GL_DEPTH_ATTACHMENT,
+                                      GL_RENDERBUFFER,
+                                      msaaDepthBuffer);
+            glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, 0);
+#endif
+        } else {
+            glBindTexture(GL_TEXTURE_2D, framebuffer.texture_id);
+            glTexImage2D(GL_TEXTURE_2D,
+                         0,
+                         UMFELD_DEFAULT_INTERNAL_PIXEL_FORMAT,
+                         framebuffer.width,
+                         framebuffer.height,
+                         0,
+                         UMFELD_DEFAULT_EXTERNAL_PIXEL_FORMAT,
+                         UMFELD_DEFAULT_TEXTURE_PIXEL_TYPE,
+                         nullptr);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+            glFramebufferTexture2D(GL_FRAMEBUFFER,
+                                   GL_COLOR_ATTACHMENT0,
+                                   GL_TEXTURE_2D,
+                                   framebuffer.texture_id,
+                                   0);
+
+            // Depth/stencil renderbuffer (recreate each resize)
+            GLuint depthBuffer;
+            glGenRenderbuffers(1, &depthBuffer);
+            glBindRenderbuffer(GL_RENDERBUFFER, depthBuffer);
+            glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, framebuffer.width, framebuffer.height);
+            glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depthBuffer);
+            glBindTexture(GL_TEXTURE_2D, 0);
+        }
+
+        if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+            error_in_function("framebuffer is not complete after resize!");
+        }
+
+        // Clear new target and set viewport to new size
+        glViewport(0, 0, framebuffer.width, framebuffer.height);
+        glClearColor(0, 0, 0, 0);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        // Unbind FBO; restore previous state
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        texture_id = framebuffer.texture_id;
+        restore_fbo_state();
+    } else {
+        // On-screen: recreate backing texture used for blits/draws
+        if (texture_id == 0) {
+            GLuint _buffer_texture_id;
+            glGenTextures(1, &_buffer_texture_id);
+            texture_id = _buffer_texture_id;
+        }
+        glBindTexture(GL_TEXTURE_2D, texture_id);
+        glTexImage2D(GL_TEXTURE_2D, 0,
+                     UMFELD_DEFAULT_INTERNAL_PIXEL_FORMAT,
+                     new_width, new_height,
+                     0,
+                     UMFELD_DEFAULT_EXTERNAL_PIXEL_FORMAT,
+                     UMFELD_DEFAULT_TEXTURE_PIXEL_TYPE,
+                     nullptr);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glBindTexture(GL_TEXTURE_2D, 0);
+
+        // Update viewport for immediate rendering paths
+        glViewport(0, 0, new_width, new_height);
+    }
+
+    // Optional: update projection dependent data if needed (client code may also call perspective/ortho)
+    // resetShader(); // ensure no stale program bound if caller expects default state
+}
+
 /* additional */
-
-// void PGraphicsOpenGL_3::OGL3_update_shader_matrices(PShader* shader) const {
-//     if (shader == nullptr) { return; }
-//     if (shader->has_model_matrix) {
-//         shader->set_uniform(SHADER_UNIFORM_MODEL_MATRIX, model_matrix);
-//     }
-//     if (shader->has_view_matrix) {
-//         shader->set_uniform(SHADER_UNIFORM_VIEW_MATRIX, view_matrix);
-//     }
-//     if (shader->has_projection_matrix) {
-//         shader->set_uniform(SHADER_UNIFORM_PROJECTION_MATRIX, projection_matrix);
-//     }
-//     if (shader->has_texture_unit) {
-//         shader->set_uniform(SHADER_UNIFORM_TEXTURE_UNIT, DEFAULT_ACTIVE_TEXTURE_UNIT);
-//     }
-// }
-//
-// void PGraphicsOpenGL_3::OGL3_reset_shader_matrices(PShader* shader) {
-//     if (shader == nullptr) { return; }
-//     if (shader->has_model_matrix) {
-//         shader->set_uniform(SHADER_UNIFORM_MODEL_MATRIX, glm::mat4(1.0f));
-//     }
-//     if (shader->has_view_matrix) {
-//         shader->set_uniform(SHADER_UNIFORM_VIEW_MATRIX, glm::mat4(1.0f));
-//     }
-//     if (shader->has_projection_matrix) {
-//         shader->set_uniform(SHADER_UNIFORM_PROJECTION_MATRIX, glm::mat4(1.0f));
-//     }
-//     if (shader->has_texture_unit) {
-//         shader->set_uniform(SHADER_UNIFORM_TEXTURE_UNIT, 0);
-//     }
-// }
-
-// void PGraphicsOpenGL_3::mesh(VertexBuffer* mesh_shape) {
-//     UMFELD_PGRAPHICS_OPENGL_3_CHECK_ERRORS("mesh() begin");
-//     if (mesh_shape == nullptr) {
-//         return;
-//     }
-//     warning_in_function_once("NOTE shader values are not properly set ATM");
-//     mesh_shape->draw();
-//     UMFELD_PGRAPHICS_OPENGL_3_CHECK_ERRORS("mesh() end");
-// #ifdef UMFELD_OGL33_RESET_MATRICES_ON_SHADER
-//     OGL3_reset_shader_matrices(current_custom_shader);
-// #endif
-// }
 
 PShader* PGraphicsOpenGL_3::loadShader(const std::string& vertex_code, const std::string& fragment_code, const std::string& geometry_code) {
     const auto shader = new PShader();

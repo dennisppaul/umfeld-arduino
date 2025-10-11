@@ -1,6 +1,6 @@
 ![umfeld-logotype-3D](assets/umfeld-logotype.png)
 
-*Umfeld* is a C++ environment for audio- and graphics-based applications. it is inspired by [Processing.org](https://processing.org) and similar environments.
+*Umfeld* is a C++ environment for audio- and graphics-based applications, inspired by the [Processing.org](https://processing.org/) environment.
 
 ⚠️ *Umfeld* is a *Work in Progress* (WIP) ⚠️ please keep this in mind. if you find a bug, issue, or something missing, or have an idea for improvements or a feature request, please use GitHub’s [Issue Tracking System](https://github.com/dennisppaul/umfeld/issues).
 
@@ -46,7 +46,7 @@ cmake --build build
 ./build/minimal
 ```
 
-if everything works fine look into [Developing-Applications](Developing-Applications.md).
+if everything works fine look into [Developing-Applications](documentation/Developing-Applications.md).
 
 > tip: if something goes wrong, consult the notes below or the detailed [DOCUMENTATION](documentation/DOCUMENTATION.md).
 

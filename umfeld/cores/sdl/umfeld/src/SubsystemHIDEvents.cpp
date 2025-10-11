@@ -36,11 +36,13 @@ namespace umfeld::subsystem {
 
         switch (event.type) {
             case SDL_EVENT_KEY_DOWN:
-                key = static_cast<int>(event.key.key);
+                keyCode      = event.key.scancode;
+                key          = static_cast<int>(event.key.key);
                 isKeyPressed = true;
                 run_keyPressed_callback();
                 break;
             case SDL_EVENT_KEY_UP:
+                keyCode      = event.key.scancode;
                 key          = static_cast<int>(event.key.key);
                 isKeyPressed = false;
                 run_keyReleased_callback();
@@ -48,7 +50,7 @@ namespace umfeld::subsystem {
             case SDL_EVENT_MOUSE_BUTTON_DOWN:
                 mouseButton       = event.button.button; // TODO not sure how consistent these are across platforms
                 _mouse_is_pressed = true;
-                isMousePressed = true;
+                isMousePressed    = true;
                 run_mousePressed_callback();
                 // callbackHook();
                 // if (callbackHook_func) {
@@ -58,7 +60,7 @@ namespace umfeld::subsystem {
             case SDL_EVENT_MOUSE_BUTTON_UP:
                 mouseButton       = -1;
                 _mouse_is_pressed = false;
-                isMousePressed = false;
+                isMousePressed    = false;
                 run_mouseReleased_callback();
                 break;
             case SDL_EVENT_MOUSE_MOTION:
@@ -74,7 +76,7 @@ namespace umfeld::subsystem {
                 break;
             // case SDL_MULTIGESTURE:
             case SDL_EVENT_MOUSE_WHEEL:
-                run_mouseWheel_callback(event.wheel.mouse_x, event.wheel.mouse_y);
+                run_mouseWheel_callback(event.wheel.x, event.wheel.y);
                 break;
             case SDL_EVENT_DROP_FILE: {
                 // only allow drag and drop on main window

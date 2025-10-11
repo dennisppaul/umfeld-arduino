@@ -391,10 +391,6 @@ float PGraphicsOpenGL_2_0::textWidth(const std::string& text) {
 
 void PGraphicsOpenGL_2_0::pixelDensity(const int density) {
     static bool emitted_warning = false;
-    if (!emitted_warning && init_properties_locked) {
-        warning("`pixelDensity()` should not be set after context is created. use `retina_support` in settings instead.");
-        emitted_warning = true;
-    }
     pixel_density = density;
 }
 

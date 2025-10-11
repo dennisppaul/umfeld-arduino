@@ -22,7 +22,9 @@
 
 using namespace umfeld;
 
-void umfeld::merge_interleaved_stereo(float* left, float* right, float* interleaved, size_t frames) {
+PAudio::PAudio(const AudioUnitInfo* device_info) : AudioUnitInfo(*device_info) {}
+
+void umfeld::merge_interleaved_stereo(const float* left, const float* right, float* interleaved, const size_t frames) {
     if (left == nullptr || right == nullptr || interleaved == nullptr) {
         return;
     }
@@ -42,12 +44,35 @@ void umfeld::split_interleaved_stereo(float* left, float* right, const float* in
     }
 }
 
-PAudio::PAudio(const AudioUnitInfo* device_info) : AudioUnitInfo(*device_info) {}
-
 void PAudio::copy_input_buffer_to_output_buffer() const {
-    if (umfeld::audio_output_channels == umfeld::audio_input_channels) {
+    if (output_channels == input_channels) {
         std::memcpy(output_buffer,                                 // destination
                     input_buffer,                                  // source
                     input_channels * buffer_size * sizeof(float)); // size
+    } else {
+        for (int i = 0; i < buffer_size; ++i) {
+            for (int ch = 0; ch < output_channels; ++ch) {
+                if (ch < input_channels) {
+                    output_buffer[i * output_channels + ch] = input_buffer[i * input_channels + ch];
+                } else {
+                    output_buffer[i * output_channels + ch] = 0.0f; // fill remaining channels with silence
+                }
+            }
+        }
+    }
+}
+
+void PAudio::acquire_audio_buffer_per_sample(const PAudio* audio_device) {
+    constexpr int num_output_channels = 2;
+    if (audio_device->output_channels == num_output_channels) {
+        for (int i = 0; i < audio_device->buffer_size * num_output_channels; i += num_output_channels) {
+            float left  = 0.0f;
+            float right = 0.0f;
+            run_audioEventFloatRefFloatRef_callback(left, right);
+            audio_device->output_buffer[i + 0] = left;
+            audio_device->output_buffer[i + 1] = right;
+        }
+    } else {
+        warning_in_function("currently only stereo output (2 channels) is supported");
     }
 }

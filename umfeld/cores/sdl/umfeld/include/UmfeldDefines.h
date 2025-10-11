@@ -19,7 +19,7 @@
 
 #pragma once
 
-// SYSTEM
+/* --- SYSTEM --- */
 
 #ifndef TRUE
 #define TRUE 1
@@ -28,7 +28,11 @@
 #define FALSE 0
 #endif
 
-// DEBUGGING
+#ifndef UMFELD_DATA_PATH
+#define UMFELD_DATA_PATH "data/"
+#endif
+
+/* --- DEBUGGING --- */
 
 #define UMFELD_DEBUG_PRINT_FLUSH_SORT_BY_Z_ORDER_STATS               FALSE
 #define UMFELD_DEBUG_CHECK_OPENGL_ERROR                              FALSE
@@ -37,8 +41,9 @@
 #define UMFELD_DEBUG_VERTEX_BUFFER_DEBUG_OPENGL_ERRORS               FALSE
 #define UMFELD_DEBUG_SHAPE_RENDERER_OGL_3                            FALSE
 #define UMFELD_DEBUG_PIXEL_DENSITY_FRAME_BUFFER                      FALSE
+#define UMFELD_DEBUG_WINDOW_RESIZE                                   FALSE
 
-// CALLBACKS
+/* --- CALLBACKS --- */
 
 #ifndef UMFELD_FUNC_WEAK
 #define UMFELD_FUNC_WEAK __attribute__((weak))
@@ -65,6 +70,21 @@
 #endif
 #ifndef UMFELD_PRINT_CONSOLE
 #define UMFELD_PRINT_CONSOLE TRUE
+#endif
+
+/* --- AUDIO --- */
+
+#ifndef DEFAULT_SAMPLE_RATE_FALLBACK
+#define DEFAULT_SAMPLE_RATE_FALLBACK 48000
+#endif
+#ifndef DEFAULT_AUDIO_BUFFER_SIZE_FALLBACK
+#define DEFAULT_AUDIO_BUFFER_SIZE_FALLBACK 1024
+#endif
+#ifndef DEFAULT_INPUT_CHANNELS_FALLBACK
+#define DEFAULT_INPUT_CHANNELS_FALLBACK 2
+#endif
+#ifndef DEFAULT_OUTPUT_CHANNELS_FALLBACK
+#define DEFAULT_OUTPUT_CHANNELS_FALLBACK 2
 #endif
 
 /* --- TOOLS --- */
@@ -136,6 +156,29 @@
 #else
 #define PROFILE_PG_OGL33_SCOPE
 #define PROFILE_PG_OGL33_SCOPE_N(name)
+#endif
+
+/* --- WARNINGS --- */
+
+#if defined(__clang__)
+    #define DISABLE_WARNING_PUSH           _Pragma("clang diagnostic push")
+    #define DISABLE_WARNING_POP            _Pragma("clang diagnostic pop")
+    #define DISABLE_WARNING_DEPRECATED     _Pragma("clang diagnostic ignored \"-Wdeprecated-declarations\"")
+
+#elif defined(__GNUC__)
+    #define DISABLE_WARNING_PUSH           _Pragma("GCC diagnostic push")
+    #define DISABLE_WARNING_POP            _Pragma("GCC diagnostic pop")
+    #define DISABLE_WARNING_DEPRECATED     _Pragma("GCC diagnostic ignored \"-Wdeprecated-declarations\"")
+
+#elif defined(_MSC_VER)
+    #define DISABLE_WARNING_PUSH           __pragma(warning(push))
+    #define DISABLE_WARNING_POP            __pragma(warning(pop))
+    #define DISABLE_WARNING_DEPRECATED     __pragma(warning(disable: 4996))
+
+#else
+    #define DISABLE_WARNING_PUSH
+    #define DISABLE_WARNING_POP
+    #define DISABLE_WARNING_DEPRECATED
 #endif
 
 /* --- */

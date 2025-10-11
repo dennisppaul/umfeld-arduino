@@ -17,6 +17,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+// ReSharper disable CppDeprecatedEntity
 #include <filesystem>
 
 #if defined(__APPLE__) || defined(__linux__)
@@ -90,6 +91,10 @@ namespace umfeld {
         return std::filesystem::exists(path, ec) && std::filesystem::is_regular_file(path, ec);
     }
 
+    bool resource_file_exists(const std::string& resource_file_path) {
+        return file_exists(resolve_data_path(resource_file_path));
+    }
+
     bool directory_exists(const std::string& dir_path) {
         std::error_code             ec;
         const std::filesystem::path path(dir_path);
@@ -137,7 +142,7 @@ namespace umfeld {
         Dl_info info;
         // Get the address of a function within the library (can be any function)
         if (dladdr((void*) &get_executable_location, &info)) {
-            std::filesystem::path lib_path(info.dli_fname);                                      // Full path to the library
+            const std::filesystem::path lib_path(info.dli_fname);                                // Full path to the library
             return lib_path.parent_path().string() + std::filesystem::path::preferred_separator; // Return the directory without the library name
         } else {
             std::cerr << "Could not retrieve library location (dladdr)" << std::endl;
@@ -208,8 +213,8 @@ namespace umfeld {
                const int  output_channels,
                const int  sample_rate,
                const int  buffer_size,
-               const int  input_device,
-               const int  output_device,
+               const int  input_device_id,
+               const int  output_device_id,
                const bool threaded) {
         // TODO maybe add option to choose driver e.g SDL, PORTAUDIO, …
         //      similar to renderer parameter in `size()` with RENDERER_OPENGL_3_3_CORE, …
@@ -217,14 +222,19 @@ namespace umfeld {
             warning("`audio()` must be called before or within `settings()`.");
             return;
         }
+        DISABLE_WARNING_PUSH
+        DISABLE_WARNING_DEPRECATED
+        // ReSharper disable CppDeprecatedEntity
         umfeld::enable_audio           = true;
-        umfeld::audio_input_device_id  = input_device;
+        umfeld::audio_input_device_id  = input_device_id;
         umfeld::audio_input_channels   = input_channels;
-        umfeld::audio_output_device_id = output_device;
+        umfeld::audio_output_device_id = output_device_id;
         umfeld::audio_output_channels  = output_channels;
         umfeld::audio_buffer_size      = buffer_size;
         umfeld::audio_sample_rate      = sample_rate;
-        umfeld::audio_threaded         = threaded;
+        umfeld::run_audio_in_thread    = threaded;
+        // ReSharper restore CppDeprecatedEntity
+        DISABLE_WARNING_POP
     }
 
     void audio(const int          input_channels,
@@ -238,6 +248,9 @@ namespace umfeld {
             warning("`audio()` must be called before or within `settings()`.");
             return;
         }
+        DISABLE_WARNING_PUSH
+        DISABLE_WARNING_DEPRECATED
+        // ReSharper disable CppDeprecatedEntity
         umfeld::enable_audio             = true;
         umfeld::audio_input_device_id    = AUDIO_DEVICE_FIND_BY_NAME;
         umfeld::audio_input_device_name  = input_device_name;
@@ -247,7 +260,9 @@ namespace umfeld {
         umfeld::audio_output_channels    = output_channels;
         umfeld::audio_buffer_size        = buffer_size;
         umfeld::audio_sample_rate        = sample_rate;
-        umfeld::audio_threaded           = threaded;
+        umfeld::run_audio_in_thread      = threaded;
+        // ReSharper restore CppDeprecatedEntity
+        DISABLE_WARNING_POP
     }
 
     void audio(const AudioUnitInfo& info) {
@@ -255,7 +270,11 @@ namespace umfeld {
             warning("`audio()` must be called before or within `settings()`.");
             return;
         }
+        DISABLE_WARNING_PUSH
+        DISABLE_WARNING_DEPRECATED
+        // ReSharper disable CppDeprecatedEntity
         umfeld::enable_audio             = true;
+        umfeld::audio_input_device_id    = info.input_device_id;
         umfeld::audio_input_device_id    = info.input_device_id;
         umfeld::audio_input_device_name  = info.input_device_name;
         umfeld::audio_input_channels     = info.input_channels;
@@ -264,12 +283,14 @@ namespace umfeld {
         umfeld::audio_output_channels    = info.output_channels;
         umfeld::audio_buffer_size        = info.buffer_size;
         umfeld::audio_sample_rate        = info.sample_rate;
-        umfeld::audio_threaded           = info.threaded;
+        umfeld::run_audio_in_thread      = info.threaded;
+        // ReSharper restore CppDeprecatedEntity
+        DISABLE_WARNING_POP
     }
 
     void audio_start(PAudio* device) {
         if (device == nullptr) {
-            subsystem_audio->start(a);
+            subsystem_audio->start(audio_device);
         } else {
             subsystem_audio->start(device);
         }
@@ -277,10 +298,26 @@ namespace umfeld {
 
     void audio_stop(PAudio* device) {
         if (device == nullptr) {
-            subsystem_audio->stop(a);
+            subsystem_audio->stop(audio_device);
         } else {
             subsystem_audio->stop(device);
         }
+    }
+
+    uint32_t get_audio_sample_rate() {
+        return audio_device != nullptr ? audio_device->sample_rate : 0;
+    }
+
+    int8_t get_audio_input_channels() {
+        return audio_device != nullptr ? audio_device->input_channels : 0;
+    }
+
+    int8_t get_audio_output_channels() {
+        return audio_device != nullptr ? audio_device->output_channels : 0;
+    }
+
+    uint32_t get_audio_buffer_size() {
+        return audio_device != nullptr ? audio_device->buffer_size : 0;
     }
 
     std::vector<Vertex> loadOBJ_with_material(const std::string& filename) {
@@ -406,7 +443,7 @@ namespace umfeld {
     }
 
     std::vector<Vertex> loadOBJ(const std::string& file, const bool material) {
-        const std::string absolute_path = resolveDataPath(file);
+        const std::string absolute_path = resolve_data_path(file);
         if (!file_exists(absolute_path)) {
             error("loadOBJ() failed! file not found: '", file, "'. the 'sketchPath()' is currently set to '", sketchPath(), "'. looking for file at: '", absolute_path, "'");
             return {};
@@ -414,8 +451,8 @@ namespace umfeld {
         return material ? loadOBJ_with_material(absolute_path) : loadOBJ_no_material(absolute_path);
     }
 
-    Sampler* loadSample(const std::string& file) {
-        const std::string absolute_path = resolveDataPath(file);
+    Sampler* loadSample(const std::string& file, const bool resample_to_audio_device) {
+        const std::string absolute_path = resolve_data_path(file);
         if (!file_exists(absolute_path)) {
             error("loadSample() failed! file not found: '", file, "'. the 'sketchPath()' is currently set to '", sketchPath(), "'. looking for file at: '", absolute_path, "'");
             return nullptr;
@@ -442,8 +479,19 @@ namespace umfeld {
             delete[] sample_buffer;
             sample_buffer = single_buffer;
         }
-        const auto sampler = new Sampler(sample_rate);
+        uint32_t _sample_rate;
+        if (audio_device != nullptr) {
+            _sample_rate = audio_device->sample_rate;
+        } else {
+            warning_in_function("no audio device available. using sample rate of the sample: ", sample_rate, " Hz.");
+            _sample_rate = sample_rate;
+        }
+        const auto sampler = new Sampler(_sample_rate);
         sampler->set_buffer(sample_buffer, static_cast<int32_t>(length), false);
+        if (resample_to_audio_device && _sample_rate != sample_rate) {
+            console_in_function("resampling sample from ", sample_rate, " Hz to ", _sample_rate, " Hz.");
+            sampler->resample(sample_rate, _sample_rate);
+        }
         return sampler;
     }
 } // namespace umfeld

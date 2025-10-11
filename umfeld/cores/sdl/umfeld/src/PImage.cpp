@@ -246,6 +246,10 @@ void PImage::init(uint32_t* pixels,
     this->height = static_cast<float>(height);
 }
 
+void PImage::resize(int width, int height) {
+    warning_in_function_once("not implemented yet");
+}
+
 static float clamp(const float x) {
     return (x < 0 ? 0 : x) > 1 ? 1 : x;
 }

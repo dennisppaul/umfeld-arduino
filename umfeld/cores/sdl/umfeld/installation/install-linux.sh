@@ -27,20 +27,9 @@ trap cleanup_keepalive EXIT
 
 export DEBIAN_FRONTEND=noninteractive
 
-# Small retry helper
-retry() {
-  local tries=${2:-3}
-  local n=1
-  until "$1"; do
-    (( n >= tries )) && return 1
-    sleep 2
-    ((n++))
-  done
-}
-
 # --- Update/upgrade with resilience ------------------------------------------
 log "--- updating apt"
-retry "sudo apt-get update -y" 3 || sudo apt-get update -y
+sudo apt-get update -y || sudo apt-get update -y
 
 log "--- upgrading system (dist-upgrade)"
 sudo apt-get dist-upgrade -y || sudo apt-get -f install -y

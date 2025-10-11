@@ -31,7 +31,6 @@ void umfeld_set_callbacks();
 extern "C" {
 #endif
 /* NOTE weak implementations in `Umfeld.cpp` */
-// TODO new callback mechanism
 void settings();
 void arguments(const std::vector<std::string>& args);
 void setup();
@@ -39,6 +38,7 @@ void draw();
 void update();
 void windowResized(int width, int height);
 void post();
+[[deprecated("use 'audioEvent(PAudio& audio)' instead")]]
 void audioEvent();
 /* NOTE weak implementations in `SubsystemHIDEvents`*/
 void keyPressed();
@@ -53,20 +53,22 @@ bool sdl_event(const SDL_Event& event);
 #ifdef __cplusplus
 } // extern "C"
 #endif
-// NOTE
-void shutdown();                               // NOTE cannot be `extern "C"` due to conflict with function in `socket.h`
-void audioEvent(const umfeld::PAudio& device); // TODO cannot be `extern "C"` due to overloading ... maybe rename to `audioEventDevice`?
+
+void shutdown();                              // NOTE cannot be `extern "C"` due to conflict with function in `socket.h`
+void audioEvent(const umfeld::PAudio& audio); // NOTE cannot be `extern "C"` due to overloading
+void audioEvent(float& left, float& right);   // NOTE cannot be `extern "C"` due to overloading
+// TODO maybe rename to `audioEventDevice` or remove audioEvent()?
 
 /* declare callbacks */
 namespace umfeld {
-    // TODO new callback mechanism
-    using FnVoid         = void();
-    using FnIntInt       = void(int, int);
-    using FnFloatFloat   = void(float, float);
-    using FnStrings      = void(const std::vector<std::string>&);
-    using FnPAudio       = void(const PAudio&);
-    using FnConstCharPtr = void(const char*);
-    using FnSDLEvent     = bool(const SDL_Event& event);
+    using FnVoid             = void();
+    using FnIntInt           = void(int, int);
+    using FnFloatFloat       = void(float, float);
+    using FnStrings          = void(const std::vector<std::string>&);
+    using FnPAudio           = void(const PAudio&);
+    using FnFloatRefFloatRef = void(float&, float&);
+    using FnConstCharPtr     = void(const char*);
+    using FnSDLEvent         = bool(const SDL_Event& event);
     void set_settings_callback(FnVoid* f);
     void run_settings_callback();
     void set_arguments_callback(FnStrings* f);
@@ -87,6 +89,8 @@ namespace umfeld {
     void run_audioEvent_callback();
     void set_audioEventPAudio_callback(FnPAudio* f);
     void run_audioEventPAudio_callback(const PAudio&);
+    void set_audioEventFloatRefFloatRef_callback(FnFloatRefFloatRef* f);
+    void run_audioEventFloatRefFloatRef_callback(float&, float&);
     void set_keyPressed_callback(FnVoid* f);
     void run_keyPressed_callback();
     void set_keyReleased_callback(FnVoid* f);

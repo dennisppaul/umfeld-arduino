@@ -4,7 +4,7 @@ set -euo pipefail
 IFS=$'\n\t'
 
 readonly BASE_URL="https://raw.githubusercontent.com/dennisppaul/umfeld/main/installation"
-readonly UMFELD_VERSION="v2.4.0"
+readonly UMFELD_VERSION="v2.5.0"
 
 # Always clean up temp files, even on error/CTRL-C
 TMP_DEP=$(mktemp) ; TMP_UMF=$(mktemp)

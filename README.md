@@ -9,7 +9,10 @@ Board definition to run [Umfeld](https://github.com/dennisppaul/umfeld) as a boa
 
 ## Installation
 
-- navigate to the *Arduino* folder ( the one that contains libraries )
+- navigate to the *Arduino* folder ( the sketch folder that also contains libraries )
+    - on macOS the folder is usually located at `$HOME/Documents/Arduino`
+    - on Linux the folder is usually located at `$HOME/Arduino`
+    - on Window the folder is usually located at `%HOMEPATH%/Documents/Arduino`
 - create a `hardware` folder ( if it does not exist already ) 
     ```sh
     ├── hardware
@@ -67,7 +70,7 @@ create a `.bat` that sets `PATH` only for the IDE process:
 ```sh
 @echo off
 set "PATH=C:\msys64\ucrt64\bin;%PATH%"
-start "" "C:\Program Files\Arduino IDE\Arduino IDE.exe"
+start "" "%LOCALAPPDATA%\Programs\Arduino IDE\Arduino IDE.exe"
 ```
 
 double-click `.bat` to start *Arduino IDE*.
@@ -94,7 +97,7 @@ arduino-cli compile -u -b umfeld-arduino:umfeld:UMFELD ./umfeld-arduino/umfeld/e
 open umfeld-arduino/umfeld/examples/umfeld/minimal/minimal.ino
 ```
 
-### A Note on Installing Arduino CLI
+### A Note on Installing Arduino CLI on Ubuntu
 
 on Ubuntu 22.04.3 the standard installation instructions failed, but the following steps worked:
 

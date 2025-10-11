@@ -122,10 +122,8 @@ int PGraphics::displayDensity() {
 }
 
 void PGraphics::pixelDensity(const int density) {
-    static bool emitted_warning = false;
-    if (!emitted_warning && init_properties_locked) {
-        warning("`pixelDensity()` should not be set after context is created. use `retina_support` in settings instead to control pixel density.");
-        emitted_warning = true;
+    if (init_properties_locked) {
+        resize(width, height);
     }
     pixel_density = density;
 }
@@ -845,7 +843,7 @@ void PGraphics::circle(const float x, const float y, const float diameter) {
 // }
 
 PFont* PGraphics::loadFont(const std::string& file, const float size) {
-    const std::string absolute_path = resolveDataPath(file);
+    const std::string absolute_path = resolve_data_path(file);
     if (!file_exists(absolute_path)) {
         error("loadFont() failed! file not found: '", file, "'. the 'sketchPath()' is currently set to '", sketchPath(), "'. looking for file at: '", absolute_path, "'");
         return nullptr;

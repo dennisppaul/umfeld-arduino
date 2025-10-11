@@ -4,3 +4,7 @@ cmake-build-debug/
 Brewfile.lock.json
 .DS_Store
 .obsidian/
+deployment/stage/
+deployment/libs/
+deployment/sdk/
+deployment.bak/

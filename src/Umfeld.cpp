@@ -45,7 +45,9 @@ UMFELD_FUNC_WEAK void update() { LOG_CALLBACK_MSG(umfeld::to_string("default: ",
 UMFELD_FUNC_WEAK void windowResized(int width, int height) { LOG_CALLBACK_MSG(umfeld::to_string("default: ", __func__)); }
 UMFELD_FUNC_WEAK void post() { LOG_CALLBACK_MSG("default post"); }
 UMFELD_FUNC_WEAK void shutdown() { LOG_CALLBACK_MSG(umfeld::to_string("default: ", __func__)); }
-UMFELD_FUNC_WEAK void audioEvent(const umfeld::PAudio& device) { LOG_CALLBACK_MSG(umfeld::to_string("default: ", __func__)); }
+UMFELD_FUNC_WEAK void audioEvent(const umfeld::PAudio& audio) { LOG_CALLBACK_MSG(umfeld::to_string("default: ", __func__)); }
+UMFELD_FUNC_WEAK void audioEvent(float& left, float& right) { LOG_CALLBACK_MSG(umfeld::to_string("default: ", __func__)); }
+[[deprecated("use 'audioEvent(PAudio& audio)' instead")]]
 UMFELD_FUNC_WEAK void audioEvent() { LOG_CALLBACK_MSG(umfeld::to_string("default: ", __func__)); }
 UMFELD_FUNC_WEAK void keyPressed() { LOG_CALLBACK_MSG(umfeld::to_string("default: ", __func__)); }
 UMFELD_FUNC_WEAK void keyReleased() { LOG_CALLBACK_MSG(umfeld::to_string("default: ", __func__)); }
@@ -136,6 +138,22 @@ namespace umfeld {
 
     void set_frame_rate(const float fps) {
         target_frame_duration = 1.0 / fps;
+    }
+
+    void register_library(LibraryListener* listener) {
+        if (subsystem_libraries == nullptr) {
+            warning("no library subsystem available (yet). make sure to NOT call this function in 'settings()'");
+            return;
+        }
+        subsystem_libraries->register_library(listener);
+    }
+
+    void unregister_library(const LibraryListener* listener) {
+        if (subsystem_libraries == nullptr) {
+            warning("no library subsystem available (yet). make sure to NOT call this function in 'settings()'");
+            return;
+        }
+        subsystem_libraries->unregister_library(listener);
     }
 
     static bool set_display_size() {
@@ -304,7 +322,12 @@ SDL_AppResult SDL_AppInit(void** appstate, const int argc, char* argv[]) {
     umfeld::set_post_callback(post);
     umfeld::set_shutdown_callback(shutdown);
     umfeld::set_audioEventPAudio_callback(audioEvent);
+    umfeld::set_audioEventFloatRefFloatRef_callback(audioEvent);
+    DISABLE_WARNING_PUSH
+    DISABLE_WARNING_DEPRECATED
+    // ReSharper disable once CppDeprecatedEntity
     umfeld::set_audioEvent_callback(audioEvent);
+    DISABLE_WARNING_POP
     umfeld::set_keyPressed_callback(keyPressed);
     umfeld::set_keyReleased_callback(keyReleased);
     umfeld::set_mousePressed_callback(mousePressed);
@@ -507,7 +530,7 @@ SDL_AppResult SDL_AppInit(void** appstate, const int argc, char* argv[]) {
             if (umfeld::subsystem_graphics->create_native_graphics != nullptr) {
                 umfeld::g = umfeld::subsystem_graphics->create_native_graphics(umfeld::render_to_buffer);
             }
-            /* NOTE interpret rennderer as profiles */
+            /* NOTE interpret renderer as profiles */
             if (umfeld::renderer == umfeld::P2D) {
                 umfeld::profile(umfeld::PROFILE_2D);
             }
@@ -523,6 +546,9 @@ SDL_AppResult SDL_AppInit(void** appstate, const int argc, char* argv[]) {
                 // NOTE fill in the values from `Umfeld.h`
                 umfeld::AudioUnitInfo _audio_unit_info;
                 // _audio_unit_info.unique_id       = 0; // NOTE set by subsystem
+                DISABLE_WARNING_PUSH
+                DISABLE_WARNING_DEPRECATED
+                // ReSharper disable CppDeprecatedEntity
                 _audio_unit_info.input_device_id    = umfeld::audio_input_device_id;
                 _audio_unit_info.input_device_name  = umfeld::audio_input_device_name;
                 _audio_unit_info.input_buffer       = nullptr;
@@ -533,8 +559,10 @@ SDL_AppResult SDL_AppInit(void** appstate, const int argc, char* argv[]) {
                 _audio_unit_info.output_channels    = umfeld::audio_output_channels;
                 _audio_unit_info.buffer_size        = umfeld::audio_buffer_size;
                 _audio_unit_info.sample_rate        = umfeld::audio_sample_rate;
-                _audio_unit_info.threaded           = umfeld::audio_threaded;
-                umfeld::a                           = umfeld::subsystem_audio->create_audio(&_audio_unit_info);
+                // ReSharper restore CppDeprecatedEntity
+                DISABLE_WARNING_POP
+                _audio_unit_info.threaded = umfeld::run_audio_in_thread;
+                umfeld::audio_device      = umfeld::subsystem_audio->create_audio(&_audio_unit_info);
             }
         }
     }
@@ -578,19 +606,24 @@ SDL_AppResult SDL_AppInit(void** appstate, const int argc, char* argv[]) {
         // NOTE umfeld now owns the pixel buffer and takes care of deleting it
     }
 
-    if (umfeld::a != nullptr && umfeld::enable_audio) {
+    if (umfeld::audio_device != nullptr && umfeld::enable_audio) {
         // NOTE copy values back to global variables after initialization … a bit hackish but well.
-        umfeld::audio_input_device_id    = umfeld::a->input_device_id;
-        umfeld::audio_input_device_name  = umfeld::a->input_device_name;
-        umfeld::audio_input_buffer       = umfeld::a->input_buffer;
-        umfeld::audio_input_channels     = umfeld::a->input_channels;
-        umfeld::audio_output_device_id   = umfeld::a->output_device_id;
-        umfeld::audio_output_device_name = umfeld::a->output_device_name;
-        umfeld::audio_output_buffer      = umfeld::a->output_buffer;
-        umfeld::audio_output_channels    = umfeld::a->output_channels;
-        umfeld::audio_buffer_size        = umfeld::a->buffer_size;
-        umfeld::audio_sample_rate        = umfeld::a->sample_rate;
-        umfeld::audio_threaded           = umfeld::a->threaded;
+        DISABLE_WARNING_PUSH
+        DISABLE_WARNING_DEPRECATED
+        // ReSharper disable CppDeprecatedEntity
+        umfeld::audio_input_device_id    = umfeld::audio_device->input_device_id;
+        umfeld::audio_input_device_name  = umfeld::audio_device->input_device_name;
+        umfeld::audio_input_buffer       = umfeld::audio_device->input_buffer;
+        umfeld::audio_input_channels     = umfeld::audio_device->input_channels;
+        umfeld::audio_output_device_id   = umfeld::audio_device->output_device_id;
+        umfeld::audio_output_device_name = umfeld::audio_device->output_device_name;
+        umfeld::audio_output_buffer      = umfeld::audio_device->output_buffer;
+        umfeld::audio_output_channels    = umfeld::audio_device->output_channels;
+        umfeld::audio_buffer_size        = umfeld::audio_device->buffer_size;
+        umfeld::audio_sample_rate        = umfeld::audio_device->sample_rate;
+        umfeld::run_audio_in_thread      = umfeld::audio_device->threaded;
+        // ReSharper restore CppDeprecatedEntity
+        DISABLE_WARNING_POP
     }
 
     umfeld::run_setup_callback();
@@ -615,15 +648,24 @@ SDL_AppResult SDL_AppInit(void** appstate, const int argc, char* argv[]) {
     return SDL_APP_CONTINUE;
 }
 
+static void handle_event_window_resize() {
+    if (umfeld::g != nullptr && umfeld::enable_graphics) {
+        int new_width  = -1;
+        int new_height = -1;
+        umfeld::getWindowSize(new_width, new_height);
+        if (new_width > 0 && new_height > 0) {
+            umfeld::run_windowResized_callback(new_width, new_height);
+        }
+    }
+}
+
 static void handle_event(const SDL_Event& event, bool& app_is_running) {
     switch (event.type) {
         case SDL_EVENT_WINDOW_RESIZED:
-            // // TODO implement window resize … how will the subsystems be updated?
-            umfeld::warning("TODO window resized. subsystem needs to be update …");
-            umfeld::run_windowResized_callback(-1, -1);
+            handle_event_window_resize();
             break;
         case SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED:
-            // // TODO implement
+            // TODO implement
             break;
         case SDL_EVENT_WINDOW_SHOWN:
         case SDL_EVENT_WINDOW_HIDDEN:

@@ -58,21 +58,21 @@ namespace umfeld {
     }
 
     template<typename T>
-    std::string hex(T value, int width = sizeof(T) * 2) {
+    std::string hex(T value, const int width = sizeof(T) * 2) {
         std::stringstream ss;
         ss << std::hex << std::uppercase << std::setfill('0') << std::setw(width) << (uint64_t) value;
         return ss.str();
     }
 
-    inline std::string hex(char value) {
+    inline std::string hex(const char value) {
         return hex(static_cast<unsigned char>(value), 2);
     }
 
-    inline std::string hex(unsigned char value) {
+    inline std::string hex(const unsigned char value) {
         return hex(static_cast<int>(value), 2);
     }
 
-    inline std::string hex(uint32_t color) {
+    inline std::string hex(const uint32_t color) {
         return hex(color, 8);
     }
 
@@ -208,25 +208,25 @@ namespace umfeld {
 
     // ### Creating & Reading
 
-    uint32_t color(float gray);
-    uint32_t color(float gray, float alpha);
-    uint32_t color(float v1, float v2, float v3);
-    uint32_t color(float v1, float v2, float v3, float alpha);
+    color_32 color(float brightness);
+    color_32 color(float brightness, float alpha);
+    color_32 color(float r, float g, float b);
+    color_32 color(float r, float g, float b, float a);
 
-    uint32_t color_i(uint32_t gray);
-    uint32_t color_i(uint32_t gray, uint32_t alpha);
-    uint32_t color_i(uint32_t v1, uint32_t v2, uint32_t v3);
-    uint32_t color_i(uint32_t v1, uint32_t v2, uint32_t v3, uint32_t alpha);
+    color_32 color_8(uint8_t gray);
+    color_32 color_8(uint8_t gray, uint8_t alpha);
+    color_32 color_8(uint8_t r, uint8_t g, uint8_t b);
+    color_32 color_8(uint8_t r, uint8_t g, uint8_t b, uint8_t a);
 
-    float    red(uint32_t color);
-    float    green(uint32_t color);
-    float    blue(uint32_t color);
-    float    alpha(uint32_t color);
-    float    brightness(uint32_t color);
-    float    hue(uint32_t color);
-    float    saturation(uint32_t color);
-    uint32_t lerpColor(uint32_t c1, uint32_t c2, float amt);
-    void     rgb_to_hsb(const float r, const float g, const float b, float& h, float& s, float& v);
+    float    red(color_32 color);
+    float    green(color_32 color);
+    float    blue(color_32 color);
+    float    alpha(color_32 color);
+    float    brightness(color_32 color);
+    float    hue(color_32 color);
+    float    saturation(color_32 color);
+    color_32 lerpColor(color_32 c1, color_32 c2, float amt);
+    void     rgb_to_hsb(float r, float g, float b, float& h, float& s, float& v);
 
     // ## Environment
 
@@ -268,6 +268,8 @@ namespace umfeld {
         return value * value;
     }
 
+    template<typename T>
+    T     mapT(T value, T start0, T stop0, T start1, T stop1);
     float map(float value, float start0, float stop0, float start1, float stop1);
 
     template<typename T>
@@ -312,6 +314,6 @@ namespace umfeld {
     // ( part of original processing but not in the Reference )
 
     std::string sketchPath();
-    std::string resolveDataPath(const std::string& path);
+    std::string resolve_data_path(const std::string& path);
 
 } // namespace umfeld

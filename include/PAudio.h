@@ -24,13 +24,45 @@
 
 namespace umfeld {
 
-    void merge_interleaved_stereo(float* left, float* right, float* interleaved, size_t frames);
+    void merge_interleaved_stereo(const float* left, const float* right, float* interleaved, size_t frames);
     void split_interleaved_stereo(float* left, float* right, const float* interleaved, size_t frames);
 
-    struct AudioUnitInfo {
+    // typedef struct KLST_AudioBlock {
+    //     uint32_t sample_rate;
+    //     uint8_t  output_channels;
+    //     uint8_t  input_channels;
+    //     uint16_t block_size;
+    //     float**  output;
+    //     float**  input;
+    //     uint8_t  device_id;
+    // } KLST_AudioBlock;
+
+    struct AudioBlock {
+        bool     is_interleaved{true};
+        uint32_t sample_rate{DEFAULT_SAMPLE_RATE};
+        /** buffer for audio input samples. buffer is interleaved by default
+         * ( i.e. samples for each channel are contiguous in memory ).
+         */
+        float* input_buffer{nullptr};
+        int8_t input_channels{0};
+        /** buffer for audio output samples. buffer is interleaved by default
+         * ( i.e. samples for each channel are contiguous in memory ).
+         */
+        float* output_buffer{nullptr};
+        int8_t output_channels{0};
+        /** number of *frame* ( i.e samples per channel )
+         * e.g for a device with 2 output channels (`output_channels = 2`) and
+         * 256 buffer size (`buffer_size = 256`) the length of `output_buffer`
+         * is 512 samples (`output_channels * buffer_size` -> 2 channels * 256 = 512 samples).
+         */
+        uint32_t buffer_size{DEFAULT_AUDIO_BUFFER_SIZE};
+        // int format; // TODO currently supporting F32 format only
+    };
+
+    struct AudioUnitInfo : AudioBlock {
         /**
-         * unique id of audio unit. id is set by audio subsystem. it is not to be confused with the device id.
-         * a unit is a combination of input and output device.
+         * unique id of audio unit. id is set by audio subsystem. it is not to be confused with `input_device_id`
+         * or `output_device_id`. a unit is a combination of input and output device.
          */
         int unique_id{AUDIO_UNIT_NOT_INITIALIZED};
         /** case-sensitive audio device name ( or beginning of the name )
@@ -44,26 +76,15 @@ namespace umfeld {
          */
         int         input_device_id{DEFAULT_AUDIO_DEVICE};
         std::string input_device_name{DEFAULT_AUDIO_DEVICE_NAME};
-        /** buffer for audio input samples. buffer is interleaved, i.e. samples for each channel are contiguous in memory. */
-        float*      input_buffer{nullptr};
-        int         input_channels{0};
         int         output_device_id{DEFAULT_AUDIO_DEVICE};
         std::string output_device_name{DEFAULT_AUDIO_DEVICE_NAME};
-        /** buffer for audio output samples. buffer is interleaved, i.e. samples for each channel are contiguous in memory. */
-        float* output_buffer{nullptr};
-        int    output_channels{0};
-        /** number of samples per channel ( also referred to as *frames* )
-         * e.g for a 2 channel device with `output_channels = 2` length of `output_buffer` length is `output_channels * buffer_size`
-         */
-        int  buffer_size{DEFAULT_AUDIO_BUFFER_SIZE};
-        int  sample_rate{DEFAULT_SAMPLE_RATE};
-        bool threaded{DEFAULT_AUDIO_RUN_IN_THREAD};
-        // int         channels; // TODO currently supporting F32 only
+        bool        threaded{DEFAULT_AUDIO_RUN_IN_THREAD};
     };
 
     class PAudio : public AudioUnitInfo {
     public:
         explicit PAudio(const AudioUnitInfo* device_info);
         void copy_input_buffer_to_output_buffer() const;
+        static void acquire_audio_buffer_per_sample(const PAudio* audio_device);
     };
 } // namespace umfeld

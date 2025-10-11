@@ -29,7 +29,16 @@ namespace umfeld::subsystem {
     static void draw_post();
 
     static bool init() {
-        return OGL_init(window, gl_context, 3, 3, SDL_GL_CONTEXT_PROFILE_CORE);
+        OpenGLGraphicsInfo info;
+        info.major_version        = 3;
+        info.minor_version        = 3;
+        info.profile              = SDL_GL_CONTEXT_PROFILE_CORE;
+        info.width                = width;
+        info.height               = height;
+        info.depth_buffer_depth   = depth_buffer_depth;
+        info.stencil_buffer_depth = stencil_buffer_depth;
+        info.double_buffered      = double_buffered;
+        return OGL_init(window, gl_context, info);
     }
 
     static void setup_pre() {
@@ -66,17 +75,55 @@ namespace umfeld::subsystem {
         subsystem_flags |= SDL_INIT_VIDEO;
     }
 
+    static void resize_graphics(SDL_Window*& window) {
+        int  _width, _height;
+        bool success = SDL_GetWindowSize(window, &_width, &_height);
+        if (!success) {
+            error_in_function("failed to get window size: ", SDL_GetError());
+            return;
+        }
+
+        int framebuffer_width, framebuffer_height;
+        success = SDL_GetWindowSizeInPixels(window, &framebuffer_width, &framebuffer_height);
+        if (!success) {
+            error_in_function("failed to get window size in pixels: ", SDL_GetError());
+            return;
+        }
+
+        float pixel_density = SDL_GetWindowPixelDensity(window);
+        if (pixel_density <= 0) {
+            warning_in_function("invalid pixel density: ", pixel_density, " defaulting to 1.0");
+            pixel_density = 1.0f;
+        }
+
+#if UMFELD_DEBUG_WINDOW_RESIZE
+        console("--------------------------------");
+        console("DEBUGGING INFO re-init graphics");
+        console(fl("framebuffer size"), framebuffer_width, " x ", framebuffer_height, " px");
+        console(fl("graphics size"), width, " x ", height, " px");
+        console(fl("pixel_density"), pixel_density);
+        console("--------------------------------");
+#endif
+
+        width  = _width;
+        height = _height;
+        g->resize(framebuffer_width, framebuffer_height);
+        g->pixelDensity(pixel_density);
+        g->width  = width;
+        g->height = height;
+    }
+
     // ReSharper disable once CppParameterMayBeConstPtrOrRef
     static void event(SDL_Event* event) {
-        if (event->type == SDL_EVENT_WINDOW_RESIZED) {
-            warning("TODO implement resize in OGLv33");
-        }
+        // NOTE only call window resize in update loop to avoid conflicts with rendering
+        // if (event->type == SDL_EVENT_WINDOW_RESIZED) {}
     }
 
     // ReSharper disable once CppParameterMayBeConstPtrOrRef
     static void event_in_update_loop(SDL_Event* event) {
-        if (event->type == SDL_EVENT_WINDOW_RESIZED) {
-            warning("TODO implement resize in OGLv33");
+        // NOTE only call window resize in update loop to avoid conflicts with rendering
+        if (event->type == SDL_EVENT_WINDOW_RESIZED || event->type == SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED) {
+            resize_graphics(window);
         }
     }
 
@@ -147,7 +194,7 @@ namespace umfeld::subsystem {
     static const char* name() {
         return "OpenGL 3.3 core";
     }
-} // namespace umfeld
+} // namespace umfeld::subsystem
 
 umfeld::SubsystemGraphics* umfeld_create_subsystem_graphics_openglv33() {
     auto* graphics                   = new umfeld::SubsystemGraphics{};

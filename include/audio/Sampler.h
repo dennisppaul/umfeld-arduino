@@ -95,7 +95,7 @@ namespace umfeld {
             return fSampleRate;
         }
 
-        void set_sample_rate(float sample_rate) {
+        void set_sample_rate(const float sample_rate) {
             fSampleRate = sample_rate;
         }
 
@@ -537,30 +537,30 @@ namespace umfeld {
             return i;
         }
 
-        static float convert_sample(const BUFFER_TYPE pRawSample) {
-            return pRawSample;
+        static float convert_sample(const BUFFER_TYPE raw_sample) {
+            return raw_sample;
         }
     };
 
     template<>
-    inline float SamplerT<uint8_t>::convert_sample(const uint8_t pRawSample) {
+    inline float SamplerT<uint8_t>::convert_sample(const uint8_t raw_sample) {
         constexpr static float mScale = 1.0 / ((1 << 8) - 1);
-        const float            mRange = pRawSample * mScale;
+        const float            mRange = raw_sample * mScale;
         return mRange * 2.0 - 1.0;
     }
 
     template<>
-    inline float SamplerT<int8_t>::convert_sample(const int8_t pRawSample) {
+    inline float SamplerT<int8_t>::convert_sample(const int8_t raw_sample) {
         constexpr static float mScale  = 1.0 / ((1 << 8) - 1);
-        const float            mOffset = pRawSample + (1 << 7);
+        const float            mOffset = raw_sample + (1 << 7);
         const float            mRange  = mOffset * mScale;
         return mRange * 2.0 - 1.0;
     }
 
     template<>
-    inline float SamplerT<uint16_t>::convert_sample(const uint16_t pRawSample) {
+    inline float SamplerT<uint16_t>::convert_sample(const uint16_t raw_sample) {
         constexpr static float mScale = 1.0 / ((1 << 16) - 1);
-        const float            mRange = pRawSample * mScale;
+        const float            mRange = raw_sample * mScale;
         return mRange * 2.0 - 1.0;
         // @note(below: less precise but faster)
         // const float s      = pRawSample;
@@ -570,9 +570,9 @@ namespace umfeld {
     }
 
     template<>
-    inline float SamplerT<int16_t>::convert_sample(const int16_t pRawSample) {
+    inline float SamplerT<int16_t>::convert_sample(const int16_t raw_sample) {
         constexpr static float mScale  = 1.0 / ((1 << 16) - 1);
-        const float            mOffset = pRawSample + (1 << 15);
+        const float            mOffset = raw_sample + (1 << 15);
         const float            mRange  = mOffset * mScale;
         return mRange * 2.0 - 1.0;
     }

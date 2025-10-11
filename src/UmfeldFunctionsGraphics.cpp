@@ -25,14 +25,14 @@
 #include "ShaderSource.h"
 
 namespace umfeld {
-    void background(const float a) {
+    void background(const float alpha) {
         if (g == nullptr) { return; }
-        g->background(a);
+        g->background(alpha);
     }
 
-    void background(const float a, const float b, const float c, const float d) {
-        if (g == nullptr) { return; }
-        g->background(a, b, c, d);
+    void background(const float r, const float g, const float b, const float a) {
+        if (umfeld::g == nullptr) { return; }
+        umfeld::g->background(r, g, b, a);
     }
 
     void background(PImage* img) {
@@ -97,17 +97,17 @@ namespace umfeld {
         umfeld::g->fill(r, g, b, a);
     }
 
-    void fill(const float brightness, const float a) {
+    void fill(const float brightness, const float alpha) {
         if (g == nullptr) { return; }
-        g->fill(brightness, a);
+        g->fill(brightness, alpha);
     }
 
-    void fill(const float a) {
+    void fill(const float brightness) {
         if (g == nullptr) { return; }
-        g->fill(a);
+        g->fill(brightness);
     }
 
-    void fill_color(const uint32_t c) {
+    void fill_color_32(const uint32_t c) {
         if (g == nullptr) { return; }
         g->fill_color(c);
     }
@@ -174,17 +174,17 @@ namespace umfeld {
         umfeld::g->stroke(r, g, b, a);
     }
 
-    void stroke(const float brightness, const float a) {
+    void stroke(const float brightness, const float alpha) {
         if (g == nullptr) { return; }
-        g->stroke(brightness, a);
+        g->stroke(brightness, alpha);
     }
 
-    void stroke(const float a) {
+    void stroke(const float brightness) {
         if (g == nullptr) { return; }
-        g->stroke(a);
+        g->stroke(brightness);
     }
 
-    void stroke_color(const uint32_t c) {
+    void stroke_color_32(const uint32_t c) {
         if (g == nullptr) { return; }
         g->stroke_color(c);
     }

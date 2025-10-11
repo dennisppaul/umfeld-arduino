@@ -47,6 +47,7 @@ namespace umfeld {
     uint32_t                 color_pack(float r, float g, float b, float a);
     void                     color_unpack(uint32_t color, float& r, float& g, float& b, float& a);
     bool                     file_exists(const std::string& file_path);
+    bool                     resource_file_exists(const std::string& resource_file_path);
     bool                     directory_exists(const std::string& dir_path);
     std::string              find_file_in_paths(const std::vector<std::string>& paths, const std::string& filename);
     std::string              find_in_environment_path(const std::string& filename);
@@ -55,13 +56,13 @@ namespace umfeld {
     int                      get_int_from_argument(const std::string& argument);
     std::string              get_string_from_argument(const std::string& argument);
     std::string              timestamp();
-    void                     audio(int  input_channels  = DEFAULT_INPUT_CHANNELS,
-                                   int  output_channels = DEFAULT_OUTPUT_CHANNELS,
-                                   int  sample_rate     = DEFAULT_SAMPLE_RATE,
-                                   int  buffer_size     = DEFAULT_AUDIO_BUFFER_SIZE,
-                                   int  input_device    = DEFAULT_AUDIO_DEVICE,
-                                   int  output_device   = DEFAULT_AUDIO_DEVICE,
-                                   bool threaded        = DEFAULT_AUDIO_RUN_IN_THREAD);
+    void                     audio(int  input_channels   = DEFAULT_INPUT_CHANNELS,
+                                   int  output_channels  = DEFAULT_OUTPUT_CHANNELS,
+                                   int  sample_rate      = DEFAULT_SAMPLE_RATE,
+                                   int  buffer_size      = DEFAULT_AUDIO_BUFFER_SIZE,
+                                   int  input_device_id  = DEFAULT_AUDIO_DEVICE,
+                                   int  output_device_id = DEFAULT_AUDIO_DEVICE,
+                                   bool threaded         = DEFAULT_AUDIO_RUN_IN_THREAD);
     void                     audio(int                input_channels,
                                    int                output_channels,
                                    int                sample_rate,
@@ -72,6 +73,10 @@ namespace umfeld {
     void                     audio(const AudioUnitInfo& info);
     void                     audio_start(PAudio* device = nullptr);
     void                     audio_stop(PAudio* device = nullptr);
+    uint32_t                 get_audio_sample_rate();
+    int8_t                   get_audio_input_channels();
+    int8_t                   get_audio_output_channels();
+    uint32_t                 get_audio_buffer_size();
     bool                     is_initialized();
     std::string              getTitle();
     void                     getLocation(const int& x, const int& y);
@@ -81,7 +86,7 @@ namespace umfeld {
     void                     register_library(LibraryListener* listener);         /* implemented in subsystems */
     void                     unregister_library(const LibraryListener* listener); /* implemented in subsystems */
     std::vector<Vertex>      loadOBJ(const std::string& file, bool material = true);
-    Sampler*                 loadSample(const std::string& file);
+    Sampler*                 loadSample(const std::string& file, bool resample_to_audio_device = true);
     void                     saveImage(const PImage* image, const std::string& filename);
     PAudio*                  createAudio(const AudioUnitInfo* device_info);
     void                     profile(Profile profile_name);

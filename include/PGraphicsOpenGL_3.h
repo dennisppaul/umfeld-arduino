@@ -45,7 +45,9 @@ namespace umfeld {
         void endDraw() override;
         void texture(PImage* img) override;
 
-        void        init(uint32_t* pixels, int width, int height) override;
+        void init(uint32_t* pixels, int width, int height) override;
+        void resize(int width, int height) override;
+
         std::string name() override {
 #if defined(OPENGL_ES_3_0)
             return "PGraphicsOpenGL_ES_3_0";

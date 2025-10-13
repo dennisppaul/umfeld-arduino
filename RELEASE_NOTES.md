@@ -1,5 +1,14 @@
 # RELEASE NOTES
 
+## v2.5.0 (2025-10-13)
+
+- added per sample `audioEvent` ( enable with `enable_audio_per_sample_processing = true;` )
+- window resize now works ( including pixel density changes )
+- fixed reverb
+- sampler can now resample data to other sample rates
+- color functions now exist in float ( e.g `stroke(0.5)` ) and 8-bit versions ( e.g `stroke_8(127)` ). the 8-bit versions are suffixed with a `_8`.
+- fixed library registration
+
 ## v2.4.2 (2025-09-22)
 
 - `update` can run in own thread now with `run_update_in_thread = true`

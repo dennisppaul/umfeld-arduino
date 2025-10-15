@@ -7,7 +7,7 @@
 ###################################################################################################
 
 name=Umfeld
-version=2.4.0
+version=2.5.0
 
 ###################################################################################################
 #
@@ -177,7 +177,7 @@ recipe.preproc.macros="{compiler.path}{preproc.macros.cmd}" {compiler.cpp.flags}
 # tools.sdlexecprog.exec.windows=
 # TODO problem with dialog box quitting 
 # cannot use the upload script when also using the dialog box with e.g `Card.begin()`
-tools.sdlexecprog.upload.pattern="{build.path}/{build.project_name}.exec" {upload.options} --fontpath={runtime.platform.path}/fonts
+tools.sdlexecprog.upload.pattern="{build.path}/{build.project_name}.exec" {upload.options} --sketchpath={build.core.path} {runtime.platform.path} {build.path} {build.project_name} {build.source.path} {build.source.path} {sketch_path}
 tools.sdlexecprog.upload.params.verbose=
 tools.sdlexecprog.upload.params.quiet=
 
@@ -185,7 +185,8 @@ tools.sdlexecprog.upload.params.quiet=
 # recipe.hooks.postbuild.01.pattern=echo && echo Executable binary located at: "{build.path}/{build.project_name}.exec"
 # #recipe.hooks.postbuild.01.pattern=printf "\n\nexecutable binary located at: {build.path}/{build.project_name}.exec "
 # # recipe.hooks.postbuild.02.pattern={build.path}/{build.project_name}.exec
-
+recipe.hooks.postbuild.01.pattern=mkdir -p "{sketch_path}/data" 
+recipe.hooks.postbuild.02.pattern=cp -R "{sketch_path}/data" "{build.path}/"
 ###################################################################################################
 #
 # CLI

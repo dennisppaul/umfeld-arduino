@@ -67,9 +67,9 @@ compiler.SDL3_cflags.windows = -IC:/msys64/ucrt64/include -IC:/msys64/ucrt64/inc
 #
 ###################################################################################################
 
-compiler.umfeld_libs.macosx   = -L/opt/homebrew/lib -L/usr/local/lib -framework OpenGL -lharfbuzz -lfreetype -lportaudio -lcurl -lncurses
-compiler.umfeld_libs.linux    = -L/usr/lib -L/usr/local/lib -lGL -lharfbuzz -lfreetype -lportaudio -lcurl -lncurses
-compiler.umfeld_libs.windows  = -LC:/msys64/ucrt64/lib -lopengl32 -lharfbuzz -lfreetype -lportaudio -lncurses -lcurl -lssl -lcrypto -lidn2 -lssh2 -lpsl -lzstd -lnghttp2 -lbrotlidec -lcares -lz -lws2_32 -lbcrypt -lcrypt32 -lole32 -lcomdlg32 -lwinmm
+compiler.umfeld_libs.macosx   = -L/opt/homebrew/lib -L/usr/local/lib -framework OpenGL -lharfbuzz -lfreetype -lportaudio -lcurl -lncurses -lrtmidi
+compiler.umfeld_libs.linux    = -L/usr/lib -L/usr/local/lib -lGL -lharfbuzz -lfreetype -lportaudio -lcurl -lncurses -lrtmidi
+compiler.umfeld_libs.windows  = -LC:/msys64/ucrt64/lib -lopengl32 -lharfbuzz -lfreetype -lportaudio -lncurses -lcurl -lssl -lcrypto -lidn2 -lssh2 -lpsl -lzstd -lnghttp2 -lbrotlidec -lcares -lz -lws2_32 -lbcrypt -lcrypt32 -lole32 -lcomdlg32 -lwinmm -lrtmidi
 
 compiler.SDL3_libs.macosx     = -L/opt/homebrew/lib -L/usr/local/lib -lSDL3
 compiler.SDL3_libs.linux      = -L/usr/lib -lSDL3

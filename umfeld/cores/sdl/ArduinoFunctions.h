@@ -19,6 +19,8 @@
 
 #pragma once
 
+#ifdef BOARD_NAME_KLST_EMU
+
 // TODO functions are implemented in 'Klangstrom_Emulator' library … that s a bit scattered.
 //      maybe there is a way to consolidate core and emulator?
 
@@ -126,3 +128,5 @@ void noInterrupts();
 // USB
 // Keyboard
 // Mouse
+
+#endif // BOARD_NAME_KLST_EMU

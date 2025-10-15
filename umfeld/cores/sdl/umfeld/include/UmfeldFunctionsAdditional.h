@@ -251,5 +251,5 @@ namespace umfeld {
 
     inline void   set_random_mode(const Random mode) { _random_mode() = mode; }
     inline Random get_random_mode() { return _random_mode(); }
-
+    void          set_sketch_path(const std::string& path);
 } // namespace umfeld

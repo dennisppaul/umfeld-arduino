@@ -49,7 +49,6 @@ namespace umfeld::subsystem {
     static void setup_post() {
         PGraphicsOpenGL::OGL_check_error("SUBSYSTEM_GRAPHICS_OPENGL20::setup_post(begin)");
         OGL_setup_post();
-        OGL_draw_post(window, false); // TODO maybe move this to shared methods once it is fully integrated
         PGraphicsOpenGL::OGL_check_error("SUBSYSTEM_GRAPHICS_OPENGL20::setup_post(end)");
     }
 

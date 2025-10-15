@@ -193,10 +193,6 @@ namespace umfeld {
         g->width  = width;
         g->height = height;
         g->lock_init_properties(true);
-
-        g->set_default_graphics_state();
-
-        OGL_draw_pre();
     }
 
     inline void OGL_setup_post() {

@@ -482,10 +482,19 @@ namespace umfeld {
         return SimplexNoise::noise(x, y, z);
     }
 
+    static std::string custom_sketch_path;
+
+    void set_sketch_path(const std::string& path) {
+        custom_sketch_path = path;
+    }
+
 #ifndef UMFELD_USE_NATIVE_SKETCH_PATH
 #define USE_SDL_SKETCH_PATH
 #endif
     std::string sketchPath() {
+        if (custom_sketch_path.empty() == false) {
+            return custom_sketch_path;
+        }
 #ifdef USE_SDL_SKETCH_PATH
         return SDL_GetBasePath();
 #else

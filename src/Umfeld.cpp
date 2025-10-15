@@ -301,6 +301,43 @@ static uint32_t compile_subsystems_flag() {
     return subsystem_flags;
 }
 
+static void handle_event_in_update_loop() {
+    for (const umfeld::Subsystem* subsystem: umfeld::subsystems) {
+        if (subsystem != nullptr && subsystem->event_in_update_loop != nullptr) {
+            for (auto& e: umfeld::event_cache) {
+                subsystem->event_in_update_loop(&e);
+            }
+        }
+    }
+    umfeld::event_cache.clear();
+}
+
+static void handle_draw_in_setup();
+
+void handle_setup_draw_and_post() {
+    if (umfeld::enable_graphics) {
+        if (umfeld::subsystem_graphics != nullptr) {
+            handle_draw_in_setup();
+        }
+    }
+
+    /* - setup_post */
+
+    for (const umfeld::Subsystem* subsystem: umfeld::subsystems) {
+        if (subsystem != nullptr) {
+            if (subsystem->setup_post != nullptr) {
+                subsystem->setup_post();
+            }
+        }
+    }
+
+    umfeld::lastFrameTime = std::chrono::high_resolution_clock::now();
+
+    /* start update thread */
+    if (umfeld::run_update_in_thread) {
+        start_update_thread();
+    }
+}
 SDL_AppResult SDL_AppInit(void** appstate, const int argc, char* argv[]) {
     /*
      * 0. setup callbacks
@@ -626,24 +663,8 @@ SDL_AppResult SDL_AppInit(void** appstate, const int argc, char* argv[]) {
         DISABLE_WARNING_POP
     }
 
-    umfeld::run_setup_callback();
-
-    /* - setup_post */
-
-    for (const umfeld::Subsystem* subsystem: umfeld::subsystems) {
-        if (subsystem != nullptr) {
-            if (subsystem->setup_post != nullptr) {
-                subsystem->setup_post();
-            }
-        }
-    }
-
-    umfeld::lastFrameTime = std::chrono::high_resolution_clock::now();
-
-    /* start update thread */
-    if (umfeld::run_update_in_thread) {
-        start_update_thread();
-    }
+    // NOTE call to setup and setup_post is handled in first call to `SDL_AppIterate`
+    // handle_setup_draw_and_post();
 
     return SDL_APP_CONTINUE;
 }
@@ -707,6 +728,39 @@ SDL_AppResult SDL_AppEvent(void* appstate, SDL_Event* event) {
     return SDL_APP_CONTINUE;
 }
 
+static void handle_draw_in_setup() {
+    for (const umfeld::Subsystem* subsystem: umfeld::subsystems) {
+        if (subsystem != nullptr) {
+            if (subsystem->draw_pre != nullptr) {
+                subsystem->draw_pre();
+            }
+        }
+    }
+
+    // NOTE handle events just before drawing so that drawing method have effect in event callback
+    handle_event_in_update_loop();
+    if (umfeld::g != nullptr) {
+        umfeld::g->set_default_graphics_state();
+    }
+    umfeld::run_setup_callback();
+
+    for (const umfeld::Subsystem* subsystem: umfeld::subsystems) {
+        if (subsystem != nullptr) {
+            if (subsystem->draw_post != nullptr) {
+                subsystem->draw_post();
+            }
+        }
+    }
+
+    // if (umfeld::subsystem_graphics != nullptr) {
+    //     if (umfeld::subsystem_graphics->post != nullptr) {
+    //         umfeld::subsystem_graphics->post();
+    //     }
+    // }
+
+    umfeld::run_post_callback();
+}
+
 static void handle_draw() {
     for (const umfeld::Subsystem* subsystem: umfeld::subsystems) {
         if (subsystem != nullptr) {
@@ -716,6 +770,8 @@ static void handle_draw() {
         }
     }
 
+    // NOTE handle events just before drawing so that drawing method have effect in event callback
+    handle_event_in_update_loop();
     umfeld::run_draw_callback();
 
     for (const umfeld::Subsystem* subsystem: umfeld::subsystems) {
@@ -726,25 +782,27 @@ static void handle_draw() {
         }
     }
 
-    if (umfeld::subsystem_graphics != nullptr) {
-        if (umfeld::subsystem_graphics->post != nullptr) {
-            umfeld::subsystem_graphics->post();
-        }
-    }
+    // if (umfeld::subsystem_graphics != nullptr) {
+    //     if (umfeld::subsystem_graphics->post != nullptr) {
+    //         umfeld::subsystem_graphics->post();
+    //     }
+    // }
 
     umfeld::run_post_callback();
 }
 
+static bool first_iterate = true;
+
 SDL_AppResult SDL_AppIterate(void* appstate) {
-    // NOTE always process events even if noLoop() is active
-    for (const umfeld::Subsystem* subsystem: umfeld::subsystems) {
-        if (subsystem != nullptr && subsystem->event_in_update_loop != nullptr) {
-            for (auto& e: umfeld::event_cache) {
-                subsystem->event_in_update_loop(&e);
-            }
-        }
+    if (first_iterate) {
+        first_iterate = false;
+        handle_setup_draw_and_post();
+        return SDL_APP_CONTINUE;
     }
-    umfeld::event_cache.clear();
+
+    // NOTE moved events into draw loop to make darwing methods available
+    // NOTE always process events even if noLoop() is active
+    // handle_event_in_update_loop();
 
     // NOTE only update and draw if looping or first frame after noLoop()
     if (!umfeld::_app_no_loop || umfeld::frameCount == 0 || umfeld::_app_force_redraw) {

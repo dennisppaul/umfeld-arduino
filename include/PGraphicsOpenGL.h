@@ -77,10 +77,7 @@ namespace umfeld {
 
         ~PGraphicsOpenGL() override = default;
 
-        void set_default_graphics_state() override {
-            background(0, 0, 0, 1);
-            blendMode(BLEND);
-        }
+        void set_default_graphics_state() override;
 
         virtual void store_fbo_state()   = 0;
         virtual void restore_fbo_state() = 0;

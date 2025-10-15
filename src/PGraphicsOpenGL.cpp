@@ -60,6 +60,14 @@ namespace umfeld {
         }
     }
 
+    void PGraphicsOpenGL::set_default_graphics_state() {
+        background(red(DEFAULT_BACKGROUND_COLOR),
+                   green(DEFAULT_BACKGROUND_COLOR),
+                   blue(DEFAULT_BACKGROUND_COLOR),
+                   alpha(DEFAULT_BACKGROUND_COLOR));
+        blendMode(BLEND);
+    }
+
     void PGraphicsOpenGL::bind_framebuffer_texture() const {
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, framebuffer.texture_id);

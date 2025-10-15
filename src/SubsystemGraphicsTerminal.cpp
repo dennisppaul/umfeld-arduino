@@ -190,7 +190,7 @@ namespace umfeld::subsystem {
         return new PGraphicsTerminal();
     }
 
-    static void post() {}
+    // static void post() {}
 
     static void set_title(const std::string& title) {}
 
@@ -231,7 +231,7 @@ umfeld::SubsystemGraphics* umfeld_create_subsystem_graphics_terminal() {
     graphics->event_in_update_loop   = umfeld::subsystem::event_in_update_loop;
     graphics->name                   = umfeld::subsystem::name;
     graphics->create_native_graphics = umfeld::subsystem::create_native_graphics;
-    graphics->post                   = umfeld::subsystem::post; // TODO maybe remove this, as there is also a `draw_post()` method
+    // graphics->post                   = umfeld::subsystem::post; // TODO maybe remove this, as there is also a `draw_post()` method
     graphics->set_title              = umfeld::subsystem::set_title;
     graphics->get_title              = umfeld::subsystem::get_title;
     graphics->set_window_size        = umfeld::subsystem::set_window_size;

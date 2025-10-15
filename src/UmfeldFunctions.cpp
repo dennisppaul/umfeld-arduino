@@ -96,19 +96,19 @@ namespace umfeld {
                r;
     }
 
-    float red(const color_32 color) {
+    float alpha(const color_32 color) {
         return static_cast<float>((color & 0x000000FF) >> 0) / 255.0f;
     }
 
-    float green(const color_32 color) {
+    float blue(const color_32 color) {
         return static_cast<float>((color & 0x0000FF00) >> 8) / 255.0f;
     }
 
-    float blue(const color_32 color) {
+    float green(const color_32 color) {
         return static_cast<float>((color & 0x00FF0000) >> 16) / 255.0f;
     }
 
-    float alpha(const color_32 color) {
+    float red(const color_32 color) {
         return static_cast<float>((color & 0xFF000000) >> 24) / 255.0f;
     }
 

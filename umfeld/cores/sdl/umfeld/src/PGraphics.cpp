@@ -255,7 +255,7 @@ void PGraphics::fill(const float gray, const float alpha) {
     fill(gray, gray, gray, alpha);
 }
 
-void PGraphics::fill_color(const uint32_t c) {
+void PGraphics::fill_color_32(const uint32_t c) {
     color_unpack(c, color_fill.r, color_fill.g, color_fill.b, color_fill.a);
     color_fill.active = true;
 }

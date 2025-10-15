@@ -37,7 +37,7 @@ this script installs all required packages ( on *macOS*, *Linux* ( including *Ra
 
 ### 3. Build + Run an Example
 
-run an example ( e.g. `minimal` ) to see if *Umfeld* works. navigate to the folder and run the CMake build commands:
+run an example ( e.g. `minimal` ) to see if *Umfeld* works. open a console, navigate to the example folder and run the CMake build commands:
 
 ```sh
 cd umfeld-examples/Basics/minimal

@@ -109,7 +109,7 @@ namespace umfeld {
 
     void fill_color_32(const uint32_t c) {
         if (g == nullptr) { return; }
-        g->fill_color(c);
+        g->fill_color_32(c);
     }
 
     void noFill() {

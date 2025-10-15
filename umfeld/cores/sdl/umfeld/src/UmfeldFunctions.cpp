@@ -390,10 +390,10 @@ namespace umfeld {
     static uint64_t pcg_state = 0x853c49e6748fea9bULL;
 
     uint32_t pcg32() {
-        uint64_t oldstate   = pcg_state;
-        pcg_state           = oldstate * 6364136223846793005ULL + 1;
-        uint32_t xorshifted = static_cast<uint32_t>(((oldstate >> 18u) ^ oldstate) >> 27u);
-        uint32_t rot        = oldstate >> 59u;
+        const uint64_t oldstate   = pcg_state;
+        pcg_state                 = oldstate * 6364136223846793005ULL + 1;
+        const uint32_t xorshifted = static_cast<uint32_t>(((oldstate >> 18u) ^ oldstate) >> 27u);
+        const uint32_t rot        = oldstate >> 59u;
         return (xorshifted >> rot) | (xorshifted << ((-rot) & 31));
     }
 
@@ -721,7 +721,7 @@ namespace umfeld {
 
         std::vector<uint8_t> output;
         int                  val = 0, valb = -8;
-        for (unsigned char c: input) {
+        for (const unsigned char c: input) {
             if (!is_base64(c)) {
                 break;
             }
@@ -868,7 +868,7 @@ namespace umfeld {
                     return loadBytesFromFile(path);
                 }
 #else
-                std::string path = file_path.substr(7); // strip file://
+                const std::string path = file_path.substr(7); // strip file://
                 return loadBytesFromFile(path);
 #endif
             }
@@ -956,7 +956,7 @@ namespace umfeld {
     void noCursor() { SDL_HideCursor(); }
 
     std::string resolve_data_path(const std::string& path) {
-        std::filesystem::path p(path);
+        const std::filesystem::path p(path);
 
         if (p.is_absolute()) {
             return path;

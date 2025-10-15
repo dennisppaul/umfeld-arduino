@@ -42,8 +42,8 @@ pacman -S --noconfirm --needed \
 log "--- installing Umfeld dependencies"
 pacman -S --noconfirm --needed \
   ucrt64/mingw-w64-ucrt-x86_64-ffmpeg \
-  ucrt64/mingw-w64-ucrt-x86_64-harfbuzz \
   ucrt64/mingw-w64-ucrt-x86_64-freetype \
+  ucrt64/mingw-w64-ucrt-x86_64-harfbuzz \
   ucrt64/mingw-w64-ucrt-x86_64-rtmidi \
   ucrt64/mingw-w64-ucrt-x86_64-glm \
   ucrt64/mingw-w64-ucrt-x86_64-portaudio \

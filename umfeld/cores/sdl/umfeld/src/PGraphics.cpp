@@ -593,13 +593,14 @@ void PGraphics::arc(const float x, const float y,
         bool end_shape_closed = false;
         beginShape();
         if (mode == PIE) {
-            vertex(arcPoints.front().x, arcPoints.front().y);
+            // NOTE outline is not closed to comply with Processing behavior
+            // vertex(arcPoints.front().x, arcPoints.front().y);
             for (const auto& pt: arcPoints) {
                 vertex(pt.x, pt.y);
             }
-            vertex(arcPoints.back().x, arcPoints.back().y);
-            vertex(x, y); // close back to center
-            end_shape_closed = true;
+            // vertex(arcPoints.back().x, arcPoints.back().y);
+            // vertex(x, y); // close back to center
+            end_shape_closed = false;
         } else if (mode == CHORD) {
             for (const auto& pt: arcPoints) {
                 vertex(pt.x, pt.y);

@@ -135,7 +135,7 @@ namespace umfeld {
 
         // ### 2d Primitives
 
-        virtual void arc(float x, float y, float w, float h, float start, float stop, int mode = OPEN);
+        virtual void arc(float x, float y, float w, float h, float start, float stop, int mode = PIE);
         virtual void circle(float x, float y, float diameter);
         virtual void ellipse(float a, float b, float c, float d);
         virtual void line(float x1, float y1, float z1, float x2, float y2, float z2);

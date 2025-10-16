@@ -55,7 +55,7 @@ namespace umfeld {
     };
 
     class PFont final : public PImage {
-        const std::string character_atlas_default = " ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()[]{}-_=+;:'\",<.>/?`~";
+        const std::string character_atlas_default = " ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()[]{}-_=+;:'\",<.>/?`~—";
 
     public:
         explicit PFont(const std::string& filepath, int font_size, float pixelDensity = 1);

@@ -975,8 +975,30 @@ namespace umfeld {
         return sketchPath() + (std::filesystem::path(UMFELD_DATA_PATH) / p).string();
     }
 
+    PFont* loadFont(const std::string& file, const float size) {
+        // NOTE if the file starts with "http://", "https://",  etcetera assume it's a URL
+        if (is_protocol_supported(file)) {
+            const std::vector<uint8_t> data = loadBytes(file);
+            return new PFont(data.data(), data.size(), size);
+        }
+
+        const std::string absolute_path = resolve_data_path(file);
+        if (!file_exists(absolute_path)) {
+            error("loadImage() failed! file not found: '", file, "'. the 'sketchPath()' is currently set to '", sketchPath(), "'. looking for file at: '", absolute_path, "'");
+            return nullptr;
+        }
+        return new PFont(absolute_path, size);
+
+        // const std::string absolute_path = resolve_data_path(file);
+        // if (!file_exists(absolute_path)) {
+        //     error("loadFont() failed! file not found: '", file, "'. the 'sketchPath()' is currently set to '", sketchPath(), "'. looking for file at: '", absolute_path, "'");
+        //     return nullptr;
+        // }
+        // return new PFont(absolute_path, size);
+    }
+
     PImage* loadImage(const std::string& file) {
-        // if the file starts with "http://", "https://",  etcetera assume it's a URL
+        // NOTE if the file starts with "http://", "https://",  etcetera assume it's a URL
         if (is_protocol_supported(file)) {
             const std::vector<uint8_t> data = loadBytes(file);
             return new PImage(data.data(), data.size());

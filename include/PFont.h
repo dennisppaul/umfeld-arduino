@@ -59,6 +59,8 @@ namespace umfeld {
 
     public:
         explicit PFont(const std::string& filepath, int font_size, float pixelDensity = 1);
+        PFont(const uint8_t* data, size_t size, float pixel_size, float pixelDensity = 1);
+
         static constexpr int atlas_pixel_width       = 512;
         static constexpr int atlas_character_padding = 2;
         const float          font_size;
@@ -121,14 +123,7 @@ namespace umfeld {
             text_leading = leading;
         }
 
-        ~PFont() override {
-            hb_buffer_destroy(font->buffer);
-            hb_font_destroy(font->hb_font);
-            FT_Done_Face(font->face);
-            delete font;
-            FT_Done_FreeType(freetype);
-            delete pixels;
-        }
+        ~PFont() override;
 
     private:
         struct Glyph {
@@ -153,6 +148,7 @@ namespace umfeld {
             FT_Face                             face{nullptr};
             hb_font_t*                          hb_font{nullptr};
             hb_buffer_t*                        buffer{nullptr};
+            std::vector<uint8_t>                bytes;
         };
 
         std::vector<TexturedQuad> text_quads;

@@ -137,6 +137,10 @@ namespace umfeld {
     int       second();
     int       year();
 
+    // ## Typography
+
+    PFont* loadFont(const std::string& file, float size);
+
     // ## Rendering
 
     PGraphics* createGraphics(int width, int height, int renderer = DEFAULT);

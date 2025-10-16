@@ -159,38 +159,38 @@ namespace umfeld {
 
         // ## Structure
 
-        virtual void   pushStyle();
-        virtual void   popStyle();
-        virtual void   bezier(float x1, float y1, float x2, float y2, float x3, float y3, float x4, float y4);
-        virtual void   bezier(float x1, float y1, float z1, float x2, float y2, float z2, float x3, float y3, float z3, float x4, float y4, float z4);
-        virtual void   bezierDetail(int detail);
-        virtual void   curve(float x1, float y1, float x2, float y2, float x3, float y3, float x4, float y4);
-        virtual void   curve(float x1, float y1, float z1, float x2, float y2, float z2, float x3, float y3, float z3, float x4, float y4, float z4);
-        virtual void   curveDetail(int detail);
-        virtual void   curveTightness(float tightness);
-        virtual void   arcDetail(int detail);
-        virtual void   ellipseMode(int mode);
-        virtual void   ellipseDetail(int detail);
-        virtual void   image(PImage* img, float x, float y, float w, float h);
-        virtual void   image(PImage* img, float x, float y);
-        virtual void   texture(PImage* img = nullptr);
-        virtual void   pointSize(float size);
-        virtual void   rectMode(int mode);
-        virtual void   textFont(PFont* font);
-        virtual void   textSize(float size);
-        virtual void   text(const char* value, float x, float y, float z = 0.0f);
-        virtual float  textWidth(const std::string& text);
-        virtual void   textAlign(int alignX, int alignY = BASELINE);
-        virtual float  textAscent();
-        virtual float  textDescent();
-        virtual void   textLeading(float leading);
-        virtual PFont* loadFont(const std::string& file, float size);
-        virtual void   box(float width, float height, float depth);
-        virtual void   box(const float size) { box(size, size, size); }
-        virtual void   sphere(float width, float height, float depth);
-        virtual void   sphere(const float size) { sphere(size, size, size); }
-        virtual void   sphereDetail(int ures, int vres);
-        virtual void   sphereDetail(const int res) { sphereDetail(res, res); }
+        virtual void  pushStyle();
+        virtual void  popStyle();
+        virtual void  bezier(float x1, float y1, float x2, float y2, float x3, float y3, float x4, float y4);
+        virtual void  bezier(float x1, float y1, float z1, float x2, float y2, float z2, float x3, float y3, float z3, float x4, float y4, float z4);
+        virtual void  bezierDetail(int detail);
+        virtual void  curve(float x1, float y1, float x2, float y2, float x3, float y3, float x4, float y4);
+        virtual void  curve(float x1, float y1, float z1, float x2, float y2, float z2, float x3, float y3, float z3, float x4, float y4, float z4);
+        virtual void  curveDetail(int detail);
+        virtual void  curveTightness(float tightness);
+        virtual void  arcDetail(int detail);
+        virtual void  ellipseMode(int mode);
+        virtual void  ellipseDetail(int detail);
+        virtual void  image(PImage* img, float x, float y, float w, float h);
+        virtual void  image(PImage* img, float x, float y);
+        virtual void  texture(PImage* img = nullptr);
+        virtual void  pointSize(float size);
+        virtual void  rectMode(int mode);
+        virtual void  textFont(PFont* font);
+        virtual void  textSize(float size);
+        virtual void  text(const char* value, float x, float y, float z = 0.0f);
+        virtual float textWidth(const std::string& text);
+        virtual void  textAlign(int alignX, int alignY = BASELINE);
+        virtual float textAscent();
+        virtual float textDescent();
+        virtual void  textLeading(float leading);
+        // virtual PFont* loadFont(const std::string& file, float size);
+        virtual void box(float width, float height, float depth);
+        virtual void box(const float size) { box(size, size, size); }
+        virtual void sphere(float width, float height, float depth);
+        virtual void sphere(const float size) { sphere(size, size, size); }
+        virtual void sphereDetail(int ures, int vres);
+        virtual void sphereDetail(const int res) { sphereDetail(res, res); }
         // void             process_collected_fill_vertices();
         // void             process_collected_stroke_vertices(bool close_shape);
         virtual void     shader(PShader* shader);

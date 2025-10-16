@@ -19,6 +19,7 @@ UMFELD.build.core=sdl
 # UMFELD.compiler.path=/usr/bin/
 UMFELD.build.variant_h=variant_Umfeld.h
 UMFELD.build.variant_defines=
+UMFELD.build.print_debug=0
 
 UMFELD.menu.upload_method.sdlexec=Execute Application
 UMFELD.menu.upload_method.sdlexec.upload.protocol=1
@@ -50,6 +51,11 @@ UMFELD.menu.sample_rate.xx44100xx=44100Hz
 UMFELD.menu.sample_rate.xx44100xx.build.flags.sample_rate=44100
 UMFELD.menu.sample_rate.xx22050xx=22050Hz
 UMFELD.menu.sample_rate.xx22050xx.build.flags.sample_rate=22050
+
+# UMFELD.menu.print_debug.TRUE=PRINT_DEBUG_ON
+# UMFELD.menu.print_debug.TRUE.build.flags.print_debug=1
+# UMFELD.menu.print_debug.FALSE=PRINT_DEBUG_OFF
+# UMFELD.menu.print_debug.FALSE.build.flags.print_debug=0
 
 UMFELD.menu.audioblock.4096=4096 samples
 UMFELD.menu.audioblock.4096.build.flags.audioblock=4096

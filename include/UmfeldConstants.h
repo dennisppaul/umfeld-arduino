@@ -27,6 +27,8 @@
 #include "UmfeldDefines.h"
 #include "UmfeldVersion.h"
 
+#include "SDL3/SDL_scancode.h"
+
 namespace umfeld {
     typedef uint32_t color_32;
 
@@ -74,10 +76,15 @@ namespace umfeld {
     static constexpr float    TAU                           = TWO_PI;
     static constexpr bool     CLOSE                         = true;
     static constexpr bool     NOT_CLOSED                    = false;
-    static constexpr int      LEFT                          = 0x01; // shared constants
-    static constexpr int      RIGHT                         = 0x02;
-    static constexpr int      MIDDLE                        = 0x03;
-    static constexpr int      CENTER                        = 0x04;
+
+    enum Location {
+        RIGHT = SDL_SCANCODE_RIGHT,
+        LEFT  = SDL_SCANCODE_LEFT,
+        DOWN  = SDL_SCANCODE_DOWN,
+        UP    = SDL_SCANCODE_UP,
+        CENTER,
+        MIDDLE,
+    };
 
     enum ShapeMode {
         INHERIT = 0x10,

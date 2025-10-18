@@ -1,11 +1,16 @@
 menu.upload_method=Upload method
 menu.OPENGL_VERSION=OpenGL Version
 # menu.compiler_path=C/C++ Compiler Path ( <- remove this? )
-menu.sample_rate=Sampling Rate
+menu.sample_rate=Sample Rate
 menu.audioblock=Samples per Audio Block
 menu.board=Board
-
 menu.pnum=Board part number
+
+### options
+
+menu.print_debug=Print Debug
+menu.add_info_plist=Add Info.plist file (macOS)
+menu.enable_capture=Enable Capture (experimental)
 
 ##########################################################################################
 # UMFELD                                                                                 #
@@ -19,7 +24,6 @@ UMFELD.build.core=sdl
 # UMFELD.compiler.path=/usr/bin/
 UMFELD.build.variant_h=variant_Umfeld.h
 UMFELD.build.variant_defines=
-UMFELD.build.print_debug=0
 
 UMFELD.menu.upload_method.sdlexec=Execute Application
 UMFELD.menu.upload_method.sdlexec.upload.protocol=1
@@ -38,6 +42,21 @@ UMFELD.menu.pnum.UMFELD_TOOL.build.variant=UMFELD_TOOL
 UMFELD.menu.board.UMFELD_APP=UMFELD_APP
 UMFELD.menu.board.UMFELD_APP.build.flags.board=0x00
 
+UMFELD.menu.print_debug.on=on
+UMFELD.menu.print_debug.on.build.flags.print_debug=-DUMFELD_PRINT_CONSOLE=1
+UMFELD.menu.print_debug.off=off
+UMFELD.menu.print_debug.off.build.flags.print_debug=-DUMFELD_PRINT_CONSOLE=0
+
+UMFELD.menu.add_info_plist.off=off
+UMFELD.menu.add_info_plist.off.build.flags.add_info_plist=
+UMFELD.menu.add_info_plist.on=on
+UMFELD.menu.add_info_plist.on.build.flags.add_info_plist=-Wl,-sectcreate,__TEXT,__info_plist,"{sketch_path}/data/Info.plist"
+
+UMFELD.menu.enable_capture.off=off
+UMFELD.menu.enable_capture.off.build.flags.enable_capture=
+UMFELD.menu.enable_capture.on=on
+UMFELD.menu.enable_capture.on.build.flags.enable_capture=-DENABLE_CAPTURE
+
 UMFELD.menu.OPENGL_VERSION.3_3_core=OpenGL 3.3 Core
 UMFELD.menu.OPENGL_VERSION.3_3_core.build.flags.opengl=-DOPENGL_3_3_CORE -I{runtime.platform.path}/cores/sdl/umfeld/external/glad_opengl_33/include
 UMFELD.menu.OPENGL_VERSION.es_3_0=OpenGL ES 3.0
@@ -51,11 +70,6 @@ UMFELD.menu.sample_rate.xx44100xx=44100Hz
 UMFELD.menu.sample_rate.xx44100xx.build.flags.sample_rate=44100
 UMFELD.menu.sample_rate.xx22050xx=22050Hz
 UMFELD.menu.sample_rate.xx22050xx.build.flags.sample_rate=22050
-
-# UMFELD.menu.print_debug.TRUE=PRINT_DEBUG_ON
-# UMFELD.menu.print_debug.TRUE.build.flags.print_debug=1
-# UMFELD.menu.print_debug.FALSE=PRINT_DEBUG_OFF
-# UMFELD.menu.print_debug.FALSE.build.flags.print_debug=0
 
 UMFELD.menu.audioblock.4096=4096 samples
 UMFELD.menu.audioblock.4096.build.flags.audioblock=4096

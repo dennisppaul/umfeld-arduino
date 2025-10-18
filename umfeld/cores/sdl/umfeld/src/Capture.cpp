@@ -278,8 +278,7 @@ namespace umfeld {
 
         PImage::init(reinterpret_cast<uint32_t*>(buffer),
                      codecContext->width,
-                     codecContext->height,
-                     default_channels_RGBA, false);
+                     codecContext->height);
         return 0;
     }
 

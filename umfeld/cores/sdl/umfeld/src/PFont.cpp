@@ -22,6 +22,68 @@
 
 using namespace umfeld;
 
+struct FontData {
+    FT_Face              face    = nullptr;
+    hb_font_t*           hb_font = nullptr;
+    hb_buffer_t*         buffer  = nullptr;
+    std::vector<uint8_t> bytes; // owns the font bytes (must outlive FT_Face)
+};
+
+static FT_Library g_ft; // init once somewhere: FT_Init_FreeType(&g_ft)
+
+PFont::PFont(const uint8_t* data,
+             size_t         size,
+             const float    pixel_size,
+             const float    pixelDensity) : font_size((int)pixel_size) {
+
+    if(!data || size == 0) {
+        error("PFont / empty font data");
+        return;
+    }
+
+    const std::string character_atlas = character_atlas_default;
+    (void) pixelDensity; // TODO implement pixel density
+
+    // init freetype + structs exactly like the file ctor
+    FT_Init_FreeType(&freetype);
+
+    font = new FontData();
+    font->bytes.assign(data, data + size); // keep alive for FT_New_Memory_Face
+    font->buffer = hb_buffer_create();
+
+    if(FT_New_Memory_Face(freetype,
+                          font->bytes.data(),
+                          (FT_Long)font->bytes.size(),
+                          0,
+                          &font->face)) {
+        error("PFont / FT_New_Memory_Face failed");
+        return;
+                          }
+
+    FT_Set_Pixel_Sizes(font->face, 0, (FT_UInt)font_size);
+    font->hb_font = hb_ft_font_create(font->face, nullptr);
+
+    // build atlas exactly like the file ctor
+    create_font_atlas(*font, character_atlas);
+
+    // NOTE: tex creation stays in PGraphics, just like the file ctor
+    width  = static_cast<float>(font->atlas_width);
+    height = static_cast<float>(font->atlas_height);
+    pixels = new uint32_t[static_cast<int>(width * height)];
+    set_auto_generate_mipmap(true);
+    copy_atlas_to_rgba(*font, reinterpret_cast<unsigned char*>(pixels));
+
+    console(format_label("PFont"), "atlas created (memory)");
+    console(format_label("PFont atlas size"), width, "×", height, " px");
+    textSize(font_size);
+    textLeading(font_size * 1.2f);
+
+#ifdef PFONT_DEBUG_FONT
+    DEBUG_save_font_atlas(*font, std::string("<memory>") + "--font_atlas.png");
+    DEBUG_save_text(*font, "AVTAWaToVAWeYoyo Hamburgefonts", std::string("<memory>") + "--text.png");
+#endif
+}
+
 PFont::PFont(const std::string& filepath,
              const int          font_size,
              const float        pixelDensity) : font_size(font_size) {
@@ -61,6 +123,28 @@ PFont::PFont(const std::string& filepath,
     DEBUG_save_font_atlas(*font, font_filepath + "--font_atlas.png");
     DEBUG_save_text(*font, "AVTAWaToVAWeYoyo Hamburgefonts", font_filepath + "--text.png");
 #endif //PFONT_DEBUG_FONT
+}
+
+PFont::~PFont() {
+    if (font) {
+        if (font->hb_font) {
+            hb_font_destroy(font->hb_font);
+        }
+        if (font->buffer) {
+            hb_buffer_destroy(font->buffer);
+        }
+        if (font->face) {
+            FT_Done_Face(font->face);
+        }
+        delete font;
+
+        hb_buffer_destroy(font->buffer);
+        // hb_font_destroy(font->hb_font);
+        // FT_Done_Face(font->face);
+        // delete font;
+        FT_Done_FreeType(freetype);
+        delete pixels;
+    }
 }
 
 void PFont::outline(const std::string& text, std::vector<std::vector<glm::vec2>>& outlines) const {

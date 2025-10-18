@@ -36,8 +36,9 @@ sudo apt-get dist-upgrade -y || sudo apt-get -f install -y
 
 # --- Base toolchain & deps ----------------------------------------------------
 log "--- installing dependencies (Debian/Ubuntu)"
+# TODO consider dropping clang package to increase install speed?
 sudo apt-get install -y --no-install-recommends \
-  git clang cmake ninja-build curl pkg-config \
+  build-essential git clang cmake ninja-build curl pkg-config \
   libx11-dev libxext-dev libxrandr-dev libxcursor-dev libxi-dev libxinerama-dev \
   libgl1-mesa-dev libglu1-mesa-dev \
   libwayland-dev libxkbcommon-dev wayland-protocols \

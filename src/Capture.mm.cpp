@@ -19,12 +19,8 @@
 
 #ifdef ENABLE_CAPTURE
 
-#include <iostream>
-#include <vector>
 #include <string>
-
-#import <Foundation/Foundation.h>
-#import <AVFoundation/AVFoundation.h>
+#include <vector>
 
 struct DeviceCapability {
     std::string device_name;
@@ -35,6 +31,14 @@ struct DeviceCapability {
     std::string pixel_format;
 };
 
+std::vector<DeviceCapability> getDeviceCapabilities();
+
+#if defined(__APPLE__) && defined(__OBJC__)
+// ===== Objective-C++ path (only active if compiled as ObjC++) =====
+#import <Foundation/Foundation.h>
+#import <AVFoundation/AVFoundation.h>
+#import <CoreMedia/CoreMedia.h>
+
 std::vector<DeviceCapability> getDeviceCapabilities() {
     std::vector<DeviceCapability> capabilities;
 
@@ -43,10 +47,10 @@ std::vector<DeviceCapability> getDeviceCapabilities() {
             AVCaptureDeviceTypeBuiltInWideAngleCamera
         ];
 
-        AVCaptureDeviceDiscoverySession* discoverySession = [AVCaptureDeviceDiscoverySession
-            discoverySessionWithDeviceTypes:deviceTypes
-                                  mediaType:AVMediaTypeVideo
-                                   position:AVCaptureDevicePositionUnspecified];
+        AVCaptureDeviceDiscoverySession* discoverySession =
+            [AVCaptureDeviceDiscoverySession discoverySessionWithDeviceTypes:deviceTypes
+                                                                  mediaType:AVMediaTypeVideo
+                                                                   position:AVCaptureDevicePositionUnspecified];
 
         NSArray<AVCaptureDevice*>* devices = discoverySession.devices;
 
@@ -59,30 +63,29 @@ std::vector<DeviceCapability> getDeviceCapabilities() {
 
                 FourCharCode mediaSubType = CMFormatDescriptionGetMediaSubType(desc);
 
-                // Convert FourCharCode to NSString
+                // Convert FourCharCode to C string
                 char formatCode[5];
-                formatCode[0]               = (mediaSubType >> 24) & 0xFF;
-                formatCode[1]               = (mediaSubType >> 16) & 0xFF;
-                formatCode[2]               = (mediaSubType >> 8) & 0xFF;
-                formatCode[3]               = mediaSubType & 0xFF;
-                formatCode[4]               = '\0';
-                NSString* pixelFormatString = [NSString stringWithUTF8String:formatCode];
+                formatCode[0] = (mediaSubType >> 24) & 0xFF;
+                formatCode[1] = (mediaSubType >> 16) & 0xFF;
+                formatCode[2] = (mediaSubType >> 8) & 0xFF;
+                formatCode[3] = mediaSubType & 0xFF;
+                formatCode[4] = '\0';
 
                 // Map FourCC to FFmpeg pixel format string
                 NSString* ffmpegPixelFormat = nil;
                 if (mediaSubType == kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange ||
                     mediaSubType == kCVPixelFormatType_420YpCbCr8BiPlanarFullRange) {
-                    ffmpegPixelFormat = @ "nv12";
+                    ffmpegPixelFormat = @"nv12";
                 } else if (mediaSubType == kCVPixelFormatType_422YpCbCr8) {
-                    ffmpegPixelFormat = @ "uyvy422";
+                    ffmpegPixelFormat = @"uyvy422";
                 } else if (mediaSubType == kCVPixelFormatType_32BGRA) {
-                    ffmpegPixelFormat = @ "bgra";
+                    ffmpegPixelFormat = @"bgra";
                 } else if (mediaSubType == kCVPixelFormatType_32ARGB) {
-                    ffmpegPixelFormat = @ "argb";
+                    ffmpegPixelFormat = @"argb";
                 } else if (mediaSubType == kCVPixelFormatType_32RGBA) {
-                    ffmpegPixelFormat = @ "rgba";
+                    ffmpegPixelFormat = @"rgba";
                 } else {
-                    ffmpegPixelFormat = @ "unknown";
+                    ffmpegPixelFormat = @"unknown";
                 }
 
                 NSArray<AVFrameRateRange*>* frameRateRanges = format.videoSupportedFrameRateRanges;
@@ -102,5 +105,13 @@ std::vector<DeviceCapability> getDeviceCapabilities() {
 
     return capabilities;
 }
+
+#else
+// ===== Non-ObjC++ (Arduino g++, non-Apple, etc.) =====
+std::vector<DeviceCapability> getDeviceCapabilities() {
+    // dummy fallback so pure C++ builds succeed
+    return {};
+}
+#endif // __APPLE__ && __OBJC__
 
 #endif // ENABLE_CAPTURE

@@ -76,6 +76,7 @@ UMFELD.menu.7_pnum.UMFELD_APP.build.variant=UMFELD
 # UMFELD.menu.7_pnum.UMFELD_TOOL=Umfeld Tool
 # UMFELD.menu.7_pnum.UMFELD_TOOL.build.variant=UMFELD_TOOL
 
+# TODO this currently break Klangstrom Emulator
 UMFELD.menu.1_print_debug.on=on
 UMFELD.menu.1_print_debug.on.build.flags.print_debug=-DUMFELD_PRINT_CONSOLE=1
 UMFELD.menu.1_print_debug.off=off
@@ -124,14 +125,15 @@ KLST_EMU.build.core=sdl
 KLST_EMU.build.variant_h=variant_KLST_Emulator.h
 KLST_EMU.build.variant_defines=-DUMFELD_SET_DEFAULT_CALLBACK=0
 
-KLST_EMU.menu.6_upload_method.sdlexec=Execute Application
-KLST_EMU.menu.6_upload_method.sdlexec.upload.protocol=1
-KLST_EMU.menu.6_upload_method.sdlexec.upload.options=-g
-KLST_EMU.menu.6_upload_method.sdlexec.upload.tool=sdlexecprog
-KLST_EMU.menu.6_upload_method.sdlexec.upload.options=
+KLST_EMU.menu.1_print_debug.on=on
+KLST_EMU.menu.1_print_debug.on.build.flags.print_debug=-DUMFELD_PRINT_CONSOLE=1
+KLST_EMU.menu.1_print_debug.off=off
+KLST_EMU.menu.1_print_debug.off.build.flags.print_debug=-DUMFELD_PRINT_CONSOLE=0
 
-KLST_EMU.menu.7_pnum.KLST_EMU=Klangstrom Emulator
-KLST_EMU.menu.7_pnum.KLST_EMU.build.variant=KLST_EMU
+KLST_EMU.menu.2_enable_portaudio.off=off
+KLST_EMU.menu.2_enable_portaudio.off.build.flags.enable_portaudio=
+KLST_EMU.menu.2_enable_portaudio.on=on
+KLST_EMU.menu.2_enable_portaudio.on.build.flags.enable_portaudio=-DENABLE_PORTAUDIO
 
 KLST_EMU.menu.3_opengl_version.3_3_core=OpenGL 3.3 Core
 KLST_EMU.menu.3_opengl_version.3_3_core.build.flags.opengl=-DOPENGL_3_3_CORE -I{runtime.platform.path}/cores/sdl/umfeld/external/glad_opengl_33/include
@@ -163,6 +165,15 @@ KLST_EMU.menu.5_audioblock.64=64 samples
 KLST_EMU.menu.5_audioblock.64.build.flags.audioblock=64
 KLST_EMU.menu.5_audioblock.32=32 samples
 KLST_EMU.menu.5_audioblock.32.build.flags.audioblock=32
+
+KLST_EMU.menu.6_upload_method.sdlexec=Execute Application
+KLST_EMU.menu.6_upload_method.sdlexec.upload.protocol=1
+KLST_EMU.menu.6_upload_method.sdlexec.upload.options=-g
+KLST_EMU.menu.6_upload_method.sdlexec.upload.tool=sdlexecprog
+KLST_EMU.menu.6_upload_method.sdlexec.upload.options=
+
+KLST_EMU.menu.7_pnum.KLST_EMU=Klangstrom Emulator
+KLST_EMU.menu.7_pnum.KLST_EMU.build.variant=KLST_EMU
 
 KLST_EMU.menu.8_board.KLST_PANDA=KLST_PANDA
 KLST_EMU.menu.8_board.KLST_PANDA.build.flags.board=0x46

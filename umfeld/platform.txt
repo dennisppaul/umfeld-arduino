@@ -197,6 +197,7 @@ tools.sdlexecprog.upload.params.quiet=
 # TODO check if `mkdir` and `cp` works on windows … probably not
 recipe.hooks.postbuild.01.pattern=mkdir -p "{sketch_path}/data" 
 recipe.hooks.postbuild.02.pattern=cp -R "{sketch_path}/data" "{build.path}/"
+
 ###################################################################################################
 #
 # CLI

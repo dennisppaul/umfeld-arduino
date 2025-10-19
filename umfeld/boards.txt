@@ -1,16 +1,19 @@
-menu.upload_method=Upload method
-menu.OPENGL_VERSION=OpenGL Version
+menu.1_print_debug=Print Debug
+menu.2_enable_portaudio=Enable Portaudio
+menu.3_opengl_version=OpenGL Version
+menu.4_sample_rate=Sample Rate
+menu.5_audioblock=Samples per Audio Block
+menu.6_upload_method=Execution method
+# TODO maybe unify `pnum` + `board` option
+menu.7_pnum=Application/Board Variant
+menu.8_board=Application/Board Type
 # menu.compiler_path=C/C++ Compiler Path ( <- remove this? )
-menu.sample_rate=Sample Rate
-menu.audioblock=Samples per Audio Block
-menu.board=Board
-menu.pnum=Board part number
 
-### options
-
-menu.print_debug=Print Debug
-menu.add_info_plist=Add Info.plist file (macOS)
-menu.enable_capture=Enable Capture (experimental)
+# TODO @video @capture @infoplist
+#
+# menu.enable_video=Enable Video (experimental)
+# menu.enable_capture=Enable Capture (experimental)
+# menu.add_info_plist=Add Info.plist file (macOS)
 
 ##########################################################################################
 # UMFELD                                                                                 #
@@ -25,68 +28,81 @@ UMFELD.build.core=sdl
 UMFELD.build.variant_h=variant_Umfeld.h
 UMFELD.build.variant_defines=
 
-UMFELD.menu.upload_method.sdlexec=Execute Application
-UMFELD.menu.upload_method.sdlexec.upload.protocol=1
-UMFELD.menu.upload_method.sdlexec.upload.options=-g
-UMFELD.menu.upload_method.sdlexec.upload.tool=sdlexecprog
-UMFELD.menu.upload_method.sdlexec.upload.options=
+UMFELD.menu.6_upload_method.sdlexec=Directly Execute Application
+UMFELD.menu.6_upload_method.sdlexec.upload.protocol=1
+UMFELD.menu.6_upload_method.sdlexec.upload.options=-g
+UMFELD.menu.6_upload_method.sdlexec.upload.tool=sdlexecprog
+UMFELD.menu.6_upload_method.sdlexec.upload.options=
 
-UMFELD.menu.pnum.UMFELD_APP=Umfeld Application
-UMFELD.menu.pnum.UMFELD_APP.build.variant=UMFELD
+UMFELD.menu.3_opengl_version.3_3_core=OpenGL 3.3 Core
+UMFELD.menu.3_opengl_version.3_3_core.build.flags.opengl=-DOPENGL_3_3_CORE -I{runtime.platform.path}/cores/sdl/umfeld/external/glad_opengl_33/include
+UMFELD.menu.3_opengl_version.es_3_0=OpenGL ES 3.0
+UMFELD.menu.3_opengl_version.es_3_0.build.flags.opengl=-DOPENGL_ES_3_0 -I{runtime.platform.path}/cores/sdl/umfeld/external/glad_opengles_30/include
+# UMFELD.menu.3_opengl_version.2_0=( OpenGL 2.0 ) (nA)
+# UMFELD.menu.3_opengl_version.2_0.build.flags.opengl=-DOPENGL_2_0 -I{runtime.platform.path}/cores/sdl/umfeld/external/glad_opengl_20/include
+
+UMFELD.menu.4_sample_rate.xx48000xx=48000Hz
+UMFELD.menu.4_sample_rate.xx48000xx.build.flags.sample_rate=48000
+UMFELD.menu.4_sample_rate.xx44100xx=44100Hz
+UMFELD.menu.4_sample_rate.xx44100xx.build.flags.sample_rate=44100
+UMFELD.menu.4_sample_rate.xx22050xx=22050Hz
+UMFELD.menu.4_sample_rate.xx22050xx.build.flags.sample_rate=22050
+
+UMFELD.menu.5_audioblock.4096=4096 samples
+UMFELD.menu.5_audioblock.4096.build.flags.audioblock=4096
+UMFELD.menu.5_audioblock.2048=2048 samples
+UMFELD.menu.5_audioblock.2048.build.flags.audioblock=2048
+UMFELD.menu.5_audioblock.1024=1024 samples
+UMFELD.menu.5_audioblock.1024.build.flags.audioblock=1024
+UMFELD.menu.5_audioblock.512=512 samples
+UMFELD.menu.5_audioblock.512.build.flags.audioblock=512
+UMFELD.menu.5_audioblock.256=256 samples
+UMFELD.menu.5_audioblock.256.build.flags.audioblock=256
+UMFELD.menu.5_audioblock.128=128 samples
+UMFELD.menu.5_audioblock.128.build.flags.audioblock=128
+UMFELD.menu.5_audioblock.64=64 samples
+UMFELD.menu.5_audioblock.64.build.flags.audioblock=64
+UMFELD.menu.5_audioblock.32=32 samples
+UMFELD.menu.5_audioblock.32.build.flags.audioblock=32
+
+# UMFELD.menu.8_board.GENERIC=GENERIC
+# UMFELD.menu.8_board.GENERIC.build.flags.board=0x00
+UMFELD.menu.8_board.UMFELD_APP=UMFELD_APP
+UMFELD.menu.8_board.UMFELD_APP.build.flags.board=0x00
+
+UMFELD.menu.7_pnum.UMFELD_APP=Umfeld Application
+UMFELD.menu.7_pnum.UMFELD_APP.build.variant=UMFELD
 # TODO 'UMFELD_TOOL' is just a proof of concept and WIP
-UMFELD.menu.pnum.UMFELD_TOOL=Umfeld Tool
-UMFELD.menu.pnum.UMFELD_TOOL.build.variant=UMFELD_TOOL
+# UMFELD.menu.7_pnum.UMFELD_TOOL=Umfeld Tool
+# UMFELD.menu.7_pnum.UMFELD_TOOL.build.variant=UMFELD_TOOL
 
-# UMFELD.menu.board.GENERIC=GENERIC
-# UMFELD.menu.board.GENERIC.build.flags.board=0x00
-UMFELD.menu.board.UMFELD_APP=UMFELD_APP
-UMFELD.menu.board.UMFELD_APP.build.flags.board=0x00
+UMFELD.menu.1_print_debug.on=on
+UMFELD.menu.1_print_debug.on.build.flags.print_debug=-DUMFELD_PRINT_CONSOLE=1
+UMFELD.menu.1_print_debug.off=off
+UMFELD.menu.1_print_debug.off.build.flags.print_debug=-DUMFELD_PRINT_CONSOLE=0
 
-UMFELD.menu.print_debug.on=on
-UMFELD.menu.print_debug.on.build.flags.print_debug=-DUMFELD_PRINT_CONSOLE=1
-UMFELD.menu.print_debug.off=off
-UMFELD.menu.print_debug.off.build.flags.print_debug=-DUMFELD_PRINT_CONSOLE=0
+UMFELD.menu.2_enable_portaudio.off=off
+UMFELD.menu.2_enable_portaudio.off.build.flags.enable_portaudio=
+UMFELD.menu.2_enable_portaudio.on=on
+UMFELD.menu.2_enable_portaudio.on.build.flags.enable_portaudio=-DENABLE_PORTAUDIO
 
-UMFELD.menu.add_info_plist.off=off
-UMFELD.menu.add_info_plist.off.build.flags.add_info_plist=
-UMFELD.menu.add_info_plist.on=on
-UMFELD.menu.add_info_plist.on.build.flags.add_info_plist=-Wl,-sectcreate,__TEXT,__info_plist,"{sketch_path}/data/Info.plist"
-
-UMFELD.menu.enable_capture.off=off
-UMFELD.menu.enable_capture.off.build.flags.enable_capture=
-UMFELD.menu.enable_capture.on=on
-UMFELD.menu.enable_capture.on.build.flags.enable_capture=-DENABLE_CAPTURE
-
-UMFELD.menu.OPENGL_VERSION.3_3_core=OpenGL 3.3 Core
-UMFELD.menu.OPENGL_VERSION.3_3_core.build.flags.opengl=-DOPENGL_3_3_CORE -I{runtime.platform.path}/cores/sdl/umfeld/external/glad_opengl_33/include
-UMFELD.menu.OPENGL_VERSION.es_3_0=OpenGL ES 3.0
-UMFELD.menu.OPENGL_VERSION.es_3_0.build.flags.opengl=-DOPENGL_ES_3_0 -I{runtime.platform.path}/cores/sdl/umfeld/external/glad_opengles_30/include
-UMFELD.menu.OPENGL_VERSION.2_0=( OpenGL 2.0 ) (nA)
-UMFELD.menu.OPENGL_VERSION.2_0.build.flags.opengl=-DOPENGL_2_0 -I{runtime.platform.path}/cores/sdl/umfeld/external/glad_opengl_20/include
-
-UMFELD.menu.sample_rate.xx48000xx=48000Hz
-UMFELD.menu.sample_rate.xx48000xx.build.flags.sample_rate=48000
-UMFELD.menu.sample_rate.xx44100xx=44100Hz
-UMFELD.menu.sample_rate.xx44100xx.build.flags.sample_rate=44100
-UMFELD.menu.sample_rate.xx22050xx=22050Hz
-UMFELD.menu.sample_rate.xx22050xx.build.flags.sample_rate=22050
-
-UMFELD.menu.audioblock.4096=4096 samples
-UMFELD.menu.audioblock.4096.build.flags.audioblock=4096
-UMFELD.menu.audioblock.2048=2048 samples
-UMFELD.menu.audioblock.2048.build.flags.audioblock=2048
-UMFELD.menu.audioblock.1024=1024 samples
-UMFELD.menu.audioblock.1024.build.flags.audioblock=1024
-UMFELD.menu.audioblock.512=512 samples
-UMFELD.menu.audioblock.512.build.flags.audioblock=512
-UMFELD.menu.audioblock.256=256 samples
-UMFELD.menu.audioblock.256.build.flags.audioblock=256
-UMFELD.menu.audioblock.128=128 samples
-UMFELD.menu.audioblock.128.build.flags.audioblock=128
-UMFELD.menu.audioblock.64=64 samples
-UMFELD.menu.audioblock.64.build.flags.audioblock=64
-UMFELD.menu.audioblock.32=32 samples
-UMFELD.menu.audioblock.32.build.flags.audioblock=32
+# TODO @video @capture @infoplist
+# 
+# UMFELD.menu.add_info_plist.off=off
+# UMFELD.menu.add_info_plist.off.build.flags.add_info_plist=
+# UMFELD.menu.add_info_plist.on=on
+# UMFELD.menu.add_info_plist.on.build.flags.add_info_plist=-Wl,-sectcreate,__TEXT,__info_plist,{sketch_path}/data/Info.plist
+# # TODO check if "{sketch_path}/data/Info.plist" works ( with quotation marks )
+# 
+# UMFELD.menu.enable_video.off=off
+# UMFELD.menu.enable_video.off.build.flags.enable_video=
+# UMFELD.menu.enable_video.on=on
+# UMFELD.menu.enable_video.on.build.flags.enable_video=-DENABLE_VIDEO
+# 
+# UMFELD.menu.enable_capture.off=off
+# UMFELD.menu.enable_capture.off.build.flags.enable_capture=
+# UMFELD.menu.enable_capture.on=on
+# UMFELD.menu.enable_capture.on.build.flags.enable_capture=-DENABLE_CAPTURE
 
 # UMFELD.menu.compiler_path.macos=macOS default
 # UMFELD.menu.compiler_path.macos.compiler.path=/usr/bin/
@@ -108,55 +124,55 @@ KLST_EMU.build.core=sdl
 KLST_EMU.build.variant_h=variant_KLST_Emulator.h
 KLST_EMU.build.variant_defines=-DUMFELD_SET_DEFAULT_CALLBACK=0
 
-KLST_EMU.menu.upload_method.sdlexec=Execute Application
-KLST_EMU.menu.upload_method.sdlexec.upload.protocol=1
-KLST_EMU.menu.upload_method.sdlexec.upload.options=-g
-KLST_EMU.menu.upload_method.sdlexec.upload.tool=sdlexecprog
-KLST_EMU.menu.upload_method.sdlexec.upload.options=
+KLST_EMU.menu.6_upload_method.sdlexec=Execute Application
+KLST_EMU.menu.6_upload_method.sdlexec.upload.protocol=1
+KLST_EMU.menu.6_upload_method.sdlexec.upload.options=-g
+KLST_EMU.menu.6_upload_method.sdlexec.upload.tool=sdlexecprog
+KLST_EMU.menu.6_upload_method.sdlexec.upload.options=
 
-KLST_EMU.menu.pnum.KLST_EMU=Klangstrom Emulator
-KLST_EMU.menu.pnum.KLST_EMU.build.variant=KLST_EMU
+KLST_EMU.menu.7_pnum.KLST_EMU=Klangstrom Emulator
+KLST_EMU.menu.7_pnum.KLST_EMU.build.variant=KLST_EMU
 
-KLST_EMU.menu.OPENGL_VERSION.3_3_core=OpenGL 3.3 Core
-KLST_EMU.menu.OPENGL_VERSION.3_3_core.build.flags.opengl=-DOPENGL_3_3_CORE -I{runtime.platform.path}/cores/sdl/umfeld/external/glad_opengl_33/include
-UMFELD.menu.OPENGL_VERSION.es_3_0=OpenGL ES 3.0
-KLST_EMU.menu.OPENGL_VERSION.es_3_0.build.flags.opengl=-DOPENGL_ES_3_0 -I{runtime.platform.path}/cores/sdl/umfeld/external/glad_opengles_30/include
-KLST_EMU.menu.OPENGL_VERSION.2_0=( OpenGL 2.0 ) (nA)
-KLST_EMU.menu.OPENGL_VERSION.2_0.build.flags.opengl=-DOPENGL_2_0 -I{runtime.platform.path}/cores/sdl/umfeld/external/glad_opengl_20/include
+KLST_EMU.menu.3_opengl_version.3_3_core=OpenGL 3.3 Core
+KLST_EMU.menu.3_opengl_version.3_3_core.build.flags.opengl=-DOPENGL_3_3_CORE -I{runtime.platform.path}/cores/sdl/umfeld/external/glad_opengl_33/include
+UMFELD.menu.3_opengl_version.es_3_0=OpenGL ES 3.0
+KLST_EMU.menu.3_opengl_version.es_3_0.build.flags.opengl=-DOPENGL_ES_3_0 -I{runtime.platform.path}/cores/sdl/umfeld/external/glad_opengles_30/include
+KLST_EMU.menu.3_opengl_version.2_0=( OpenGL 2.0 ) (nA)
+KLST_EMU.menu.3_opengl_version.2_0.build.flags.opengl=-DOPENGL_2_0 -I{runtime.platform.path}/cores/sdl/umfeld/external/glad_opengl_20/include
 
-KLST_EMU.menu.sample_rate.xx48000xx=48000Hz
-KLST_EMU.menu.sample_rate.xx48000xx.build.flags.sample_rate=48000
-KLST_EMU.menu.sample_rate.xx44100xx=44100Hz
-KLST_EMU.menu.sample_rate.xx44100xx.build.flags.sample_rate=44100
-KLST_EMU.menu.sample_rate.xx22050xx=22050Hz
-KLST_EMU.menu.sample_rate.xx22050xx.build.flags.sample_rate=22050
+KLST_EMU.menu.4_sample_rate.xx48000xx=48000Hz
+KLST_EMU.menu.4_sample_rate.xx48000xx.build.flags.sample_rate=48000
+KLST_EMU.menu.4_sample_rate.xx44100xx=44100Hz
+KLST_EMU.menu.4_sample_rate.xx44100xx.build.flags.sample_rate=44100
+KLST_EMU.menu.4_sample_rate.xx22050xx=22050Hz
+KLST_EMU.menu.4_sample_rate.xx22050xx.build.flags.sample_rate=22050
 
-KLST_EMU.menu.audioblock.4096=4096 samples
-KLST_EMU.menu.audioblock.4096.build.flags.audioblock=4096
-KLST_EMU.menu.audioblock.2048=2048 samples
-KLST_EMU.menu.audioblock.2048.build.flags.audioblock=2048
-KLST_EMU.menu.audioblock.1024=1024 samples
-KLST_EMU.menu.audioblock.1024.build.flags.audioblock=1024
-KLST_EMU.menu.audioblock.512=512 samples
-KLST_EMU.menu.audioblock.512.build.flags.audioblock=512
-KLST_EMU.menu.audioblock.256=256 samples
-KLST_EMU.menu.audioblock.256.build.flags.audioblock=256
-KLST_EMU.menu.audioblock.128=128 samples
-KLST_EMU.menu.audioblock.128.build.flags.audioblock=128
-KLST_EMU.menu.audioblock.64=64 samples
-KLST_EMU.menu.audioblock.64.build.flags.audioblock=64
-KLST_EMU.menu.audioblock.32=32 samples
-KLST_EMU.menu.audioblock.32.build.flags.audioblock=32
+KLST_EMU.menu.5_audioblock.4096=4096 samples
+KLST_EMU.menu.5_audioblock.4096.build.flags.audioblock=4096
+KLST_EMU.menu.5_audioblock.2048=2048 samples
+KLST_EMU.menu.5_audioblock.2048.build.flags.audioblock=2048
+KLST_EMU.menu.5_audioblock.1024=1024 samples
+KLST_EMU.menu.5_audioblock.1024.build.flags.audioblock=1024
+KLST_EMU.menu.5_audioblock.512=512 samples
+KLST_EMU.menu.5_audioblock.512.build.flags.audioblock=512
+KLST_EMU.menu.5_audioblock.256=256 samples
+KLST_EMU.menu.5_audioblock.256.build.flags.audioblock=256
+KLST_EMU.menu.5_audioblock.128=128 samples
+KLST_EMU.menu.5_audioblock.128.build.flags.audioblock=128
+KLST_EMU.menu.5_audioblock.64=64 samples
+KLST_EMU.menu.5_audioblock.64.build.flags.audioblock=64
+KLST_EMU.menu.5_audioblock.32=32 samples
+KLST_EMU.menu.5_audioblock.32.build.flags.audioblock=32
 
-KLST_EMU.menu.board.KLST_PANDA=KLST_PANDA
-KLST_EMU.menu.board.KLST_PANDA.build.flags.board=0x46
-KLST_EMU.menu.board.KLST_CATERPILLAR=KLST_CATERPILLAR
-KLST_EMU.menu.board.KLST_CATERPILLAR.build.flags.board=0x47
-# KLST_EMU.menu.board.KLST_SHEEP=KLST_SHEEP ( 16 LEDs, 2 Encoders, Display, ... )
-# KLST_EMU.menu.board.KLST_SHEEP.build.flags.board=0x45
-# KLST_EMU.menu.board.KLST_TINY=KLST_TINY ( 3 LEDs, 3 Encoders, ... )
-# KLST_EMU.menu.board.KLST_TINY.build.flags.board=0x44
-# KLST_EMU.menu.board.KLST_CORE=KLST_CORE ( 3 LEDs, 3 Encoders, ... )
-# KLST_EMU.menu.board.KLST_CORE.build.flags.board=0x43
-# KLST_EMU.menu.board.GENERIC=GENERIC
-# KLST_EMU.menu.board.GENERIC.build.flags.board=0x42
+KLST_EMU.menu.8_board.KLST_PANDA=KLST_PANDA
+KLST_EMU.menu.8_board.KLST_PANDA.build.flags.board=0x46
+KLST_EMU.menu.8_board.KLST_CATERPILLAR=KLST_CATERPILLAR
+KLST_EMU.menu.8_board.KLST_CATERPILLAR.build.flags.board=0x47
+# KLST_EMU.menu.8_board.KLST_SHEEP=KLST_SHEEP ( 16 LEDs, 2 Encoders, Display, ... )
+# KLST_EMU.menu.8_board.KLST_SHEEP.build.flags.board=0x45
+# KLST_EMU.menu.8_board.KLST_TINY=KLST_TINY ( 3 LEDs, 3 Encoders, ... )
+# KLST_EMU.menu.8_board.KLST_TINY.build.flags.board=0x44
+# KLST_EMU.menu.8_board.KLST_CORE=KLST_CORE ( 3 LEDs, 3 Encoders, ... )
+# KLST_EMU.menu.8_board.KLST_CORE.build.flags.board=0x43
+# KLST_EMU.menu.8_board.GENERIC=GENERIC
+# KLST_EMU.menu.8_board.GENERIC.build.flags.board=0x42

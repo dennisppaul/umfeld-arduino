@@ -67,6 +67,9 @@ compiler.SDL3_cflags.windows = -IC:/msys64/ucrt64/include -IC:/msys64/ucrt64/inc
 #
 ###################################################################################################
 
+# TODO @video @capture
+# add ffmpeg libraries
+# compiler.umfeld_libs.macosx   = -L/opt/homebrew/lib -L/usr/local/lib -framework OpenGL -lharfbuzz -lfreetype -lportaudio -lcurl -lncurses -lrtmidi -L/opt/homebrew/Cellar/ffmpeg/8.0_1/lib -lavdevice -lavformat -lavcodec -lswscale -lswresample -lavutil
 compiler.umfeld_libs.macosx   = -L/opt/homebrew/lib -L/usr/local/lib -framework OpenGL -lharfbuzz -lfreetype -lportaudio -lcurl -lncurses -lrtmidi
 compiler.umfeld_libs.linux    = -L/usr/lib -L/usr/local/lib -lGL -lharfbuzz -lfreetype -lportaudio -lcurl -lncurses -lrtmidi
 compiler.umfeld_libs.windows  = -LC:/msys64/ucrt64/lib -lopengl32 -lharfbuzz -lfreetype -lportaudio -lncurses -lcurl -lssl -lcrypto -lidn2 -lssh2 -lpsl -lzstd -lnghttp2 -lbrotlidec -lcares -lz -lws2_32 -lbcrypt -lcrypt32 -lole32 -lcomdlg32 -lwinmm -lrtmidi
@@ -81,7 +84,9 @@ compiler.SDL3_libs.windows    = -LC:/msys64/ucrt64/lib -lSDL3
 #
 ###################################################################################################
 
-compiler.umfeld_flags = -I{runtime.platform.path}/cores/sdl -I{runtime.platform.path}/cores/sdl/umfeld/include -I{runtime.platform.path}/cores/sdl/umfeld/include/libraries -I{runtime.platform.path}/cores/sdl/umfeld/include/libraries/clipper2 -I{runtime.platform.path}/cores/sdl/umfeld/include/libraries/dr_libs -I{runtime.platform.path}/cores/sdl/umfeld/include/libraries/ip -I{runtime.platform.path}/cores/sdl/umfeld/include/libraries/libtess2 -I{runtime.platform.path}/cores/sdl/umfeld/include/libraries/osc -I{runtime.platform.path}/cores/sdl/umfeld/include/libraries/pffft -I{runtime.platform.path}/cores/sdl/umfeld/include/shaders -I{runtime.platform.path}/cores/sdl/umfeld/external/ -DENABLE_PORTAUDIO {build.flags.enable_capture}
+compiler.umfeld_flags = -I{runtime.platform.path}/cores/sdl -I{runtime.platform.path}/cores/sdl/umfeld/include -I{runtime.platform.path}/cores/sdl/umfeld/include/libraries -I{runtime.platform.path}/cores/sdl/umfeld/include/libraries/clipper2 -I{runtime.platform.path}/cores/sdl/umfeld/include/libraries/dr_libs -I{runtime.platform.path}/cores/sdl/umfeld/include/libraries/ip -I{runtime.platform.path}/cores/sdl/umfeld/include/libraries/libtess2 -I{runtime.platform.path}/cores/sdl/umfeld/include/libraries/osc -I{runtime.platform.path}/cores/sdl/umfeld/include/libraries/pffft -I{runtime.platform.path}/cores/sdl/umfeld/include/shaders -I{runtime.platform.path}/cores/sdl/umfeld/external/ {build.flags.enable_portaudio}
+# TODO @video @capture
+# add `{build.flags.enable_video} {build.flags.enable_capture}`
 
 ###################################################################################################
 #
@@ -135,7 +140,8 @@ recipe.ar.pattern="{compiler.path}{compiler.ar.cmd}" {compiler.ar.flags} "{archi
 compiler.c.linker.cmd=g++
 # compiler.ldflags=-v
 compiler.ldflags=
-compiler.ldflags.macosx={build.flags.add_info_plist}
+# TODO @infoplist
+# compiler.ldflags.macosx={build.flags.add_info_plist}
 recipe.c.combine.pattern="{compiler.path}{compiler.c.linker.cmd}" {compiler.ldflags} -o "{build.path}/{build.project_name}.exec" {object_files} {archive_file_path} {compiler.umfeld_libs} {compiler.SDL3_libs} -lm
 
 # copy run script to `/tmp/` ( or similar )
@@ -178,7 +184,9 @@ recipe.preproc.macros="{compiler.path}{preproc.macros.cmd}" {compiler.cpp.flags}
 # tools.sdlexecprog.exec.windows=
 # TODO problem with dialog box quitting 
 # cannot use the upload script when also using the dialog box with e.g `Card.begin()`
-tools.sdlexecprog.upload.pattern="{build.path}/{build.project_name}.exec" {upload.options} --sketchpath={build.core.path} {runtime.platform.path} {build.path} {build.project_name} {build.source.path} {build.source.path} {sketch_path}
+tools.sdlexecprog.upload.pattern="{build.path}/{build.project_name}.exec" {upload.options}
+# TODO sketchpath should either point to current sketch path or tmp directory
+# --sketchpath={build.core.path} {runtime.platform.path} {build.path} {build.project_name} {build.source.path} {build.source.path} {sketch_path}
 tools.sdlexecprog.upload.params.verbose=
 tools.sdlexecprog.upload.params.quiet=
 
@@ -186,6 +194,7 @@ tools.sdlexecprog.upload.params.quiet=
 # recipe.hooks.postbuild.01.pattern=echo && echo Executable binary located at: "{build.path}/{build.project_name}.exec"
 # #recipe.hooks.postbuild.01.pattern=printf "\n\nexecutable binary located at: {build.path}/{build.project_name}.exec "
 # # recipe.hooks.postbuild.02.pattern={build.path}/{build.project_name}.exec
+# TODO check if `mkdir` and `cp` works on windows … probably not
 recipe.hooks.postbuild.01.pattern=mkdir -p "{sketch_path}/data" 
 recipe.hooks.postbuild.02.pattern=cp -R "{sketch_path}/data" "{build.path}/"
 ###################################################################################################

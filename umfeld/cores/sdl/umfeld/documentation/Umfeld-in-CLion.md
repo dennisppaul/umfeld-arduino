@@ -20,9 +20,7 @@ if MSYS2 has been installed correctly and the *Quickstart* guide has been follow
 8. point it to the `cmake` installed by `UCRT64` ( default location is `C:\msys64\ucrt64\bin\cmake.exe` )
 9. note, you may ignore the version warning
 
-## Linux
-
-(TODO)
+<!-- ## Linux -->
 
 ## Opening a Project
 

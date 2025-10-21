@@ -89,7 +89,9 @@ Serial::Serial(const std::string& portName, int baudrate, char parity, int dataB
     isOpen = true;
 }
 
-void Serial::configure(bool flush_buffer, int baudrate, char parity, int dataBits, int stopBits) {
+// header + cpp
+void Serial::configure(int baudrate, const char parity, int dataBits, int stopBits, bool flush_buffer) {
+//void Serial::configure(bool flush_buffer, int baudrate, char parity, int dataBits, int stopBits) {
 #ifdef SYSTEM_WINDOWS
     DCB dcb       = {0};
     dcb.DCBlength = sizeof(dcb);

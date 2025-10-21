@@ -72,5 +72,7 @@ private:
     int                                   bufferDelimiter = -1;
     std::chrono::steady_clock::time_point lastPoll        = std::chrono::steady_clock::now();
 
-    void configure(bool flush_buffer, int baudrate, char parity, int dataBits, int stopBits);
+    // header + cpp
+    void configure(int baudrate, char parity, int dataBits, int stopBits, bool flush_buffer);
+    // void configure(bool flush_buffer, int baudrate, char parity, int dataBits, int stopBits);
 };

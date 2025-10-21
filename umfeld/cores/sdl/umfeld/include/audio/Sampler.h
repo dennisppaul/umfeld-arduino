@@ -481,6 +481,16 @@ namespace umfeld {
             return fBufferLength - 1;
         }
 
+        bool is_done() const {
+            return fIsFlaggedDone;
+            // TODO or is the code below better?
+            // if (fDirectionForward) {
+            //     return fBufferIndex >= fOutPoint;
+            // } else {
+            //     return fBufferIndex <= fInPoint;
+            // }
+        }
+
         void notifyListeners() {
             if (!fIsFlaggedDone) {
                 for (SamplerListener* l: fSamplerListeners) {

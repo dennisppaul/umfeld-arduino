@@ -1,4 +1,4 @@
-⚠️️️️⚠️️️️⚠️️️️ THIS PROJECT IS VERY EXPERIMENTAL ⚠️️️️⚠️️️️⚠️️️️
+⚠️ THE PROJECT HAS MOVED TO CODEBERG.ORG [https://codeberg.org/Umfeld](https://codeberg.org/Umfeld) ⚠️
 
 Board definition to run [Umfeld](https://github.com/dennisppaul/umfeld) as a board from Arduino IDE or CLI.
 
